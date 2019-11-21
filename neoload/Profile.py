@@ -6,6 +6,7 @@ from pyconfigstore3 import ConfigStore
 from PyInquirer import (prompt)
 
 import json
+import logging
 
 profileprefix = "profile_"
 
@@ -75,7 +76,8 @@ def listProfiles():
 def createOrUpdateProfile(proname,url,token,zone):
     if url is None: url = getNLWSaaSAPIURL()
     profile = getProfileByName(proname)
-    if profile is None:
+    creating = True if profile is None else False
+    if creating:
         profile = {
             "token": token,
             "url": url,
@@ -88,6 +90,10 @@ def createOrUpdateProfile(proname,url,token,zone):
         profile["zone"] = zone
 
     _updateProfile(proname,profile)
+
+    if creating:
+        cprint("Created profile: " + proname, "yellow")
+
     return profile
 
 def _updateProfile(proname,profile):
