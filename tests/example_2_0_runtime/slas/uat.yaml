@@ -1,0 +1,6 @@
+sla_profiles:
+- name: geo_3rdparty_sla
+  description: Avg Resp Time >=100ms >= 250ms for cached queries
+  thresholds:
+  - avg-resp-time warn >= 100ms fail >= 250ms per interval
+  - error-rate warn >= 5% fail >= 10% per test
