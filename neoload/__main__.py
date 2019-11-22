@@ -8,7 +8,7 @@ import coloredlogs,logging
 
 from neoload import *
 from .Validators import *
-from .Profile import (loadProfile,setZone,listProfiles,setToken,getCurrentProfile)
+from .Profile import (loadProfile,setZone,listProfiles,setToken,getCurrentProfile,createOrUpdateProfile)
 from .Files import *
 from .NLWAPI import (getNLWAPI,uploadProject,runProject,getTestStatus,getTestOverviewUrl,getTestLogsUrl)
 from .Attaching import (attachInfra,detatchInfra)
