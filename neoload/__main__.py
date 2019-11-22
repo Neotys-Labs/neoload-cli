@@ -19,6 +19,8 @@ from pprint import pprint
 import webbrowser
 import click
 
+os.environ["PYTHONUNBUFFERED"] = "1" #for CI, specifically Jenkins output
+
 @click.command()
 @click.option('-ps','--profiles', is_flag=True, default=None, help='List profiles')
 @click.option('--profile', default=None, help='Set profiles')
@@ -184,7 +186,7 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug):
 
         #end infraReady
     except:
-        exitCode = 2 
+        exitCode = 2
         logger.error("Unexpected error:", sys.exc_info()[0])
 
         cleanupAfter(zipfile,attach,infra)
