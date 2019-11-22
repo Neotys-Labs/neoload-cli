@@ -96,7 +96,7 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug):
     }
 
     cleanedUp = False
-    exitCode = 2
+    exitCode = 0
 
     #infra["ready"] = False #TODO: temp debug REMOVE ASAP
 
@@ -184,6 +184,7 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug):
 
         #end infraReady
     except:
+        exitCode = 2 
         logger.error("Unexpected error:", sys.exc_info()[0])
 
         cleanupAfter(zipfile,attach,infra)
@@ -193,6 +194,9 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug):
 
     if not cleanedUp:
         cleanupAfter(zipfile,attach,infra)
+
+    if moreinfo:
+        logger.info("Exiting with code: " + str(exitCode))
 
     sys.exit(exitCode)
 
