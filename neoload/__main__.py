@@ -19,8 +19,6 @@ from pprint import pprint
 import webbrowser
 import click
 
-os.environ["PYTHONUNBUFFERED"] = "1" #for CI, specifically Jenkins output
-
 @click.command()
 @click.option('-ps','--profiles', is_flag=True, default=None, help='List profiles')
 @click.option('--profile', default=None, help='Set profiles')
@@ -36,17 +34,24 @@ os.environ["PYTHONUNBUFFERED"] = "1" #for CI, specifically Jenkins output
 def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug):
 
     logger = logging.getLogger("root")
+    moreinfo = True if debug is not None or verbose is not None else False
 
     if debug is not None:
-        cprint("logging level set to DEBUG","red")
+        if moreinfo: cprint("logging level set to DEBUG","red")
         logger.setLevel(logging.DEBUG)
     elif verbose is not None:
-        cprint("logging level set to INFO","red")
+        if moreinfo: cprint("logging level set to INFO","red")
         logger.setLevel(logging.INFO)
     else:
+        if moreinfo: cprint("logging level set to ERROR","red")
         logger.setLevel(logging.ERROR)
 
-    moreinfo = True if debug is not None or verbose is not None else False
+    if moreinfo:
+        unbuf = '' if os.getenv('PYTHONUNBUFFERED') is None else os.getenv('PYTHONUNBUFFERED')
+        if unbuf.lower() in ['1','yes','true','on']:
+            logger.warning('Unbuffered output is on; CI jobs should report in real-time')
+        else:
+            logger.warning('Unbuffered output is off; CI jobs may delay output')
 
     #cprint("logging.ERROR=" + str(logging.ERROR),"red")
     #cprint("logging.INFO=" + str(logging.INFO),"red")
