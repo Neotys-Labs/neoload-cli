@@ -30,18 +30,23 @@ def uploadProject(client,zipfile):
     resp = api.post_upload_project(file=zipfile)
     return resp
 
-def runProject(client,projectId,asCodeFiles,scenario,zone,testName):
+def runProject(client,projectId,asCodeFiles,scenario,zone,infra,testName):
     logger = logging.getLogger("root")
     api = openapi_client.RuntimeApi(client)
     asCodeLine = ",".join(asCodeFiles)#"default.yaml" + "," + ",".join(asCodeFiles)
     logger.debug(asCodeLine)
+
+    lgCount = 1
+    if "numOfLGs" in infra:
+        lgCount = infra["numOfLGs"]
+
     resp = api.get_tests_run(
         name=testName,
         project_id=projectId,
         scenario_name=scenario,
         as_code=asCodeLine,
         controller_zone_id=zone,
-        lg_zones=""+zone+":1",
+        lg_zones=""+zone+":"+str(lgCount),
         )
     return resp
 
