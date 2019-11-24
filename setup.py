@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='neoload',
-      version='0.1',
+      version='0.2',
       description='A command-line native utility for launching and observing NeoLoad performance tests',
       url='https://github.com/paulsbruce/neoload-cli',
       author='Paul Bruce',
