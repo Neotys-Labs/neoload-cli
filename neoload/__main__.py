@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import platform
 import sys
 import shutil
 import time
@@ -59,9 +60,13 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug):
     #cprint("Logging is set to: " + str(logger.getEffectiveLevel()),"red")
     logger.info("This is an informational message.")
 
-    intentToRun = True if files is not None or scenario is not None else False
+    logger.debug("Platform: " + platform.system())
 
-    coloredlogs.install()
+    intentToRun = True if files is not None or scenario is not None else False
+    interactive = False if platform.system().lower() == 'linux' else True
+
+    if interactive:
+        coloredlogs.install()
 
     if not intentToRun:
         cprint("NeoLoad CLI", color="blue")
