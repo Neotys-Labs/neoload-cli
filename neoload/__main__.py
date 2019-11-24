@@ -5,7 +5,7 @@ import platform
 import sys
 import shutil
 import time
-import coloredlogs,logging
+import logging
 
 from neoload import *
 from .Validators import *
@@ -19,6 +19,9 @@ from pprint import pprint
 
 import webbrowser
 import click
+import termcolor
+
+trueValues = ['1','yes','true','on']
 
 @click.command()
 @click.option('-ps','--profiles', is_flag=True, default=None, help='List profiles')
@@ -32,42 +35,50 @@ import click
 @click.option('--attach', default=None, help='Attaches containers for Controller and Load Generator(s)')
 @click.option('--verbose', is_flag=True, default=None, help='Include INFO and WARNING detail.')
 @click.option('--debug', is_flag=True, default=None, help='Include DEBUG, INFO and WARNING detail.')
-def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug):
+@click.option('--nocolor', is_flag=True, default=None, help='Control color logs')
+def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,nocolor):
 
     logger = logging.getLogger("root")
+    if debug is not None:
+        logger.setLevel(logging.DEBUG)
+    elif verbose is not None:
+        logger.setLevel(logging.INFO)
+    else:
+        logger.setLevel(logging.ERROR)
+
     moreinfo = True if debug is not None or verbose is not None else False
+    interactive = False if platform.system().lower() == 'linux' else True
+
+    if interactive and nocolor is None:
+        coloredlogs = __import__('coloredlogs')
+        coloredlogs.install()
+    else:
+        setColorEnabled(False)
+        cprint("Color logs are disabled")
 
     if debug is not None:
         if moreinfo: cprint("logging level set to DEBUG","red")
-        logger.setLevel(logging.DEBUG)
     elif verbose is not None:
         if moreinfo: cprint("logging level set to INFO","red")
-        logger.setLevel(logging.INFO)
     else:
         if moreinfo: cprint("logging level set to ERROR","red")
-        logger.setLevel(logging.ERROR)
 
     if moreinfo:
         unbuf = '' if os.getenv('PYTHONUNBUFFERED') is None else os.getenv('PYTHONUNBUFFERED')
-        if unbuf.lower() in ['1','yes','true','on']:
+        if unbuf.lower() in trueValues:
             logger.warning('Unbuffered output is on; CI jobs should report in real-time')
         else:
-            logger.warning('Unbuffered output is off; CI jobs may delay output')
+            logger.warning('Unbuffered output is off; CI jobs may delay output; set PYTHONUNBUFFERED=1')
 
-    #cprint("logging.ERROR=" + str(logging.ERROR),"red")
+    #cprint("logging.   ERROR=" + str(logging.ERROR),"red")
     #cprint("logging.INFO=" + str(logging.INFO),"red")
     #cprint("logging.DEBUG=" + str(logging.DEBUG),"red")
     #cprint("Logging is set to: " + str(logger.getEffectiveLevel()),"red")
     logger.info("This is an informational message.")
 
-    logger.debug("Platform: " + platform.system())
-    print("Platform: " + platform.system())
+    logger.warning("Platform: " + platform.system())
 
     intentToRun = True if files is not None or scenario is not None else False
-    interactive = False if platform.system().lower() == 'linux' else True
-
-    if interactive:
-        coloredlogs.install()
 
     if not intentToRun:
         cprint("NeoLoad CLI", color="blue")
