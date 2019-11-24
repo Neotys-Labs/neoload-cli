@@ -61,7 +61,7 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug):
     logger.info("This is an informational message.")
 
     logger.debug("Platform: " + platform.system())
-    cprint("Platform: " + platform.system())
+    print("Platform: " + platform.system())
 
     intentToRun = True if files is not None or scenario is not None else False
     interactive = False if platform.system().lower() == 'linux' else True
