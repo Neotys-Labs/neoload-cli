@@ -39,6 +39,7 @@ trueValues = ['1','yes','true','on']
 def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,nocolor):
 
     logger = logging.getLogger("root")
+
     if debug is not None:
         logger.setLevel(logging.DEBUG)
     elif verbose is not None:
@@ -58,6 +59,14 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,noc
         setColorEnabled(False)
         cprint("Color logs are disabled")
 
+    if not interactive:
+        # define a Handler which writes INFO messages or higher to the sys.stderr
+        console = logging.StreamHandler()
+        console.setLevel(logger.getEffectiveLevel())
+        # add the handler to the root logger
+        logging.getLogger('root').addHandler(console)
+
+
     if debug is not None:
         if moreinfo: cprint("logging level set to DEBUG","red")
     elif verbose is not None:
@@ -73,7 +82,7 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,noc
             logger.warning('Unbuffered output is off; CI jobs may delay output; set PYTHONUNBUFFERED=1')
 
     if debug is not None:
-        cprint("logging.   ERROR=" + str(logging.ERROR),"red")
+        cprint("logging.ERROR=" + str(logging.ERROR),"red")
         cprint("logging.INFO=" + str(logging.INFO),"red")
         cprint("logging.DEBUG=" + str(logging.DEBUG),"red")
         cprint("Logging is set to: " + str(logger.getEffectiveLevel()),"red")
@@ -190,7 +199,7 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,noc
                     elif test.status == "RUNNING":
                         if not running:
                             running = True
-                            cprint("Test is running: " + overviewUrl)
+                            cprint("Test overview now available at: " + overviewUrl)
                             print("Test running", end="")
                             webbrowser.open_new_tab(overviewUrl)
                         waiterations += 1
