@@ -190,6 +190,7 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,noc
                     elif test.status == "RUNNING":
                         if not running:
                             running = True
+                            cprint("Test is running: " + overviewUrl)
                             print("Test running", end="")
                             webbrowser.open_new_tab(overviewUrl)
                         waiterations += 1
