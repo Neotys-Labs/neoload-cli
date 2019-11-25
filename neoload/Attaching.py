@@ -56,7 +56,7 @@ def attachLocalDockerInfra(profile,spec):
     network_id = None
     runId = str(random.randint(1,65535))
     randPortRange = str(random.randint(171,471)*100) # between 17100 and 47100
-    randPortRange = 7700
+    #randPortRange = 7700
     networkName = _containerNamingPrefix + runId + "_network"
     try:
         network = client.networks.create(networkName, driver="bridge")
