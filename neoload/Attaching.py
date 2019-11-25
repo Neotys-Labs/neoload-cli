@@ -27,7 +27,6 @@ _containerNamingPrefix = "neoload_cli"
 
 def attachLocalDockerInfra(profile,spec):
     logger = logging.getLogger("root")
-    print('Attaching:LogLevel' + str(logger.getEffectiveLevel()))
 
     logger.warning("Connecting to local Docker host")
     client = docker.from_env()
@@ -69,7 +68,7 @@ def attachLocalDockerInfra(profile,spec):
             lgport = randPortRange+x
             lgname = _containerNamingPrefix + runId + "_lg" + str(x+1)
             hostandport = {
-                "LG_HOST": "host.docker.internal",#lgname,
+                "LG_HOST": lgname,
                 "LG_PORT": lgport
             }
             lgenv = commonenv.copy()
@@ -77,7 +76,6 @@ def attachLocalDockerInfra(profile,spec):
             logger.info("Attaching load generator " + str(x+1) + ".")
             portspec = {}
             portspec[""+str(lgport)+"/tcp"] = lgport
-            #portspec["7100/tcp"] = lgport
             lg = client.containers.run(
                 image=spec["lgImage"],
                 name = lgname,
@@ -106,7 +104,9 @@ def attachLocalDockerInfra(profile,spec):
         logger.info("Waiting for docker containers to be attached and ready.")
 
         if not pauseIfInteractiveDebug(logger):
-            time.sleep( 30 )
+            time.sleep( 60 )
+            #neoload.agent.Agent: Connection test to Neoload Web successful
+            #neoload.controller.agent.ControllerAgent: Successfully connected to URL:
 
         spec["ready"] = True
     except Exception as err:
