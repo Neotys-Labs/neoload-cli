@@ -2,6 +2,7 @@ import tempfile
 import shutil
 import os
 import logging
+import sys
 from distutils.dir_util import copy_tree
 
 def packageFiles(fileSpecs):
@@ -52,7 +53,11 @@ def packageFiles(fileSpecs):
 
     fd, tmpzip = tempfile.mkstemp(prefix='neoload-cli_')
     shutil.make_archive(tmpzip, 'zip', tmpdir) # creates new .zip file
-    os.remove(tmpzip) # get rid of temp file without extension
+    try:
+        os.remove(tmpzip) # get rid of temp file without extension
+    except Exception as err:
+        logger.error("Unexpected error in 'attachLocalDockerInfra':", sys.exc_info()[0])
+
     tmpzip = tmpzip+".zip"
     os.close(fd)
 
