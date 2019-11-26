@@ -8,6 +8,7 @@ import docker
 import random
 import time
 import logging
+import platform
 from datetime import datetime
 import pprint
 
@@ -96,14 +97,24 @@ def attachLocalDockerInfra(profile,spec):
             volumes[os.getcwd()] = {'bind': '/launch', 'mode': 'ro'}
 
         lglinks = {}
+        lgImage = spec["lgImage"]
+        lgTag = lgImage.split(':')[-1].split("-")[0]
+        lgVersion = "" if not lgTag.replace(".","").isnumeric() else lgTag
+        logger.debug("lgTag: " + lgTag)
+        logger.debug("lgVersion: " + lgVersion)
         baseIpX = 2
         for x in range(spec["numOfLGs"]):
             lgport = randPortRange+x
             lgname = _containerNamingPrefix + runId + "_lg" + str(x+1)
             lghost = subnet3s+"."+str(baseIpX)
+
+            lg2ctrl_port = lgport
+            if lgVersion.startswith('7.'):
+                lg2ctrl_port = 7100
+
             hostandport = {
                 "LG_HOST": lghost,#"10.0.0.111",#lgname,
-                "LG_PORT": lgport
+                "LG_PORT": lg2ctrl_port
             }
             lgenv = commonenv.copy()
             lgenv.update(hostandport)
@@ -111,7 +122,7 @@ def attachLocalDockerInfra(profile,spec):
             portspec = {}
             portspec[""+str(lgport)+"/tcp"] = lgport
             lg = client.containers.run(
-                image=spec["lgImage"],
+                image=lgImage,
                 name = lghost,#lgname,
                 #network = networkName,
                 detach=True,
@@ -149,19 +160,27 @@ def attachLocalDockerInfra(profile,spec):
 
         logger.info("Waiting for docker containers to be attached and ready.")
 
-        if not pauseIfInteractiveDebug(logger):
-            time.sleep( 1 )
-
         #neoload.agent.Agent: Connection test to Neoload Web successful
         #neoload.controller.agent.ControllerAgent: Successfully connected to URL:
 
+        waitingSuccess = False
+
         for container_id in lg_container_ids:
-            waitForContainerLogsToInclude(container_id,"Connection test to Neoload Web successful|LoadGeneratorAgent running")
+            waitingSuccess = waitForContainerLogsToInclude(container_id,"Agent started|Connection test to Neoload Web successful|LoadGeneratorAgent running")
+            if not waitingSuccess:
+                logger.error("Couldn't ensure load generator readiness for " + container_id)
+                break
 
         if ctrl_container_id is not None:
-            waitForContainerLogsToInclude(container_id,"Successfully connected to URL")
+            waitingSuccess = waitForContainerLogsToInclude(ctrl_container_id,"Successfully connected to URL")
+            if not waitingSuccess:
+                logger.error("Couldn't ensure controller readiness for " + container_id)
 
-        logger.info("All containers are attached and ready for use.")
+        if waitingSuccess:
+            logger.info("All containers are attached and ready for use.")
+
+        if not pauseIfInteractiveDebug(logger):
+            time.sleep( 1 )
 
         spec["ready"] = True
     except Exception as err:
