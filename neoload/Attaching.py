@@ -162,7 +162,7 @@ def waitForContainerLogsToInclude(container_id, str_to_find):
 
             for str in strs_to_find:
                 if str.lower() in logstr.decode("utf-8").lower():
-                    logger.debug("Waited successfully for container "+container_id+" readiness: ",wait_sec)
+                    logger.debug("Waited successfully for container "+container_id+" readiness.")
                     return True
 
         logger.debug("Timed out while waiting for "+container_id+" readiness.")
