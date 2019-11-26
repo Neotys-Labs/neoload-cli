@@ -65,10 +65,30 @@ def attachLocalDockerInfra(profile,spec):
     runId = str(random.randint(1,65535))
     randPortRange = random.randint(171,471)*100 # between 17100 and 47100
     #randPortRange = 7100
+    randSubnet2 = random.randint(50,250)
     networkName = _containerNamingPrefix + runId + "_network"
+    subnet3s = "172."+str(randSubnet2)+".0"
     try:
-        network = client.networks.create(networkName, driver="bridge")
+        network = client.networks.create(
+            networkName,
+            driver="bridge",
+            attachable=True,
+            #scope="global",
+            ipam=docker.types.IPAMConfig(
+                driver='default',
+                #options={
+                #    'subnet': subnet3s+".0/16",
+                #    'gateway': subnet3s+".1"
+                #}
+                pool_configs=[docker.types.IPAMPool(
+                    subnet=subnet3s+'.0/16',
+                    iprange=subnet3s+'.0/24',
+                    gateway=subnet3s+'.254'
+                )]
+            )
+        )
         logger.info("Created docker network '" + networkName + "'")
+        logger.debug(network.attrs)
         spec["network_id"] = network.id
 
         volumes = {}
@@ -76,11 +96,13 @@ def attachLocalDockerInfra(profile,spec):
             volumes[os.getcwd()] = {'bind': '/launch', 'mode': 'ro'}
 
         lglinks = {}
+        baseIpX = 2
         for x in range(spec["numOfLGs"]):
             lgport = randPortRange+x
             lgname = _containerNamingPrefix + runId + "_lg" + str(x+1)
+            lghost = subnet3s+"."+str(baseIpX)
             hostandport = {
-                "LG_HOST": lgname,
+                "LG_HOST": lghost,#"10.0.0.111",#lgname,
                 "LG_PORT": lgport
             }
             lgenv = commonenv.copy()
@@ -88,11 +110,10 @@ def attachLocalDockerInfra(profile,spec):
             logger.info("Attaching load generator " + str(x+1) + ".")
             portspec = {}
             portspec[""+str(lgport)+"/tcp"] = lgport
-            portspec[""+str(lgport)+"/tcp"] = None
             lg = client.containers.run(
                 image=spec["lgImage"],
-                name = lgname,
-                network = networkName,
+                name = lghost,#lgname,
+                #network = networkName,
                 detach=True,
                 auto_remove=auto_remove_containers,
                 environment=lgenv,
@@ -102,7 +123,15 @@ def attachLocalDockerInfra(profile,spec):
             lglinks[lg.id] = lgname
             container_ids.append(lg.id)
             lg_container_ids.append(lg.id)
-            logger.info("Attached load generator " + str(x+1) + ".")
+            logger.info("Created load generator " + str(x+1) + ".")
+
+            network.connect(
+                container=lg.id,
+                ipv4_address=lghost
+            )
+            logger.info("Attached load generator " + str(x+1) + " to network.")
+
+            baseIpX += 1
 
         ctrl = client.containers.run(
             image=spec["ctrlImage"],
@@ -131,6 +160,8 @@ def attachLocalDockerInfra(profile,spec):
 
         if ctrl_container_id is not None:
             waitForContainerLogsToInclude(container_id,"Successfully connected to URL")
+
+        logger.info("All containers are attached and ready for use.")
 
         spec["ready"] = True
     except Exception as err:
@@ -181,34 +212,35 @@ def detatchLocalDockerInfra(spec):
 
     pauseIfInteractiveDebug(logger,"Press any key to continue detatching Docker resources...")
 
-    for id in spec["container_ids"]:
-        try:
-            container = client.containers.get(id)
+    if 'container_ids' in spec:
+        for id in spec["container_ids"]:
+            try:
+                container = client.containers.get(id)
 
-            logger.debug("Container " + container.name + " logs:")
-            logger.debug(container.logs())
+                logger.debug("Container " + container.name + " logs:")
+                logger.debug(container.logs())
 
-            logger.info("Stopping container " + id)
-            container.stop()
-            if not auto_remove_containers:
-                container.remove()
+                logger.info("Stopping container " + id)
+                container.stop()
+                if not auto_remove_containers:
+                    container.remove()
 
-        except Exception as err:
-            logger.error("Unexpected error in 'detatchLocalDockerInfra'[0]:", sys.exc_info()[0])
-            traceback.print_exc()
+            except Exception as err:
+                logger.error("Unexpected error in 'detatchLocalDockerInfra'[0]:", sys.exc_info()[0])
+                traceback.print_exc()
 
     time.sleep( 5 )
 
-    networkId = spec["network_id"]
-
-    if networkId is not None:
-        logger.info("Removing network " + networkId)
-        try:
-            network = client.networks.get(networkId)
-            network.remove()
-        except Exception as err:
-            logger.error("Unexpected error in 'detatchLocalDockerInfra'[1]:", sys.exc_info()[0])
-            traceback.print_exc()
+    if 'network_id' in spec:
+        networkId = spec["network_id"]
+        if networkId is not None:
+            logger.info("Removing network " + networkId)
+            try:
+                network = client.networks.get(networkId)
+                network.remove()
+            except Exception as err:
+                logger.error("Unexpected error in 'detatchLocalDockerInfra'[1]:", sys.exc_info()[0])
+                traceback.print_exc()
 
 def parseInfraSpec(rawspec):
     # docker#2,neotys/neoload-loadgenerator:6.10
