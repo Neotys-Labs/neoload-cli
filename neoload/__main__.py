@@ -39,6 +39,7 @@ trueValues = ['1','yes','true','on']
 def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,nocolor):
 
     logger = logging.getLogger("root")
+
     if debug is not None:
         logger.setLevel(logging.DEBUG)
     elif verbose is not None:
@@ -47,7 +48,9 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,noc
         logger.setLevel(logging.ERROR)
 
     moreinfo = True if debug is not None or verbose is not None else False
+
     interactive = False if platform.system().lower() == 'linux' else True
+    setInteractiveMode(interactive)
 
     if interactive and nocolor is None:
         coloredlogs = __import__('coloredlogs')
@@ -55,6 +58,14 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,noc
     else:
         setColorEnabled(False)
         cprint("Color logs are disabled")
+
+    if not interactive:
+        # define a Handler which writes INFO messages or higher to the sys.stderr
+        console = logging.StreamHandler()
+        console.setLevel(logger.getEffectiveLevel())
+        # add the handler to the root logger
+        logging.getLogger('root').addHandler(console)
+
 
     if debug is not None:
         if moreinfo: cprint("logging level set to DEBUG","red")
@@ -70,10 +81,12 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,noc
         else:
             logger.warning('Unbuffered output is off; CI jobs may delay output; set PYTHONUNBUFFERED=1')
 
-    #cprint("logging.   ERROR=" + str(logging.ERROR),"red")
-    #cprint("logging.INFO=" + str(logging.INFO),"red")
-    #cprint("logging.DEBUG=" + str(logging.DEBUG),"red")
-    #cprint("Logging is set to: " + str(logger.getEffectiveLevel()),"red")
+    if debug is not None:
+        cprint("logging.ERROR=" + str(logging.ERROR),"red")
+        cprint("logging.INFO=" + str(logging.INFO),"red")
+        cprint("logging.DEBUG=" + str(logging.DEBUG),"red")
+        cprint("Logging is set to: " + str(logger.getEffectiveLevel()),"red")
+
     logger.info("This is an informational message.")
 
     logger.warning("Platform: " + platform.system())
@@ -131,6 +144,9 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,noc
             logger.info("Attaching resources.")
             infra = attachInfra(profile,attach)
 
+        #if explicitly argumented numOfLGs, ensure below or equal to that defined
+        # considering dynamic zones should be interrogated for max
+
         if infra["ready"]:
 
             projectDef = None
@@ -147,7 +163,7 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,noc
                 testName = projectName + "_" + scenario
                 cprint("Launching new test '" + testName + "'.", "yellow")
                 try:
-                    projectLaunched = runProject(api,projectId,asCodeFiles,scenario,zone,testName)
+                    projectLaunched = runProject(api,projectId,asCodeFiles,scenario,zone,infra,testName)
                     cprint("Test queued [" + time.ctime() + "], receiving initial telemetry.", "green")
                 except ApiException as err:
                     logger.critical("API error: {0}".format(err))
@@ -183,6 +199,7 @@ def main(profiles,profile,url,token,zone,files,scenario,attach,verbose,debug,noc
                     elif test.status == "RUNNING":
                         if not running:
                             running = True
+                            cprint("Test overview now available at: " + overviewUrl)
                             print("Test running", end="")
                             webbrowser.open_new_tab(overviewUrl)
                         waiterations += 1
