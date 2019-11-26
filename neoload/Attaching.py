@@ -1,12 +1,18 @@
 
 from neoload import *
 
+import os
 import sys
 import traceback
 import docker
 import random
 import time
 import logging
+from datetime import datetime
+import pprint
+
+auto_remove_containers = True
+max_container_readiness_wait_sec = 60
 
 def attachInfra(profile,rawspec):
     spec = parseInfraSpec(rawspec)
@@ -53,15 +59,21 @@ def attachLocalDockerInfra(profile,spec):
         logger.warning("Because there is no NTS configuration in this profile, license will be acquired from NLWEB.")
 
     container_ids = []
+    lg_container_ids = []
+    ctrl_container_id = None
     network_id = None
     runId = str(random.randint(1,65535))
     randPortRange = random.randint(171,471)*100 # between 17100 and 47100
-    #randPortRange = 7700
+    #randPortRange = 7100
     networkName = _containerNamingPrefix + runId + "_network"
     try:
         network = client.networks.create(networkName, driver="bridge")
         logger.info("Created docker network '" + networkName + "'")
         spec["network_id"] = network.id
+
+        volumes = {}
+        if isInteractiveMode() and isLoggerInDebug(logger):
+            volumes[os.getcwd()] = {'bind': '/launch', 'mode': 'ro'}
 
         lglinks = {}
         for x in range(spec["numOfLGs"]):
@@ -76,17 +88,20 @@ def attachLocalDockerInfra(profile,spec):
             logger.info("Attaching load generator " + str(x+1) + ".")
             portspec = {}
             portspec[""+str(lgport)+"/tcp"] = lgport
+            portspec[""+str(lgport)+"/tcp"] = None
             lg = client.containers.run(
                 image=spec["lgImage"],
                 name = lgname,
                 network = networkName,
                 detach=True,
-                auto_remove=True,
+                auto_remove=auto_remove_containers,
                 environment=lgenv,
+                volumes=volumes,
                 ports=portspec,
             )
             lglinks[lg.id] = lgname
             container_ids.append(lg.id)
+            lg_container_ids.append(lg.id)
             logger.info("Attached load generator " + str(x+1) + ".")
 
         ctrl = client.containers.run(
@@ -94,19 +109,28 @@ def attachLocalDockerInfra(profile,spec):
             name = _containerNamingPrefix + runId + "_ctrl",
             network = networkName,
             detach=True,
-            auto_remove=True,
+            auto_remove=auto_remove_containers,
             environment=ctrlenv,
-            links=lglinks
+            volumes=volumes,
+            #links=lglinks
         )
         container_ids.append(ctrl.id)
+        ctrl_container_id = ctrl.id
         logger.info("Attached controller.")
 
         logger.info("Waiting for docker containers to be attached and ready.")
 
         if not pauseIfInteractiveDebug(logger):
-            time.sleep( 60 )
-            #neoload.agent.Agent: Connection test to Neoload Web successful
-            #neoload.controller.agent.ControllerAgent: Successfully connected to URL:
+            time.sleep( 1 )
+
+        #neoload.agent.Agent: Connection test to Neoload Web successful
+        #neoload.controller.agent.ControllerAgent: Successfully connected to URL:
+
+        for container_id in lg_container_ids:
+            waitForContainerLogsToInclude(container_id,"Connection test to Neoload Web successful|LoadGeneratorAgent running")
+
+        if ctrl_container_id is not None:
+            waitForContainerLogsToInclude(container_id,"Successfully connected to URL")
 
         spec["ready"] = True
     except Exception as err:
@@ -118,6 +142,37 @@ def attachLocalDockerInfra(profile,spec):
 
     return spec
 
+def waitForContainerLogsToInclude(container_id, str_to_find):
+    logger = logging.getLogger("root")
+    logger.info("Waiting for container " + container_id + " logs to indicate attachment readiness")
+    client = docker.from_env()
+    logs = ""
+    wait_sec = 0
+    started_at = datetime.now()
+    strs_to_find = str_to_find.split("|")
+    try:
+        container = client.containers.get(container_id)
+
+        while wait_sec < max_container_readiness_wait_sec:
+            time.sleep(1)
+            wait_sec = (datetime.now() - started_at).total_seconds()
+
+            logstr = container.logs()
+            if logstr is None: logstr = ""
+
+            for str in strs_to_find:
+                if str.lower() in logstr.decode("utf-8").lower():
+                    logger.debug("Waited successfully for container "+container_id+" readiness: ",wait_sec)
+                    return True
+
+        logger.debug("Timed out while waiting for "+container_id+" readiness.")
+
+    except Exception as err:
+        logger.error("Unexpected error in 'waitForContainerLogsToInclude':", sys.exc_info()[0])
+        traceback.print_exc()
+
+    return False
+
 
 def detatchLocalDockerInfra(spec):
     logger = logging.getLogger("root")
@@ -127,9 +182,20 @@ def detatchLocalDockerInfra(spec):
     pauseIfInteractiveDebug(logger,"Press any key to continue detatching Docker resources...")
 
     for id in spec["container_ids"]:
-        logger.info("Stopping container " + id)
-        container = client.containers.get(id)
-        container.stop()
+        try:
+            container = client.containers.get(id)
+
+            logger.debug("Container " + container.name + " logs:")
+            logger.debug(container.logs())
+
+            logger.info("Stopping container " + id)
+            container.stop()
+            if not auto_remove_containers:
+                container.remove()
+
+        except Exception as err:
+            logger.error("Unexpected error in 'detatchLocalDockerInfra'[0]:", sys.exc_info()[0])
+            traceback.print_exc()
 
     time.sleep( 5 )
 
@@ -137,8 +203,12 @@ def detatchLocalDockerInfra(spec):
 
     if networkId is not None:
         logger.info("Removing network " + networkId)
-        network = client.networks.get(networkId)
-        network.remove()
+        try:
+            network = client.networks.get(networkId)
+            network.remove()
+        except Exception as err:
+            logger.error("Unexpected error in 'detatchLocalDockerInfra'[1]:", sys.exc_info()[0])
+            traceback.print_exc()
 
 def parseInfraSpec(rawspec):
     # docker#2,neotys/neoload-loadgenerator:6.10
@@ -168,7 +238,7 @@ def parseInfraSpec(rawspec):
             raise ValueError("Don't let's be silly. You cannot have more than 10 load generator containers on the same host.")
 
         ret["numOfLGs"] = numOfLGs
-        ret["ctrlImage"] = lgImage.replace("-loadgenerator:","-controller:")
+        ret["ctrlImage"] = lgImage.replace("-loadgenerator","-controller")
         ret["lgImage"] = lgImage
         return ret
     else:

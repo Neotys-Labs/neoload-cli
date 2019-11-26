@@ -32,7 +32,7 @@ def setInteractiveMode(enabled):
     interactiveMode = enabled
 
 def pauseIfInteractiveDebug(logger,msgIfDebug=None):
-    msg = "Debugging WAIT: press any key to continue...at your own risk" if msgIfDebug is None else msgIfDebug
+    msg = "Debugging WAIT: press enter to continue...at your own risk" if msgIfDebug is None else msgIfDebug
     if isLoggerInDebug(logger) and isInteractiveMode():
         input(msg)
         return True
