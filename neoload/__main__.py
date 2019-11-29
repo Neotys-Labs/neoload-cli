@@ -496,7 +496,10 @@ class Logger(object):
         if self.log is not None:
             self.log.write(message)
 
-    def flush():
+    def flush(**kwargs):
+        for key, value in kwargs.items():
+            print("{0} = {1}".format(key, value))
+            
         self.terminal.flush()
         if self.log is not None:
             self.log.flush()
