@@ -29,6 +29,7 @@ setup(name='neoload',
           'pprint',
           'docker',
           'coloredlogs',
+          'junit-xml',
       ],
       entry_points={
         'console_scripts': [

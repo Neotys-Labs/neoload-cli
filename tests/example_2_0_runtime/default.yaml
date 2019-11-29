@@ -1,4 +1,4 @@
-name: NeoLoad-as-code-examples-2_0
+name: NeoLoad-CLI-example-2_0
 includes:
 - paths/geosearch_get.yaml
 

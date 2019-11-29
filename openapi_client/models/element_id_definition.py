@@ -61,7 +61,7 @@ class ElementIdDefinition(object):
     def id(self):
         """Gets the id of this ElementIdDefinition.  # noqa: E501
 
-        The id of the element. Can be a specific element identifier or one of the following keywords: all-requests, all-pages, all-transactions  # noqa: E501
+        The id of the element. Can be a specific element identifier or one of the following keywords: - all-requests - all-pages - all-transactions  # noqa: E501
 
         :return: The id of this ElementIdDefinition.  # noqa: E501
         :rtype: str
@@ -72,7 +72,7 @@ class ElementIdDefinition(object):
     def id(self, id):
         """Sets the id of this ElementIdDefinition.
 
-        The id of the element. Can be a specific element identifier or one of the following keywords: all-requests, all-pages, all-transactions  # noqa: E501
+        The id of the element. Can be a specific element identifier or one of the following keywords: - all-requests - all-pages - all-transactions  # noqa: E501
 
         :param id: The id of this ElementIdDefinition.  # noqa: E501
         :type: str
@@ -98,6 +98,14 @@ class ElementIdDefinition(object):
         :param statistics: The statistics of this ElementIdDefinition.  # noqa: E501
         :type: list[str]
         """
+        allowed_values = ["AVG_DURATION", "MIN_DURATION", "MAX_DURATION", "COUNT", "THROUGHPUT", "ELEMENTS_PER_SECOND", "ERRORS", "ERRORS_PER_SECOND", "ERROR_RATE", "AVG_TTFB", "MIN_TTFB", "MAX_TTFB", "PERCENTILES_DURATION"]  # noqa: E501
+        if (self.local_vars_configuration.client_side_validation and
+                not set(statistics).issubset(set(allowed_values))):  # noqa: E501
+            raise ValueError(
+                "Invalid values for `statistics` [{0}], must be a subset of [{1}]"  # noqa: E501
+                .format(", ".join(map(str, set(statistics) - set(allowed_values))),  # noqa: E501
+                        ", ".join(map(str, allowed_values)))
+            )
 
         self._statistics = statistics
 

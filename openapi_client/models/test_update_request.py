@@ -66,7 +66,7 @@ class TestUpdateRequest(object):
     def name(self):
         """Gets the name of this TestUpdateRequest.  # noqa: E501
 
-        Name of the test.  # noqa: E501
+        Name of the test result.  # noqa: E501
 
         :return: The name of this TestUpdateRequest.  # noqa: E501
         :rtype: str
@@ -77,7 +77,7 @@ class TestUpdateRequest(object):
     def name(self, name):
         """Sets the name of this TestUpdateRequest.
 
-        Name of the test.  # noqa: E501
+        Name of the test result.  # noqa: E501
 
         :param name: The name of this TestUpdateRequest.  # noqa: E501
         :type: str
@@ -89,7 +89,7 @@ class TestUpdateRequest(object):
     def description(self):
         """Gets the description of this TestUpdateRequest.  # noqa: E501
 
-        Description of the test.  # noqa: E501
+        Description of the test result.  # noqa: E501
 
         :return: The description of this TestUpdateRequest.  # noqa: E501
         :rtype: str
@@ -100,7 +100,7 @@ class TestUpdateRequest(object):
     def description(self, description):
         """Sets the description of this TestUpdateRequest.
 
-        Description of the test.  # noqa: E501
+        Description of the test result.  # noqa: E501
 
         :param description: The description of this TestUpdateRequest.  # noqa: E501
         :type: str
@@ -112,7 +112,7 @@ class TestUpdateRequest(object):
     def quality_status(self):
         """Gets the quality_status of this TestUpdateRequest.  # noqa: E501
 
-        Quality status of the test.  # noqa: E501
+        Quality status of the test result.  # noqa: E501
 
         :return: The quality_status of this TestUpdateRequest.  # noqa: E501
         :rtype: str
@@ -123,7 +123,7 @@ class TestUpdateRequest(object):
     def quality_status(self, quality_status):
         """Sets the quality_status of this TestUpdateRequest.
 
-        Quality status of the test.  # noqa: E501
+        Quality status of the test result.  # noqa: E501
 
         :param quality_status: The quality_status of this TestUpdateRequest.  # noqa: E501
         :type: str

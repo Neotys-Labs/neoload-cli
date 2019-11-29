@@ -116,7 +116,7 @@ class TestDefinition(object):
     def id(self):
         """Gets the id of this TestDefinition.  # noqa: E501
 
-        Unique identifier of the test.  # noqa: E501
+        Unique identifier of the test result.  # noqa: E501
 
         :return: The id of this TestDefinition.  # noqa: E501
         :rtype: str
@@ -127,7 +127,7 @@ class TestDefinition(object):
     def id(self, id):
         """Sets the id of this TestDefinition.
 
-        Unique identifier of the test.  # noqa: E501
+        Unique identifier of the test result.  # noqa: E501
 
         :param id: The id of this TestDefinition.  # noqa: E501
         :type: str
@@ -139,7 +139,7 @@ class TestDefinition(object):
     def name(self):
         """Gets the name of this TestDefinition.  # noqa: E501
 
-        Name of the test.  # noqa: E501
+        Name of the test result.  # noqa: E501
 
         :return: The name of this TestDefinition.  # noqa: E501
         :rtype: str
@@ -150,7 +150,7 @@ class TestDefinition(object):
     def name(self, name):
         """Sets the name of this TestDefinition.
 
-        Name of the test.  # noqa: E501
+        Name of the test result.  # noqa: E501
 
         :param name: The name of this TestDefinition.  # noqa: E501
         :type: str
@@ -162,7 +162,7 @@ class TestDefinition(object):
     def description(self):
         """Gets the description of this TestDefinition.  # noqa: E501
 
-        Description of the test.  # noqa: E501
+        Description of the test result.  # noqa: E501
 
         :return: The description of this TestDefinition.  # noqa: E501
         :rtype: str
@@ -173,7 +173,7 @@ class TestDefinition(object):
     def description(self, description):
         """Sets the description of this TestDefinition.
 
-        Description of the test.  # noqa: E501
+        Description of the test result.  # noqa: E501
 
         :param description: The description of this TestDefinition.  # noqa: E501
         :type: str
@@ -237,7 +237,7 @@ class TestDefinition(object):
     def lg_count(self):
         """Gets the lg_count of this TestDefinition.  # noqa: E501
 
-        Total number of Load Generators used in the test.  # noqa: E501
+        Total number of Load Generators used in the test result.  # noqa: E501
 
         :return: The lg_count of this TestDefinition.  # noqa: E501
         :rtype: int
@@ -248,7 +248,7 @@ class TestDefinition(object):
     def lg_count(self, lg_count):
         """Sets the lg_count of this TestDefinition.
 
-        Total number of Load Generators used in the test.  # noqa: E501
+        Total number of Load Generators used in the test result.  # noqa: E501
 
         :param lg_count: The lg_count of this TestDefinition.  # noqa: E501
         :type: int
@@ -306,7 +306,7 @@ class TestDefinition(object):
     def status(self):
         """Gets the status of this TestDefinition.  # noqa: E501
 
-        Status of the test.  # noqa: E501
+        Status of the test result.  # noqa: E501
 
         :return: The status of this TestDefinition.  # noqa: E501
         :rtype: str
@@ -317,7 +317,7 @@ class TestDefinition(object):
     def status(self, status):
         """Sets the status of this TestDefinition.
 
-        Status of the test.  # noqa: E501
+        Status of the test result.  # noqa: E501
 
         :param status: The status of this TestDefinition.  # noqa: E501
         :type: str
@@ -335,7 +335,7 @@ class TestDefinition(object):
     def quality_status(self):
         """Gets the quality_status of this TestDefinition.  # noqa: E501
 
-        Quality status of the test.  # noqa: E501
+        Quality status of the test result.  # noqa: E501
 
         :return: The quality_status of this TestDefinition.  # noqa: E501
         :rtype: str
@@ -346,7 +346,7 @@ class TestDefinition(object):
     def quality_status(self, quality_status):
         """Sets the quality_status of this TestDefinition.
 
-        Quality status of the test.  # noqa: E501
+        Quality status of the test result.  # noqa: E501
 
         :param quality_status: The quality_status of this TestDefinition.  # noqa: E501
         :type: str

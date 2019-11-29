@@ -46,7 +46,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
                                  data. Default is True.
@@ -71,7 +71,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -147,14 +147,14 @@ class ResultsApi(object):
     def get_test(self, test_id, **kwargs):  # noqa: E501
         """Test result description  # noqa: E501
 
-        Provides a test result description using a unique test identifier. Provides name, dates, owner ...  # noqa: E501
+        Provides a test result description using a unique test result identifier. Provides name, dates, owner ...  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test(test_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
                                  data. Default is True.
@@ -172,14 +172,14 @@ class ResultsApi(object):
     def get_test_with_http_info(self, test_id, **kwargs):  # noqa: E501
         """Test result description  # noqa: E501
 
-        Provides a test result description using a unique test identifier. Provides name, dates, owner ...  # noqa: E501
+        Provides a test result description using a unique test result identifier. Provides name, dates, owner ...  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_with_http_info(test_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -253,16 +253,16 @@ class ResultsApi(object):
             collection_formats=collection_formats)
 
     def get_test_element_definition(self, test_id, element_id, **kwargs):  # noqa: E501
-        """Test element definition  # noqa: E501
+        """Test result element definition  # noqa: E501
 
-        Provides a test element definition.  # noqa: E501
+        Provides a test result element definition.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_element_definition(test_id, element_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str element_id: Unique identifier representing a specific element. (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -279,16 +279,16 @@ class ResultsApi(object):
         return self.get_test_element_definition_with_http_info(test_id, element_id, **kwargs)  # noqa: E501
 
     def get_test_element_definition_with_http_info(self, test_id, element_id, **kwargs):  # noqa: E501
-        """Test element definition  # noqa: E501
+        """Test result element definition  # noqa: E501
 
-        Provides a test element definition.  # noqa: E501
+        Provides a test result element definition.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_element_definition_with_http_info(test_id, element_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str element_id: Unique identifier representing a specific element. (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
@@ -378,7 +378,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str category: Category of the elements to return. (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -404,7 +404,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str category: Category of the elements to return. (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
@@ -484,17 +484,133 @@ class ResultsApi(object):
             _request_timeout=local_var_params.get('_request_timeout'),
             collection_formats=collection_formats)
 
-    def get_test_elements_points(self, test_id, element_id, statistics, **kwargs):  # noqa: E501
-        """Tests elements points since the beginning of the test  # noqa: E501
+    def get_test_elements_percentiles(self, test_id, element_id, **kwargs):  # noqa: E501
+        """Test result percentiles transaction since the beginning of the test result  # noqa: E501
 
-        Provides all the ponits of a test element for the selected statistics.  # noqa: E501
+        Provides the percentiles of a test result transaction.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.get_test_elements_percentiles(test_id, element_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool: execute request asynchronously
+        :param str test_id: Unique identifier representing a specific test result. (required)
+        :param str element_id: Unique identifier representing a specific element. (required)
+        :param _preload_content: if False, the urllib3.HTTPResponse object will
+                                 be returned without reading/decoding response
+                                 data. Default is True.
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :return: list[PercentilesPoints]
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        return self.get_test_elements_percentiles_with_http_info(test_id, element_id, **kwargs)  # noqa: E501
+
+    def get_test_elements_percentiles_with_http_info(self, test_id, element_id, **kwargs):  # noqa: E501
+        """Test result percentiles transaction since the beginning of the test result  # noqa: E501
+
+        Provides the percentiles of a test result transaction.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.get_test_elements_percentiles_with_http_info(test_id, element_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool: execute request asynchronously
+        :param str test_id: Unique identifier representing a specific test result. (required)
+        :param str element_id: Unique identifier representing a specific element. (required)
+        :param _return_http_data_only: response data without head status code
+                                       and headers
+        :param _preload_content: if False, the urllib3.HTTPResponse object will
+                                 be returned without reading/decoding response
+                                 data. Default is True.
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :return: tuple(list[PercentilesPoints], status_code(int), headers(HTTPHeaderDict))
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        local_var_params = locals()
+
+        all_params = ['test_id', 'element_id']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        for key, val in six.iteritems(local_var_params['kwargs']):
+            if key not in all_params:
+                raise ApiTypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method get_test_elements_percentiles" % key
+                )
+            local_var_params[key] = val
+        del local_var_params['kwargs']
+        # verify the required parameter 'test_id' is set
+        if self.api_client.client_side_validation and ('test_id' not in local_var_params or  # noqa: E501
+                                                        local_var_params['test_id'] is None):  # noqa: E501
+            raise ApiValueError("Missing the required parameter `test_id` when calling `get_test_elements_percentiles`")  # noqa: E501
+        # verify the required parameter 'element_id' is set
+        if self.api_client.client_side_validation and ('element_id' not in local_var_params or  # noqa: E501
+                                                        local_var_params['element_id'] is None):  # noqa: E501
+            raise ApiValueError("Missing the required parameter `element_id` when calling `get_test_elements_percentiles`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'test_id' in local_var_params:
+            path_params['testId'] = local_var_params['test_id']  # noqa: E501
+        if 'element_id' in local_var_params:
+            path_params['elementId'] = local_var_params['element_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['NeoloadAuthorizer']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/tests/{testId}/elements/{elementId}/percentiles', 'GET',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='list[PercentilesPoints]',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=local_var_params.get('async_req'),
+            _return_http_data_only=local_var_params.get('_return_http_data_only'),  # noqa: E501
+            _preload_content=local_var_params.get('_preload_content', True),
+            _request_timeout=local_var_params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def get_test_elements_points(self, test_id, element_id, statistics, **kwargs):  # noqa: E501
+        """Test results elements points since the beginning of the test result  # noqa: E501
+
+        Provides all the points of a test result element for the selected statistics.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_elements_points(test_id, element_id, statistics, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str element_id: Unique identifier representing a specific element. (required)
         :param str statistics: Comma-separated list of statistics to get. Available statistics are: AVG_DURATION (ms), MIN_DURATION (ms), MAX_DURATION (ms), COUNT, THROUGHPUT (Byte/s), ELEMENTS_PER_SECOND, ERRORS, ERRORS_PER_SECOND, ERROR_RATE (%), AVG_TTFB (ms), MIN_TTFB (ms), MAX_TTFB (ms).<br/> Example: AVG_DURATION,ELEMENTS_PER_SECOND (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -512,16 +628,16 @@ class ResultsApi(object):
         return self.get_test_elements_points_with_http_info(test_id, element_id, statistics, **kwargs)  # noqa: E501
 
     def get_test_elements_points_with_http_info(self, test_id, element_id, statistics, **kwargs):  # noqa: E501
-        """Tests elements points since the beginning of the test  # noqa: E501
+        """Test results elements points since the beginning of the test result  # noqa: E501
 
-        Provides all the ponits of a test element for the selected statistics.  # noqa: E501
+        Provides all the points of a test result element for the selected statistics.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_elements_points_with_http_info(test_id, element_id, statistics, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str element_id: Unique identifier representing a specific element. (required)
         :param str statistics: Comma-separated list of statistics to get. Available statistics are: AVG_DURATION (ms), MIN_DURATION (ms), MAX_DURATION (ms), COUNT, THROUGHPUT (Byte/s), ELEMENTS_PER_SECOND, ERRORS, ERRORS_PER_SECOND, ERROR_RATE (%), AVG_TTFB (ms), MIN_TTFB (ms), MAX_TTFB (ms).<br/> Example: AVG_DURATION,ELEMENTS_PER_SECOND (required)
         :param _return_http_data_only: response data without head status code
@@ -609,16 +725,16 @@ class ResultsApi(object):
             collection_formats=collection_formats)
 
     def get_test_elements_sla(self, test_id, element_id, **kwargs):  # noqa: E501
-        """Test elements SLA status since the beginning of the test  # noqa: E501
+        """Test result elements SLA status since the beginning of the test result  # noqa: E501
 
-        Provides the SLA status of a test element.  # noqa: E501
+        Provides the SLA status of a test result element.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_elements_sla(test_id, element_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str element_id: Unique identifier representing a specific element. (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -635,16 +751,16 @@ class ResultsApi(object):
         return self.get_test_elements_sla_with_http_info(test_id, element_id, **kwargs)  # noqa: E501
 
     def get_test_elements_sla_with_http_info(self, test_id, element_id, **kwargs):  # noqa: E501
-        """Test elements SLA status since the beginning of the test  # noqa: E501
+        """Test result elements SLA status since the beginning of the test result  # noqa: E501
 
-        Provides the SLA status of a test element.  # noqa: E501
+        Provides the SLA status of a test result element.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_elements_sla_with_http_info(test_id, element_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str element_id: Unique identifier representing a specific element. (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
@@ -725,16 +841,16 @@ class ResultsApi(object):
             collection_formats=collection_formats)
 
     def get_test_elements_values(self, test_id, element_id, **kwargs):  # noqa: E501
-        """Test elements values  # noqa: E501
+        """Test result elements values  # noqa: E501
 
-        Provides the values of a test element.  # noqa: E501
+        Provides the values of a test result element.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_elements_values(test_id, element_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str element_id: Unique identifier representing a specific element. (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -751,16 +867,16 @@ class ResultsApi(object):
         return self.get_test_elements_values_with_http_info(test_id, element_id, **kwargs)  # noqa: E501
 
     def get_test_elements_values_with_http_info(self, test_id, element_id, **kwargs):  # noqa: E501
-        """Test elements values  # noqa: E501
+        """Test result elements values  # noqa: E501
 
-        Provides the values of a test element.  # noqa: E501
+        Provides the values of a test result element.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_elements_values_with_http_info(test_id, element_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str element_id: Unique identifier representing a specific element. (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
@@ -841,16 +957,16 @@ class ResultsApi(object):
             collection_formats=collection_formats)
 
     def get_test_events(self, test_id, **kwargs):  # noqa: E501
-        """Tests events  # noqa: E501
+        """Test result events  # noqa: E501
 
-        List the events of the specified test according to the method parameters.  # noqa: E501
+        List the events of the specified test result according to the method parameters.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_events(test_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param list[EventType] types: The types of the events you expect to get. It will return all the types if the field is left empty. (Ctrl+click to select multiple values) 
         :param int limit: The maximum number of elements returned by this call. The maximum must be less than or equal to 200.
         :param int offset: The offset of the first element to return. Starting at this offset, the query will return a maximum of 'limit' elements.
@@ -869,16 +985,16 @@ class ResultsApi(object):
         return self.get_test_events_with_http_info(test_id, **kwargs)  # noqa: E501
 
     def get_test_events_with_http_info(self, test_id, **kwargs):  # noqa: E501
-        """Tests events  # noqa: E501
+        """Test result events  # noqa: E501
 
-        List the events of the specified test according to the method parameters.  # noqa: E501
+        List the events of the specified test result according to the method parameters.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_events_with_http_info(test_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param list[EventType] types: The types of the events you expect to get. It will return all the types if the field is left empty. (Ctrl+click to select multiple values) 
         :param int limit: The maximum number of elements returned by this call. The maximum must be less than or equal to 200.
         :param int offset: The offset of the first element to return. Starting at this offset, the query will return a maximum of 'limit' elements.
@@ -964,16 +1080,16 @@ class ResultsApi(object):
             collection_formats=collection_formats)
 
     def get_test_graph(self, test_id, **kwargs):  # noqa: E501
-        """Test Graph  # noqa: E501
+        """Test result Graph  # noqa: E501
 
-        Provides a graph from some stats of a test result.  # noqa: E501
+        Provides a graph from some stats of a test result.  Element statistics can be mixed with monitor statistics. Only limitation is around PERCENTILES_DURATION element statistic that cannot be mixed with other element statistics neither with monitor statistics.   # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_graph(test_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param TestRasterConfiguration test_raster_configuration:
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -990,16 +1106,16 @@ class ResultsApi(object):
         return self.get_test_graph_with_http_info(test_id, **kwargs)  # noqa: E501
 
     def get_test_graph_with_http_info(self, test_id, **kwargs):  # noqa: E501
-        """Test Graph  # noqa: E501
+        """Test result Graph  # noqa: E501
 
-        Provides a graph from some stats of a test result.  # noqa: E501
+        Provides a graph from some stats of a test result.  Element statistics can be mixed with monitor statistics. Only limitation is around PERCENTILES_DURATION element statistic that cannot be mixed with other element statistics neither with monitor statistics.   # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_graph_with_http_info(test_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param TestRasterConfiguration test_raster_configuration:
         :param _return_http_data_only: response data without head status code
                                        and headers
@@ -1080,16 +1196,16 @@ class ResultsApi(object):
             collection_formats=collection_formats)
 
     def get_test_monitor_definition(self, test_id, counter_id, **kwargs):  # noqa: E501
-        """Tests counter definition  # noqa: E501
+        """Test result counter definition  # noqa: E501
 
-        Provides the definition of a test counter.  # noqa: E501
+        Provides the definition of a test result counter.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_monitor_definition(test_id, counter_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str counter_id: Unique identifier representing a specific counter. (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -1106,16 +1222,16 @@ class ResultsApi(object):
         return self.get_test_monitor_definition_with_http_info(test_id, counter_id, **kwargs)  # noqa: E501
 
     def get_test_monitor_definition_with_http_info(self, test_id, counter_id, **kwargs):  # noqa: E501
-        """Tests counter definition  # noqa: E501
+        """Test result counter definition  # noqa: E501
 
-        Provides the definition of a test counter.  # noqa: E501
+        Provides the definition of a test result counter.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_monitor_definition_with_http_info(test_id, counter_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str counter_id: Unique identifier representing a specific counter. (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
@@ -1196,16 +1312,16 @@ class ResultsApi(object):
             collection_formats=collection_formats)
 
     def get_test_monitors(self, test_id, **kwargs):  # noqa: E501
-        """Test monitors  # noqa: E501
+        """Test result monitors  # noqa: E501
 
-        Provides all the tests counters of all monitors for a test result.  # noqa: E501
+        Provides all the test result counters of all monitors for a test result.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_monitors(test_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
                                  data. Default is True.
@@ -1221,16 +1337,16 @@ class ResultsApi(object):
         return self.get_test_monitors_with_http_info(test_id, **kwargs)  # noqa: E501
 
     def get_test_monitors_with_http_info(self, test_id, **kwargs):  # noqa: E501
-        """Test monitors  # noqa: E501
+        """Test result monitors  # noqa: E501
 
-        Provides all the tests counters of all monitors for a test result.  # noqa: E501
+        Provides all the test result counters of all monitors for a test result.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_monitors_with_http_info(test_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -1304,16 +1420,16 @@ class ResultsApi(object):
             collection_formats=collection_formats)
 
     def get_test_monitors_points(self, test_id, counter_id, **kwargs):  # noqa: E501
-        """Tests monitors points  # noqa: E501
+        """Test result monitors points  # noqa: E501
 
-        Provides all the points of a test counter. The values are the average on the specified interval.  # noqa: E501
+        Provides all the points of a test result counter. The values are the average on the specified interval.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_monitors_points(test_id, counter_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str counter_id: Unique identifier representing a specific counter. (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -1330,16 +1446,16 @@ class ResultsApi(object):
         return self.get_test_monitors_points_with_http_info(test_id, counter_id, **kwargs)  # noqa: E501
 
     def get_test_monitors_points_with_http_info(self, test_id, counter_id, **kwargs):  # noqa: E501
-        """Tests monitors points  # noqa: E501
+        """Test result monitors points  # noqa: E501
 
-        Provides all the points of a test counter. The values are the average on the specified interval.  # noqa: E501
+        Provides all the points of a test result counter. The values are the average on the specified interval.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_monitors_points_with_http_info(test_id, counter_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str counter_id: Unique identifier representing a specific counter. (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
@@ -1420,16 +1536,16 @@ class ResultsApi(object):
             collection_formats=collection_formats)
 
     def get_test_monitors_values(self, test_id, counter_id, **kwargs):  # noqa: E501
-        """Tests monitors values  # noqa: E501
+        """Test result monitors values  # noqa: E501
 
-        Provides the values of a test counter.  # noqa: E501
+        Provides the values of a test result counter.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_monitors_values(test_id, counter_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str counter_id: Unique identifier representing a specific counter. (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -1446,16 +1562,16 @@ class ResultsApi(object):
         return self.get_test_monitors_values_with_http_info(test_id, counter_id, **kwargs)  # noqa: E501
 
     def get_test_monitors_values_with_http_info(self, test_id, counter_id, **kwargs):  # noqa: E501
-        """Tests monitors values  # noqa: E501
+        """Test result monitors values  # noqa: E501
 
-        Provides the values of a test counter.  # noqa: E501
+        Provides the values of a test result counter.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_monitors_values_with_http_info(test_id, counter_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str counter_id: Unique identifier representing a specific counter. (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
@@ -1536,7 +1652,7 @@ class ResultsApi(object):
             collection_formats=collection_formats)
 
     def get_test_multi_graph(self, **kwargs):  # noqa: E501
-        """Test MultiGraph  # noqa: E501
+        """Test results MultiGraph  # noqa: E501
 
         Provides a graph from some stats of some tests result.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
@@ -1561,7 +1677,7 @@ class ResultsApi(object):
         return self.get_test_multi_graph_with_http_info(**kwargs)  # noqa: E501
 
     def get_test_multi_graph_with_http_info(self, **kwargs):  # noqa: E501
-        """Test MultiGraph  # noqa: E501
+        """Test results MultiGraph  # noqa: E501
 
         Provides a graph from some stats of some tests result.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
@@ -1653,7 +1769,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str status: The status of the element you expect to get the SLA for. It will return all the statuses if the field is left empty.
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -1679,7 +1795,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str status: The status of the element you expect to get the SLA for. It will return all the statuses if the field is left empty.
         :param _return_http_data_only: response data without head status code
                                        and headers
@@ -1765,7 +1881,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str status: The status of the element you expect to get the SLA for. It will return all the statuses if the field is left empty.
         :param str category: The category of the element you expect to get the SLA for. It will return all the categories if the field is left empty.
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -1792,7 +1908,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str status: The status of the element you expect to get the SLA for. It will return all the statuses if the field is left empty.
         :param str category: The category of the element you expect to get the SLA for. It will return all the categories if the field is left empty.
         :param _return_http_data_only: response data without head status code
@@ -1881,7 +1997,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str status: The status of the element you expect to get the SLA for. It will return all the statuses if the field is left empty.
         :param str category: The category of the element you expect to get the SLA for. It will return all the categories if the field is left empty.
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -1908,7 +2024,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param str status: The status of the element you expect to get the SLA for. It will return all the statuses if the field is left empty.
         :param str category: The category of the element you expect to get the SLA for. It will return all the categories if the field is left empty.
         :param _return_http_data_only: response data without head status code
@@ -1990,14 +2106,14 @@ class ResultsApi(object):
     def get_test_statistics(self, test_id, **kwargs):  # noqa: E501
         """Test result main statistics  # noqa: E501
 
-        Provides the main statistics of a test result. For a runnning test, these statistics are live, for a finished test, those are average for the all test.  # noqa: E501
+        Provides the main statistics of a test result. For a runnning test, these statistics are live, for a test result, those are average for the all test result.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_statistics(test_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
                                  data. Default is True.
@@ -2015,14 +2131,14 @@ class ResultsApi(object):
     def get_test_statistics_with_http_info(self, test_id, **kwargs):  # noqa: E501
         """Test result main statistics  # noqa: E501
 
-        Provides the main statistics of a test result. For a runnning test, these statistics are live, for a finished test, those are average for the all test.  # noqa: E501
+        Provides the main statistics of a test result. For a runnning test, these statistics are live, for a test result, those are average for the all test result.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_statistics_with_http_info(test_id, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -2105,12 +2221,12 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str status: Returns only the test with the specified status.
-        :param str project: Project name. Returns only the tests of the specified project.
-        :param str author: The author of the test. Returns only the tests launched by the specified author.
+        :param str status: Returns only the test results with the specified status.
+        :param str project: Project name. Returns only the test results of the specified project.
+        :param str author: The author of the test result. Returns only the test results launched by the specified author.
         :param int limit: The maximum number of elements returned by this call. The maximum must be less than or equal to 200.
         :param int offset: The offset of the first element to return. Starting at this offset, the query will return a maximum of 'limit' elements.
-        :param str fields: Comma-separated list of fields to include in the json test definition.
+        :param str fields: Comma-separated list of fields to include in the json test result definition.
         :param bool pretty: If true the Json returned is human readable.
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -2136,12 +2252,12 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str status: Returns only the test with the specified status.
-        :param str project: Project name. Returns only the tests of the specified project.
-        :param str author: The author of the test. Returns only the tests launched by the specified author.
+        :param str status: Returns only the test results with the specified status.
+        :param str project: Project name. Returns only the test results of the specified project.
+        :param str author: The author of the test result. Returns only the test results launched by the specified author.
         :param int limit: The maximum number of elements returned by this call. The maximum must be less than or equal to 200.
         :param int offset: The offset of the first element to return. Starting at this offset, the query will return a maximum of 'limit' elements.
-        :param str fields: Comma-separated list of fields to include in the json test definition.
+        :param str fields: Comma-separated list of fields to include in the json test result definition.
         :param bool pretty: If true the Json returned is human readable.
         :param _return_http_data_only: response data without head status code
                                        and headers
@@ -2235,7 +2351,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param MonitorPostRequest monitor_post_request: List of custom monitors (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -2261,7 +2377,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param MonitorPostRequest monitor_post_request: List of custom monitors (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
@@ -2355,7 +2471,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param TestUpdateRequest test_update_request: (required)
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
@@ -2381,7 +2497,7 @@ class ResultsApi(object):
         >>> result = thread.get()
 
         :param async_req bool: execute request asynchronously
-        :param str test_id: Unique identifier representing a specific test. (required)
+        :param str test_id: Unique identifier representing a specific test result. (required)
         :param TestUpdateRequest test_update_request: (required)
         :param _return_http_data_only: response data without head status code
                                        and headers
