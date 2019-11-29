@@ -497,13 +497,15 @@ class Logger(object):
             self.log.write(message)
 
     def flush(self,**kwargs):
-        for key, value in kwargs.items():
-            print("{0} = {1}".format(key, value))
+        try:
+            for key, value in kwargs.items():
+                print("{0} = {1}".format(key, value))
 
-        self.terminal.flush()
-        if self.log is not None:
-            self.log.flush()
-
+            self.terminal.flush()
+            if self.log is not None:
+                self.log.flush()
+        except Exception as e:
+            logger.error("Logger.flush error:", sys.exc_info()[0])
 
 if __name__ == '__main__':
     main()
