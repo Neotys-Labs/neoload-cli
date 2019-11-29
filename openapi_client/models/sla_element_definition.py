@@ -36,7 +36,7 @@ class SLAElementDefinition(object):
         'element_id': 'str',
         'name': 'str',
         'category': 'str',
-        'user_path': 'str',
+        'userpath': 'str',
         'parent': 'str'
     }
 
@@ -44,11 +44,11 @@ class SLAElementDefinition(object):
         'element_id': 'elementID',
         'name': 'name',
         'category': 'category',
-        'user_path': 'userPath',
+        'userpath': 'userpath',
         'parent': 'parent'
     }
 
-    def __init__(self, element_id=None, name=None, category=None, user_path=None, parent=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, element_id=None, name=None, category=None, userpath=None, parent=None, local_vars_configuration=None):  # noqa: E501
         """SLAElementDefinition - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration()
@@ -57,7 +57,7 @@ class SLAElementDefinition(object):
         self._element_id = None
         self._name = None
         self._category = None
-        self._user_path = None
+        self._userpath = None
         self._parent = None
         self.discriminator = None
 
@@ -67,8 +67,8 @@ class SLAElementDefinition(object):
             self.name = name
         if category is not None:
             self.category = category
-        if user_path is not None:
-            self.user_path = user_path
+        if userpath is not None:
+            self.userpath = userpath
         if parent is not None:
             self.parent = parent
 
@@ -146,27 +146,27 @@ class SLAElementDefinition(object):
         self._category = category
 
     @property
-    def user_path(self):
-        """Gets the user_path of this SLAElementDefinition.  # noqa: E501
+    def userpath(self):
+        """Gets the userpath of this SLAElementDefinition.  # noqa: E501
 
         The name of the user path in which the element is.  # noqa: E501
 
-        :return: The user_path of this SLAElementDefinition.  # noqa: E501
+        :return: The userpath of this SLAElementDefinition.  # noqa: E501
         :rtype: str
         """
-        return self._user_path
+        return self._userpath
 
-    @user_path.setter
-    def user_path(self, user_path):
-        """Sets the user_path of this SLAElementDefinition.
+    @userpath.setter
+    def userpath(self, userpath):
+        """Sets the userpath of this SLAElementDefinition.
 
         The name of the user path in which the element is.  # noqa: E501
 
-        :param user_path: The user_path of this SLAElementDefinition.  # noqa: E501
+        :param userpath: The userpath of this SLAElementDefinition.  # noqa: E501
         :type: str
         """
 
-        self._user_path = user_path
+        self._userpath = userpath
 
     @property
     def parent(self):

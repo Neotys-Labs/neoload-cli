@@ -15,27 +15,45 @@ import pprint
 auto_remove_containers = True
 max_container_readiness_wait_sec = 60
 
-def attachInfra(profile,rawspec):
+def attachInfra(profile,rawspec,explicit):
     spec = parseInfraSpec(rawspec)
     if spec["provider"] == "docker":
-        return attachLocalDockerInfra(profile,spec)
+        return attachLocalDockerInfra(profile,spec,explicit)
     else:
         raise NotImplementedError()
 
-def detatchInfra(spec):
+def detatchInfra(spec,explicit):
     logger = logging.getLogger("root")
     logger.info("detatchInfra: "+spec["provider"])
     if spec["provider"] == "docker":
-        return detatchLocalDockerInfra(spec)
+        return detatchLocalDockerInfra(explicit,spec)
     else:
         logger.info("Attached infrastructure lacked a provider, so no detatched occured.")
 
+def isAlreadyAttached(infra):
+    logger = logging.getLogger("root")
+    if infra['provider'] == 'docker':
+        try:
+            client = docker.from_env()
+            containers = []
+            for containerId in infra['container_ids']:
+                containers.append(client.containers.get(containerId))
+            network = client.networks.get(infra['network_id'])
+
+            if all(map(lambda x: x.status == 'running', containers)) and len(network.name) > 0:
+                return True
+        except:
+            logger.error("Unexpected error in 'isAlreadyAttached':", sys.exc_info()[0])
+            traceback.print_exc()
+
+    return False
+
 _containerNamingPrefix = "neoload_cli"
 
-def attachLocalDockerInfra(profile,spec):
+def attachLocalDockerInfra(profile,spec,explicit):
     logger = logging.getLogger("root")
 
-    logger.warning("Connecting to local Docker host")
+    cprintOrLogInfo(explicit,logger,"Connecting to local Docker host")
     client = docker.from_env()
 
     use_nts = "ntsurl" in profile and "ntslogin" in profile
@@ -69,26 +87,30 @@ def attachLocalDockerInfra(profile,spec):
     randSubnet2 = random.randint(50,250)
     networkName = _containerNamingPrefix + runId + "_network"
     subnet3s = "172."+str(randSubnet2)+".0"
+    labelsall = {
+        'neoload-cli': runId
+    }
     try:
         network = client.networks.create(
-            networkName,
-            driver="bridge",
-            attachable=True,
+            name = networkName,
+            driver = "bridge",
+            attachable = True,
+            labels = labelsall,
             #scope="global",
-            ipam=docker.types.IPAMConfig(
-                driver='default',
+            ipam = docker.types.IPAMConfig(
+                driver = 'default',
                 #options={
                 #    'subnet': subnet3s+".0/16",
                 #    'gateway': subnet3s+".1"
                 #}
                 pool_configs=[docker.types.IPAMPool(
-                    subnet=subnet3s+'.0/16',
-                    iprange=subnet3s+'.0/24',
-                    gateway=subnet3s+'.254'
+                    subnet = subnet3s+'.0/16',
+                    iprange = subnet3s+'.0/24',
+                    gateway = subnet3s+'.254'
                 )]
             )
         )
-        logger.info("Created docker network '" + networkName + "'")
+        cprintOrLogInfo(explicit,logger,"Created docker network '" + networkName + "'")
         logger.debug(network.attrs)
         spec["network_id"] = network.id
 
@@ -118,13 +140,14 @@ def attachLocalDockerInfra(profile,spec):
             }
             lgenv = commonenv.copy()
             lgenv.update(hostandport)
-            logger.info("Attaching load generator " + str(x+1) + ".")
+            cprintOrLogInfo(explicit,logger,"Attaching load generator " + str(x+1) + ".")
             portspec = {}
             portspec[""+str(lgport)+"/tcp"] = lgport
             lg = client.containers.run(
                 image=lgImage,
                 name = lghost,#lgname,
-                #network = networkName,
+                #network = networkName, # handled with explicit .connect below
+                labels = labelsall,
                 detach=True,
                 auto_remove=auto_remove_containers,
                 environment=lgenv,
@@ -134,13 +157,13 @@ def attachLocalDockerInfra(profile,spec):
             lglinks[lg.id] = lgname
             container_ids.append(lg.id)
             lg_container_ids.append(lg.id)
-            logger.info("Created load generator " + str(x+1) + ".")
+            cprintOrLogInfo(explicit,logger,"Created load generator " + str(x+1) + ".")
 
             network.connect(
                 container=lg.id,
                 ipv4_address=lghost
             )
-            logger.info("Attached load generator " + str(x+1) + " to network.")
+            cprintOrLogInfo(explicit,logger,"Attached load generator " + str(x+1) + " to network.")
 
             baseIpX += 1
 
@@ -148,6 +171,7 @@ def attachLocalDockerInfra(profile,spec):
             image=spec["ctrlImage"],
             name = _containerNamingPrefix + runId + "_ctrl",
             network = networkName,
+            labels = labelsall,
             detach=True,
             auto_remove=auto_remove_containers,
             environment=ctrlenv,
@@ -156,9 +180,9 @@ def attachLocalDockerInfra(profile,spec):
         )
         container_ids.append(ctrl.id)
         ctrl_container_id = ctrl.id
-        logger.info("Attached controller.")
+        cprintOrLogInfo(explicit,logger,"Attached controller.")
 
-        logger.info("Waiting for docker containers to be attached and ready.")
+        cprintOrLogInfo(explicit,logger,"Waiting for docker containers to be attached and ready.")
 
         #neoload.agent.Agent: Connection test to Neoload Web successful
         #neoload.controller.agent.ControllerAgent: Successfully connected to URL:
@@ -166,23 +190,24 @@ def attachLocalDockerInfra(profile,spec):
         waitingSuccess = False
 
         for container_id in lg_container_ids:
-            waitingSuccess = waitForContainerLogsToInclude(container_id,"Agent started|Connection test to Neoload Web successful|LoadGeneratorAgent running")
+            waitingSuccess = waitForContainerLogsToInclude(explicit,logger,container_id,"Agent started|Connection test to Neoload Web successful|LoadGeneratorAgent running")
             if not waitingSuccess:
                 logger.error("Couldn't ensure load generator readiness for " + container_id)
                 break
 
         if ctrl_container_id is not None:
-            waitingSuccess = waitForContainerLogsToInclude(ctrl_container_id,"Successfully connected to URL")
+            waitingSuccess = waitForContainerLogsToInclude(explicit,logger,ctrl_container_id,"Successfully connected to URL")
             if not waitingSuccess:
                 logger.error("Couldn't ensure controller readiness for " + container_id)
 
         if waitingSuccess:
-            logger.info("All containers are attached and ready for use.")
+            cprintOrLogInfo(explicit,logger,"All containers are attached and ready for use.")
 
         if not pauseIfInteractiveDebug(logger):
             time.sleep( 1 )
 
         spec["ready"] = True
+
     except Exception as err:
         logger.error("Unexpected error in 'attachLocalDockerInfra':", sys.exc_info()[0])
         traceback.print_exc()
@@ -192,9 +217,9 @@ def attachLocalDockerInfra(profile,spec):
 
     return spec
 
-def waitForContainerLogsToInclude(container_id, str_to_find):
+def waitForContainerLogsToInclude(explicit,logger,container_id, str_to_find):
     logger = logging.getLogger("root")
-    logger.info("Waiting for container " + container_id + " logs to indicate attachment readiness")
+    cprintOrLogInfo(explicit,logger,"Waiting for container " + container_id + " logs to indicate attachment readiness")
     client = docker.from_env()
     logs = ""
     wait_sec = 0
@@ -224,42 +249,85 @@ def waitForContainerLogsToInclude(container_id, str_to_find):
     return False
 
 
-def detatchLocalDockerInfra(spec):
+def detatchLocalDockerInfra(explicit,spec):
     logger = logging.getLogger("root")
     client = docker.from_env()
-    logger.debug(spec)
 
     pauseIfInteractiveDebug(logger,"Press any key to continue detatching Docker resources...")
 
     if 'container_ids' in spec:
-        for id in spec["container_ids"]:
-            try:
-                container = client.containers.get(id)
-
-                logger.debug("Container " + container.name + " logs:")
-                logger.debug(container.logs())
-
-                logger.info("Stopping container " + id)
-                container.stop()
-                if not auto_remove_containers:
-                    container.remove()
-
-            except Exception as err:
-                logger.error("Unexpected error in 'detatchLocalDockerInfra'[0]:", sys.exc_info()[0])
-                traceback.print_exc()
+        for containerId in spec["container_ids"]:
+            removeDockerContainer(client,explicit,containerId)
 
     time.sleep( 5 )
 
     if 'network_id' in spec:
         networkId = spec["network_id"]
         if networkId is not None:
-            logger.info("Removing network " + networkId)
-            try:
-                network = client.networks.get(networkId)
-                network.remove()
-            except Exception as err:
-                logger.error("Unexpected error in 'detatchLocalDockerInfra'[1]:", sys.exc_info()[0])
-                traceback.print_exc()
+            removeDockerNetwork(client,explicit,networkId)
+
+def removeDockerContainer(client,explicit,containerId):
+    logger = logging.getLogger("root")
+    try:
+        container = client.containers.get(containerId)
+
+        logger.debug("Container " + container.name + " logs:")
+        logger.debug(container.logs().decode("utf-8"))
+
+        cprintOrLogInfo(explicit,logger,"Stopping container " + containerId)
+        container.stop()
+        if not auto_remove_containers:
+            container.remove()
+
+    except Exception as err:
+        logger.error("Unexpected error in 'removeDockerContainer':", sys.exc_info()[0])
+        traceback.print_exc()
+
+def removeDockerNetwork(client,explicit,networkId):
+    logger = logging.getLogger("root")
+    cprintOrLogInfo(explicit,logger,"Removing network " + networkId)
+    try:
+        network = client.networks.get(networkId)
+        network.remove()
+    except Exception as err:
+        logger.error("Unexpected error in 'removeDockerNetwork':", sys.exc_info()[0])
+        traceback.print_exc()
+
+def detatchAllInfra(explicit):
+    logger = logging.getLogger("root")
+    client = docker.from_env()
+    filters = {
+        'label': 'neoload-cli'
+    }
+    containers = client.containers.list(
+        all = True,
+        filters = filters,
+    )
+    networks = client.networks.list(
+        filters = filters,
+    )
+    if len(containers) < 1 and len(networks) < 1:
+        cprintOrLogInfo(explicit,logger,"No containers or networks with 'neoload-cli' label to delete.")
+    else:
+        cprintOrLogInfo(explicit,logger,"Containers:\n\t" + "\n\t".join(map(lambda x: x.name, containers)))
+        cprintOrLogInfo(explicit,logger,"Networks:\n\t" + "\n\t".join(map(lambda x: x.name, networks)))
+        defaultDelete = not isInteractiveMode()
+        if dprompt({
+            'type': 'confirm',
+            'name': 'delete',
+            'message': "Are you sure you want to delete all neoload-cli containers and networks (label=neoload-cli) on this host?",
+            'default': defaultDelete, # important to be False for non-interactive (headless) contexts
+        }).get("delete"):
+            for container in containers:
+                removeDockerContainer(client,explicit,container.id)
+
+            for network in networks:
+                removeDockerNetwork(client,explicit,network.id)
+
+            #update all profiles with infra to None
+        return True
+
+    return False
 
 def parseInfraSpec(rawspec):
     # docker#2,neotys/neoload-loadgenerator:6.10

@@ -41,6 +41,7 @@ from openapi_client.models.event_definition import EventDefinition
 from openapi_client.models.event_type import EventType
 from openapi_client.models.inline_object import InlineObject
 from openapi_client.models.monitor_post_request import MonitorPostRequest
+from openapi_client.models.percentiles_points import PercentilesPoints
 from openapi_client.models.point import Point
 from openapi_client.models.project_definition import ProjectDefinition
 from openapi_client.models.rate_limit_error import RateLimitError

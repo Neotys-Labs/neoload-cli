@@ -50,7 +50,11 @@ class ElementValues(object):
         'success_rate': 'float',
         'failure_count': 'int',
         'failure_per_second': 'float',
-        'failure_rate': 'float'
+        'failure_rate': 'float',
+        'percentile50': 'float',
+        'percentile90': 'float',
+        'percentile95': 'float',
+        'percentile99': 'float'
     }
 
     attribute_map = {
@@ -71,10 +75,14 @@ class ElementValues(object):
         'success_rate': 'successRate',
         'failure_count': 'failureCount',
         'failure_per_second': 'failurePerSecond',
-        'failure_rate': 'failureRate'
+        'failure_rate': 'failureRate',
+        'percentile50': 'percentile50',
+        'percentile90': 'percentile90',
+        'percentile95': 'percentile95',
+        'percentile99': 'percentile99'
     }
 
-    def __init__(self, count=None, element_per_second=None, min_duration=None, max_duration=None, sum_duration=None, avg_duration=None, min_ttfb=None, max_ttfb=None, sum_ttfb=None, avg_ttfb=None, sum_downloaded_bytes=None, downloaded_bytes_per_second=None, success_count=None, success_per_second=None, success_rate=None, failure_count=None, failure_per_second=None, failure_rate=None, local_vars_configuration=None):  # noqa: E501
+    def __init__(self, count=None, element_per_second=None, min_duration=None, max_duration=None, sum_duration=None, avg_duration=None, min_ttfb=None, max_ttfb=None, sum_ttfb=None, avg_ttfb=None, sum_downloaded_bytes=None, downloaded_bytes_per_second=None, success_count=None, success_per_second=None, success_rate=None, failure_count=None, failure_per_second=None, failure_rate=None, percentile50=None, percentile90=None, percentile95=None, percentile99=None, local_vars_configuration=None):  # noqa: E501
         """ElementValues - a model defined in OpenAPI"""  # noqa: E501
         if local_vars_configuration is None:
             local_vars_configuration = Configuration()
@@ -98,6 +106,10 @@ class ElementValues(object):
         self._failure_count = None
         self._failure_per_second = None
         self._failure_rate = None
+        self._percentile50 = None
+        self._percentile90 = None
+        self._percentile95 = None
+        self._percentile99 = None
         self.discriminator = None
 
         if count is not None:
@@ -136,11 +148,20 @@ class ElementValues(object):
             self.failure_per_second = failure_per_second
         if failure_rate is not None:
             self.failure_rate = failure_rate
+        if percentile50 is not None:
+            self.percentile50 = percentile50
+        if percentile90 is not None:
+            self.percentile90 = percentile90
+        if percentile95 is not None:
+            self.percentile95 = percentile95
+        if percentile99 is not None:
+            self.percentile99 = percentile99
 
     @property
     def count(self):
         """Gets the count of this ElementValues.  # noqa: E501
 
+        Count statistics are the number of full executions of an element of a User Path. If the element is interrupted (because of error or end of test), then the count number is not incremented.  # noqa: E501
 
         :return: The count of this ElementValues.  # noqa: E501
         :rtype: int
@@ -151,6 +172,7 @@ class ElementValues(object):
     def count(self, count):
         """Sets the count of this ElementValues.
 
+        Count statistics are the number of full executions of an element of a User Path. If the element is interrupted (because of error or end of test), then the count number is not incremented.  # noqa: E501
 
         :param count: The count of this ElementValues.  # noqa: E501
         :type: int
@@ -162,6 +184,7 @@ class ElementValues(object):
     def element_per_second(self):
         """Gets the element_per_second of this ElementValues.  # noqa: E501
 
+        Number of iterations of the element per second.  # noqa: E501
 
         :return: The element_per_second of this ElementValues.  # noqa: E501
         :rtype: float
@@ -172,6 +195,7 @@ class ElementValues(object):
     def element_per_second(self, element_per_second):
         """Sets the element_per_second of this ElementValues.
 
+        Number of iterations of the element per second.  # noqa: E501
 
         :param element_per_second: The element_per_second of this ElementValues.  # noqa: E501
         :type: float
@@ -183,6 +207,7 @@ class ElementValues(object):
     def min_duration(self):
         """Gets the min_duration of this ElementValues.  # noqa: E501
 
+        Shortest response time, in milliseconds.  # noqa: E501
 
         :return: The min_duration of this ElementValues.  # noqa: E501
         :rtype: int
@@ -193,6 +218,7 @@ class ElementValues(object):
     def min_duration(self, min_duration):
         """Sets the min_duration of this ElementValues.
 
+        Shortest response time, in milliseconds.  # noqa: E501
 
         :param min_duration: The min_duration of this ElementValues.  # noqa: E501
         :type: int
@@ -204,6 +230,7 @@ class ElementValues(object):
     def max_duration(self):
         """Gets the max_duration of this ElementValues.  # noqa: E501
 
+        Longest response time, in milliseconds.  # noqa: E501
 
         :return: The max_duration of this ElementValues.  # noqa: E501
         :rtype: int
@@ -214,6 +241,7 @@ class ElementValues(object):
     def max_duration(self, max_duration):
         """Sets the max_duration of this ElementValues.
 
+        Longest response time, in milliseconds.  # noqa: E501
 
         :param max_duration: The max_duration of this ElementValues.  # noqa: E501
         :type: int
@@ -225,6 +253,7 @@ class ElementValues(object):
     def sum_duration(self):
         """Gets the sum_duration of this ElementValues.  # noqa: E501
 
+        Sum of response time of all iterations, in milliseconds.  # noqa: E501
 
         :return: The sum_duration of this ElementValues.  # noqa: E501
         :rtype: int
@@ -235,6 +264,7 @@ class ElementValues(object):
     def sum_duration(self, sum_duration):
         """Sets the sum_duration of this ElementValues.
 
+        Sum of response time of all iterations, in milliseconds.  # noqa: E501
 
         :param sum_duration: The sum_duration of this ElementValues.  # noqa: E501
         :type: int
@@ -246,6 +276,7 @@ class ElementValues(object):
     def avg_duration(self):
         """Gets the avg_duration of this ElementValues.  # noqa: E501
 
+        Average response time, in milliseconds.  # noqa: E501
 
         :return: The avg_duration of this ElementValues.  # noqa: E501
         :rtype: float
@@ -256,6 +287,7 @@ class ElementValues(object):
     def avg_duration(self, avg_duration):
         """Sets the avg_duration of this ElementValues.
 
+        Average response time, in milliseconds.  # noqa: E501
 
         :param avg_duration: The avg_duration of this ElementValues.  # noqa: E501
         :type: float
@@ -267,6 +299,7 @@ class ElementValues(object):
     def min_ttfb(self):
         """Gets the min_ttfb of this ElementValues.  # noqa: E501
 
+        Shortest time to first byte, in milliseconds.  # noqa: E501
 
         :return: The min_ttfb of this ElementValues.  # noqa: E501
         :rtype: int
@@ -277,6 +310,7 @@ class ElementValues(object):
     def min_ttfb(self, min_ttfb):
         """Sets the min_ttfb of this ElementValues.
 
+        Shortest time to first byte, in milliseconds.  # noqa: E501
 
         :param min_ttfb: The min_ttfb of this ElementValues.  # noqa: E501
         :type: int
@@ -288,6 +322,7 @@ class ElementValues(object):
     def max_ttfb(self):
         """Gets the max_ttfb of this ElementValues.  # noqa: E501
 
+        Longest time to first byte, in milliseconds.  # noqa: E501
 
         :return: The max_ttfb of this ElementValues.  # noqa: E501
         :rtype: int
@@ -298,6 +333,7 @@ class ElementValues(object):
     def max_ttfb(self, max_ttfb):
         """Sets the max_ttfb of this ElementValues.
 
+        Longest time to first byte, in milliseconds.  # noqa: E501
 
         :param max_ttfb: The max_ttfb of this ElementValues.  # noqa: E501
         :type: int
@@ -309,6 +345,7 @@ class ElementValues(object):
     def sum_ttfb(self):
         """Gets the sum_ttfb of this ElementValues.  # noqa: E501
 
+        Sum of time to first byte of all iterations, in milliseconds.  # noqa: E501
 
         :return: The sum_ttfb of this ElementValues.  # noqa: E501
         :rtype: int
@@ -319,6 +356,7 @@ class ElementValues(object):
     def sum_ttfb(self, sum_ttfb):
         """Sets the sum_ttfb of this ElementValues.
 
+        Sum of time to first byte of all iterations, in milliseconds.  # noqa: E501
 
         :param sum_ttfb: The sum_ttfb of this ElementValues.  # noqa: E501
         :type: int
@@ -330,6 +368,7 @@ class ElementValues(object):
     def avg_ttfb(self):
         """Gets the avg_ttfb of this ElementValues.  # noqa: E501
 
+        Average time to first byte, in milliseconds.  # noqa: E501
 
         :return: The avg_ttfb of this ElementValues.  # noqa: E501
         :rtype: float
@@ -340,6 +379,7 @@ class ElementValues(object):
     def avg_ttfb(self, avg_ttfb):
         """Sets the avg_ttfb of this ElementValues.
 
+        Average time to first byte, in milliseconds.  # noqa: E501
 
         :param avg_ttfb: The avg_ttfb of this ElementValues.  # noqa: E501
         :type: float
@@ -351,6 +391,7 @@ class ElementValues(object):
     def sum_downloaded_bytes(self):
         """Gets the sum_downloaded_bytes of this ElementValues.  # noqa: E501
 
+        Total size of network traffic for the element, in bytes.  # noqa: E501
 
         :return: The sum_downloaded_bytes of this ElementValues.  # noqa: E501
         :rtype: int
@@ -361,6 +402,7 @@ class ElementValues(object):
     def sum_downloaded_bytes(self, sum_downloaded_bytes):
         """Sets the sum_downloaded_bytes of this ElementValues.
 
+        Total size of network traffic for the element, in bytes.  # noqa: E501
 
         :param sum_downloaded_bytes: The sum_downloaded_bytes of this ElementValues.  # noqa: E501
         :type: int
@@ -372,6 +414,7 @@ class ElementValues(object):
     def downloaded_bytes_per_second(self):
         """Gets the downloaded_bytes_per_second of this ElementValues.  # noqa: E501
 
+        Average size of network traffic for the element, in bytes per seconds.  # noqa: E501
 
         :return: The downloaded_bytes_per_second of this ElementValues.  # noqa: E501
         :rtype: float
@@ -382,6 +425,7 @@ class ElementValues(object):
     def downloaded_bytes_per_second(self, downloaded_bytes_per_second):
         """Sets the downloaded_bytes_per_second of this ElementValues.
 
+        Average size of network traffic for the element, in bytes per seconds.  # noqa: E501
 
         :param downloaded_bytes_per_second: The downloaded_bytes_per_second of this ElementValues.  # noqa: E501
         :type: float
@@ -393,6 +437,7 @@ class ElementValues(object):
     def success_count(self):
         """Gets the success_count of this ElementValues.  # noqa: E501
 
+        Count of succeeded iterations.  # noqa: E501
 
         :return: The success_count of this ElementValues.  # noqa: E501
         :rtype: int
@@ -403,6 +448,7 @@ class ElementValues(object):
     def success_count(self, success_count):
         """Sets the success_count of this ElementValues.
 
+        Count of succeeded iterations.  # noqa: E501
 
         :param success_count: The success_count of this ElementValues.  # noqa: E501
         :type: int
@@ -414,6 +460,7 @@ class ElementValues(object):
     def success_per_second(self):
         """Gets the success_per_second of this ElementValues.  # noqa: E501
 
+        Count of succeeded iterations per second.  # noqa: E501
 
         :return: The success_per_second of this ElementValues.  # noqa: E501
         :rtype: float
@@ -424,6 +471,7 @@ class ElementValues(object):
     def success_per_second(self, success_per_second):
         """Sets the success_per_second of this ElementValues.
 
+        Count of succeeded iterations per second.  # noqa: E501
 
         :param success_per_second: The success_per_second of this ElementValues.  # noqa: E501
         :type: float
@@ -435,6 +483,7 @@ class ElementValues(object):
     def success_rate(self):
         """Gets the success_rate of this ElementValues.  # noqa: E501
 
+        Percentage of succeeded iterations out of count.  # noqa: E501
 
         :return: The success_rate of this ElementValues.  # noqa: E501
         :rtype: float
@@ -445,6 +494,7 @@ class ElementValues(object):
     def success_rate(self, success_rate):
         """Sets the success_rate of this ElementValues.
 
+        Percentage of succeeded iterations out of count.  # noqa: E501
 
         :param success_rate: The success_rate of this ElementValues.  # noqa: E501
         :type: float
@@ -456,6 +506,7 @@ class ElementValues(object):
     def failure_count(self):
         """Gets the failure_count of this ElementValues.  # noqa: E501
 
+        Count of failed iterations.  # noqa: E501
 
         :return: The failure_count of this ElementValues.  # noqa: E501
         :rtype: int
@@ -466,6 +517,7 @@ class ElementValues(object):
     def failure_count(self, failure_count):
         """Sets the failure_count of this ElementValues.
 
+        Count of failed iterations.  # noqa: E501
 
         :param failure_count: The failure_count of this ElementValues.  # noqa: E501
         :type: int
@@ -477,6 +529,7 @@ class ElementValues(object):
     def failure_per_second(self):
         """Gets the failure_per_second of this ElementValues.  # noqa: E501
 
+        Count of failed iterations per second.  # noqa: E501
 
         :return: The failure_per_second of this ElementValues.  # noqa: E501
         :rtype: float
@@ -487,6 +540,7 @@ class ElementValues(object):
     def failure_per_second(self, failure_per_second):
         """Sets the failure_per_second of this ElementValues.
 
+        Count of failed iterations per second.  # noqa: E501
 
         :param failure_per_second: The failure_per_second of this ElementValues.  # noqa: E501
         :type: float
@@ -498,6 +552,7 @@ class ElementValues(object):
     def failure_rate(self):
         """Gets the failure_rate of this ElementValues.  # noqa: E501
 
+        Percentage of failed iterations out of count.  # noqa: E501
 
         :return: The failure_rate of this ElementValues.  # noqa: E501
         :rtype: float
@@ -508,12 +563,105 @@ class ElementValues(object):
     def failure_rate(self, failure_rate):
         """Sets the failure_rate of this ElementValues.
 
+        Percentage of failed iterations out of count.  # noqa: E501
 
         :param failure_rate: The failure_rate of this ElementValues.  # noqa: E501
         :type: float
         """
 
         self._failure_rate = failure_rate
+
+    @property
+    def percentile50(self):
+        """Gets the percentile50 of this ElementValues.  # noqa: E501
+
+        50th percentile of the element duration, in milliseconds. Requires at least NeoLoad 7.1. Only available when test is terminated.  # noqa: E501
+
+        :return: The percentile50 of this ElementValues.  # noqa: E501
+        :rtype: float
+        """
+        return self._percentile50
+
+    @percentile50.setter
+    def percentile50(self, percentile50):
+        """Sets the percentile50 of this ElementValues.
+
+        50th percentile of the element duration, in milliseconds. Requires at least NeoLoad 7.1. Only available when test is terminated.  # noqa: E501
+
+        :param percentile50: The percentile50 of this ElementValues.  # noqa: E501
+        :type: float
+        """
+
+        self._percentile50 = percentile50
+
+    @property
+    def percentile90(self):
+        """Gets the percentile90 of this ElementValues.  # noqa: E501
+
+        90th percentile of the element duration, in milliseconds. Requires at least NeoLoad 7.1. Only available when test is terminated.  # noqa: E501
+
+        :return: The percentile90 of this ElementValues.  # noqa: E501
+        :rtype: float
+        """
+        return self._percentile90
+
+    @percentile90.setter
+    def percentile90(self, percentile90):
+        """Sets the percentile90 of this ElementValues.
+
+        90th percentile of the element duration, in milliseconds. Requires at least NeoLoad 7.1. Only available when test is terminated.  # noqa: E501
+
+        :param percentile90: The percentile90 of this ElementValues.  # noqa: E501
+        :type: float
+        """
+
+        self._percentile90 = percentile90
+
+    @property
+    def percentile95(self):
+        """Gets the percentile95 of this ElementValues.  # noqa: E501
+
+        95th percentile of the element duration, in milliseconds. Requires at least NeoLoad 7.1. Only available when test is terminated.  # noqa: E501
+
+        :return: The percentile95 of this ElementValues.  # noqa: E501
+        :rtype: float
+        """
+        return self._percentile95
+
+    @percentile95.setter
+    def percentile95(self, percentile95):
+        """Sets the percentile95 of this ElementValues.
+
+        95th percentile of the element duration, in milliseconds. Requires at least NeoLoad 7.1. Only available when test is terminated.  # noqa: E501
+
+        :param percentile95: The percentile95 of this ElementValues.  # noqa: E501
+        :type: float
+        """
+
+        self._percentile95 = percentile95
+
+    @property
+    def percentile99(self):
+        """Gets the percentile99 of this ElementValues.  # noqa: E501
+
+        99th percentile of the element duration, in milliseconds. Requires at least NeoLoad 7.1. Only available when test is terminated.  # noqa: E501
+
+        :return: The percentile99 of this ElementValues.  # noqa: E501
+        :rtype: float
+        """
+        return self._percentile99
+
+    @percentile99.setter
+    def percentile99(self, percentile99):
+        """Sets the percentile99 of this ElementValues.
+
+        99th percentile of the element duration, in milliseconds. Requires at least NeoLoad 7.1. Only available when test is terminated.  # noqa: E501
+
+        :param percentile99: The percentile99 of this ElementValues.  # noqa: E501
+        :type: float
+        """
+
+        self._percentile99 = percentile99
 
     def to_dict(self):
         """Returns the model properties as a dict"""

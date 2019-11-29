@@ -45,7 +45,7 @@ def askNLWAPI():
         #     #'validate': EmptyValidator,
         # },
     ]
-    answers = prompt(questions)
+    answers = dprompt(questions)
     return answers
 
 def getCurrentProfileName():
@@ -120,11 +120,13 @@ def loadProfile(proname):
         profile = getProfileByName(proname)
         if profile is None:
             cprint("Profile '"+proname+"' does not exist!", "red")
-            if prompt({
+            if not isInteractiveMode():
+                raise Exception("You must specify all required profile elements if you want to create a profile in non-interactive mode.")
+            if dprompt({
                 'type': 'confirm',
                 'name': 'create',
                 'message': "Would you like to create a new profile named '"+proname+"'?",
-                'default': False,
+                'default': False, # important to be False for non-interactive (headless) contexts
             }).get("create"):
                 answers = askNLWAPI()
                 profile = createOrUpdateProfile(proname,getNLWSaaSAPIURL(),answers.get("token"),answers.get("zone"))
@@ -152,7 +154,9 @@ def setZone(zoneId):
     if proname is None:
         proname = getDefaultProfileName()
     profile = getProfileByName(proname)
+
     profile["zone"] = zoneId
+
     _updateProfile(proname, profile)
     cprint("Profile["+proname+"] zone: "+profile.get("zone"), "green")
 
@@ -161,6 +165,38 @@ def setToken(token):
     if proname is None:
         proname = getDefaultProfileName()
     profile = getProfileByName(proname)
+
     profile["token"] = token
+
     _updateProfile(proname, profile)
     cprint("Profile["+proname+"] token set", "green")
+
+def updateProfileInfra(infra):
+    proname = getCurrentProfileName()
+    if proname is None:
+        proname = getDefaultProfileName()
+    profile = getProfileByName(proname)
+
+    profile['lastinfra'] = infra
+
+    _updateProfile(proname, profile)
+    return profile
+
+def getProfileInfra(profile):
+    return None if 'lastinfra' not in profile else profile['lastinfra']
+
+def updateProfileAttach(spec):
+    proname = getCurrentProfileName()
+    if proname is None:
+        proname = getDefaultProfileName()
+    profile = getProfileByName(proname)
+
+    profile['lastattach'] = spec
+
+    _updateProfile(proname, profile)
+    cprint("Profile["+proname+"] attach updated", "green")
+    return profile
+
+def getProfileAttach(profile):
+
+    return None if 'lastattach' not in profile else profile['lastattach']

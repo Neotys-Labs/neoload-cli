@@ -58,6 +58,7 @@ class RuntimeApi(object):
         :param str controller_zone_id: The controller zone Id. If empty, the default zone will be used.
         :param str lg_zones: The LG zones with the number of the LGs. Example: \"ZoneId1:10,ZoneId2:5\". If empty, the default zone will be used with one LG.
         :param bool publish_test_result: When \"true\" and the project is an collaborative project (other than git) then the test result is published onto the server. If empty, the default value is \"false\".
+        :param bool delete_project_after_test: When \"true\" deletes associated test as soon as test result is created. If empty, the default value is \"false\".
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
                                  data. Default is True.
@@ -94,6 +95,7 @@ class RuntimeApi(object):
         :param str controller_zone_id: The controller zone Id. If empty, the default zone will be used.
         :param str lg_zones: The LG zones with the number of the LGs. Example: \"ZoneId1:10,ZoneId2:5\". If empty, the default zone will be used with one LG.
         :param bool publish_test_result: When \"true\" and the project is an collaborative project (other than git) then the test result is published onto the server. If empty, the default value is \"false\".
+        :param bool delete_project_after_test: When \"true\" deletes associated test as soon as test result is created. If empty, the default value is \"false\".
         :param _return_http_data_only: response data without head status code
                                        and headers
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -110,7 +112,7 @@ class RuntimeApi(object):
 
         local_var_params = locals()
 
-        all_params = ['name', 'project_id', 'scenario_name', 'description', 'as_code', 'reservation_id', 'reservation_duration', 'reservation_web_v_us', 'reservation_sapv_us', 'controller_zone_id', 'lg_zones', 'publish_test_result']  # noqa: E501
+        all_params = ['name', 'project_id', 'scenario_name', 'description', 'as_code', 'reservation_id', 'reservation_duration', 'reservation_web_v_us', 'reservation_sapv_us', 'controller_zone_id', 'lg_zones', 'publish_test_result', 'delete_project_after_test']  # noqa: E501
         all_params.append('async_req')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -166,6 +168,8 @@ class RuntimeApi(object):
             query_params.append(('lgZones', local_var_params['lg_zones']))  # noqa: E501
         if 'publish_test_result' in local_var_params and local_var_params['publish_test_result'] is not None:  # noqa: E501
             query_params.append(('publishTestResult', local_var_params['publish_test_result']))  # noqa: E501
+        if 'delete_project_after_test' in local_var_params and local_var_params['delete_project_after_test'] is not None:  # noqa: E501
+            query_params.append(('deleteProjectAfterTest', local_var_params['delete_project_after_test']))  # noqa: E501
 
         header_params = {}
 

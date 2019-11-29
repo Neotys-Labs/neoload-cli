@@ -18,8 +18,6 @@ import os
 import re
 import tempfile
 
-from pprint import pprint
-
 # python 2 and python 3 compatibility library
 import six
 from six.moves.urllib.parse import quote
@@ -152,8 +150,6 @@ class ApiClient(object):
             post_params = self.parameters_to_tuples(post_params,
                                                     collection_formats)
             post_params.extend(self.files_parameters(files))
-
-        #pprint(post_params)
 
         # auth setting
         self.update_params_for_auth(header_params, query_params, auth_settings)

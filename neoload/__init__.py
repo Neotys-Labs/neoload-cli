@@ -3,19 +3,36 @@ import six
 from pyfiglet import figlet_format
 from termcolor import colored
 import logging
+from PyInquirer import (prompt)
 
 colorPrint = True
 interactiveMode = False
+quietMode = False
 
 def cprint(string, color=None, font="slant", figlet=False):
-    if colored and color is not None and colorPrint:
-        if not figlet:
-            six.print_(colored(string, color))
+    if not isQuietMode():
+        if colored and color is not None and colorPrint:
+            if not figlet:
+                six.print_(colored(string, color))
+            else:
+                six.print_(colored(figlet_format(string, font=font), color))
         else:
-            six.print_(colored(figlet_format(
-                string, font=font), color))
+            six.print_(string)
+
+def cprintOrLogInfo(explicitPrint, logger, string, color=None, font="slant", figlet=False):
+    if(explicitPrint):
+        cprint(string,color,font,figlet)
     else:
-        six.print_(string)
+        logger.info(string)
+
+
+def dprompt(options):
+    if isInteractiveMode():
+        return prompt(options)
+    else:
+        logger = logging.getLogger("root")
+        logger.warning("Required input during non-interactive session used defaults.")
+        return options
 
 def setColorEnabled(enabled):
     global colorPrint
@@ -30,6 +47,13 @@ def isInteractiveMode():
 def setInteractiveMode(enabled):
     global interactiveMode
     interactiveMode = enabled
+
+def isQuietMode():
+    return quietMode
+
+def setQuietMode(quiet):
+    global quietMode
+    quietMode = quiet
 
 def pauseIfInteractiveDebug(logger,msgIfDebug=None):
     msg = "Debugging WAIT: press enter to continue...at your own risk" if msgIfDebug is None else msgIfDebug
