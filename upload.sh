@@ -4,7 +4,7 @@ version_id=$(cat ./setup.py | grep -oE "(?:version=')(.*?)(?:')")
 version_id=$(echo "${version_id/version=/}")
 version_id=$(echo "${version_id//\'/}")
 
-if [ -z "$version_id"]; then
+if [ -z "$version_id" ]; then
     echo "No version found"
     exit 1
 fi
