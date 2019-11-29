@@ -357,7 +357,8 @@ def main(profiles,profile,url,token,zone,                                       
     if not shouldDetatch and intentToRun and alreadyAttached:
         logger.warning("Reminder: you just ran a test without detatching infrastructure. Make sure you clean up after yourself with the --detatch argument!")
 
-    cleanupAfter(zipfile,shouldDetatch,explicitDetatch,infra)
+    explicitEither = True if explicitAttach or explicitDetatch else False
+    cleanupAfter(zipfile,shouldDetatch,explicitEither,infra)
 
     if shouldDetatch:
         profile = updateProfileInfra(None)
@@ -380,14 +381,14 @@ def writeSLAs(client,test,filepath):
 
 
 
-def cleanupAfter(zipfile,shouldDetatch,explicitDetatch,infra):
+def cleanupAfter(zipfile,shouldDetatch,explicit,infra):
     logger = logging.getLogger("root")
 
     if shouldDetatch:
         if infra is None:
             logger.warning("No prior infrastructure to detatch.")
         else:
-            detatchInfra(infra,explicitDetatch)
+            detatchInfra(infra,explicit)
 
     if zipfile is not None:
         os.remove(zipfile)
