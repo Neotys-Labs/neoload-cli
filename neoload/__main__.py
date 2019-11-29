@@ -6,6 +6,7 @@ import sys
 import shutil
 import time
 import logging
+import re
 
 from neoload import *
 from .Validators import *
@@ -17,6 +18,7 @@ from .Formatting import printNiceTime
 from .SimpleReports import writeJUnitSLAContent
 from openapi_client.rest import ApiException
 from pprint import pprint
+from contextlib import redirect_stdout
 
 import webbrowser
 import click
@@ -44,17 +46,25 @@ class ArgumentException(Exception):
 @click.option('--noninteractive','-ni', is_flag=True, default=False, help='Force processing as if console is non-interactive (i.e. not a user session)')
 @click.option('--quiet', is_flag=True, default=False, help='Suppress non-critical console output.')
 @click.option('--testid', default=None, help='Specify a Test ID (guid) for contextual operations such as reporting, modification, etc.')
+@click.option('--query', default=None, help='Specifies a query (regex or jsonPath). Used in conjunction with --nowait and --outfile to derive testid and other details from after test is started.')
 @click.option('--summary', is_flag=True, default=None, help='Display a summary of the test.')
+@click.option('--justid', is_flag=True, default=None, help='Output just the ID of the relevant artifact; infers --quiet flag')
+@click.option('--outfile', default=None, help='Specify a file to also write all stdout to.')
+@click.option('--infile', default=None, help='Specifies a file to run summary/query commands on. Used in conjunction with --nowait and --query to derive testid and other details from after test is started.')
 @click.option('--junitsla', default=None, help='Path to write jUnit SLA report')
 @click.option('--updatename', default=None, help='Updates the name of a test, incl. hashtag processing.')
 @click.option('--updatedesc', default=None, help='Updates the description of a test, incl. hashtag processing.')
 @click.option('--updatestatus', default=None, help='Updates the status of a test (PASSED|FAILED).')
+@click.option('--nowait', is_flag=True, default=None, help='Do not wait for blocking events, return immediately. To be used in conjunction with running a test.')
+@click.option('--spinwait', is_flag=True, default=None, help='Block execution until a test is done or failure to connect to API. To be used in conjunction with --testid specifier.')
 def main(profiles,profile,url,token,zone,                                           # profile stuff
             files,scenario,attach,detatch,detatchall,                               # runtime inputs
             verbose,debug,nocolor,noninteractive,quiet,                             # logging and debugging
-            testid,                                                                 # entities (primarily, a test)
-            summary,junitsla,                                                       # export operations
-            updatename,updatedesc,updatestatus):                                    # modification ops (particularly, for a test)
+            testid,query,                                                           # entities (primarily, a test)
+            summary,justid,outfile,infile,junitsla,                                 # export operations
+            updatename,updatedesc,updatestatus,                                     # modification ops (particularly, for a test)
+            nowait,spinwait                                                         # support for non-blocking execution
+    ):
 
     loggingLevel = logging.ERROR
 
@@ -70,8 +80,15 @@ def main(profiles,profile,url,token,zone,                                       
     logger.setLevel(loggingLevel)
 
     moreinfo = True if debug is not None or verbose is not None else False
-
     interactive = False if platform.system().lower() == 'linux' or noninteractive else True
+    if justid:
+        quiet = True
+    if infile is not None and query is not None:
+        quiet = True
+
+    if outfile:
+        sys.stdout = Logger(outfile)
+
     setInteractiveMode(interactive)
     setQuietMode(quiet)
 
@@ -133,28 +150,27 @@ def main(profiles,profile,url,token,zone,                                       
                 setToken(token)
 
     shouldAttach = False if attach is None else True
-    profile = getCurrentProfile()
+    currentProfile = getCurrentProfile()
     explicitAttach = True if attach is not None else False
     explicitDetatch = True if detatch or detatchall else False
     alreadyAttached = False
     if attach is not None:
-        profile = updateProfileAttach(attach)
+        currentProfile = updateProfileAttach(attach)
     else:
         if intentToRun:
-            alreadyAttached = True if 'lastinfra' in profile and isAlreadyAttached(profile['lastinfra']) else False
+            alreadyAttached = True if 'lastinfra' in currentProfile and isAlreadyAttached(currentProfile['lastinfra']) else False
             if alreadyAttached:
                 shouldAttach = False
-                logger.warning("Reusing profile attach: " + str(profile['lastinfra']))
+                logger.warning("Reusing profile attach: " + str(currentProfile['lastinfra']))
                 logger.debug("alreadyAttached: " + str(alreadyAttached))
             else:
-                attach = getProfileAttach(profile)
+                attach = getProfileAttach(currentProfile)
                 if attach is not None:
                     shouldAttach = True
                     logger.warning("Prior infrastructure could not be revived; need to restart.")
 
-
-    if profile is not None and summary:
-        print(profile)
+    if profile is not None and currentProfile is not None and summary:
+        print(currentProfile)
 
 
     #TODO: need to add validation that, if to be run, minimum-viable params are specified (like Scenario)
@@ -179,15 +195,15 @@ def main(profiles,profile,url,token,zone,                                       
     #infra["ready"] = False #TODO: temp debug REMOVE ASAP
 
     try:
-        client = getNLWAPI(profile)
+        client = getNLWAPI(currentProfile)
 
         logger.debug("shouldAttach=" + str(shouldAttach))
         logger.debug("intentToRun=" + str(intentToRun))
 
         if shouldAttach:
             logger.info("Attaching resources.")
-            infra = attachInfra(profile,attach,explicitAttach)
-            profile = updateProfileInfra(infra)
+            infra = attachInfra(currentProfile,attach,explicitAttach)
+            currentProfile = updateProfileInfra(infra)
 
         if intentToRun:
 
@@ -206,7 +222,7 @@ def main(profiles,profile,url,token,zone,                                       
                 if projectDef is not None:
                     projectId = projectDef.project_id
                     projectName = projectDef.project_name
-                    zone = profile["zone"]
+                    zone = currentProfile["zone"]
                     testName = projectName + "_" + scenario
                     cprint("Launching new test '" + testName + "'.", "yellow")
                     try:
@@ -217,82 +233,63 @@ def main(profiles,profile,url,token,zone,                                       
 
 
                 if projectLaunched is not None:
-                    time.sleep( 10 )
+                    time.sleep( 5 ) # wait for NLW test queued
                     launchedTestId = projectLaunched.test_id
-                    overviewUrl = getTestOverviewUrl(profile,launchedTestId)
-                    logsUrl = getTestLogsUrl(profile,launchedTestId)
-                    logger.info("Test logs available at: " + logsUrl)
-                    if moreinfo:
-                        webbrowser.open_new_tab(logsUrl)
-                    test = None
-                    inited = False
-                    started = False
-                    running = False
-                    terminated = False
-                    waiterations = 0
-                    while not terminated:
-                        test = getTestStatus(client,launchedTestId)
-                        if test.status == "INIT":
-                            if not inited:
-                                inited = True
-                                cprint("Test is initializing...", "yellow")
-                                cprint("Est. duration: " + printNiceTime(test.duration/1000) + ", LG count: " + str(test.lg_count), "yellow")
-                        elif test.status == "STARTING":
-                            inited = inited #dummy
-                        elif test.status == "STARTED":
-                            if not started:
-                                cprint("Test started.", "green")
-                                started = True
-                        elif test.status == "RUNNING":
-                            if not running:
-                                running = True
-                                cprint("Test overview now available at: " + overviewUrl)
-                                print("Test running", end="")
-                                webbrowser.open_new_tab(overviewUrl)
-                            waiterations += 1
-                            waterator = '.' #*waiterations
-                            print(""+waterator, end="")
-                            sys.stdout.flush()
-                            #pprint("Test running"+ waterator +"\r")
-                        elif test.status == "TERMINATED":
-                            if not terminated:
-                                print("") # end the ...s
-                                handleTestTermination(test)
-                                terminated = True
-                        else:
-                            cprint("Unknown status encountered '" + test.status + "'.", "red")
 
-                        if test.status == "TERMINATED":
-                            if test.quality_status == "PASSED":
-                                exitCode = 0
-                            else:
-                                exitCode = 1
-
-                            afterTermination(client,test,junitsla)
-
-                        time.sleep( 5 )
+                    if nowait:
+                        exitCode = 0
+                        logging.warning("Test queued for execution in --nowait mode.")
+                        logsUrl = getTestLogsUrl(currentProfile,launchedTestId)
+                        cprintOrLogInfo(True,logger,"Test logs available at: " + logsUrl)
+                        printTestSummary(client, projectLaunched.test_id, justid)
+                    else:
+                        exitCode = blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,junitsla,quiet,justid)
 
             #end infraReady
         else: # not intentToRun
 
-            exportops = [summary,junitsla]
+            execops = [spinwait]
+            exportops = [summary,justid,junitsla,query]
             modops = [updatename,updatedesc,updatestatus]
             infraops = [attach,detatch]
 
-            allops = exportops + modops + infraops
-            allids = [testid,profile]
+            standaloneops = [detatch]
 
-            if (
-                any(list(map(lambda x: x is not None, allops))) and all(list(map(lambda x: x is None, allids)))
-                ) or (
-                any(list(map(lambda x: x is not None, allids))) and all(list(map(lambda x: x is None, allops)))
+            allops = execops + exportops + modops + infraops + standaloneops
+            allids = [testid,profile,infile]
+
+            if not any(list(map(lambda x: x is not None, standaloneops))) and (
+                    (
+                        any(list(map(lambda x: x is not None, allops))) and all(list(map(lambda x: x is None, allids)))
+                    ) or (
+                        any(list(map(lambda x: x is not None, allids))) and all(list(map(lambda x: x is None, allops)))
+                    )
                 ):
-                    raise ArgumentException("Activity without context (i.e. --updatedesc but no --testid)")
+                raise ArgumentException("Activity without context (i.e. --updatedesc but no --testid)")
+
+            if infile is not None and query is not None:
+                found = None
+                if query.lower() == "testid":
+                    guid = re.compile("(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}")
+                    for i, line in enumerate(open(infile)):
+                        for match in re.finditer(guid, line):
+                            found = match.group()
+                if found is not None:
+                    print(found)
+                else:
+                    logger.warning("Nothing in file [" + infile + "] matching query [" + query + "]")
 
             if testid is not None:
 
                 test = getTestStatus(client,testid)
                 printSummary = summary
+
+                if any(list(map(lambda x: x is not None, execops))):
+                    logger.debug("Execution on a test...")
+
+                    if spinwait is not None:
+                        cprintOrLogInfo(True,logger,"Resuming a blocking --spinwait for test: " + testid)
+                        exitCode = blockingWaitForTestCompleted(currentProfile,client,testid,moreinfo,junitsla,quiet,justid)
 
                 if any(list(map(lambda x: x is not None, modops))):
                     logger.debug("Operating on a test...")
@@ -323,9 +320,7 @@ def main(profiles,profile,url,token,zone,                                       
                         writeSLAs(client,test,junitsla)
 
                     if printSummary:
-                        print(test)
-                        stats = getTestStatistics(client,testid)
-                        print(stats)
+                        printTestSummary(client,testid,justid)
 
     except ArgumentException as e:
         exitCode = 3
@@ -340,36 +335,115 @@ def main(profiles,profile,url,token,zone,                                       
     #print("detatch: " + str(detatch))
     #print("infra[in-proc]: " + str(infra))
 
+    if nowait:
+        logger.warning("Skipping all cleanup tasks in --nowait mode.")
+    else:
+        if detatch and not intentToRun:
+            logger.info("Loading prior infrastructure from current profile.")
+            infra = getProfileInfra(currentProfile)
+            logger.debug("infra[restored]: " + str(infra))
 
-    if detatch and not intentToRun:
-        logger.info("Loading prior infrastructure from current profile.")
-        infra = getProfileInfra(profile)
-        logger.debug("infra[restored]: " + str(infra))
+        if shouldDetatch:
+            containerCount = 0
+            if infra is not None:
+                containerCount = len(infra['container_ids']) if 'container_ids' in infra else 0
 
-    if shouldDetatch and infra is not None:
-        containerCount = len(infra['container_ids']) if 'container_ids' in infra else 0
-        print("containerCount: " + str(containerCount))
-        if containerCount > 0:
-            logger.warning("Detatching " + str(shouldDetatch) + " prior containers.")
-        else:
-            logger.warning("No containers to detatch!")
+            logger.info("containerCount: " + str(containerCount))
+            if containerCount > 0:
+                logger.warning("Detatching " + str(shouldDetatch) + " prior containers.")
+            else:
+                cprintOrLogInfo(True,logger,"No containers to detatch!")
 
-    if not shouldDetatch and intentToRun and alreadyAttached:
-        logger.warning("Reminder: you just ran a test without detatching infrastructure. Make sure you clean up after yourself with the --detatch argument!")
+        if not shouldDetatch and intentToRun and alreadyAttached:
+            logger.warning("Reminder: you just ran a test without detatching infrastructure. Make sure you clean up after yourself with the --detatch argument!")
 
-    explicitEither = True if explicitAttach or explicitDetatch else False
-    cleanupAfter(zipfile,shouldDetatch,explicitEither,infra)
+        explicitEither = True if explicitAttach or explicitDetatch else False
+        cleanupAfter(zipfile,shouldDetatch,explicitEither,infra)
 
-    if shouldDetatch:
-        profile = updateProfileInfra(None)
+        if shouldDetatch:
+            currentProfile = updateProfileInfra(None)
 
-    if detatchall:
-        detatchAllInfra(explicitDetatch)
+        if detatchall:
+            detatchAllInfra(explicitDetatch)
 
     if moreinfo:
         logger.info("Exiting with code: " + str(exitCode))
 
     sys.exit(exitCode)
+
+def printTestSummary(client,testId,justid):
+    test = getTestStatus(client,testId)
+    stats = None
+    if test.status in ['STARTED','RUNNING','TERMINATED']:
+        stats = getTestStatistics(client,testId)
+    if justid:
+        print(test.id)
+    else:
+        json = {
+            'summary': test
+        }
+        if stats is not None:
+            json['statistics'] = stats
+        print(json)
+
+def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,junitsla,quiet,justid):
+    logger = logging.getLogger("root")
+    overviewUrl = getTestOverviewUrl(currentProfile,launchedTestId)
+    logsUrl = getTestLogsUrl(currentProfile,launchedTestId)
+    logger.info("Test logs available at: " + logsUrl)
+    if moreinfo:
+        webbrowser.open_new_tab(logsUrl)
+    test = None
+    inited = False
+    started = False
+    running = False
+    terminated = False
+    waiterations = 0
+    while not terminated:
+        test = getTestStatus(client,launchedTestId)
+        if test.status == "INIT":
+            if not inited:
+                inited = True
+                cprint("Test is initializing...", "yellow")
+                cprint("Est. duration: " + printNiceTime(test.duration/1000) + ", LG count: " + str(test.lg_count), "yellow")
+        elif test.status == "STARTING":
+            inited = inited #dummy
+        elif test.status == "STARTED":
+            if not started:
+                cprint("Test started.", "green")
+                started = True
+        elif test.status == "RUNNING":
+            if not running:
+                running = True
+                cprint("Test overview now available at: " + overviewUrl)
+                if not quiet:
+                    print("Test running", end="")
+                webbrowser.open_new_tab(overviewUrl)
+            waiterations += 1
+            if not quiet:
+                waterator = '.'
+                print(""+waterator, end="")
+                sys.stdout.flush()
+        elif test.status == "TERMINATED":
+            if not terminated:
+                if not quiet:
+                    print("") # end the ...s
+                handleTestTermination(test)
+                terminated = True
+        else:
+            cprint("Unknown status encountered '" + test.status + "'.", "red")
+
+        if test.status == "TERMINATED":
+            if test.quality_status == "PASSED":
+                exitCode = 0
+            else:
+                exitCode = 1
+
+            afterTermination(client,test,junitsla)
+
+        time.sleep( 5 )
+
+    return exitCode
 
 def afterTermination(client,test,junitsla):
     if junitsla is not None:
@@ -378,8 +452,6 @@ def afterTermination(client,test,junitsla):
 def writeSLAs(client,test,filepath):
     slas = getSLAs(client,test.id)
     writeJUnitSLAContent(slas,test,filepath)
-
-
 
 def cleanupAfter(zipfile,shouldDetatch,explicit,infra):
     logger = logging.getLogger("root")
@@ -411,6 +483,24 @@ def handleTestTermination(test): # dictionary from NLW API of final status
     else:
         cprint("Unknown 'termination_reason' value: " + test.termination_reason, "red")
         pprint(test)
+
+class Logger(object):
+    def __init__(self, filename=None):
+        self.terminal = sys.stdout
+        self.log = None
+        if filename is not None:
+            self.log = open(filename, "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        if self.log is not None:
+            self.log.write(message)
+
+    def flush():
+        self.terminal.flush()
+        if self.log is not None:
+            self.log.flush()
+
 
 if __name__ == '__main__':
     main()

@@ -30,6 +30,7 @@ setup(name='neoload',
           'docker',
           'coloredlogs',
           'junit-xml',
+          'jsonpath',
       ],
       entry_points={
         'console_scripts': [
