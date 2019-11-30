@@ -16,6 +16,11 @@ class ConfigStore:
 
         self.configDir = getConfigDir()
 
+        # override is for testing purposes, to maintain hermetic test-only config
+        overrideName = os.getenv("PYCONFIGSTORE_NAME_OVERRIDE")
+        if overrideName is not None and overrideName != "":
+            name = overrideName
+
         if self.globalConfigPath:
             self.pathPrefix = join(name, 'config.json')
             pathEntry = name

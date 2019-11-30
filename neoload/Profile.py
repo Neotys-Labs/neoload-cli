@@ -28,7 +28,7 @@ def askNLWAPI():
         {
             'type': 'input',
             'name': 'token',
-            'message': 'Enter a NeoLoad Web (SaaS) token',
+            'message': 'Enter a NeoLoad Web token',
             'validate': EmptyValidator,
         },
         {
@@ -37,13 +37,13 @@ def askNLWAPI():
             'message': 'Enter a NeoLoad Web Zone ID',
             'validate': EmptyValidator,
         },
-        # {
-        #     'type': 'input',
-        #     'name': 'url',
-        #     'message': 'Enter your NeoLoad Web API URL (default is SaaS: '+getNLWSaaSAPIURL()+')',
-        #     'default': getNLWSaaSAPIURL(),
-        #     #'validate': EmptyValidator,
-        # },
+        {
+            'type': 'input',
+            'name': 'url',
+            'message': 'Enter your NeoLoad Web API URL (default is SaaS: '+getNLWSaaSAPIURL()+')',
+            'default': getNLWSaaSAPIURL(),
+            #'validate': EmptyValidator,
+        },
     ]
     answers = dprompt(questions)
     return answers
@@ -67,11 +67,14 @@ def getDefaultProfileName():
     return profileprefix+"default"
 
 def listProfiles():
-    cprint("List of profiles:", "yellow")
-    for key in conf.all():
-        if key != profileprefix and key.startswith(profileprefix):
-            justname = key.replace(profileprefix,"",1)
-            cprint("   "+("*" if justname == getCurrentProfileName() else "-")+" "+justname, "yellow")
+    if len(conf.all()) < 1:
+        cprint("No profiles found!", "yellow")
+    else:
+        cprint("List of profiles:", "yellow")
+        for key in conf.all():
+            if key != profileprefix and key.startswith(profileprefix):
+                justname = key.replace(profileprefix,"",1)
+                cprint("   "+("*" if justname == getCurrentProfileName() else "-")+" "+justname, "yellow")
 
 def createOrUpdateProfile(proname,url,token,zone):
     if url is None: url = getNLWSaaSAPIURL()
@@ -102,7 +105,9 @@ def _updateProfile(proname,profile):
 def _setCurrentProfileName(proname):
     conf.set(profileprefix, proname)
 
-def loadProfile(proname):
+def loadProfile(proname,url,token,zone):
+
+    profile = None
 
     init = False
     if proname is None:
@@ -121,17 +126,21 @@ def loadProfile(proname):
         if profile is None:
             cprint("Profile '"+proname+"' does not exist!", "red")
             if not isInteractiveMode():
-                raise Exception("You must specify all required profile elements if you want to create a profile in non-interactive mode.")
-            if dprompt({
-                'type': 'confirm',
-                'name': 'create',
-                'message': "Would you like to create a new profile named '"+proname+"'?",
-                'default': False, # important to be False for non-interactive (headless) contexts
-            }).get("create"):
-                answers = askNLWAPI()
-                profile = createOrUpdateProfile(proname,getNLWSaaSAPIURL(),answers.get("token"),answers.get("zone"))
+                if url is None or token is None or zone is None:
+                    raise Exception("You must specify all required profile elements (min: url,token,zone) if you want to create a profile in non-interactive mode.")
+                else:
+                    profile = createOrUpdateProfile(proname,url,token,zone)
             else:
-                return None
+                if dprompt({
+                    'type': 'confirm',
+                    'name': 'create',
+                    'message': "Would you like to create a new profile named '"+proname+"'?",
+                    'default': False, # important to be False for non-interactive (headless) contexts
+                }).get("create"):
+                    answers = askNLWAPI()
+                    profile = createOrUpdateProfile(proname,getNLWSaaSAPIURL(),answers.get("token"),answers.get("zone"))
+                else:
+                    return None
         else:
             _setCurrentProfileName(proname)
 
@@ -149,54 +158,43 @@ def loadProfile(proname):
     if profile.get("token") is None:
         cprint("   No token set. Use --token argument.", "red")
 
-def setZone(zoneId):
+    return profile
+
+def setProfileProperty(topLevelProperty,value):
     proname = getCurrentProfileName()
     if proname is None:
         proname = getDefaultProfileName()
     profile = getProfileByName(proname)
 
-    profile["zone"] = zoneId
+    profile[topLevelProperty] = value
 
     _updateProfile(proname, profile)
-    cprint("Profile["+proname+"] zone: "+profile.get("zone"), "green")
+    #cprintOrLogInfo("Profile["+proname+"] " + topLevelProperty + ": "+str(profile.get(topLevelProperty)))
+    return profile
+
+def setUrl(url):
+    return setProfileProperty('url',url)
+
+def setZone(zoneId):
+    return setProfileProperty('zone',zoneId)
 
 def setToken(token):
-    proname = getCurrentProfileName()
-    if proname is None:
-        proname = getDefaultProfileName()
-    profile = getProfileByName(proname)
+    return setProfileProperty('token',token)
 
-    profile["token"] = token
+def setNTSURL(url):
+    return setProfileProperty('ntsurl',url)
 
-    _updateProfile(proname, profile)
-    cprint("Profile["+proname+"] token set", "green")
+def setNTSLogin(login):
+    return setProfileProperty('ntslogin',login)
 
 def updateProfileInfra(infra):
-    proname = getCurrentProfileName()
-    if proname is None:
-        proname = getDefaultProfileName()
-    profile = getProfileByName(proname)
-
-    profile['lastinfra'] = infra
-
-    _updateProfile(proname, profile)
-    return profile
+    return setProfileProperty('lastinfra',infra)
 
 def getProfileInfra(profile):
     return None if 'lastinfra' not in profile else profile['lastinfra']
 
 def updateProfileAttach(spec):
-    proname = getCurrentProfileName()
-    if proname is None:
-        proname = getDefaultProfileName()
-    profile = getProfileByName(proname)
-
-    profile['lastattach'] = spec
-
-    _updateProfile(proname, profile)
-    cprint("Profile["+proname+"] attach updated", "green")
-    return profile
+    return setProfileProperty('lastattach',spec)
 
 def getProfileAttach(profile):
-
     return None if 'lastattach' not in profile else profile['lastattach']
