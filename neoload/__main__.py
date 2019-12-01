@@ -28,6 +28,8 @@ trueValues = ['1','yes','true','on']
 class ArgumentException(Exception):
     pass
 
+# https://click.palletsprojects.com/en/7.x/options/
+
 @click.command()
 @click.option('--profiles', is_flag=True, default=None, help='List profiles')
 @click.option('--profile', default=None, help='Set profiles')
@@ -35,6 +37,8 @@ class ArgumentException(Exception):
 @click.option('--url', default=None, help='Set a url for selected profile')
 @click.option('--token', default=None, help='Set a token for selected profile')
 @click.option('--zone', default=None, help='Set a zone for selected profile')
+@click.option('--ntslogin', default=None, help='Set the NTS login used for license acquisition')
+@click.option('--ntsurl', default=None, help='Set the NTS URL used for license acquisition')
 @click.option('files','--project','-f', multiple=True, help='Delimited list of project files, one or more, .nlp or YAML')
 @click.option('--scenario', default=None, help='Run a specific scenario in provided project file(s)')
 @click.option('--attach', default=None, help='Attaches containers for Controller and Load Generator(s)')
@@ -57,7 +61,7 @@ class ArgumentException(Exception):
 @click.option('--updatestatus', default=None, help='Updates the status of a test (PASSED|FAILED).')
 @click.option('--nowait', is_flag=True, default=None, help='Do not wait for blocking events, return immediately. To be used in conjunction with running a test.')
 @click.option('--spinwait', is_flag=True, default=None, help='Block execution until a test is done or failure to connect to API. To be used in conjunction with --testid specifier.')
-def main(profiles,profile,url,token,zone,                                           # profile stuff
+def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                           # profile stuff
             files,scenario,attach,detatch,detatchall,                               # runtime inputs
             verbose,debug,nocolor,noninteractive,quiet,                             # logging and debugging
             testid,query,                                                           # entities (primarily, a test)
@@ -141,13 +145,18 @@ def main(profiles,profile,url,token,zone,                                       
         if profile is not None and token is not None and zone is not None:
             createOrUpdateProfile(profile,url,token,zone)
         else:
-            loadProfile(profile)
+            loadProfile(profile,url,token,zone)
 
-            if zone is not None:
-                setZone(zone)
-
-            if token is not None:
-                setToken(token)
+        if url is not None:
+            setUrl(url)
+        if zone is not None:
+            setZone(zone)
+        if token is not None:
+            setToken(token)
+        if ntsurl is not None:
+            setNTSURL(ntsurl)
+        if ntslogin is not None:
+            setNTSLogin(ntslogin)
 
     shouldAttach = False if attach is None else True
     currentProfile = getCurrentProfile()
@@ -391,7 +400,7 @@ def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,j
     overviewUrl = getTestOverviewUrl(currentProfile,launchedTestId)
     logsUrl = getTestLogsUrl(currentProfile,launchedTestId)
     logger.info("Test logs available at: " + logsUrl)
-    if moreinfo:
+    if moreinfo and isInteractiveMode():
         webbrowser.open_new_tab(logsUrl)
     test = None
     inited = False
@@ -418,7 +427,8 @@ def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,j
                 cprint("Test overview now available at: " + overviewUrl)
                 if not quiet:
                     print("Test running", end="")
-                webbrowser.open_new_tab(overviewUrl)
+                if isInteractiveMode():
+                    webbrowser.open_new_tab(overviewUrl)
             waiterations += 1
             if not quiet:
                 waterator = '.'

@@ -60,11 +60,14 @@ from junit_xml import TestSuite, TestCase
 #     }
 #   }
 #
+
+# https://github.com/kyrus/python-junit-xml
+# https://github.com/kyrus/python-junit-xml/blob/master/junit_xml/__init__.py
 def writeJUnitSLAContent(slas,test,filepath):
 
     logger = logging.getLogger("root")
     if slas is None: return
-    
+
     logger.info("writeJUnitSLAContent: " + test.id + " to " + filepath)
 
     try:
@@ -146,3 +149,5 @@ def getSLAText(test,group,sla,slaprofile,userpath):
             "\n"
             "Created N/A " + "\n") # maybe from test completion time?/?
     return txt
+
+# https://jenkins.io/blog/2016/07/01/html-publisher-plugin/
