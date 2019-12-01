@@ -7,7 +7,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='neoload',
-      version='0.3.3',
+      version='0.3.2',
       description='A command-line native utility for launching and observing NeoLoad performance tests',
       url='https://github.com/Neotys-Labs/neoload-cli',
       author='Paul Bruce',
@@ -29,8 +29,8 @@ setup(name='neoload',
           'pprint',
           'docker',
           'coloredlogs',
-          'junit-xml',
-          'jsonpath',
+          'pytest',
+          'pytest-steps',
       ],
       entry_points={
         'console_scripts': [
