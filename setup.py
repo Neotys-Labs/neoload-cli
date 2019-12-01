@@ -31,6 +31,7 @@ setup(name='neoload',
           'coloredlogs',
           'pytest',
           'pytest-steps',
+          'junit-xml',
       ],
       entry_points={
         'console_scripts': [
