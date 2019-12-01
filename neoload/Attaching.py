@@ -306,7 +306,8 @@ def detatchAllInfra(explicit):
     networks = client.networks.list(
         filters = filters,
     )
-    if len(containers) < 1 and len(networks) < 1:
+    beforeCount = len(containers) + len(networks)
+    if beforeCount < 1:
         cprintOrLogInfo(explicit,logger,"No containers or networks with 'neoload-cli' label to delete.")
     else:
         cprintOrLogInfo(explicit,logger,"Containers:\n\t" + "\n\t".join(map(lambda x: x.name, containers)))
@@ -318,16 +319,30 @@ def detatchAllInfra(explicit):
             'message': "Are you sure you want to delete all neoload-cli containers and networks (label=neoload-cli) on this host?",
             'default': defaultDelete, # important to be False for non-interactive (headless) contexts
         }).get("delete"):
+
             for container in containers:
                 removeDockerContainer(client,explicit,container.id)
 
             for network in networks:
                 removeDockerNetwork(client,explicit,network.id)
 
-            #update all profiles with infra to None
-        return True
+            cprintOrLogInfo(explicit,logger,"All containers and networks with label=neoload-cli removed.")
 
-    return False
+            #update all profiles with infra to None
+
+    containers = client.containers.list(
+        all = True,
+        filters = filters,
+    )
+    networks = client.networks.list(
+        filters = filters,
+    )
+
+    afterCount = len(containers) + len(networks)
+
+    cprint(str(afterCount)+" docker artifacts with label=neoload-cli exist.")
+
+    return beforeCount > 0 and afterCount < 1
 
 def parseInfraSpec(rawspec):
     # docker#2,neotys/neoload-loadgenerator:6.10

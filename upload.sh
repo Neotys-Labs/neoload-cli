@@ -9,7 +9,7 @@ if [ -z "$version_id" ]; then
     exit 1
 fi
 
-python3 -m pytest tests -v
+python3 -m pytest tests -v --runslow
 if [ "$?" -ne "0" ]; then
     echo "One or more tests failed."
     exit 2
