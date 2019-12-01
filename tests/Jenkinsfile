@@ -38,18 +38,16 @@ pipeline {
                   --data '""" + payload + """' \
                   """ + env.SLACK_URL
                 }
-              sh "python3 -m pip install -q -e nl_project/"
+              sh "python3 -m pip install -q -e ./"
           }
         }
         stage('Run PyTes') {
           steps {
-              dir('nl_project') {
-                sh """python3 -m pytest \
-                    -v --junitxml=pytest_junit.xml \
-                    tests \
-                    --runslow
-                """
-              }
+              sh """python3 -m pytest \
+                  -v --junitxml=pytest_junit.xml \
+                  tests \
+                  --runslow
+              """
           }
           post {
               always {
@@ -62,7 +60,7 @@ pipeline {
           always {
               script {
                   payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nSee: '+"${env.BUILD_URL}"+'"}'
-                  sh """curl \
+                  sh """curl -s \
                   -X POST -H 'Content-type: application/json' \
                   --data '""" + payload + """' \
                   """ + env.SLACK_URL
