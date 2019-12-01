@@ -1,0 +1,142 @@
+[33mCurrent profile: localdocker[0m
+[33m   Using NLW URL: https://neoload-rest.saas.neotys.com[0m
+[33m   Profile zone: rBhB3[0m
+[32mProfile[localdocker] attach updated[0m
+Connecting to local Docker host
+Created docker network 'neoload_cli13568_network'
+Attaching load generator 1.
+Created load generator 1.
+Attached load generator 1 to network.
+Attached controller.
+Waiting for docker containers to be attached and ready.
+Waiting for container c257ddee492dc88a77868175adbcacf3fac3ea3516c10855c0f99cf3152bda8e logs to indicate attachment readiness
+Waiting for container 44af6c868c69f82ecb2db6eb4c44ada046105818f0292ea06b0affea7976ba78 logs to indicate attachment readiness
+All containers are attached and ready for use.
+[33mUploading project.[0m
+[32mProject uploaded[0m
+[33mLaunching new test 'NeoLoad-CLI-example-2_0_sanityScenario'.[0m
+[32mTest queued [Fri Nov 29 14:08:17 2019], receiving initial telemetry.[0m
+Test logs available at: https://neoload.saas.neotys.com/#!result/f1f954f7-c129-46e0-bcf5-2284b770d72c/logs
+{'summary': {'author': 'Paul Bruce',
+ 'description': '',
+ 'duration': 30000,
+ 'end_date': None,
+ 'id': 'f1f954f7-c129-46e0-bcf5-2284b770d72c',
+ 'lg_count': 1,
+ 'name': 'NeoLoad-CLI-example-2_0_sanityScenario',
+ 'project': 'NeoLoad-CLI-example-2_0',
+ 'quality_status': 'UNKNOWN',
+ 'scenario': 'sanityScenario',
+ 'start_date': 1575054497869,
+ 'status': 'INIT',
+ 'termination_reason': 'UNKNOWN'}}
+Color logs are disabled
+Current profile: test
+   Using NLW URL: https://neoload-rest.saas.neotys.com
+   Profile zone: rBhB3
+Uploading project.
+Project uploaded
+Launching new test 'NeoLoad-CLI-example-2_0_sanityScenario'.
+Test queued [Sun Dec  1 11:41:57 2019], receiving initial telemetry.
+Test logs available at: https://neoload.saas.neotys.com/#!result/ef74f60e-0416-4305-b2c6-3bd3e2884386/logs
+{'summary': {'author': 'Paul Bruce',
+ 'description': '',
+ 'duration': 10000,
+ 'end_date': None,
+ 'id': 'ef74f60e-0416-4305-b2c6-3bd3e2884386',
+ 'lg_count': 1,
+ 'name': 'NeoLoad-CLI-example-2_0_sanityScenario',
+ 'project': 'NeoLoad-CLI-example-2_0',
+ 'quality_status': 'UNKNOWN',
+ 'scenario': 'sanityScenario',
+ 'start_date': 1575218517869,
+ 'status': 'INIT',
+ 'termination_reason': 'UNKNOWN'}}
+Color logs are disabled
+Current profile: test
+   Using NLW URL: https://neoload-rest.saas.neotys.com
+   Profile zone: rBhB3
+Uploading project.
+Project uploaded
+Launching new test 'NeoLoad-CLI-example-2_0_sanityScenario'.
+Test queued [Sun Dec  1 11:46:03 2019], receiving initial telemetry.
+Test logs available at: https://neoload.saas.neotys.com/#!result/2d42e8c5-214f-4bbe-9c1a-d4d164a9276f/logs
+{'summary': {'author': 'Paul Bruce',
+ 'description': '',
+ 'duration': 10000,
+ 'end_date': None,
+ 'id': '2d42e8c5-214f-4bbe-9c1a-d4d164a9276f',
+ 'lg_count': 1,
+ 'name': 'NeoLoad-CLI-example-2_0_sanityScenario',
+ 'project': 'NeoLoad-CLI-example-2_0',
+ 'quality_status': 'UNKNOWN',
+ 'scenario': 'sanityScenario',
+ 'start_date': 1575218763368,
+ 'status': 'INIT',
+ 'termination_reason': 'UNKNOWN'}}
+Color logs are disabled
+Current profile: test
+   Using NLW URL: https://neoload-rest.saas.neotys.com
+   Profile zone: rBhB3
+Uploading project.
+Project uploaded
+Launching new test 'NeoLoad-CLI-example-2_0_sanityScenario'.
+Test queued [Sun Dec  1 11:47:34 2019], receiving initial telemetry.
+Test logs available at: https://neoload.saas.neotys.com/#!result/a619e785-801c-48b0-a243-b9f39ef8bf27/logs
+{'summary': {'author': 'Paul Bruce',
+ 'description': '',
+ 'duration': 10000,
+ 'end_date': None,
+ 'id': 'a619e785-801c-48b0-a243-b9f39ef8bf27',
+ 'lg_count': 1,
+ 'name': 'NeoLoad-CLI-example-2_0_sanityScenario',
+ 'project': 'NeoLoad-CLI-example-2_0',
+ 'quality_status': 'UNKNOWN',
+ 'scenario': 'sanityScenario',
+ 'start_date': 1575218854870,
+ 'status': 'INIT',
+ 'termination_reason': 'UNKNOWN'}}
+Color logs are disabled
+Current profile: test
+   Using NLW URL: https://neoload-rest.saas.neotys.com
+   Profile zone: rBhB3
+Uploading project.
+Project uploaded
+Launching new test 'NeoLoad-CLI-example-2_0_sanityScenario'.
+Test queued [Sun Dec  1 11:54:02 2019], receiving initial telemetry.
+Test logs available at: https://neoload.saas.neotys.com/#!result/f8946a1f-80a9-4a34-bf7d-961a482bf643/logs
+{'summary': {'author': 'Paul Bruce',
+ 'description': '',
+ 'duration': 10000,
+ 'end_date': None,
+ 'id': 'f8946a1f-80a9-4a34-bf7d-961a482bf643',
+ 'lg_count': 1,
+ 'name': 'NeoLoad-CLI-example-2_0_sanityScenario',
+ 'project': 'NeoLoad-CLI-example-2_0',
+ 'quality_status': 'UNKNOWN',
+ 'scenario': 'sanityScenario',
+ 'start_date': 1575219242368,
+ 'status': 'INIT',
+ 'termination_reason': 'UNKNOWN'}}
+Color logs are disabled
+Current profile: test
+   Using NLW URL: https://neoload-rest.saas.neotys.com
+   Profile zone: rBhB3
+Uploading project.
+Project uploaded
+Launching new test 'NeoLoad-CLI-example-2_0_sanityScenario'.
+Test queued [Sun Dec  1 11:55:26 2019], receiving initial telemetry.
+Test logs available at: https://neoload.saas.neotys.com/#!result/263c0ccc-6648-4e73-bf34-8dcc65a59a8c/logs
+{'summary': {'author': 'Paul Bruce',
+ 'description': '',
+ 'duration': 10000,
+ 'end_date': None,
+ 'id': '263c0ccc-6648-4e73-bf34-8dcc65a59a8c',
+ 'lg_count': 1,
+ 'name': 'NeoLoad-CLI-example-2_0_sanityScenario',
+ 'project': 'NeoLoad-CLI-example-2_0',
+ 'quality_status': 'UNKNOWN',
+ 'scenario': 'sanityScenario',
+ 'start_date': 1575219327369,
+ 'status': 'INIT',
+ 'termination_reason': 'UNKNOWN'}}

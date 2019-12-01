@@ -1,10 +1,10 @@
 tests/example_1_1_request/
 .DS_Store
 
-junit.xml
 openapi_client.7.0.2.zip
 openapi_client.7.0.2/
-sla.xml
+junit_docker.xml
+async.stdout
 tests/example_0_9_allinone/
 
 # Byte-compiled / optimized / DLL files

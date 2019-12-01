@@ -69,7 +69,7 @@ def test_attach_run_async():
     yield
 
     # Step: kickoff
-    outFile = os.path.abspath("out.log")
+    outFile = os.path.abspath("async.stdout")
     assertOutput(
         contains=[
             "Project uploaded",
@@ -93,7 +93,7 @@ def test_attach_run_async():
         printOutput=True,
         clearConfig=False,
         args={
-            '--infile '+ os.path.abspath("out.log") : None,
+            '--infile '+ outFile : None,
             '--query': 'testid'
         })
     assert (testId is not None and len(testId) > 0), "Could not obtain a proper bench ID."
