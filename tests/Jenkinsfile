@@ -12,19 +12,13 @@ pipeline {
       agent { label 'master' }
       steps {
         cleanWs()
-        dir('utility') {
-            git(branch: "master", url: 'https://github.com/paulsbruce/neoload-ci-utility.git')
-        }
-        dir('nl_project') {
-            git(branch: env.CLI_BRANCH, url: 'https://github.com/Neotys-Labs/neoload-cli.git')
-        }
       }
     }
     stage('Attach Worker') {
       agent {
         dockerfile { // load python container
           args "--user root --rm -v /var/run/docker.sock:/var/run/docker.sock"
-          dir 'utility/docker/dind-python3'
+          dir 'tests/docker/dind-python3'
         }
       }
       stages {
