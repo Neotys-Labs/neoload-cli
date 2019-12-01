@@ -4,7 +4,6 @@ pipeline {
   environment {
       SEE_ENVIRONMENT_PREPARE='if you want to know secrets'
       // https://api.slack.com/apps/AQSDLPATU/incoming-webhooks?success=1
-      CLI_BRANCH = 'UpdateSetupWithPyTestDeps'
   }
 
   stages {
