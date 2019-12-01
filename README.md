@@ -28,7 +28,17 @@ neoload --profile saas1 --token [NLW_TOKEN] --zone [NLW_ZONE_ID]
 ### Create a Self-Hosted Enterprise License Profile
 If you do not have a SaaS-based license, you will need to specify additional licensing server url and credentials that refer to your own NeoLoad Team License Server.
 ```
-neoload --profile nts --token [NLW_TOKEN] --zone [NLW_ZONE_ID] --nts-url [TEAM_SERVER_URL] --nts-credentials [TEAM_SERVER_USERNAME_ENC_PASS]
+neoload --profile nts --token [NLW_TOKEN] --zone [NLW_ZONE_ID] --ntsurl [TEAM_SERVER_URL] --ntslogin [TEAM_SERVER_USERNAME_COLON_ENC_PASS]
+```
+
+### Viewing saved profiles
+You can always list profiles that have saved using the following command:
+```
+neoload --profiles
+```
+You can also view the raw/complete stored JSON representation of saved profile details using the following command:
+```
+neoload --profile [your_profile_name] --summary
 ```
 
 ### *Future* Plans to Execute Local Tests on a Free Trial License
@@ -42,7 +52,9 @@ This is planned to be delivered in Dec 2019.
 Once a profile is established, NeoLoad CLI makes it very easy to execute load tests. All you need is to provide an existing test suite or set of as-code file(s), then specify a scenario.
 
 NeoLoad CLI defaults to using the NeoLoad Web APIs for Runtime operations, which means that your project assets will be zipped up together and uploaded to the NeoLoad Web deployment you specified in your profile (SaaS or self-hosted).
-
+```
+neoload --scenario sanityScenario -f [path_to_your_nlp_or_yaml_file]
+```
 Once a test is initialized, if you are running in interactive console mode, the NeoLoad CLI will automatically open the system default browser to your live test results.
 
 ### Obtain Basic Examples
@@ -58,3 +70,40 @@ Additionally, you can specify multiple files, such as additional SLA, variables,
 ```
 neoload -f tests/example_2_0_runtime/default.yaml -f tests/example_2_0_runtime/slas/uat.yaml --scenario sanityScenario
 ```
+
+### Non-blocking Execution Workflow
+You may want to manage individual steps of attaching resources, running, waiting, and detatching resources in a parallel pipeline. This is particularly useful in combination with other parallel steps that dynamically analyze SLA data and fast-fail the test (using API commands) using a known custom real-time analysis process.
+
+The general process can be seen in the [NeoLoad CLI E2E PyTest suite](tests/test_attach_functions.py), but also abstracted below:
+
+- Initialize a profile
+  ```
+  neoload --profile example --zone [static_or_dynamic_zone_id] --token [your_neoload_web_token]
+  ```
+- (Optional for static zone) Attach dynamic resources
+  ```
+  neoload --attach docker#2,neotys/neoload-loadgenerator:7.0.1
+  ```
+  (Note: this assumes that the host you run the above command is a Docker host or is connected to one, DinD)
+
+- Kick off a test via NeoLoad Web Runtime
+  ```
+  neoload --nowait --scenario [your_scenario_name] -f [your_project_file(s)] --outfile neoload.stdout
+  ```
+
+- Grab the ID of the test just executed
+  ```
+  neoload --infile neoload.stdout --query testid
+  ```
+
+- (Start some other parallel operations, such as monitoring for early advanced SLA failures)
+
+- Wait (blocking) for test to complete
+  ```
+  neoload --spinwait --summary --junitsla junit_neoload_sla.xml --testid [test_id_obtained_from_above_query]
+  ```
+
+- (Always) Detatch Optional Docker resources
+  ```
+  neoload --detatch
+  ```
