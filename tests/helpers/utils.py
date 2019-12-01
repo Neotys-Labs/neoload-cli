@@ -31,17 +31,16 @@ def assertOutput(args,exitCode=None,contains=None,printOutput=False,clearConfig=
 
 
     result = subprocess.run([command], shell=True, check=False, capture_output=True, universal_newlines=True, env=my_env)
+    output = ""
+    if result.stdout is not None:
+        output += result.stdout
+    if result.stderr is not None:
+        output += result.stderr
+    if printOutput:
+        print('exitCode: ' + str(result.returncode))
+        print(output)
+
     if contains is not None:
-        output = ""
-        if result.stdout is not None:
-            output += result.stdout
-        if result.stderr is not None:
-            output += result.stderr
-        if printOutput:
-            print({
-                'exitCode': result.returncode,
-                'output': output,
-            })
         allContains = []
         if type(contains) is str:
             allContains.append(contains)
@@ -52,7 +51,9 @@ def assertOutput(args,exitCode=None,contains=None,printOutput=False,clearConfig=
             assert index >= 0, "Could not find '" + find + "' in stdout:\n\n" + output
 
     if exitCode is not None:
-        assert result.returncode == exitCode, "Process return code was not '" + str(exitCode) + "."
+        assert result.returncode == exitCode, "Process return code was not " + str(exitCode) + "."
+
+    return output
 # https://stackoverflow.com/questions/51736864/how-to-test-command-line-applications-in-python
 
 NEOLOAD_CLI_NTS_LOGIN = 'NEOLOAD_CLI_NTS_LOGIN'
@@ -81,6 +82,7 @@ def assertProfileByZone(zone):
     assertOutput(
         contains="Created profile: test",
         printOutput=True,
+        clearConfig=True,
         args={
             '--profile': 'test',
             '--zone': zone,
@@ -88,4 +90,13 @@ def assertProfileByZone(zone):
             '--token': '$NEOLOAD_CLI_NLW_TOKEN',
             '--ntslogin': '$NEOLOAD_CLI_NTS_LOGIN',
             '--ntsurl': '$NEOLOAD_CLI_NTS_URL',
+        })
+
+def assertNoDockerContainersRunning():
+    assertOutput(
+        contains="0 docker artifacts",
+        printOutput=True,
+        clearConfig=False,
+        args={
+            '--detatchall': None,
         })

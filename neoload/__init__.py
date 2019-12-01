@@ -32,7 +32,17 @@ def dprompt(options):
     else:
         logger = logging.getLogger("root")
         logger.warning("Required input during non-interactive session used defaults.")
-        return options
+        
+        allOptions = []
+        if type(options) is list:
+            allOptions.extend(options)
+        elif type(options) is dict:
+            allOptions.append(options)
+
+        ret = {}
+        for option in allOptions:
+            ret[option['name']] = None if 'default' not in option else option['default']
+        return ret
 
 def setColorEnabled(enabled):
     global colorPrint
