@@ -20,7 +20,7 @@ pipeline {
     stage('Attach Worker') {
       agent {
         dockerfile { // load python container
-          args "--user root --rm -v /var/run/docker.sock:/var/run/docker.sock"
+          args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
           dir 'tests/docker/dind-python3'
         }
       }
@@ -35,7 +35,7 @@ pipeline {
         stage('Get NeoLoad CLI') {
           steps {
               script { // Slack notification: STARTING
-                  payload = '{"text":"[STARTING] NeoLoad-CLI build status.\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'"}'
+                  payload = '{"text":"[STARTING] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'"}'
                   sh """curl -s \
                   -X POST -H 'Content-type: application/json' \
                   --data '""" + payload + """' \
@@ -62,7 +62,7 @@ pipeline {
         post {
           always {
               script { // Slack notification: final build status
-                  payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'"}'
+                  payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'"}'
                   sh """curl -s \
                   -X POST -H 'Content-type: application/json' \
                   --data '""" + payload + """' \
