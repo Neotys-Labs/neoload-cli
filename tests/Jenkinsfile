@@ -11,7 +11,10 @@ pipeline {
       agent { label 'master' }
       steps {
         cleanWs()
-        sh("printenv")
+        //sh("printenv")
+        script {
+          env.GIT_COMMIT_URL = "${env.GIT_URL}".replace(".git","/commit/")+"${GIT_COMMIT}"
+        }
       }
     }
     stage('Attach Worker') {
@@ -32,7 +35,7 @@ pipeline {
         stage('Get NeoLoad CLI') {
           steps {
               script { // Slack notification: STARTING
-                  payload = '{"text":"[STARTING] NeoLoad-CLI build status.\nSee: '+"${env.BUILD_URL}"+'"}'
+                  payload = '{"text":"[STARTING] NeoLoad-CLI build status.\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'"}'
                   sh """curl -s \
                   -X POST -H 'Content-type: application/json' \
                   --data '""" + payload + """' \
@@ -59,7 +62,7 @@ pipeline {
         post {
           always {
               script { // Slack notification: final build status
-                  payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nSee: '+"${env.BUILD_URL}"+'"}'
+                  payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'"}'
                   sh """curl -s \
                   -X POST -H 'Content-type: application/json' \
                   --data '""" + payload + """' \
