@@ -11,6 +11,7 @@ pipeline {
       agent { label 'master' }
       steps {
         cleanWs()
+        sh("printenv")
       }
     }
     stage('Attach Worker') {
@@ -40,7 +41,7 @@ pipeline {
               sh "python3 -m pip install -q -e ./"
           }
         }
-        stage('Run PyTes') {
+        stage('Run PyTest') {
           steps {
               sh """python3 -m pytest \
                   -v --junitxml=pytest_junit.xml \
