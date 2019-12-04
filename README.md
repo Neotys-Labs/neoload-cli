@@ -2,6 +2,20 @@
 
 This command-line interface helps you launch and observe performance tests on the Neotys Platform. Since NeoLoad is very flexible to many deployment models (SaaS, self-hosted, cloud or local containers, etc.), configuration and test execution parameters depend on your licensing and infrastructure provisioning options. Please read the following instructions carefully.
 
+## Prerequisites
+The examples below assume that you have Python3 and Git command line tools installed.
+
+For Windows users, see:
+ - [Installing Python in Windows](https://python-docs.readthedocs.io/en/latest/starting/install3/win.html)
+ - [5 Ways to Install Git on Windows](https://www.jamessturtevant.com/posts/5-Ways-to-install-git-on-Windows/)
+
+For Mac OS X:
+ - [Installing Python3 on Mac OS X](https://docs.python-guide.org/starting/install3/osx/)
+ - [From: *Installing Git, the Easy Way*](https://gist.github.com/derhuerst/1b15ff4652a867391f03#step-2--install-git)
+
+For Docker builds:
+ - [See the test harness Alpine-based Dockerfile](https://github.com/Neotys-Labs/neoload-cli/blob/master/tests/docker/dind-python3/Dockerfile)
+
 ## Installation
 To install, simply run the following command. As of Jan 2020, Python 2 will be permanently deprecated, therefore this utility is written for Python 3.
 ```
