@@ -21,27 +21,27 @@ from os import path
 #             '--detatch': None
 #         })
 
-@pytest.mark.slow
-def test_attach_run_allinone():
-    requireTestSecrets()
-    assertProfileByZone(os.environ['NEOLOAD_CLI_ZONE_STATIC'])
-    assertNoDockerContainersRunning()
-
-    assertOutput(
-        contains=[
-            "All containers are attached and ready for use",
-            "Project uploaded",
-            "Test running",
-            "Removing network",
-        ],
-        printOutput=True,
-        clearConfig=False,
-        args={
-            '--debug': None,
-            '-f '+ os.path.abspath("tests/example_pytests/default.yaml") : None,
-            '--scenario': 'sanityScenario',
-            '--attach': 'docker#1,neotys/neoload-loadgenerator:7.0.2'
-        })
+# @pytest.mark.slow
+# def test_attach_run_allinone():
+#     requireTestSecrets()
+#     assertProfileByZone(os.environ['NEOLOAD_CLI_ZONE_STATIC'])
+#     assertNoDockerContainersRunning()
+#
+#     assertOutput(
+#         contains=[
+#             "All containers are attached and ready for use",
+#             "Project uploaded",
+#             "Test running",
+#             "Removing network",
+#         ],
+#         printOutput=True,
+#         clearConfig=False,
+#         args={
+#             '--debug': None,
+#             '-f '+ os.path.abspath("tests/example_pytests/default.yaml") : None,
+#             '--scenario': 'sanityScenario',
+#             '--attach': 'docker#1,neotys/neoload-loadgenerator:7.0.2'
+#         })
 
 ################################################################################
 ### Test Goal: verify that all steps in non-blocking execution work as expected
