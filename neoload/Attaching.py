@@ -17,7 +17,7 @@ max_container_readiness_wait_sec = 60
 
 def attachInfra(profile,rawspec,explicit):
     spec = parseInfraSpec(rawspec)
-    if spec["provider"] == "docker":
+    if spec is not None and 'provider' in spec and spec['provider'] == 'docker':
         return attachLocalDockerInfra(profile,spec,explicit)
     else:
         raise NotImplementedError()
@@ -25,14 +25,14 @@ def attachInfra(profile,rawspec,explicit):
 def detatchInfra(spec,explicit):
     logger = logging.getLogger("root")
     logger.info("detatchInfra: "+spec["provider"])
-    if spec["provider"] == "docker":
+    if spec is not None and 'provider' in spec and spec['provider'] == 'docker':
         return detatchLocalDockerInfra(explicit,spec)
     else:
         logger.info("Attached infrastructure lacked a provider, so no detatched occured.")
 
 def isAlreadyAttached(infra):
     logger = logging.getLogger("root")
-    if infra['provider'] == 'docker':
+    if infra is not None and 'provider' in infra and infra['provider'] == 'docker':
         try:
             client = docker.from_env()
             containers = []
