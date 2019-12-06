@@ -35,12 +35,19 @@ def isAlreadyAttached(infra):
     if infra is not None and 'provider' in infra and infra['provider'] == 'docker':
         try:
             client = docker.from_env()
+            runningContainers = client.containers.list(all=True)
             containers = []
             for containerId in infra['container_ids']:
-                containers.append(client.containers.get(containerId))
-            network = client.networks.get(infra['network_id'])
+                if any(filter(lambda cr: cr.id == containerId,runningContainers)):
+                    containers.append(client.containers.get(containerId))
 
-            if all(map(lambda x: x.status == 'running', containers)) and len(network.name) > 0:
+            networkId = infra['network_id']
+            networks = client.networks.list()
+            network = None
+            if any(filter(lambda net: net.id == networkId,networks)):
+                network = client.networks.get(networkId)
+
+            if all(map(lambda x: x.status == 'running', containers)) and network is not None:
                 return True
         except:
             logger.error("Unexpected error in 'isAlreadyAttached':", sys.exc_info()[0])

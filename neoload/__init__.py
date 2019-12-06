@@ -9,6 +9,9 @@ colorPrint = True
 interactiveMode = False
 quietMode = False
 
+def getDefaultLogger():
+    return logging.getLogger("root")
+
 def cprint(string, color=None, font="slant", figlet=False):
     if not isQuietMode():
         if colored and color is not None and colorPrint:
@@ -30,9 +33,9 @@ def dprompt(options):
     if isInteractiveMode():
         return prompt(options)
     else:
-        logger = logging.getLogger("root")
+        logger = getDefaultLogger()
         logger.warning("Required input during non-interactive session used defaults.")
-        
+
         allOptions = []
         if type(options) is list:
             allOptions.extend(options)

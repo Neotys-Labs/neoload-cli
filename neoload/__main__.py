@@ -42,6 +42,7 @@ class ArgumentException(Exception):
 @click.option('files','--project','-f', multiple=True, help='Delimited list of project files, one or more, .nlp or YAML')
 @click.option('--scenario', default=None, help='Run a specific scenario in provided project file(s)')
 @click.option('--attach', default=None, help='Attaches containers for Controller and Load Generator(s)')
+@click.option('--reattach', is_flag=True, help='Uses last --attach statement to create containers for Controller and Load Generator(s)')
 @click.option('--detatch','-d', is_flag=True, help='Attempts to detatch and remove containers attached by this tool.')
 @click.option('--detatchall','-da', is_flag=True, help='Detatches all local infrastructure instigated by this tool.')
 @click.option('--verbose', is_flag=True, default=None, help='Include INFO and WARNING detail.')
@@ -62,7 +63,7 @@ class ArgumentException(Exception):
 @click.option('--nowait', is_flag=True, default=None, help='Do not wait for blocking events, return immediately. To be used in conjunction with running a test.')
 @click.option('--spinwait', is_flag=True, default=None, help='Block execution until a test is done or failure to connect to API. To be used in conjunction with --testid specifier.')
 def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                           # profile stuff
-            files,scenario,attach,detatch,detatchall,                               # runtime inputs
+            files,scenario,attach,reattach,detatch,detatchall,                               # runtime inputs
             verbose,debug,nocolor,noninteractive,quiet,                             # logging and debugging
             testid,query,                                                           # entities (primarily, a test)
             summary,justid,outfile,infile,junitsla,                                 # export operations
@@ -70,138 +71,81 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
             nowait,spinwait                                                         # support for non-blocking execution
     ):
 
-    loggingLevel = logging.ERROR
-
-    if debug is not None:
-        loggingLevel = logging.DEBUG
-    elif verbose is not None:
-        loggingLevel = logging.INFO
-    else:
-        loggingLevel = logging.ERROR
-
-    logging.basicConfig(level=loggingLevel)
-    logger = logging.getLogger("root")
-    logger.setLevel(loggingLevel)
-
+    # initialize most rudimentary runtime indicators
     moreinfo = True if debug is not None or verbose is not None else False
     interactive = False if platform.system().lower() == 'linux' or noninteractive else True
+
+    # configure logging options
+    logger = configureLogging(debug,verbose,moreinfo,interactive,nocolor)
+    if outfile:
+        sys.stdout = Logger(outfile)
+
+    # indicate to this process if running as an interactive console (human) or CI
+    setInteractiveMode(interactive)
+
+    # if intent includes indicators to only output bare minimum output, set quiet flag
     if justid:
         quiet = True
     if infile is not None and query is not None:
         quiet = True
-
-    if outfile:
-        sys.stdout = Logger(outfile)
-
-    setInteractiveMode(interactive)
     setQuietMode(quiet)
 
-    if interactive and nocolor is None:
-        coloredlogs = __import__('coloredlogs')
-        coloredlogs.install(level=loggingLevel)
-    else:
-        setColorEnabled(False)
-        cprint("Color logs are disabled")
+    # for headless, non-interactive systems, flush output immediately on all prints
+    configurePythonUnbufferedMode(moreinfo)
 
-    if not interactive:
-        # define a Handler which writes INFO messages or higher to the sys.stderr
-        console = logging.StreamHandler()
-        console.setLevel(logger.getEffectiveLevel())
-        # add the handler to the root logger
-        logging.getLogger('root').addHandler(console)
-
-    if debug is not None:
-        if moreinfo: cprint("logging level set to DEBUG","red")
-    elif verbose is not None:
-        if moreinfo: cprint("logging level set to INFO","red")
-    else:
-        if moreinfo: cprint("logging level set to ERROR","red")
-
-    if moreinfo:
-        unbuf = '' if os.getenv('PYTHONUNBUFFERED') is None else os.getenv('PYTHONUNBUFFERED')
-        if unbuf.lower() in trueValues:
-            logger.warning('Unbuffered output is on; CI jobs should report in real-time')
-        else:
-            logger.warning('Unbuffered output is off; CI jobs may delay output; set PYTHONUNBUFFERED=1')
-
-    # if debug is not None:
-    #     cprint("logging.ERROR=" + str(logging.ERROR),"red")
-    #     cprint("logging.INFO=" + str(logging.INFO),"red")
-    #     cprint("logging.DEBUG=" + str(logging.DEBUG),"red")
-    #     cprint("Logging is set to: " + str(logger.getEffectiveLevel()),"red")
-
-    logger.info("Platform: " + platform.system())
-
+    # critical flags for subsequent execution modes
     hasFiles = True if files is not None and len(files)>0 else False
     intentToRun = True if hasFiles or scenario is not None else False
 
     if not intentToRun:
         cprint("NeoLoad CLI", color="blue", figlet=True)
 
-    if profiles is not None:
-        listProfiles()
-        return
-    else:
-        if profile is not None and token is not None and zone is not None:
-            createOrUpdateProfile(profile,url,token,zone)
-        else:
-            loadProfile(profile,url,token,zone)
+    if not configureProfiles(profiles,profile,url,token,zone,ntsurl,ntslogin):
+        return exitProcess(0)# this is informational listing only, no need to execute anything else
 
-        if url is not None:
-            setUrl(url)
-        if zone is not None:
-            setZone(zone)
-        if token is not None:
-            setToken(token)
-        if ntsurl is not None:
-            setNTSURL(ntsurl)
-        if ntslogin is not None:
-            setNTSLogin(ntslogin)
+    #TODO: implement --profile x --attach blahblah as a profile-update-only operation, no actual attach
 
-    shouldAttach = False if attach is None else True
     currentProfile = getCurrentProfile()
     explicitAttach = True if attach is not None else False
     explicitDetatch = True if detatch or detatchall else False
-    alreadyAttached = False
-    if attach is not None:
-        currentProfile = updateProfileAttach(attach)
-    else:
-        if intentToRun:
-            alreadyAttached = True if 'lastinfra' in currentProfile and isAlreadyAttached(currentProfile['lastinfra']) else False
-            if alreadyAttached:
-                shouldAttach = False
-                logger.warning("Reusing profile attach: " + str(currentProfile['lastinfra']))
-                logger.debug("alreadyAttached: " + str(alreadyAttached))
-            else:
-                attach = getProfileAttach(currentProfile)
-                if attach is not None:
-                    shouldAttach = True
-                    logger.warning("Prior infrastructure could not be revived; need to restart.")
+    #alreadyAttached = False
 
-    if profile is not None and currentProfile is not None and summary:
+    # if reattaching, but no prior attach saved in profile, error out
+    if reattach and getProfileAttach(currentProfile) is None:
+        return exitProcess(3, "Trying to reattach, but no prior attach stored in current profile.")
+
+
+    # prep local infra attachment based on arguments, produce output state for later steps
+    attachConfig = configureAttach(attach,intentToRun,currentProfile,reattach)
+    currentProfile = attachConfig['currentProfile']
+    alreadyAttached = attachConfig['alreadyAttached']
+    shouldAttach = attachConfig['shouldAttach']
+    attach = attachConfig['attach']
+
+    #TODO: if profile's zone has no resources available (i.e. if not attaching), fail here (TBD Jan 2020)
+
+
+    # if looking for a summary of the profile specified as an argument
+    if summary and profile is not None and currentProfile is not None:
         print(currentProfile)
 
-
     #TODO: need to add validation that, if to be run, minimum-viable params are specified (like Scenario)
+
+    # if there are files specified, package for the API and prep variables
     zipfile = None
     asCodeFiles = []
     if hasFiles:
-        #validateFiles(files)
-        logger.debug(files)
+        #validateFiles(files) #TODO: implement pre-check of YAML and json-schema
         pack = packageFiles(files)
         zipfile = pack["zipfile"]
         asCodeFiles = pack["asCodeFiles"]
-        logger.info("Zip file created: "+zipfile)
-        logger.info("As-code files: " + ",".join(asCodeFiles))
 
+    # status variables for forthcoming process
     infra = {
         "ready": True, # assume that zone has available resources, no API for validating this yet
         "provider": "", # assume that there are resources already attached/attachable
     }
-
     exitCode = 0
-
-    #infra["ready"] = False #TODO: temp debug REMOVE ASAP
 
     try:
         client = getNLWAPI(currentProfile)
@@ -216,22 +160,25 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
 
         if intentToRun:
 
-            #if explicitly argumented numOfLGs, ensure below or equal to that defined
-            # considering dynamic zones should be interrogated for max
+            # TODO: if explicitly argumented numOfLGs, ensure below or equal to
+            # that defined considering zones should be interrogated for max
 
             if infra["ready"]:
 
+                # upload the project to the NeoLoad Web Runtime in prep of test
                 projectDef = None
                 if zipfile is not None:
                     cprint("Uploading project.", "yellow")
                     projectDef = uploadProject(client,zipfile)
                     cprint("Project uploaded", "green")
 
+                # if upload successful, kick off the test
                 projectLaunched = None
                 if projectDef is not None:
                     projectId = projectDef.project_id
                     projectName = projectDef.project_name
                     zone = currentProfile["zone"]
+                    #TODO: add CLI argument to override test name
                     testName = projectName + "_" + scenario
                     cprint("Launching new test '" + testName + "'.", "yellow")
                     try:
@@ -240,7 +187,7 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
                     except ApiException as err:
                         logger.critical("API error: {0}".format(err))
 
-
+                # if test was kicked off successfully, process async or sync next steps
                 if projectLaunched is not None:
                     time.sleep( 5 ) # wait for NLW test queued
                     launchedTestId = projectLaunched.test_id
@@ -257,16 +204,18 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
             #end infraReady
         else: # not intentToRun
 
+            # collections of arguments for verification of combinations
             execops = [spinwait]
             exportops = [summary,justid,junitsla,query]
             modops = [updatename,updatedesc,updatestatus]
-            infraops = [attach,detatch]
+            infraops = [attach,reattach,detatch]
 
-            standaloneops = [detatch]
+            # operations that can live on their own (like detatch, profiles, etc.)
+            standaloneops = [detatch,profiles]
 
+            # in prep for below argument combinatory validations
             allops = execops + exportops + modops + infraops + standaloneops
             allids = [testid,profile,infile]
-
             if not any(list(map(lambda x: x is not None, standaloneops))) and (
                     (
                         any(list(map(lambda x: x is not None, allops))) and all(list(map(lambda x: x is None, allids)))
@@ -276,6 +225,7 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
                 ):
                 raise ArgumentException("Activity without context (i.e. --updatedesc but no --testid)")
 
+            # if a named query and source is provided
             if infile is not None and query is not None:
                 found = None
                 if query.lower() == "testid":
@@ -288,11 +238,13 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
                 else:
                     logger.warning("Nothing in file [" + infile + "] matching query [" + query + "]")
 
+            # if testid is provided, handle various reasons for querying a test id
             if testid is not None:
 
                 test = getTestStatus(client,testid)
                 printSummary = summary
 
+                # if test execution-related operations are specified, do them
                 if any(list(map(lambda x: x is not None, execops))):
                     logger.debug("Execution on a test...")
 
@@ -300,6 +252,7 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
                         cprintOrLogInfo(True,logger,"Resuming a blocking --spinwait for test: " + testid)
                         exitCode = blockingWaitForTestCompleted(currentProfile,client,testid,moreinfo,junitsla,quiet,justid)
 
+                # if test modification-related operations are specified, do them
                 if any(list(map(lambda x: x is not None, modops))):
                     logger.debug("Operating on a test...")
                     tobe = {
@@ -322,6 +275,7 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
                     test = updateTestDescription(client,testid,tobe)
                     printSummary = True
 
+                # if test export-related operations are specified, do them
                 if any(list(map(lambda x: x is not None, exportops))) or printSummary:
                     logger.debug("Exporting test details...")
 
@@ -331,54 +285,133 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
                     if printSummary:
                         printTestSummary(client,testid,justid)
 
+    # handle argument related issues with a different exit code than 0,1,2 (per NeoLoadCmd)
     except ArgumentException as e:
         exitCode = 3
         logger.error(e)
+    # handle any other exception and print stack trace for diagnosis putposes
     except Exception as e:
         exitCode = 2
         logger.error("Unexpected error:", sys.exc_info()[0])
 
+    # if resources were attached and not in async where they will be detatched manually afterwards
     shouldDetatch = detatch or (shouldAttach and intentToRun)
 
-    #print("shouldDetatch: " + str(shouldDetatch))
-    #print("detatch: " + str(detatch))
-    #print("infra[in-proc]: " + str(infra))
-
+    # do detatchments if appropriate
     if nowait:
         logger.warning("Skipping all cleanup tasks in --nowait mode.")
+        cleanupAfter(zipfile,shouldDetatch=False,explicitEither=False,infra=infra)
     else:
-        if detatch and not intentToRun:
-            logger.info("Loading prior infrastructure from current profile.")
-            infra = getProfileInfra(currentProfile)
-            logger.debug("infra[restored]: " + str(infra))
-
-        if shouldDetatch:
-            containerCount = 0
-            if infra is not None:
-                containerCount = len(infra['container_ids']) if 'container_ids' in infra else 0
-
-            logger.info("containerCount: " + str(containerCount))
-            if containerCount > 0:
-                logger.warning("Detatching " + str(shouldDetatch) + " prior containers.")
-            else:
-                cprintOrLogInfo(True,logger,"No containers to detatch!")
-
-        if not shouldDetatch and intentToRun and alreadyAttached:
-            logger.warning("Reminder: you just ran a test without detatching infrastructure. Make sure you clean up after yourself with the --detatch argument!")
-
-        explicitEither = True if explicitAttach or explicitDetatch else False
-        cleanupAfter(zipfile,shouldDetatch,explicitEither,infra)
-
-        if shouldDetatch:
-            currentProfile = updateProfileInfra(None)
-
-        if detatchall:
-            detatchAllInfra(explicitDetatch)
+        detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
+                            alreadyAttached,explicitAttach,explicitDetatch,zipfile,detatchall)
 
     if moreinfo:
         logger.info("Exiting with code: " + str(exitCode))
 
+    return exitProcess(exitCode)
+
+def exitProcess(exitCode,msg=None):
+    if exitCode != 0 and msg is not None:
+        getDefaultLogger().error(msg)
+
     sys.exit(exitCode)
+
+    return exitCode
+
+def configureLogging(debug,verbose,moreinfo,interactive,nocolor):
+    loggingLevel = logging.ERROR
+
+    if debug is not None:
+        loggingLevel = logging.DEBUG
+    elif verbose is not None:
+        loggingLevel = logging.INFO
+    else:
+        loggingLevel = logging.ERROR
+
+    logging.basicConfig(level=loggingLevel)
+    logger = getDefaultLogger()
+    logger.setLevel(loggingLevel)
+
+    if interactive and nocolor is None:
+        coloredlogs = __import__('coloredlogs')
+        coloredlogs.install(level=loggingLevel)
+    else:
+        setColorEnabled(False)
+        cprint("Color logs are disabled")
+
+    if not interactive:
+        # define a Handler which writes INFO messages or higher to the sys.stderr
+        console = logging.StreamHandler()
+        console.setLevel(logger.getEffectiveLevel())
+        # add the handler to the root logger
+        getDefaultLogger().addHandler(console)
+
+    if debug is not None:
+        if moreinfo: cprint("logging level set to DEBUG","red")
+    elif verbose is not None:
+        if moreinfo: cprint("logging level set to INFO","red")
+    else:
+        if moreinfo: cprint("logging level set to ERROR","red")
+
+    return logger
+
+def configurePythonUnbufferedMode(moreinfo):
+    if moreinfo:
+        unbuf = '' if os.getenv('PYTHONUNBUFFERED') is None else os.getenv('PYTHONUNBUFFERED')
+        if unbuf.lower() in trueValues:
+            getDefaultLogger().warning('Unbuffered output is on; CI jobs should report in real-time')
+        else:
+            getDefaultLogger().warning('Unbuffered output is off; CI jobs may delay output; set PYTHONUNBUFFERED=1')
+
+def configureProfiles(profiles,profile,url,token,zone,ntsurl,ntslogin):
+    if profiles is not None:
+        listProfiles()
+        return False
+    else:
+        if profile is not None and token is not None and zone is not None:
+            createOrUpdateProfile(profile,url,token,zone)
+        else:
+            loadProfile(profile,url,token,zone)
+
+        if url is not None:
+            setUrl(url)
+        if zone is not None:
+            setZone(zone)
+        if token is not None:
+            setToken(token)
+        if ntsurl is not None:
+            setNTSURL(ntsurl)
+        if ntslogin is not None:
+            setNTSLogin(ntslogin)
+
+    return True
+
+def configureAttach(attach,intentToRun,currentProfile,reattach):
+    ret = {}
+    logger = getDefaultLogger()
+    infra = getProfileInfra(currentProfile)
+    alreadyAttached = isAlreadyAttached(infra)
+    shouldAttach = False if attach is None else True
+    if attach is not None:
+        currentProfile = updateProfileAttach(attach)
+    else:
+        if intentToRun or reattach:
+            if alreadyAttached:
+                shouldAttach = False
+                logger.warning("Reusing profile attach: " + str(infra))
+                logger.debug("alreadyAttached: " + str(alreadyAttached))
+            else:
+                attach = getProfileAttach(currentProfile)
+                if attach is not None:
+                    shouldAttach = True
+                    logger.warning("Prior infrastructure could not be revived; need to restart.")
+
+    ret['currentProfile'] = currentProfile
+    ret['alreadyAttached'] = alreadyAttached
+    ret['shouldAttach'] = shouldAttach
+    ret['attach'] = attach
+
+    return ret
 
 def printTestSummary(client,testId,justid):
     test = getTestStatus(client,testId)
@@ -396,10 +429,9 @@ def printTestSummary(client,testId,justid):
         print(json)
 
 def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,junitsla,quiet,justid):
-    logger = logging.getLogger("root")
     overviewUrl = getTestOverviewUrl(currentProfile,launchedTestId)
     logsUrl = getTestLogsUrl(currentProfile,launchedTestId)
-    logger.info("Test logs available at: " + logsUrl)
+    getDefaultLogger().info("Test logs available at: " + logsUrl)
     if moreinfo and isInteractiveMode():
         webbrowser.open_new_tab(logsUrl)
     test = None
@@ -464,11 +496,9 @@ def writeSLAs(client,test,filepath):
     writeJUnitSLAContent(slas,test,filepath)
 
 def cleanupAfter(zipfile,shouldDetatch,explicit,infra):
-    logger = logging.getLogger("root")
-
     if shouldDetatch:
         if infra is None:
-            logger.warning("No prior infrastructure to detatch.")
+            getDefaultLogger().warning("No prior infrastructure to detatch.")
         else:
             detatchInfra(infra,explicit)
 
@@ -494,6 +524,38 @@ def handleTestTermination(test): # dictionary from NLW API of final status
         cprint("Unknown 'termination_reason' value: " + test.termination_reason, "red")
         pprint(test)
 
+def detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
+            alreadyAttached,explicitAttach,explicitDetatch,zipfile,detatchall):
+    logger = getDefaultLogger()
+
+    if detatch and not intentToRun:
+        logger.info("Loading prior infrastructure from current profile.")
+        infra = getProfileInfra(currentProfile)
+        logger.debug("infra[restored]: " + str(infra))
+
+    if shouldDetatch:
+        containerCount = 0
+        if infra is not None:
+            containerCount = len(infra['container_ids']) if 'container_ids' in infra else 0
+
+        logger.info("containerCount: " + str(containerCount))
+        if containerCount > 0:
+            logger.warning("Detatching " + str(shouldDetatch) + " prior containers.")
+        else:
+            cprintOrLogInfo(True,logger,"No containers to detatch!")
+
+    if not shouldDetatch and intentToRun and alreadyAttached:
+        logger.warning("Reminder: you just ran a test without detatching infrastructure. Make sure you clean up after yourself with the --detatch argument!")
+
+    explicitEither = True if explicitAttach or explicitDetatch else False
+    cleanupAfter(zipfile,shouldDetatch,explicitEither,infra)
+
+    if shouldDetatch:
+        currentProfile = updateProfileInfra(None)
+
+    if detatchall:
+        detatchAllInfra(explicitDetatch)
+
 class Logger(object):
     def __init__(self, filename=None):
         self.terminal = sys.stdout
@@ -515,7 +577,7 @@ class Logger(object):
             if self.log is not None:
                 self.log.flush()
         except Exception as e:
-            logger.error("Logger.flush error:", sys.exc_info()[0])
+            getDefaultLogger().error("Logger.flush error:", sys.exc_info()[0])
 
 if __name__ == '__main__':
     main()
