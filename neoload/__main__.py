@@ -75,11 +75,6 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
     moreinfo = True if debug is not None or verbose is not None else False
     interactive = False if platform.system().lower() == 'linux' or noninteractive else True
 
-    # configure logging options
-    logger = configureLogging(debug,verbose,moreinfo,interactive,nocolor)
-    if outfile:
-        sys.stdout = Logger(outfile)
-
     # indicate to this process if running as an interactive console (human) or CI
     setInteractiveMode(interactive)
 
@@ -89,6 +84,11 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
     if infile is not None and query is not None:
         quiet = True
     setQuietMode(quiet)
+
+    # configure logging options
+    logger = configureLogging(debug,verbose,moreinfo,interactive,nocolor)
+    if outfile:
+        sys.stdout = Logger(outfile)
 
     # for headless, non-interactive systems, flush output immediately on all prints
     configurePythonUnbufferedMode(moreinfo)
@@ -232,7 +232,11 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
                     guid = re.compile("(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}")
                     for i, line in enumerate(open(infile)):
                         for match in re.finditer(guid, line):
+                            logger.debug("match: " + str(match.group()))
                             found = match.group()
+                else:
+                    return exitProcess(3, "Query value '" + query + "' not implemented!")
+
                 if found is not None:
                     print(found)
                 else:
@@ -561,7 +565,7 @@ class Logger(object):
         self.terminal = sys.stdout
         self.log = None
         if filename is not None:
-            self.log = open(filename, "a")
+            self.log = open(filename, "w")
 
     def write(self, message):
         self.terminal.write(message)
