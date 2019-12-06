@@ -7,6 +7,7 @@ from distutils.dir_util import copy_tree
 
 def packageFiles(fileSpecs):
     logger = logging.getLogger("root")
+    logger.debug(fileSpecs)
 
     # collect all files into a temporary location, zip and upload or run from there
     files = []
@@ -66,6 +67,10 @@ def packageFiles(fileSpecs):
     pack = {}
     pack["zipfile"] = os.path.realpath(tmpzip)
     pack["asCodeFiles"] = asCodeFiles
+
+    logger.info("Zip file created: " + pack["zipfile"])
+    logger.info("As-code files: " + ",".join(asCodeFiles))
+
     return pack
 
 def getFolderSize(folder):
@@ -77,4 +82,3 @@ def getFolderSize(folder):
         elif os.path.isdir(itempath):
             total_size += getFolderSize(itempath)
     return total_size
-    
