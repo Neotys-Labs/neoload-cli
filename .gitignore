@@ -4,6 +4,7 @@ tests/example_1_1_request/
 openapi_client.7.0.2.zip
 openapi_client.7.0.2/
 junit_docker.xml
+pytest_junit.xml
 async.stdout
 tests/example_0_9_allinone/
 
