@@ -81,7 +81,7 @@ pipeline {
                   sh tempShellFile
                 } catch(Exception ex) {
                 }
-                withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'username', passwordVariable: 'password')])
+                withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
                 {
                   try {
                     sh """\
