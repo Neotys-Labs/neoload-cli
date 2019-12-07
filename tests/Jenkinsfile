@@ -64,16 +64,14 @@ pipeline {
                   sh 'printenv'
                   try {
                     sh """\
+                    git init
                     git config --global user.email "jenkins@neotys.oss"
                     git config --global user.name "Jenkins Pipeline"
+                    git pull https://""" + "$GIT_USERNAME" + ":" + "$GIT_PASSWORD" + """@github.com/Neotys-Labs/neoload-cli.git """ + "${env.JUST_BRANCH_NAME}" + """
                     """
                     sh """\
-                    git checkout """ + "${env.JUST_BRANCH_NAME}" + """
                     git branch
                     git status
-                    """
-                    sh """\
-                    git pull
                     """
                   } catch(Exception ex) {
                     echo "Failed to archive test logs."
