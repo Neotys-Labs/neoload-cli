@@ -68,8 +68,9 @@ pipeline {
                     ; ( exit """ + pipeSubstitution + """ ) \
                 """
                 while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("  "," ")
-                echo shellCommand
-                sh shellCommand
+                writeFile(shellCommand,'pytest.temp.sh')
+                sh 'chmod +x pytest.temp.sh'
+                sh './pytest.temp.sh'
               //} catch(Exception ex) {
 
               //}
