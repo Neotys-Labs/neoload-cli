@@ -59,7 +59,8 @@ pipeline {
               //try {
               script {
                 pipeSubstitution = "\${PIPESTATUS[0]}"
-                shellCommand = """(uname -a && \
+                shellCommand = """#!/usr/bin/env bash
+                (uname -a && \
                     python3 -m pytest \
                     -v --junitxml=pytest_junit.xml \
                     tests) \
@@ -68,8 +69,10 @@ pipeline {
                     ; ( exit """ + pipeSubstitution + """ ) \
                 """
                 while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("  "," ")
+                echo shellCommand
                 writeFile(shellCommand,'pytest.temp.sh')
-                sh 'chmod +x pytest.temp.sh'
+                sh 'cat pytest.temp.sh'
+                sh 'chmod +x ./pytest.temp.sh'
                 sh './pytest.temp.sh'
               //} catch(Exception ex) {
 
