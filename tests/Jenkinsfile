@@ -89,6 +89,10 @@ pipeline {
                     git status
                     """
                     sh """\
+                    git config --global user.email "jenkins@neotys.oss"
+                    git config --global user.name "Jenkins Pipeline"
+                    """
+                    sh """\
                     git add '""" + "${env.REL_LOG_PATH}" + """'
                     git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
                     """
