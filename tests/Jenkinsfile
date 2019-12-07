@@ -60,8 +60,6 @@ pipeline {
               script {
                 withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
                 {
-                  // something different
-                  sh 'printenv'
                   try {
                     sh """\
                     git init
@@ -106,10 +104,13 @@ pipeline {
                   // something different
                   try {
                     sh """\
+                    git init
+                    git config --global user.email "jenkins@neotys.oss"
+                    git config --global user.name "Jenkins Pipeline"
+                    git pull https://""" + "$GIT_USERNAME" + ":" + "$GIT_PASSWORD" + """@github.com/Neotys-Labs/neoload-cli.git """ + "${env.JUST_BRANCH_NAME}" + """
+                    git status
                     git add '""" + "${env.REL_LOG_PATH}" + """'
                     git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
-                    """
-                    sh """\
                     git status
                     git push  """ + "${env.GIT_BRANCH}" + """
                     git status
