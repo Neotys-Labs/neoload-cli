@@ -58,6 +58,7 @@ pipeline {
               // exit PIPESTATUS to retain python test exit code for proper pass/fail
               //try {
               script {
+                sh 'bash --version'
                 pipeSubstitution = "\${PIPESTATUS[0]}"
                 shellCommand = """#!/bin/sh
                 (uname -a && \
