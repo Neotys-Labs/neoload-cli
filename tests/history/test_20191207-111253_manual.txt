@@ -1,0 +1,37 @@
+Darwin Pauls-MacBook-Pro-2018.local 18.5.0 Darwin Kernel Version 18.5.0: Mon Mar 11 20:40:32 PDT 2019; root:xnu-4903.251.3~3/RELEASE_X86_64 x86_64
+============================= test session starts ==============================
+platform darwin -- Python 3.7.0, pytest-5.3.1, py-1.8.0, pluggy-0.13.1 -- /Library/Frameworks/Python.framework/Versions/3.7/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/paul/git/neotys/neoload-cli/tests, inifile: pytest.ini
+plugins: steps-1.7.1
+collecting ... collected 15 items
+
+tests/test_attach_functions.py::test_attach_detatch_simple SKIPPED       [  6%]
+tests/test_attach_functions.py::test_attach_run_allinone SKIPPED         [ 13%]
+tests/test_attach_functions.py::test_attach_run_async[prepare] SKIPPED   [ 20%]
+tests/test_attach_functions.py::test_attach_run_async[attach] SKIPPED    [ 26%]
+tests/test_attach_functions.py::test_attach_run_async[kickoff] SKIPPED   [ 33%]
+tests/test_attach_functions.py::test_attach_run_async[getid] SKIPPED     [ 40%]
+tests/test_attach_functions.py::test_attach_run_async[spinwait] SKIPPED  [ 46%]
+tests/test_attach_functions.py::test_attach_run_async[detatch] SKIPPED   [ 53%]
+tests/test_profile_functions.py::test_profiles_empty FAILED              [ 60%]
+tests/test_profile_functions.py::test_profile_empty PASSED               [ 66%]
+tests/test_profile_functions.py::test_profile_create_wo_params PASSED    [ 73%]
+tests/test_profile_functions.py::test_profile_create_with_valid_zone_no_url PASSED [ 80%]
+tests/test_profile_functions.py::test_profile_create_with_valid_url_no_zone PASSED [ 86%]
+tests/test_profile_functions.py::test_profile_create_with_nts_credentials PASSED [ 93%]
+tests/test_query_functions.py::test_query_outfile_for_bench PASSED       [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_profiles_empty ______________________________
+
+    def test_profiles_empty():
+        assertOutput(
+            contains="No profiles",
+            args="--profiles")
+>       assert False, "Purposeful fault to test the tee exit code"
+E       AssertionError: Purposeful fault to test the tee exit code
+E       assert False
+
+tests/test_profile_functions.py:8: AssertionError
+==================== 1 failed, 6 passed, 8 skipped in 5.81s ====================

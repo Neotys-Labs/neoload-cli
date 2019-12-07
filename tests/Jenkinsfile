@@ -13,7 +13,12 @@ pipeline {
         cleanWs()
         //sh("printenv")
         script {
-          env.GIT_COMMIT_URL = "${env.GIT_URL}".replace(".git","/commit/")+"${GIT_COMMIT}"
+          env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')").trim()
+          env.REL_LOG_PATH = "tests/history/test_${env.DATETIMESTAMP}_" +
+                              "${env.GIT_BRANCH}".replace("origin/","") +
+                              "_${env.GIT_COMMIT}.txt"
+          env.GIT_COMMIT_URL = "${env.GIT_URL}".replace(".git","/commit/")+"${env.GIT_COMMIT}"
+          env.LOG_PATH_URL = "${env.GIT_URL}".replace(".git","/")+"${env.REL_LOG_PATH}"
         }
       }
     }
@@ -29,6 +34,7 @@ pipeline {
           steps {
               script {
                   sh 'apk add curl' // for Slack direct curls, no assumed plugin
+                  sh "echo 'REL_LOG_PATH: ${env.REL_LOG_PATH}'"
               }
           }
         }
@@ -46,11 +52,36 @@ pipeline {
         }
         stage('Run PyTest') {
           steps {
-              sh """python3 -m pytest \
-                  -v --junitxml=pytest_junit.xml \
-                  tests \
-                  --runslow
-              """
+              // uname adds system name/identity of where this is run for audit
+              // parenthesis for uname AND python3 tests into same tee output File
+              // tee produces stdout in this same CI output plus a file for checkin
+              // exit PIPESTATUS to retain python test exit code for proper pass/fail
+              //try {
+              script {
+                // a lot of this has to do with use of PIPESTATUS and bash exclusivity
+                pipeSubstitution = "\${PIPESTATUS[0]}"
+                tempShellFile = './pytest.temp.sh'
+                shellCommand = """#!/usr/bin/env bash
+                    (uname -a && \
+                    python3 -m pytest \
+                    -v --junitxml=pytest_junit.xml \
+                    tests \
+                    --runslow \
+                    ) \
+                    | tee \
+                    """ + "${env.REL_LOG_PATH}" + """ \
+                    ; ( exit """ + pipeSubstitution + """ ) \
+                """
+                while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("  "," ")
+                //echo shellCommand
+                writeFile text: shellCommand, file: tempShellFile
+                sh 'cat ' + tempShellFile
+                sh 'chmod +x ' + tempShellFile
+                sh tempShellFile
+              //} catch(Exception ex) {
+
+              //}
+            }
           }
           post {
               always {
@@ -62,7 +93,7 @@ pipeline {
         post {
           always {
               script { // Slack notification: final build status
-                  payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'"}'
+                  payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'\nLogs: '+"${env.LOG_PATH_URL}"+'"}'
                   sh """curl -s \
                   -X POST -H 'Content-type: application/json' \
                   --data '""" + payload + """' \
