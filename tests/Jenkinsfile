@@ -83,12 +83,13 @@ pipeline {
                 }
                 withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
                 {
+                  // something different
                   try {
                     sh """\
                     git branch
                     git status
                     """
-                    
+
                     sh """\
                     git config --global user.email "jenkins@neotys.oss"
                     git config --global user.name "Jenkins Pipeline"
