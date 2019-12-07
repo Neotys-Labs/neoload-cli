@@ -72,9 +72,10 @@ pipeline {
                     """ + "${env.REL_LOG_PATH}" + """ \
                     ; ( exit """ + pipeSubstitution + """ ) \
                 """
-                while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("\t"," ").replace("\n"," ").replace("  "," ")
+                while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("  "," ")
                 //echo shellCommand
                 writeFile text: shellCommand, file: tempShellFile
+                sh 'cat ' + tempShellFile
                 sh 'chmod +x ' + tempShellFile
                 sh tempShellFile
               //} catch(Exception ex) {
