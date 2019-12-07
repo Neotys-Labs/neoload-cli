@@ -5,7 +5,7 @@ def test_profiles_empty():
     assertOutput(
         contains="No profiles",
         args="--profiles")
-    #assert False, "Used to validate that a tee pipe retains exit PIPESTATUS in $?"
+    assert False, "Used to validate that a tee pipe retains exit PIPESTATUS in $?"
 
 def test_profile_empty():
     assertOutput(

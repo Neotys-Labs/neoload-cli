@@ -58,10 +58,11 @@ pipeline {
               // exit PIPESTATUS to retain python test exit code for proper pass/fail
               //try {
               script {
-                sh 'bash --version'
+                // a lot of this has to do with use of PIPESTATUS and bash exclusivity
                 pipeSubstitution = "\${PIPESTATUS[0]}"
+                tempShellFile = './pytest.temp.sh'
                 shellCommand = """#!/usr/bin/env bash
-                (uname -a && \
+                    (uname -a && \
                     python3 -m pytest \
                     -v --junitxml=pytest_junit.xml \
                     tests) \
@@ -70,11 +71,10 @@ pipeline {
                     ; ( exit """ + pipeSubstitution + """ ) \
                 """
                 while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("  "," ")
-                echo shellCommand
-                writeFile text: shellCommand, file: 'pytest.temp.sh'
-                sh 'cat pytest.temp.sh'
-                sh 'chmod +x ./pytest.temp.sh'
-                sh './pytest.temp.sh'
+                //echo shellCommand
+                writeFile text: shellCommand, file: tempShellFile
+                sh 'chmod +x ' + tempShellFile
+                sh tempShellFile
               //} catch(Exception ex) {
 
               //}
