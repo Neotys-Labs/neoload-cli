@@ -13,7 +13,7 @@ pipeline {
         cleanWs()
         //sh("printenv")
         script {
-          env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')")
+          env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')").trim()
           env.REL_LOG_PATH = "tests/history/test_${env.DATETIMESTAMP}_${env.GIT_BRANCH}_${env.GIT_COMMIT}.txt"
           env.GIT_COMMIT_URL = "${env.GIT_URL}".replace(".git","/commit/")+"${env.GIT_COMMIT}"
           env.LOG_PATH_URL = "${env.GIT_URL}".replace(".git","/")+"${env.REL_LOG_PATH}"
