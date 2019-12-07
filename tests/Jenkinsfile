@@ -87,8 +87,8 @@ pipeline {
                   git status
                   """
                   sh """\
-                  git add """ + "${env.REL_LOG_PATH}" + """
-                  git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """
+                  git add '""" + "${env.REL_LOG_PATH}" + """'
+                  git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
                   """
                   sh """\
                   git push -u origin """ + "${env.JUST_BRANCH_NAME}" + """
