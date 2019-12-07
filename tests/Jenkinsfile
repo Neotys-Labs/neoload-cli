@@ -81,22 +81,25 @@ pipeline {
                   sh tempShellFile
                 } catch(Exception ex) {
                 }
-                try {
-                  sh """\
-                  git branch
-                  git status
-                  """
-                  sh """\
-                  git add '""" + "${env.REL_LOG_PATH}" + """'
-                  git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
-                  """
-                  sh """\
-                  git push -u origin """ + "${env.JUST_BRANCH_NAME}" + """
-                  git status
-                  """
-                } catch(Exception ex) {
-                  echo "Failed to archive test logs."
-                  throw ex
+                withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'username', passwordVariable: 'password')]){
+                {
+                  try {
+                    sh """\
+                    git branch
+                    git status
+                    """
+                    sh """\
+                    git add '""" + "${env.REL_LOG_PATH}" + """'
+                    git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
+                    """
+                    sh """\
+                    git push -u origin """ + "${env.JUST_BRANCH_NAME}" + """
+                    git status
+                    """
+                  } catch(Exception ex) {
+                    echo "Failed to archive test logs."
+                    throw ex
+                  }
                 }
               }
           }
