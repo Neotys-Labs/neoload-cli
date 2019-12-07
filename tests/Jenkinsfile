@@ -99,7 +99,6 @@ pipeline {
                   throw ex
                 }
               }
-            }
           }
           post {
               always {
