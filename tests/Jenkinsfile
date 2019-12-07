@@ -61,10 +61,14 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
                 {
                   // something different
+                  sh 'printenv'
                   try {
                     sh """\
                     git config --global user.email "jenkins@neotys.oss"
                     git config --global user.name "Jenkins Pipeline"
+                    """
+                    sh """\
+                    git remote add origin https://""" + "${env.GIT_USERNAME}" + """:""" + "${env.GIT_PASSWORD}" + """@github.com/Neotys-Labs/neoload-cli.git
                     """
                     sh """\
                     git checkout """ + "${env.JUST_BRANCH_NAME}" + """
