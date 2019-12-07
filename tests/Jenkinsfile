@@ -88,6 +88,7 @@ pipeline {
                     git branch
                     git status
                     """
+                    
                     sh """\
                     git config --global user.email "jenkins@neotys.oss"
                     git config --global user.name "Jenkins Pipeline"
