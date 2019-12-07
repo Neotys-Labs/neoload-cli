@@ -59,7 +59,7 @@ pipeline {
               //try {
               script {
                 pipeSubstitution = "\${PIPESTATUS[0]}"
-                shellCommand = """#!/usr/bin/env bash
+                shellCommand = """#!/bin/sh
                 (uname -a && \
                     python3 -m pytest \
                     -v --junitxml=pytest_junit.xml \
