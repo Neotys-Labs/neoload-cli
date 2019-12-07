@@ -66,7 +66,7 @@ pipeline {
                     git config --global user.email "jenkins@neotys.oss"
                     git config --global user.name "Jenkins Pipeline"
                     """
-                    sh """\                    
+                    sh """\
                     git checkout """ + "${env.JUST_BRANCH_NAME}" + """
                     git branch
                     git status
