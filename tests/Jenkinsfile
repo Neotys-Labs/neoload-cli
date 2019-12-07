@@ -58,7 +58,8 @@ pipeline {
               // exit PIPESTATUS to retain python test exit code for proper pass/fail
               //try {
               script {
-                shellCommand = """(uname -a && \
+                shellCommand = """#!/bin/bash -xe
+                (uname -a && \
                     python3 -m pytest \
                     -v --junitxml=pytest_junit.xml \
                     tests) \
