@@ -7,6 +7,8 @@ from os import path
 def test_attach_detatch_simple():
     requireTestSecrets()
     assertProfileByZone(os.environ['NEOLOAD_CLI_ZONE_STATIC'])
+    assertNoDockerContainersRunning()
+.
     assertOutput(
         contains="All containers are attached and ready for use",
         printOutput=True,
