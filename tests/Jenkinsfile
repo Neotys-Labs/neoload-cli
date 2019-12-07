@@ -46,10 +46,18 @@ pipeline {
         }
         stage('Run PyTest') {
           steps {
-              sh """python3 -m pytest \
+              // uname adds system name/identity of where this is run for audit
+              // parenthesis for uname AND python3 tests into same tee output File
+              // tee produces stdout in this same CI output plus a file for checkin
+              // exit PIPESTATUS to retain python test exit code for proper pass/fail
+              sh """(uname -a && \
+                  python3 -m pytest \
                   -v --junitxml=pytest_junit.xml \
                   tests \
-                  --runslow
+                  --runslow) \
+                  | tee \
+                  tests/history/test_\$(date "+%Y%m%d-%H%M%S")_""" + "$GIT_BRANCH" + "_" + "$GIT_PREVIOUS_COMMIT" + """.txt \
+                  ; ( exit \${PIPESTATUS[0]} )
               """
           }
           post {
