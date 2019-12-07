@@ -15,9 +15,21 @@ This command-line interface helps you launch and observe performance tests on th
 ## Prerequisites
 The examples below assume that you have Python3 and Git command line tools installed.
 
-For Windows users, see:
+For **Windows 10 users**, see:
  - [Installing Python in Windows](https://python-docs.readthedocs.io/en/latest/starting/install3/win.html)
+   In short:
+    - Just install via [Python.org Downloads](https://www.python.org/downloads/), then
+    - Open a command prompt and install pip:
+        ```
+        python -m pip install -U pip
+        ```
  - [5 Ways to Install Git on Windows](https://www.jamessturtevant.com/posts/5-Ways-to-install-git-on-Windows/)
+ - Install Docker with Chocolatey
+    - [Install Chocolatey package manager for Windows](https://chocolatey.org/docs/installation)
+    - Open a command prompt and install Docker Desktop for Windows 10
+        ```
+        choco install docker-cli docker-desktop
+        ```
 
 For Mac OS X:
  - [Installing Python3 on Mac OS X](https://docs.python-guide.org/starting/install3/osx/)
@@ -212,4 +224,4 @@ Feel free to fork this repo, make changes, *test locally*, and create a pull req
 ```
 python3 -m pytest -v tests --runslow
 ```
-*NOTE: the --runslow argument also runs Docker-related attaching tests, which you will need to set environment variables up for in order to successfully run the test suite. An example of these variables can be found in [example.bash_profile](/neoload-cli/blob/master/tests/example.bash_profile) and can be addapted for Windows execution as well.
+*NOTE: the --runslow argument also runs Docker-related attaching tests, which you will need to set environment variables up for in order to successfully run the test suite. An example of these variables can be found in [example.bash_profile](tests/example.bash_profile) and can be addapted for Windows execution as well.
