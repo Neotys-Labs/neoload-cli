@@ -13,7 +13,10 @@ pipeline {
         cleanWs()
         //sh("printenv")
         script {
-          env.GIT_COMMIT_URL = "${env.GIT_URL}".replace(".git","/commit/")+"${GIT_COMMIT}"
+          env.DATETIMESTAMP = sh(returnStdout: true, script: "$(date '+%Y%m%d-%H%M%S')")
+          env.REL_LOG_PATH = "tests/history/test_${env.DATETIMESTAMP}_${env.GIT_BRANCH}_${env.GIT_COMMIT}.txt"
+          env.GIT_COMMIT_URL = "${env.GIT_URL}".replace(".git","/commit/")+"${env.GIT_COMMIT}"
+          env.LOG_PATH_URL = "${env.GIT_URL}".replace(".git","/")+"${env.REL_LOG_PATH}"
         }
       }
     }
@@ -29,6 +32,7 @@ pipeline {
           steps {
               script {
                   sh 'apk add curl' // for Slack direct curls, no assumed plugin
+                  sh "echo 'REL_LOG_PATH: ${env.REL_LOG_PATH}'"
               }
           }
         }
@@ -56,7 +60,7 @@ pipeline {
                   tests \
                   --runslow) \
                   | tee \
-                  tests/history/test_\$(date "+%Y%m%d-%H%M%S")_""" + "$GIT_BRANCH" + "_" + "$GIT_COMMIT" + """.txt \
+                  """ + "${env.REL_LOG_PATH}" + """ \
                   ; ( exit \${PIPESTATUS[0]} )
               """
           }
@@ -70,7 +74,7 @@ pipeline {
         post {
           always {
               script { // Slack notification: final build status
-                  payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'"}'
+                  payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'\nLogs: '+"${env.LOG_PATH_URL}"+'"}'
                   sh """curl -s \
                   -X POST -H 'Content-type: application/json' \
                   --data '""" + payload + """' \
