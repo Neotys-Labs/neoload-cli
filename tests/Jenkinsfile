@@ -70,7 +70,7 @@ pipeline {
                 """
                 while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("  "," ")
                 echo shellCommand
-                writeFile(shellCommand,'pytest.temp.sh')
+                writeFile text: shellCommand, file: 'pytest.temp.sh'
                 sh 'cat pytest.temp.sh'
                 sh 'chmod +x ./pytest.temp.sh'
                 sh './pytest.temp.sh'
