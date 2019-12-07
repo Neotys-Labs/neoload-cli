@@ -110,7 +110,8 @@ pipeline {
                     git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
                     """
                     sh """\
-                    git push -u origin """ + "${env.JUST_BRANCH_NAME}" + """
+                    git status
+                    git push  """ + "${env.GIT_BRANCH}" + """
                     git status
                     """
                   } catch(Exception ex) {
