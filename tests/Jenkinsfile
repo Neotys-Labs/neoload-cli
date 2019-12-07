@@ -58,6 +58,27 @@ pipeline {
               // tee produces stdout in this same CI output plus a file for checkin
               // exit PIPESTATUS to retain python test exit code for proper pass/fail
               script {
+                withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
+                {
+                  // something different
+                  try {
+                    sh """\
+                    git branch
+                    git status
+                    """
+
+                    sh """\
+                    git config --global user.email "jenkins@neotys.oss"
+                    git config --global user.name "Jenkins Pipeline"
+                    """
+                    sh """\
+                    git pull
+                    """
+                  } catch(Exception ex) {
+                    echo "Failed to archive test logs."
+                    throw ex
+                  }
+                }
                 try {
                   // a lot of this has to do with use of PIPESTATUS and bash exclusivity
                   pipeSubstitution = "\${PIPESTATUS[0]}"
@@ -85,15 +106,6 @@ pipeline {
                 {
                   // something different
                   try {
-                    sh """\
-                    git branch
-                    git status
-                    """
-
-                    sh """\
-                    git config --global user.email "jenkins@neotys.oss"
-                    git config --global user.name "Jenkins Pipeline"
-                    """
                     sh """\
                     git add '""" + "${env.REL_LOG_PATH}" + """'
                     git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
