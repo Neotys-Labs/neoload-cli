@@ -65,12 +65,14 @@ pipeline {
                     (uname -a && \
                     python3 -m pytest \
                     -v --junitxml=pytest_junit.xml \
-                    tests) \
+                    tests \
+                    --runslow \
+                    ) \
                     | tee \
                     """ + "${env.REL_LOG_PATH}" + """ \
                     ; ( exit """ + pipeSubstitution + """ ) \
                 """
-                while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("  "," ")
+                while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("\t"," ").replace("\n"," ").replace("  "," ")
                 //echo shellCommand
                 writeFile text: shellCommand, file: tempShellFile
                 sh 'chmod +x ' + tempShellFile
