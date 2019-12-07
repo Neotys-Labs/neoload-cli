@@ -56,7 +56,7 @@ pipeline {
                   tests \
                   --runslow) \
                   | tee \
-                  tests/history/test_\$(date "+%Y%m%d-%H%M%S")_""" + "$GIT_BRANCH" + "_" + "$GIT_PREVIOUS_COMMIT" + """.txt \
+                  tests/history/test_\$(date "+%Y%m%d-%H%M%S")_""" + "$GIT_BRANCH" + "_" + "$GIT_COMMIT" + """.txt \
                   ; ( exit \${PIPESTATUS[0]} )
               """
           }
