@@ -63,13 +63,13 @@ pipeline {
                   // something different
                   try {
                     sh """\
+                    git config --global user.email "jenkins@neotys.oss"
+                    git config --global user.name "Jenkins Pipeline"
+                    """
+                    sh """\                    
                     git checkout """ + "${env.JUST_BRANCH_NAME}" + """
                     git branch
                     git status
-                    """
-                    sh """\
-                    git config --global user.email "jenkins@neotys.oss"
-                    git config --global user.name "Jenkins Pipeline"
                     """
                     sh """\
                     git pull
