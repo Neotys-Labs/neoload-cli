@@ -139,6 +139,7 @@ pipeline {
     stage('Commit Logs back to Repo') {
       agent any
       steps {
+        sh 'ls -latr tests/history'
         unstash(name:'REL_LOG_PATH')
         sh 'chown -R root:jenkins ' + env.REL_LOG_PATH
         sh 'ls -latr tests/history'
