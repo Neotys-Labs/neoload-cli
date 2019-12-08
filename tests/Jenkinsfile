@@ -22,6 +22,8 @@ pipeline {
                               "_${env.GIT_COMMIT}.txt"
           env.GIT_COMMIT_URL = "${env.GIT_URL}".replace(".git","/commit/")+"${env.GIT_COMMIT}"
           env.LOG_PATH_URL = "${env.GIT_URL}".replace(".git","/")+"${env.REL_LOG_PATH}"
+          env.J_GID = sh(returnStdout: true, script: "id -g jenkins").trim()
+          env.J_UID = sh(returnStdout: true, script: "id -u jenkins").trim()
         }
       }
     }
@@ -36,6 +38,9 @@ pipeline {
         stage('Prep environment') {
           steps {
               script {
+                  sh """addgroup -g ${env.J_GID} jenkins
+                  adduser -u ${env.J_UID} -G jenkins -g 'Linux User named' -s /sbin/nologin -D jenkins
+                  """
                   sh 'apk add curl' // for Slack direct curls, no assumed plugin
                   sh "echo 'REL_LOG_PATH: ${env.REL_LOG_PATH}'"
               }
