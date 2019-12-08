@@ -13,6 +13,16 @@ pipeline {
         //cleanWs()
         //sh("printenv")
         script {
+          sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
+          sh """\
+          git pull
+          echo 'Using Git username: """ + "$env.GIT_USERNAME" + """'
+          git config --global user.name '""" + "${env.JOB_NAME}#${env.BUILD_NUMBER}" + """'
+          git config --global user.email '""" + "${env.WHOAMI}@${env.UNAMEN}" + """'
+          git checkout """ + "${env.JUST_BRANCH_NAME}" + """
+          git pull
+          """
+
           env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')").trim()
           env.JUST_BRANCH_NAME = "${env.GIT_BRANCH}".replace("origin/","")
           env.REL_LOG_PATH = "tests/history/test_${env.DATETIMESTAMP}_" +
@@ -149,12 +159,7 @@ pipeline {
         script {
           withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
           {
-            sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
             sh """\
-            echo 'Using Git username: """ + "$env.GIT_USERNAME" + """'
-            git config --global user.name '""" + "${env.JOB_NAME}#${env.BUILD_NUMBER}" + """'
-            git config --global user.email '""" + "${env.WHOAMI}@${env.UNAMEN}" + """'
-            git checkout """ + "${env.JUST_BRANCH_NAME}" + """
             git add '""" + "${env.REL_LOG_PATH}" + """'
             git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
             git push -u origin """ + "${env.JUST_BRANCH_NAME}" + """
