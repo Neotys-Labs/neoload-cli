@@ -10,7 +10,7 @@ pipeline {
     stage('Grab Utility Repo') {
       agent any
       steps {
-        cleanWs()
+        //cleanWs()
         //sh("printenv")
         script {
           sh 'pwd'
