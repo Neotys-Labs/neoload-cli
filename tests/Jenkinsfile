@@ -124,8 +124,7 @@ pipeline {
   post {
     always {
         script { // Slack notification: final build status
-          def logfile = new File(env.REL_LOG_PATH);
-          def logMsgText = logfile.exists() ? '\nLogs: '+"${env.LOG_PATH_URL}" : ''
+          def logMsgText = fileExists(env.REL_LOG_PATH) ? '\nLogs: '+"${env.LOG_PATH_URL}" : ''
           payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+logMsgText+'"}'
           sh """curl -s \
           -X POST -H 'Content-type: application/json' \
