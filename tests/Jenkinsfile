@@ -150,16 +150,15 @@ pipeline {
           withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
           {
             sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
-            sh ""
             sh """\
             git config --global user.name '""" + "${env.JOB_NAME}#${env.BUILD_NUMBER}" + """'
             git config --global user.email '""" + "${env.WHOAMI}@${env.UNAMEN}" + """'
-            git checkout """ + "${env.GIT_BRANCH}" + """
+            git checkout """ + "${env.JUST_BRANCH_NAME}" + """
             git status
             git add '""" + "${env.REL_LOG_PATH}" + """'
             git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
             git status
-            git push """ + "${env.GIT_BRANCH}" + """
+            git push """ + "${env.GIT_BRANCH}" + """ HEAD:""" + "${env.JUST_BRANCH_NAME}" + """
             git status
             """
           }
