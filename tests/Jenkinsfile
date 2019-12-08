@@ -13,14 +13,6 @@ pipeline {
         //cleanWs()
         //sh("printenv")
         script {
-          sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
-          sh """\
-          git config --global user.name '""" + "${env.JOB_NAME}#${env.BUILD_NUMBER}" + """'
-          git config --global user.email '""" + "${env.WHOAMI}@${env.UNAMEN}" + """'
-          git checkout """ + "${env.JUST_BRANCH_NAME}" + """
-          git pull
-          """
-
           env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')").trim()
           env.JUST_BRANCH_NAME = "${env.GIT_BRANCH}".replace("origin/","")
           env.REL_LOG_PATH = "tests/history/test_${env.DATETIMESTAMP}_" +
@@ -32,6 +24,14 @@ pipeline {
           env.J_UID = sh(returnStdout: true, script: "id -u jenkins").trim()
           env.WHOAMI = sh(returnStdout: true, script: "whoami").trim()
           env.UNAMEN = sh(returnStdout: true, script: "uname -n").trim()
+
+          sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
+          sh """\
+          git config --global user.name '""" + "${env.JOB_NAME}#${env.BUILD_NUMBER}" + """'
+          git config --global user.email '""" + "${env.WHOAMI}@${env.UNAMEN}" + """'
+          git checkout """ + "${env.JUST_BRANCH_NAME}" + """
+          git pull
+          """
         }
       }
     }
