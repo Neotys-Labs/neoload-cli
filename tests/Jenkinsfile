@@ -12,6 +12,9 @@ pipeline {
       steps {
         cleanWs()
         //sh("printenv")
+
+        sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
+
         script {
           env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')").trim()
           env.JUST_BRANCH_NAME = "${env.GIT_BRANCH}".replace("origin/","")
@@ -58,7 +61,7 @@ pipeline {
               // tee produces stdout in this same CI output plus a file for checkin
               // exit PIPESTATUS to retain python test exit code for proper pass/fail
               script {
-                withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
+                /*withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
                 {
                   try {
                     sh """\
@@ -75,7 +78,7 @@ pipeline {
                     echo "Failed to archive test logs."
                     throw ex
                   }
-                }
+                }*/
                 try {
                   // a lot of this has to do with use of PIPESTATUS and bash exclusivity
                   pipeSubstitution = "\${PIPESTATUS[0]}"
@@ -97,8 +100,11 @@ pipeline {
                   sh 'cat ' + tempShellFile
                   sh 'chmod +x ' + tempShellFile
                   sh tempShellFile
+
                 } catch(Exception ex) {
                 }
+                stash(name:'REL_LOG_PATH', includes: env.REL_LOG_PATH)
+                /*
                 withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
                 {
                   // something different
@@ -120,6 +126,7 @@ pipeline {
                     throw ex
                   }
                 }
+                */
               }
           }
           post {
@@ -129,16 +136,34 @@ pipeline {
           }
         }
       }
-        post {
-          always {
-              script { // Slack notification: final build status
-                  payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'\nLogs: '+"${env.LOG_PATH_URL}"+'"}'
-                  sh """curl -s \
-                  -X POST -H 'Content-type: application/json' \
-                  --data '""" + payload + """' \
-                  """ + env.SLACK_URL
-              }
+    }
+    stage('Commit Logs back to Repo') {
+      steps {
+        unstash(name:'REL_LOG_PATH')
+        script {
+          withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
+          {
+            sh """\
+            git status
+            git add '""" + "${env.REL_LOG_PATH}" + """'
+            git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
+            git status
+            git push  """ + "${env.GIT_BRANCH}" + """
+            git status
+            """
           }
+        }
+      }
+    }
+  }
+  post {
+    always {
+        script { // Slack notification: final build status
+            payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'\nLogs: '+"${env.LOG_PATH_URL}"+'"}'
+            sh """curl -s \
+            -X POST -H 'Content-type: application/json' \
+            --data '""" + payload + """' \
+            """ + env.SLACK_URL
         }
     }
   }
