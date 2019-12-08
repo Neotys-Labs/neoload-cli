@@ -10,8 +10,6 @@ pipeline {
     stage('Grab Utility Repo') {
       agent any
       steps {
-        //cleanWs()
-        //sh("printenv")
         script {
           env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')").trim()
           env.JUST_BRANCH_NAME = "${env.GIT_BRANCH}".replace("origin/","")
@@ -29,8 +27,6 @@ pipeline {
           sh """\
           git config --global user.name '""" + "${env.JOB_NAME}#${env.BUILD_NUMBER}" + """'
           git config --global user.email '""" + "${env.WHOAMI}@${env.UNAMEN}" + """'
-          git checkout """ + "${env.JUST_BRANCH_NAME}" + """
-          git pull
           """
         }
       }
@@ -158,8 +154,13 @@ pipeline {
           withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
           {
             sh """\
+            git log
+            git checkout """ + "${env.JUST_BRANCH_NAME}" + """
+            git pull
+            git log
             git add '""" + "${env.REL_LOG_PATH}" + """'
             git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
+            git log
             git push -u origin """ + "${env.JUST_BRANCH_NAME}" + """
             """
           }
