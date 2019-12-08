@@ -35,7 +35,7 @@ pipeline {
       }
       stages {
         stage('Prep environment') {
-          agent 'dind'
+          agent { label: 'dind'}
           steps {
               script {
                   sh 'apk add curl' // for Slack direct curls, no assumed plugin
@@ -44,7 +44,7 @@ pipeline {
           }
         }
         stage('Get NeoLoad CLI') {
-          agent 'dind'
+          agent { label: 'dind'}
           steps {
               script { // Slack notification: STARTING
                   payload = '{"text":"[STARTING] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'"}'
@@ -57,7 +57,7 @@ pipeline {
           }
         }
         stage('Run PyTest') {
-          agent 'dind'
+          agent { label: 'dind'}
           steps {
               // uname adds system name/identity of where this is run for audit
               // parenthesis for uname AND python3 tests into same tee output File
