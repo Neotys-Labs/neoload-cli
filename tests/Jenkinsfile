@@ -138,6 +138,7 @@ pipeline {
       }
     }
     stage('Commit Logs back to Repo') {
+      agent { label 'master' }
       steps {
         unstash(name:'REL_LOG_PATH')
         script {
