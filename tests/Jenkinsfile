@@ -1,5 +1,5 @@
 pipeline {
-  agent none
+  agent any
 
   environment {
       SEE_ENVIRONMENT_PREPARE='if you want to know secrets'
@@ -8,14 +8,13 @@ pipeline {
 
   stages {
     stage('Grab Utility Repo') {
-      agent { label 'master' }
+      agent any
       steps {
         cleanWs()
         //sh("printenv")
-
-        sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
-
         script {
+          sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
+
           env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')").trim()
           env.JUST_BRANCH_NAME = "${env.GIT_BRANCH}".replace("origin/","")
           env.REL_LOG_PATH = "tests/history/test_${env.DATETIMESTAMP}_" +
@@ -31,10 +30,12 @@ pipeline {
         dockerfile { // load python container
           args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
           dir 'tests/docker/dind-python3'
+          label 'dind'
         }
       }
       stages {
         stage('Prep environment') {
+          agent 'dind'
           steps {
               script {
                   sh 'apk add curl' // for Slack direct curls, no assumed plugin
@@ -43,6 +44,7 @@ pipeline {
           }
         }
         stage('Get NeoLoad CLI') {
+          agent 'dind'
           steps {
               script { // Slack notification: STARTING
                   payload = '{"text":"[STARTING] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'"}'
@@ -55,6 +57,7 @@ pipeline {
           }
         }
         stage('Run PyTest') {
+          agent 'dind'
           steps {
               // uname adds system name/identity of where this is run for audit
               // parenthesis for uname AND python3 tests into same tee output File
@@ -138,7 +141,7 @@ pipeline {
       }
     }
     stage('Commit Logs back to Repo') {
-      agent { label 'master' }
+      agent any
       steps {
         unstash(name:'REL_LOG_PATH')
         script {
