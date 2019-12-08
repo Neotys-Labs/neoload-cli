@@ -15,8 +15,6 @@ pipeline {
         script {
           sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
           sh """\
-          git pull
-          echo 'Using Git username: """ + "$env.GIT_USERNAME" + """'
           git config --global user.name '""" + "${env.JOB_NAME}#${env.BUILD_NUMBER}" + """'
           git config --global user.email '""" + "${env.WHOAMI}@${env.UNAMEN}" + """'
           git checkout """ + "${env.JUST_BRANCH_NAME}" + """
