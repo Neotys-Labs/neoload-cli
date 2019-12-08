@@ -103,6 +103,7 @@ pipeline {
                 } catch(Exception ex) {
                 }
                 stash(name:'REL_LOG_PATH', includes: env.REL_LOG_PATH)
+                sh 'chown -R jenkins:jenkins tests/history'
                 /*
                 withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
                 {
@@ -141,7 +142,6 @@ pipeline {
       steps {
         sh 'ls -latr tests/history'
         unstash(name:'REL_LOG_PATH')
-        sh 'chown -R root:jenkins ' + env.REL_LOG_PATH
         sh 'ls -latr tests/history'
         script {
           withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
