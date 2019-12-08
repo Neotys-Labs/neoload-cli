@@ -24,6 +24,8 @@ pipeline {
           env.LOG_PATH_URL = "${env.GIT_URL}".replace(".git","/")+"${env.REL_LOG_PATH}"
           env.J_GID = sh(returnStdout: true, script: "id -g jenkins").trim()
           env.J_UID = sh(returnStdout: true, script: "id -u jenkins").trim()
+
+          sh "git checkout ${env.GIT_BRANCH}"
         }
       }
     }
@@ -145,9 +147,7 @@ pipeline {
     stage('Commit Logs back to Repo') {
       agent any
       steps {
-        sh 'ls -latr tests/history'
         unstash(name:'REL_LOG_PATH')
-        sh 'ls -latr tests/history'
         script {
           withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
           {
@@ -156,7 +156,7 @@ pipeline {
             git add '""" + "${env.REL_LOG_PATH}" + """'
             git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
             git status
-            git push  """ + "${env.GIT_BRANCH}" + """
+            git push """ + "${env.GIT_BRANCH}" + """
             git status
             """
           }
