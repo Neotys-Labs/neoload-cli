@@ -13,6 +13,10 @@ pipeline {
         cleanWs()
         //sh("printenv")
         script {
+          sh 'pwd'
+          sh "echo ${WORKSPACE}"
+          sh "cd ${WORKSPACE}"
+          sh 'pwd'
           sh 'ls -latr'
           sh 'git branch'
           sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
