@@ -19,7 +19,7 @@ pipeline {
                               "${env.JUST_BRANCH_NAME}" +
                               "_${env.GIT_COMMIT}.txt"
           env.GIT_COMMIT_URL = "${env.GIT_URL}".replace(".git","/commit/")+"${env.GIT_COMMIT}"
-          env.LOG_PATH_URL = "${env.GIT_URL}".replace(".git","/")+"${env.REL_LOG_PATH}"
+          env.LOG_PATH_URL = "${env.GIT_URL}".replace(".git","/blob/"+"${env.JUST_BRANCH_NAME}"+"/")+"${env.REL_LOG_PATH}"
           env.J_GID = sh(returnStdout: true, script: "id -g jenkins").trim()
           env.J_UID = sh(returnStdout: true, script: "id -u jenkins").trim()
           env.WHOAMI = sh(returnStdout: true, script: "whoami").trim()
@@ -161,7 +161,6 @@ pipeline {
             git add '""" + "${env.REL_LOG_PATH}" + """'
             git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
             git push -u origin """ + "${env.JUST_BRANCH_NAME}" + """
-            git status
             """
           }
         }
