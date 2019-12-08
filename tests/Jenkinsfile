@@ -13,6 +13,8 @@ pipeline {
         cleanWs()
         //sh("printenv")
         script {
+          sh 'ls -latr'
+          sh 'git branch'
           sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
 
           env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')").trim()
