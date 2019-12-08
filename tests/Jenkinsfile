@@ -13,8 +13,6 @@ pipeline {
         //cleanWs()
         //sh("printenv")
         script {
-          sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
-
           env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')").trim()
           env.JUST_BRANCH_NAME = "${env.GIT_BRANCH}".replace("origin/","")
           env.REL_LOG_PATH = "tests/history/test_${env.DATETIMESTAMP}_" +
@@ -24,8 +22,6 @@ pipeline {
           env.LOG_PATH_URL = "${env.GIT_URL}".replace(".git","/")+"${env.REL_LOG_PATH}"
           env.J_GID = sh(returnStdout: true, script: "id -g jenkins").trim()
           env.J_UID = sh(returnStdout: true, script: "id -u jenkins").trim()
-
-          sh "git checkout ${env.GIT_BRANCH}"
         }
       }
     }
@@ -151,6 +147,8 @@ pipeline {
         script {
           withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
           {
+            sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
+            sh "git checkout ${env.GIT_BRANCH}"
             sh """\
             git status
             git add '""" + "${env.REL_LOG_PATH}" + """'
