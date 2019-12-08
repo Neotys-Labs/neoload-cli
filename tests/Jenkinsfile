@@ -69,24 +69,6 @@ pipeline {
               // tee produces stdout in this same CI output plus a file for checkin
               // exit PIPESTATUS to retain python test exit code for proper pass/fail
               script {
-                /*withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
-                {
-                  try {
-                    sh """\
-                    git init
-                    git config --global user.email "jenkins@neotys.oss"
-                    git config --global user.name "Jenkins Pipeline"
-                    git pull https://""" + "$GIT_USERNAME" + ":" + "$GIT_PASSWORD" + """@github.com/Neotys-Labs/neoload-cli.git """ + "${env.JUST_BRANCH_NAME}" + """
-                    """
-                    sh """\
-                    git branch
-                    git status
-                    """
-                  } catch(Exception ex) {
-                    echo "Failed to archive test logs."
-                    throw ex
-                  }
-                }*/
                 try {
                   // a lot of this has to do with use of PIPESTATUS and bash exclusivity
                   pipeSubstitution = "\${PIPESTATUS[0]}"
@@ -96,7 +78,7 @@ pipeline {
                       python3 -m pytest \
                       -v --junitxml=pytest_junit.xml \
                       tests \
-                      --xrunslow \
+                      --runslow \
                       ) \
                       | tee \
                       """ + "${env.REL_LOG_PATH}" + """ \
@@ -113,29 +95,6 @@ pipeline {
                 }
                 stash(name:'REL_LOG_PATH', includes: env.REL_LOG_PATH)
                 sh 'chown -R jenkins:jenkins ' + env.REL_LOG_PATH
-                /*
-                withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
-                {
-                  // something different
-                  try {
-                    sh """\
-                    git init
-                    git config --global user.email "jenkins@neotys.oss"
-                    git config --global user.name "Jenkins Pipeline"
-                    git pull https://""" + "$GIT_USERNAME" + ":" + "$GIT_PASSWORD" + """@github.com/Neotys-Labs/neoload-cli.git """ + "${env.JUST_BRANCH_NAME}" + """
-                    git status
-                    git add '""" + "${env.REL_LOG_PATH}" + """'
-                    git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
-                    git status
-                    git push  """ + "${env.GIT_BRANCH}" + """
-                    git status
-                    """
-                  } catch(Exception ex) {
-                    echo "Failed to archive test logs."
-                    throw ex
-                  }
-                }
-                */
               }
           }
           post {
@@ -154,13 +113,10 @@ pipeline {
           withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
           {
             sh """\
-            git log
             git checkout """ + "${env.JUST_BRANCH_NAME}" + """
             git pull
-            git log
             git add '""" + "${env.REL_LOG_PATH}" + """'
             git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
-            git log
             git push -u origin """ + "${env.JUST_BRANCH_NAME}" + """
             """
           }
