@@ -22,6 +22,8 @@ pipeline {
           env.LOG_PATH_URL = "${env.GIT_URL}".replace(".git","/")+"${env.REL_LOG_PATH}"
           env.J_GID = sh(returnStdout: true, script: "id -g jenkins").trim()
           env.J_UID = sh(returnStdout: true, script: "id -u jenkins").trim()
+          env.WHOAMI = sh(returnStdout: true, script: "whoami").trim()
+          env.UNAMEN = sh(returnStdout: true, script: "uname -n").trim()
         }
       }
     }
@@ -148,8 +150,11 @@ pipeline {
           withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
           {
             sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
-            sh "git checkout ${env.GIT_BRANCH}"
+            sh ""
             sh """\
+            git config --global user.name '""" + "${env.JOB_NAME}#${env.BUILD_NUMBER}" + """'
+            git config --global user.email '""" + "${env.WHOAMI}@${env.UNAMEN}" + """'
+            git checkout """ + "${env.GIT_BRANCH}" + """
             git status
             git add '""" + "${env.REL_LOG_PATH}" + """'
             git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
