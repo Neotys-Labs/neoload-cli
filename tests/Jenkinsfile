@@ -46,7 +46,7 @@ pipeline {
                   adduser -u ${env.J_UID} -G jenkins -g 'Linux User named' -s /sbin/nologin -D jenkins
                   """
                   sh 'apk add curl' // for Slack direct curls, no assumed plugin
-                  sh "echo 'REL_LOG_PATH: ${env.REL_LOG_PATH}'"
+                  //sh "echo 'REL_LOG_PATH: ${env.REL_LOG_PATH}'"
               }
           }
         }
@@ -69,7 +69,6 @@ pipeline {
               // tee produces stdout in this same CI output plus a file for checkin
               // exit PIPESTATUS to retain python test exit code for proper pass/fail
               script {
-                try {
                   // a lot of this has to do with use of PIPESTATUS and bash exclusivity
                   pipeSubstitution = "\${PIPESTATUS[0]}"
                   tempShellFile = './pytest.temp.sh'
@@ -87,14 +86,12 @@ pipeline {
                   while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("  "," ")
                   //echo shellCommand
                   writeFile text: shellCommand, file: tempShellFile
-                  sh 'cat ' + tempShellFile
+                  //sh 'cat ' + tempShellFile
                   sh 'chmod +x ' + tempShellFile
                   sh tempShellFile
 
-                } catch(Exception ex) {
-                }
-                stash(name:'REL_LOG_PATH', includes: env.REL_LOG_PATH)
-                sh 'chown -R jenkins:jenkins ' + env.REL_LOG_PATH
+                  stash(name:'REL_LOG_PATH', includes: env.REL_LOG_PATH)
+                  sh 'chown -R jenkins:jenkins ' + env.REL_LOG_PATH
               }
           }
           post {
@@ -127,11 +124,13 @@ pipeline {
   post {
     always {
         script { // Slack notification: final build status
-            payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'\nLogs: '+"${env.LOG_PATH_URL}"+'"}'
-            sh """curl -s \
-            -X POST -H 'Content-type: application/json' \
-            --data '""" + payload + """' \
-            """ + env.SLACK_URL
+          def logfile = new File(env.REL_LOG_PATH);
+          def logMsgText = logfile.exists() ? '\nLogs: '+"${env.LOG_PATH_URL}"+' : '
+          payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+logMsgText+'"}'
+          sh """curl -s \
+          -X POST -H 'Content-type: application/json' \
+          --data '""" + payload + """' \
+          """ + env.SLACK_URL
         }
     }
   }
