@@ -1,6 +1,8 @@
 FROM docker:dind
 
-RUN apk add --no-cache bash
+RUN apk --update add bash shadow
+
+RUN apk add --no-cache bash git
 
 RUN apk add --update --no-cache py-pip py3-setuptools
 

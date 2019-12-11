@@ -1,0 +1,26 @@
+Linux ae49890dd910 4.14.88-88.76.amzn2.x86_64 #1 SMP Mon Jan 7 18:43:26 UTC 2019 x86_64 Linux
+============================= test session starts ==============================
+platform linux -- Python 3.7.5, pytest-5.3.1, py-1.8.0, pluggy-0.13.1 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /var/lib/jenkins/workspace/NL-cli-tests@2/tests, inifile: pytest.ini
+plugins: steps-1.7.1
+collecting ... collected 15 items
+
+tests/test_attach_functions.py::test_attach_detatch_simple SKIPPED       [  6%]
+tests/test_attach_functions.py::test_attach_run_allinone SKIPPED         [ 13%]
+tests/test_attach_functions.py::test_attach_run_async[prepare] SKIPPED   [ 20%]
+tests/test_attach_functions.py::test_attach_run_async[attach] SKIPPED    [ 26%]
+tests/test_attach_functions.py::test_attach_run_async[kickoff] SKIPPED   [ 33%]
+tests/test_attach_functions.py::test_attach_run_async[getid] SKIPPED     [ 40%]
+tests/test_attach_functions.py::test_attach_run_async[spinwait] SKIPPED  [ 46%]
+tests/test_attach_functions.py::test_attach_run_async[detatch] SKIPPED   [ 53%]
+tests/test_profile_functions.py::test_profiles_empty PASSED              [ 60%]
+tests/test_profile_functions.py::test_profile_empty PASSED               [ 66%]
+tests/test_profile_functions.py::test_profile_create_wo_params PASSED    [ 73%]
+tests/test_profile_functions.py::test_profile_create_with_valid_zone_no_url PASSED [ 80%]
+tests/test_profile_functions.py::test_profile_create_with_valid_url_no_zone PASSED [ 86%]
+tests/test_profile_functions.py::test_profile_create_with_nts_credentials PASSED [ 93%]
+tests/test_query_functions.py::test_query_outfile_for_bench PASSED       [100%]
+
+- generated xml file: /var/lib/jenkins/workspace/NL-cli-tests@2/pytest_junit.xml -
+========================= 7 passed, 8 skipped in 6.75s =========================

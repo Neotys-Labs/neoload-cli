@@ -1,5 +1,5 @@
 pipeline {
-  agent none
+  agent any
 
   environment {
       SEE_ENVIRONMENT_PREPARE='if you want to know secrets'
@@ -8,17 +8,26 @@ pipeline {
 
   stages {
     stage('Grab Utility Repo') {
-      agent { label 'master' }
+      agent any
       steps {
-        cleanWs()
-        //sh("printenv")
         script {
           env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')").trim()
+          env.JUST_BRANCH_NAME = "${env.GIT_BRANCH}".replace("origin/","")
           env.REL_LOG_PATH = "tests/history/test_${env.DATETIMESTAMP}_" +
-                              "${env.GIT_BRANCH}".replace("origin/","") +
+                              "${env.JUST_BRANCH_NAME}" +
                               "_${env.GIT_COMMIT}.txt"
           env.GIT_COMMIT_URL = "${env.GIT_URL}".replace(".git","/commit/")+"${env.GIT_COMMIT}"
-          env.LOG_PATH_URL = "${env.GIT_URL}".replace(".git","/")+"${env.REL_LOG_PATH}"
+          env.LOG_PATH_URL = "${env.GIT_URL}".replace(".git","/blob/"+"${env.JUST_BRANCH_NAME}"+"/")+"${env.REL_LOG_PATH}"
+          env.J_GID = sh(returnStdout: true, script: "id -g jenkins").trim()
+          env.J_UID = sh(returnStdout: true, script: "id -u jenkins").trim()
+          env.WHOAMI = sh(returnStdout: true, script: "whoami").trim()
+          env.UNAMEN = sh(returnStdout: true, script: "uname -n").trim()
+
+          sh 'git config --local credential.helper "!p() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; p"'
+          sh """\
+          git config --global user.name '""" + "${env.JOB_NAME}#${env.BUILD_NUMBER}" + """'
+          git config --global user.email '""" + "${env.WHOAMI}@${env.UNAMEN}" + """'
+          """
         }
       }
     }
@@ -33,8 +42,11 @@ pipeline {
         stage('Prep environment') {
           steps {
               script {
+                  sh """addgroup -g ${env.J_GID} jenkins
+                  adduser -u ${env.J_UID} -G jenkins -g 'Linux User named' -s /sbin/nologin -D jenkins
+                  """
                   sh 'apk add curl' // for Slack direct curls, no assumed plugin
-                  sh "echo 'REL_LOG_PATH: ${env.REL_LOG_PATH}'"
+                  //sh "echo 'REL_LOG_PATH: ${env.REL_LOG_PATH}'"
               }
           }
         }
@@ -56,32 +68,31 @@ pipeline {
               // parenthesis for uname AND python3 tests into same tee output File
               // tee produces stdout in this same CI output plus a file for checkin
               // exit PIPESTATUS to retain python test exit code for proper pass/fail
-              //try {
               script {
-                // a lot of this has to do with use of PIPESTATUS and bash exclusivity
-                pipeSubstitution = "\${PIPESTATUS[0]}"
-                tempShellFile = './pytest.temp.sh'
-                shellCommand = """#!/usr/bin/env bash
-                    (uname -a && \
-                    python3 -m pytest \
-                    -v --junitxml=pytest_junit.xml \
-                    tests \
-                    --runslow \
-                    ) \
-                    | tee \
-                    """ + "${env.REL_LOG_PATH}" + """ \
-                    ; ( exit """ + pipeSubstitution + """ ) \
-                """
-                while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("  "," ")
-                //echo shellCommand
-                writeFile text: shellCommand, file: tempShellFile
-                sh 'cat ' + tempShellFile
-                sh 'chmod +x ' + tempShellFile
-                sh tempShellFile
-              //} catch(Exception ex) {
+                  // a lot of this has to do with use of PIPESTATUS and bash exclusivity
+                  pipeSubstitution = "\${PIPESTATUS[0]}"
+                  tempShellFile = './pytest.temp.sh'
+                  shellCommand = """#!/usr/bin/env bash
+                      (uname -a && \
+                      python3 -m pytest \
+                      -v --junitxml=pytest_junit.xml \
+                      tests \
+                      --runslow \
+                      ) \
+                      | tee \
+                      """ + "${env.REL_LOG_PATH}" + """ \
+                      ; ( exit """ + pipeSubstitution + """ ) \
+                  """
+                  while(shellCommand.contains("  ")) shellCommand = shellCommand.replace("  "," ")
+                  //echo shellCommand
+                  writeFile text: shellCommand, file: tempShellFile
+                  //sh 'cat ' + tempShellFile
+                  sh 'chmod +x ' + tempShellFile
+                  sh tempShellFile
 
-              //}
-            }
+                  stash(name:'REL_LOG_PATH', includes: env.REL_LOG_PATH)
+                  sh 'chown -R jenkins:jenkins ' + env.REL_LOG_PATH
+              }
           }
           post {
               always {
@@ -90,16 +101,35 @@ pipeline {
           }
         }
       }
-        post {
-          always {
-              script { // Slack notification: final build status
-                  payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+'\nLogs: '+"${env.LOG_PATH_URL}"+'"}'
-                  sh """curl -s \
-                  -X POST -H 'Content-type: application/json' \
-                  --data '""" + payload + """' \
-                  """ + env.SLACK_URL
-              }
+    }
+    stage('Commit Logs back to Repo') {
+      agent any
+      steps {
+        unstash(name:'REL_LOG_PATH')
+        script {
+          withCredentials([usernamePassword(credentialsId: 'neoload-cli-creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')])
+          {
+            sh """\
+            git checkout """ + "${env.JUST_BRANCH_NAME}" + """
+            git pull
+            git add '""" + "${env.REL_LOG_PATH}" + """'
+            git commit -m 'Auto commit test logs from build """ + "${env.JOB_NAME}" + "#" + "${env.BUILD_NUMBER}" + """'
+            git push -u origin """ + "${env.JUST_BRANCH_NAME}" + """
+            """
           }
+        }
+      }
+    }
+  }
+  post {
+    always {
+        script { // Slack notification: final build status
+          def logMsgText = fileExists(env.REL_LOG_PATH) ? '\nLogs: '+"${env.LOG_PATH_URL}" : ''
+          payload = '{"text":"[' + "${currentBuild.currentResult}" + '] NeoLoad-CLI build status.\nBranch: '+"${env.GIT_BRANCH}"+'\nSee: '+"${env.BUILD_URL}"+'\nBased on: '+"${env.GIT_COMMIT_URL}"+logMsgText+'"}'
+          sh """curl -s \
+          -X POST -H 'Content-type: application/json' \
+          --data '""" + payload + """' \
+          """ + env.SLACK_URL
         }
     }
   }

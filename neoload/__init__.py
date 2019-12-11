@@ -14,13 +14,17 @@ def getDefaultLogger():
 
 def cprint(string, color=None, font="slant", figlet=False):
     if not isQuietMode():
-        if colored and color is not None and colorPrint:
-            if not figlet:
-                six.print_(colored(string, color))
-            else:
-                six.print_(colored(figlet_format(string, font=font), color))
+        six.print_(ctext(string,color,font,figlet))
+
+def ctext(string, color=None, font="slant", figlet=False):
+    if colored and color is not None and colorPrint:
+        if not figlet:
+            return colored(string, color)
         else:
-            six.print_(string)
+            return colored(figlet_format(string, font=font), color)
+    else:
+        return string
+
 
 def cprintOrLogInfo(explicitPrint, logger, string, color=None, font="slant", figlet=False):
     if(explicitPrint):

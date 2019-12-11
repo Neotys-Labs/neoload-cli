@@ -7,6 +7,7 @@ import shutil
 import time
 import logging
 import re
+import pkg_resources
 
 from neoload import *
 from .Validators import *
@@ -15,7 +16,7 @@ from .Files import *
 from .NLWAPI import *
 from .Attaching import (attachInfra,detatchInfra,detatchAllInfra,isAlreadyAttached)
 from .Formatting import printNiceTime
-from .SimpleReports import writeJUnitSLAContent
+from .SimpleReports import writeJUnitSLAContent,getSLATextSummary
 from openapi_client.rest import ApiException
 from pprint import pprint
 from contextlib import redirect_stdout
@@ -31,6 +32,7 @@ class ArgumentException(Exception):
 # https://click.palletsprojects.com/en/7.x/options/
 
 @click.command()
+@click.option('--version', is_flag=True, default=None, help='Print the version of NeoLoad CLI')
 @click.option('--profiles', is_flag=True, default=None, help='List profiles')
 @click.option('--profile', default=None, help='Set profiles')
 #@click.option('--deleteprofile', help='Deletes a profiles')
@@ -62,7 +64,8 @@ class ArgumentException(Exception):
 @click.option('--updatestatus', default=None, help='Updates the status of a test (PASSED|FAILED).')
 @click.option('--nowait', is_flag=True, default=None, help='Do not wait for blocking events, return immediately. To be used in conjunction with running a test.')
 @click.option('--spinwait', is_flag=True, default=None, help='Block execution until a test is done or failure to connect to API. To be used in conjunction with --testid specifier.')
-def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                           # profile stuff
+def main(   version,
+            profiles,profile,url,token,zone,ntslogin,ntsurl,                           # profile stuff
             files,scenario,attach,reattach,detatch,detatchall,                               # runtime inputs
             verbose,debug,nocolor,noninteractive,quiet,                             # logging and debugging
             testid,query,                                                           # entities (primarily, a test)
@@ -211,7 +214,7 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
             infraops = [attach,reattach,detatch]
 
             # operations that can live on their own (like detatch, profiles, etc.)
-            standaloneops = [detatch,profiles]
+            standaloneops = [detatch,profiles,version]
 
             # in prep for below argument combinatory validations
             allops = execops + exportops + modops + infraops + standaloneops
@@ -224,6 +227,10 @@ def main(profiles,profile,url,token,zone,ntslogin,ntsurl,                       
                     )
                 ):
                 raise ArgumentException("Activity without context (i.e. --updatedesc but no --testid)")
+
+            if version is not None:
+                version = pkg_resources.require("neoload")[0].version
+                cprint("NeoLoad CLI version " + str(version))
 
             # if a named query and source is provided
             if infile is not None and query is not None:
@@ -418,19 +425,29 @@ def configureAttach(attach,intentToRun,currentProfile,reattach):
     return ret
 
 def printTestSummary(client,testId,justid):
-    test = getTestStatus(client,testId)
-    stats = None
-    if test.status in ['STARTED','RUNNING','TERMINATED']:
-        stats = getTestStatistics(client,testId)
     if justid:
         print(test.id)
     else:
+        test = getTestStatus(client,testId)
+
+        printSLASummary(client,test)
+
+        stats = None
+        if test.status in ['STARTED','RUNNING','TERMINATED']:
+            stats = getTestStatistics(client,testId)
+
         json = {
             'summary': test
         }
         if stats is not None:
             json['statistics'] = stats
         print(json)
+
+def printSLASummary(client,test):
+    cprint("SLA summary:")
+    slas = getSLAs(client,test.id)
+    text = getSLATextSummary(slas,test)
+    cprint(text)
 
 def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,junitsla,quiet,justid):
     overviewUrl = getTestOverviewUrl(currentProfile,launchedTestId)
@@ -484,6 +501,10 @@ def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,j
                 exitCode = 0
             else:
                 exitCode = 1
+
+            if test.quality_status == "FAILED" and test.termination_reason == "POLICY":
+                if not quiet:
+                    cprint("One or more SLAs failed.")
 
             afterTermination(client,test,junitsla)
 
@@ -559,6 +580,8 @@ def detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
 
     if detatchall:
         detatchAllInfra(explicitDetatch)
+
+
 
 class Logger(object):
     def __init__(self, filename=None):

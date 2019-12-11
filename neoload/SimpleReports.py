@@ -107,10 +107,10 @@ def getSLATestSuites(test,group,sla):
     if sla.status == "PASSED":
         tc.stdout = ""#"Value is " + str(sla.value)
     elif sla.status == "FAILED":
-        txt = getSLAText(test,group.lower(),sla,slaprofile,userpath)
+        txt = getSLAJUnitText(test,group.lower(),sla,slaprofile,userpath)
         tc.add_error_info("SLA failed",txt,'NeoLoad SLA')
     elif sla.status == "WARNING":
-        txt = getSLAText(test,group.lower(),sla,slaprofile,userpath)
+        txt = getSLAJUnitText(test,group.lower(),sla,slaprofile,userpath)
         #tc.add_error_info("SLA failed",txt,'NeoLoad SLA')
     else:
         logging.warning("Unknown sla.status value: " + sla.status)
@@ -118,7 +118,7 @@ def getSLATestSuites(test,group,sla):
     return TestSuite(suitename,[tc])
 
 
-def getSLAText(test,group,sla,slaprofile,userpath):
+def getSLAJUnitText(test,group,sla,slaprofile,userpath):
 
     slaType = "Per Run" if group == "perrun" else "Per Interval" if group == "perinterval" else "Unknown"
     opAndValue = ""
@@ -149,5 +149,59 @@ def getSLAText(test,group,sla,slaprofile,userpath):
             "\n"
             "Created N/A " + "\n") # maybe from test completion time?/?
     return txt
+
+def getSLATextSummary(slas,test):
+
+    logger = logging.getLogger("root")
+    logger.info("getSLATextSummary: " + test.id)
+
+    ret = ""
+
+    if slas is not None:
+
+        try:
+            indicators = slas['indicators']
+            perrun = slas['perrun']
+            perinterval = slas['perinterval']
+
+            for sla in perrun:
+                thisText = getSingleLineSLAText(test,"PerRun",sla)
+                ret += thisText + "\n"
+
+            for sla in perinterval:
+                thisText = getSingleLineSLAText(test,"PerInterval",sla)
+                ret += thisText + "\n"
+
+        except:
+            logger.error("Unexpected error at 'writeJUnitSLAContent':", sys.exc_info()[0])
+            ret = "SLA derivation process failed."
+
+    return ret
+
+def getSingleLineSLAText(test,type,sla):
+    #ctext
+    color = None if not isInteractiveMode() else "red" if sla.status == "FAILED" else "green" if sla.status == "PASSED" else "yellow"
+
+    element = "{0} > {1} > {2}".format(
+        sla.element.userpath,
+        sla.element.parent,
+        sla.element.name
+    )
+
+    whereFormat = "{0} [{1} {2}]"
+    where = None
+    if sla.status == "PASSED":
+        where = None
+    elif sla.status == "FAILED":
+        where = whereFormat.format(sla.failed,sla.failed_threshold.operator,sla.failed_threshold.value)
+    else:
+        where = whereFormat.format(sla.warning,sla.warning_threshold.operator,sla.warning_threshold.value)
+
+    return ctext(type + "SLA[{0}] {1} on [{2}]{3}".format(
+        sla.kpi,
+        sla.status,
+        element,
+        (" " + where) if where is not None else ""
+    ),color)
 
 # https://jenkins.io/blog/2016/07/01/html-publisher-plugin/
