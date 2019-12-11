@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 version_id=$(cat ./setup.py | grep -oE "(?:version=')(.*?)(?:')")
 version_id=$(echo "${version_id/version=/}")
