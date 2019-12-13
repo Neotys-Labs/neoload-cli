@@ -20,6 +20,8 @@ from .SimpleReports import writeJUnitSLAContent,getSLATextSummary
 from openapi_client.rest import ApiException
 from pprint import pprint
 from contextlib import redirect_stdout
+import datetime
+from datetime import timedelta
 
 import webbrowser
 import click
@@ -200,9 +202,10 @@ def main(   version,
                         logging.warning("Test queued for execution in --nowait mode.")
                         logsUrl = getTestLogsUrl(currentProfile,launchedTestId)
                         cprintOrLogInfo(True,logger,"Test logs available at: " + logsUrl)
-                        printTestSummary(client, projectLaunched.test_id, justid)
                     else:
                         exitCode = blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,junitsla,quiet,justid)
+
+                    printTestSummary(client, projectLaunched.test_id, justid, moreinfo, debug)
 
             #end infraReady
         else: # not intentToRun
@@ -294,7 +297,7 @@ def main(   version,
                         writeSLAs(client,test,junitsla)
 
                     if printSummary:
-                        printTestSummary(client,testid,justid)
+                        printTestSummary(client, testid, justid, moreinfo, debug)
 
     # handle argument related issues with a different exit code than 0,1,2 (per NeoLoadCmd)
     except ArgumentException as e:
@@ -311,7 +314,7 @@ def main(   version,
     # do detatchments if appropriate
     if nowait:
         logger.warning("Skipping all cleanup tasks in --nowait mode.")
-        cleanupAfter(zipfile,shouldDetatch=False,explicitEither=False,infra=infra)
+        cleanupAfter(zipfile,shouldDetatch=False,explicit=False,infra=infra)
     else:
         detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
                             alreadyAttached,explicitAttach,explicitDetatch,zipfile,detatchall)
@@ -424,7 +427,7 @@ def configureAttach(attach,intentToRun,currentProfile,reattach):
 
     return ret
 
-def printTestSummary(client,testId,justid):
+def printTestSummary(client,testId,justid,moreinfo,debug):
     if justid:
         print(test.id)
     else:
@@ -432,20 +435,22 @@ def printTestSummary(client,testId,justid):
 
         printSLASummary(client,test)
 
-        stats = None
-        if test.status in ['STARTED','RUNNING','TERMINATED']:
-            stats = getTestStatistics(client,testId)
+        if moreinfo or debug:
 
-        json = {
-            'summary': test
-        }
-        if stats is not None:
-            json['statistics'] = stats
-        print(json)
+            stats = None
+            if test.status in ['STARTED','RUNNING','TERMINATED']:
+                stats = getTestStatistics(client,testId)
+
+            json = {
+                'summary': test
+            }
+            if stats is not None:
+                json['statistics'] = stats
+            print(json)
 
 def printSLASummary(client,test):
     cprint("SLA summary:")
-    slas = getSLAs(client,test.id)
+    slas = getSLAs(client,test)
     text = getSLATextSummary(slas,test)
     cprint(text)
 
@@ -461,13 +466,20 @@ def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,j
     running = False
     terminated = False
     waiterations = 0
+    liveSummary = not quiet
+    startedAt = datetime.datetime.now()
+    waterator = '.'
     while not terminated:
         test = getTestStatus(client,launchedTestId)
         if test.status == "INIT":
             if not inited:
                 inited = True
-                cprint("Test is initializing...", "yellow")
                 cprint("Est. duration: " + printNiceTime(test.duration/1000) + ", LG count: " + str(test.lg_count), "yellow")
+                print("Test is initializing", end="")
+            if not quiet:
+                print(""+waterator, end="")
+            waiterations += 1
+            sys.stdout.flush()
         elif test.status == "STARTING":
             inited = inited #dummy
         elif test.status == "STARTED":
@@ -476,17 +488,25 @@ def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,j
                 started = True
         elif test.status == "RUNNING":
             if not running:
+                if not quiet:
+                    print("") # end the ...s
+                waiterations = 0
                 running = True
                 cprint("Test overview now available at: " + overviewUrl)
+                startedAt = datetime.datetime.now()
                 if not quiet:
                     print("Test running", end="")
+                if liveSummary:
+                    print("")
                 if isInteractiveMode():
                     webbrowser.open_new_tab(overviewUrl)
-            waiterations += 1
-            if not quiet:
-                waterator = '.'
+            if liveSummary:
+                if (waiterations % 3) == 0:
+                    print(getCurrentTestSummaryLine(waiterations,startedAt,client,test))
+            elif not quiet:
                 print(""+waterator, end="")
-                sys.stdout.flush()
+            waiterations += 1
+            sys.stdout.flush()
         elif test.status == "TERMINATED":
             if not terminated:
                 if not quiet:
@@ -517,7 +537,7 @@ def afterTermination(client,test,junitsla):
         writeSLAs(client,test,junitsla)
 
 def writeSLAs(client,test,filepath):
-    slas = getSLAs(client,test.id)
+    slas = getSLAs(client,test)
     writeJUnitSLAContent(slas,test,filepath)
 
 def cleanupAfter(zipfile,shouldDetatch,explicit,infra):
@@ -581,6 +601,33 @@ def detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
     if detatchall:
         detatchAllInfra(explicitDetatch)
 
+def getCurrentTestSummaryLine(waiterations,startedAt,client,test):
+    datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
+    currentDT = datetime.datetime.now()
+    diff = datetime.datetime.strptime(str(currentDT), datetimeFormat) - datetime.datetime.strptime(str(startedAt), datetimeFormat)
+    prefix = "{0}: {1}\t".format(
+        waiterations,
+        str(diff)
+    )
+    ret = prefix
+    test = getTestStatus(client,test.id)
+    if test.status in ['STARTED','RUNNING','TERMINATED']:
+        stats = getTestStatistics(client,test.id)
+        ret = prefix + "Status[{0}],Fail[{4}],LGs[{1}]\tCNC:{5}\tBPS[{2}]\tRPS:{3}\tavg(rql):{6}".format(
+            test.status,
+            test.lg_count,
+            stats.total_global_downloaded_bytes_per_second,
+            stats.total_request_count_per_second,
+            stats.total_global_count_failure,
+            ("N/A" if stats.last_virtual_user_count is None else stats.last_virtual_user_count),
+            stats.total_request_duration_average
+        )
+    else:
+        ret = prefix + "Status[{0}]".format(
+            test.status
+        )
+
+    return ret
 
 
 class Logger(object):

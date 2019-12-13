@@ -10,6 +10,8 @@ if [ -z "$version_id" ]; then
     exit 1
 fi
 
+echo "Testing and packaging version $version_id"
+
 python3 -m pytest tests -v --runslow
 if [ "$?" -ne "0" ]; then
     echo "One or more tests failed."
