@@ -74,7 +74,7 @@ def getSLAs(client,test):
     api = openapi_client.ResultsApi(client)
     try:
         return {
-            'indicators': api.get_test_sla_global_indicators(test.id),
+            'indicators': [] if test.status != "TERMINATED" else api.get_test_sla_global_indicators(test.id),
             'perrun': [] if test.status != "TERMINATED" else api.get_test_sla_per_test(test.id),
             'perinterval': api.get_test_sla_per_interval(test.id),
         }
