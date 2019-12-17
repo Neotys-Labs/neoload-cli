@@ -4,6 +4,7 @@ from pyfiglet import figlet_format
 from termcolor import colored
 import logging
 from PyInquirer import (prompt)
+import importlib
 
 colorPrint = True
 interactiveMode = False
@@ -79,3 +80,9 @@ def pauseIfInteractiveDebug(logger,msgIfDebug=None):
         return True
 
     return False
+
+# used by openapi_client:runtime_api.post_upload_project...
+# provides dynamic inspection/injection of servers defined in OpenAPI spec
+def getCurrentFilesUrl():
+    Profile_mod = importlib.import_module(".Profile",package="neoload")
+    return Profile_mod.getProfileFilesUrl(Profile_mod.getCurrentProfile())

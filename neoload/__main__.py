@@ -31,6 +31,23 @@ trueValues = ['1','yes','true','on']
 class ArgumentException(Exception):
     pass
 
+API_VERSION = 20191115
+CHECKZONESBEFORERUN = False
+ALLOWZONELISTING = False
+
+def initFeatureFlags(profile):
+    if profile is None:
+        return
+
+    global CHECKZONESBEFORERUN, ALLOWZONELISTING
+    API_VERSION = getApiInternalVersionNumber(profile)
+
+    # Zone capabilities support
+    ZONES_SUPPORTED = (API_VERSION >= 20191215)
+    CHECKZONESBEFORERUN = ZONES_SUPPORTED
+    ALLOWZONELISTING = ZONES_SUPPORTED
+
+
 # https://click.palletsprojects.com/en/7.x/options/
 
 @click.command()
@@ -64,16 +81,20 @@ class ArgumentException(Exception):
 @click.option('--updatename', default=None, help='Updates the name of a test, incl. hashtag processing.')
 @click.option('--updatedesc', default=None, help='Updates the description of a test, incl. hashtag processing.')
 @click.option('--updatestatus', default=None, help='Updates the status of a test (PASSED|FAILED).')
+@click.option('--rolltag', default=None, help='Adds the specified hashtag to the description of a test AND removes the tag from all prior executions of that test (by scenario and project name). Used in rolling baselines.')
 @click.option('--nowait', is_flag=True, default=None, help='Do not wait for blocking events, return immediately. To be used in conjunction with running a test.')
 @click.option('--spinwait', is_flag=True, default=None, help='Block execution until a test is done or failure to connect to API. To be used in conjunction with --testid specifier.')
+@click.option('--tests', is_flag=True, default=None, help='List tests')
+@click.option('--zones', is_flag=True, default=None, help='List zones')
 def main(   version,
-            profiles,profile,url,token,zone,ntslogin,ntsurl,                           # profile stuff
-            files,scenario,attach,reattach,detatch,detatchall,                               # runtime inputs
+            profiles,profile,url,token,zone,ntslogin,ntsurl,                        # profile stuff
+            files,scenario,attach,reattach,detatch,detatchall,                      # runtime inputs
             verbose,debug,nocolor,noninteractive,quiet,                             # logging and debugging
             testid,query,                                                           # entities (primarily, a test)
             summary,justid,outfile,infile,junitsla,                                 # export operations
-            updatename,updatedesc,updatestatus,                                     # modification ops (particularly, for a test)
-            nowait,spinwait                                                         # support for non-blocking execution
+            updatename,updatedesc,updatestatus,rolltag,                             # modification ops (particularly, for a test)
+            nowait,spinwait,                                                        # support for non-blocking execution
+            tests,zones
     ):
 
     # initialize most rudimentary runtime indicators
@@ -98,6 +119,9 @@ def main(   version,
     # for headless, non-interactive systems, flush output immediately on all prints
     configurePythonUnbufferedMode(moreinfo)
 
+    # initialize poor person's feature flags
+    initFeatureFlags(getCurrentProfile())
+
     # critical flags for subsequent execution modes
     hasFiles = True if files is not None and len(files)>0 else False
     intentToRun = True if hasFiles or scenario is not None else False
@@ -109,6 +133,9 @@ def main(   version,
         return exitProcess(0)# this is informational listing only, no need to execute anything else
 
     #TODO: implement --profile x --attach blahblah as a profile-update-only operation, no actual attach
+
+    # initialize poor person's feature flags after profile selection
+    initFeatureFlags(getCurrentProfile())
 
     currentProfile = getCurrentProfile()
     explicitAttach = True if attach is not None else False
@@ -152,8 +179,21 @@ def main(   version,
     }
     exitCode = 0
 
+    noApiNeeded = (infile is not None and query is not None)
+
     try:
-        client = getNLWAPI(currentProfile)
+        client = None
+        filesUrl = None
+
+        if not noApiNeeded:
+            client = getNLWAPI(currentProfile)
+
+            filesUrl = getCurrentFilesUrl()
+            logger.info("filesUrl: "+filesUrl)
+
+            # check API connectivity
+            if not checkAPIConnectivity(client):
+                exitProcess(4)
 
         logger.debug("shouldAttach=" + str(shouldAttach))
         logger.debug("intentToRun=" + str(intentToRun))
@@ -162,6 +202,27 @@ def main(   version,
             logger.info("Attaching resources.")
             infra = attachInfra(currentProfile,attach,explicitAttach)
             currentProfile = updateProfileInfra(infra)
+        else:
+            if intentToRun and CHECKZONESBEFORERUN:
+                zoneId = currentProfile["zone"]
+                currentZones = list(filter(lambda z: z.id == zoneId,getZones(client)))
+                if len(currentZones) < 1:
+                    return exitProcess(5, "Zone [" + zoneId + "] could not be found.")
+                else:
+                    currentZone = currentZones[0]
+
+                    all_ctrl_count = len(currentZone.controllers)
+                    active_ctrl_count = len(list(filter(lambda r: r.status=="AVAILABLE",currentZone.controllers)))
+                    all_lgs_count = len(currentZone.loadgenerators)
+                    active_lgs_count = len(list(filter(lambda r: r.status=="AVAILABLE",currentZone.loadgenerators)))
+                    if not (active_ctrl_count > 0 and active_lgs_count > 0):
+                        msg = "\n Zone [" + zoneId + "] has no available controller + load generator(s)."
+                        if not ('lastattach' in currentProfile and currentProfile['lastattach'] is not None):
+                            msg += "\n The current local profile [" + getCurrentProfileName() + "] does not have a 'lastattach' key."
+                        if not ('lastinfra' in currentProfile and currentProfile['lastinfra'] is not None):
+                            msg += "\n The current local profile [" + getCurrentProfileName() + "] does not have a 'lastinfra' key."
+                        msg += "\n Did you forget to --attach some dynamic resources or specify a dynamic infrastructure zone?"
+                        return exitProcess(5,msg)
 
         if intentToRun:
 
@@ -213,15 +274,17 @@ def main(   version,
             # collections of arguments for verification of combinations
             execops = [spinwait]
             exportops = [summary,justid,junitsla,query]
-            modops = [updatename,updatedesc,updatestatus]
+            modops = [updatename,updatedesc,updatestatus,rolltag]
             infraops = [attach,reattach,detatch]
+            listops = [tests,zones]
 
             # operations that can live on their own (like detatch, profiles, etc.)
-            standaloneops = [detatch,profiles,version]
+            standaloneops = [detatch,profiles,version,zones]
 
             # in prep for below argument combinatory validations
-            allops = execops + exportops + modops + infraops + standaloneops
+            allops = execops + exportops + modops + infraops + standaloneops + listops
             allids = [testid,profile,infile]
+
             if not any(list(map(lambda x: x is not None, standaloneops))) and (
                     (
                         any(list(map(lambda x: x is not None, allops))) and all(list(map(lambda x: x is None, allids)))
@@ -234,6 +297,19 @@ def main(   version,
             if version is not None:
                 version = pkg_resources.require("neoload")[0].version
                 cprint("NeoLoad CLI version " + str(version))
+
+            if zones is not None:
+                if not ALLOWZONELISTING:
+                    return exitProcess(10,getIncompatibleVersionMessage("zone listing"))
+                else:
+                    allZones = list(filter(lambda z: z.id is not None,getZones(client)))
+                    cprint("Number of zones: " + str(len(allZones)))
+                    for z in allZones:
+                        all_ctrl_count = len(z.controllers)
+                        active_ctrl_count = len(list(filter(lambda r: r.status=="AVAILABLE",z.controllers)))
+                        all_lgs_count = len(z.loadgenerators)
+                        active_lgs_count = len(list(filter(lambda r: r.status=="AVAILABLE",z.loadgenerators)))
+                        cprint(" - " + z.id + "\t[" + z.type + "]\tCTRLs: (" + str(active_ctrl_count) + "/" + str(all_ctrl_count) + ")\tLGs: (" + str(active_lgs_count) + "/" + str(all_lgs_count) + ")\t" + z.name)
 
             # if a named query and source is provided
             if infile is not None and query is not None:
@@ -275,19 +351,23 @@ def main(   version,
                         'qualityStatus': test.quality_status
                     }
 
-                    if updatename is not None:
-                        tobe['name'] = processUpdateText(tobe['name'],updatename)
+                    if rolltag is not None:
+                        test = processRollTag(client,testid,rolltag)
+                    else:
+                        if updatename is not None:
+                            tobe['name'] = processUpdateText(tobe['name'],updatename)
 
-                    if updatedesc is not None:
-                        tobe['description'] = processUpdateText(tobe['description'],updatedesc)
+                        if updatedesc is not None:
+                            tobe['description'] = processUpdateText(tobe['description'],updatedesc)
 
-                    if updatestatus is not None:
-                        if updatestatus not in ['PASSED','FAILED']:
-                             raise ArgumentException("Invalid test status value provided for update. Must be 'PASSED' or 'FAILED',")
-                        tobe['qualityStatus'] = updatestatus
+                        if updatestatus is not None:
+                            if updatestatus not in ['PASSED','FAILED']:
+                                 raise ArgumentException("Invalid test status value provided for update. Must be 'PASSED' or 'FAILED',")
+                            tobe['qualityStatus'] = updatestatus
 
-                    test = updateTestDescription(client,testid,tobe)
-                    printSummary = True
+                        test = updateTestDescription(client,testid,tobe)
+
+                        printSummary = True
 
                 # if test export-related operations are specified, do them
                 if any(list(map(lambda x: x is not None, exportops))) or printSummary:
@@ -595,11 +675,11 @@ def detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
     explicitEither = True if explicitAttach or explicitDetatch else False
     cleanupAfter(zipfile,shouldDetatch,explicitEither,infra)
 
-    if shouldDetatch:
-        currentProfile = updateProfileInfra(None)
-
     if detatchall:
         detatchAllInfra(explicitDetatch)
+
+    if shouldDetatch or detatchall:
+        currentProfile = updateProfileInfra(None)
 
 def getCurrentTestSummaryLine(waiterations,startedAt,client,test):
     datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
@@ -629,6 +709,8 @@ def getCurrentTestSummaryLine(waiterations,startedAt,client,test):
 
     return ret
 
+def getIncompatibleVersionMessage(featureMessage=None):
+    return "The version of the API you are connected to [" + str(API_VERSION) + "] does not support this function" + ("" if featureMessage is None else ": "+str(featureMessage))
 
 class Logger(object):
     def __init__(self, filename=None):
