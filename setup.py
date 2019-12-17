@@ -34,6 +34,7 @@ setup(name='neoload',
           'junit-xml',
           'requests',
           'pyyaml',
+          'python-dateutil',
       ],
       entry_points={
         'console_scripts': [
