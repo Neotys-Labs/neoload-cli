@@ -101,7 +101,7 @@ pipeline {
         }
       }
     }
-    stage('Commit Logs back to Repo') {
+    stage('Commit Logs back to Repo') { // only executes when tests pass
       agent any
       steps {
         unstash(name:'REL_LOG_PATH')
