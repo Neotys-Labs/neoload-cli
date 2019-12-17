@@ -32,6 +32,8 @@ setup(name='neoload',
           'pytest',
           'pytest-steps',
           'junit-xml',
+          'requests',
+          'pyyaml',
       ],
       entry_points={
         'console_scripts': [
