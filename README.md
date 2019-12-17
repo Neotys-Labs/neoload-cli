@@ -222,6 +222,6 @@ neoload --testid [new test id] --updatedesc '+#baseline'
 ## Contributing
 Feel free to fork this repo, make changes, *test locally*, and create a pull request. As part of your testing, you should run the built-in test suite with the following command:
 ```
-python3 -m pytest -v tests --runslow
+python3 -m pytest -v tests
 ```
-*NOTE: the --runslow argument also runs Docker-related attaching tests, which you will need to set environment variables up for in order to successfully run the test suite. An example of these variables can be found in [example.bash_profile](tests/example.bash_profile) and can be addapted for Windows execution as well.
+*NOTE: omitting the --skipslow and --skipslas arguments also runs Docker-related attaching tests, which you will need to set environment variables up for in order to successfully run the test suite. An example of these variables can be found in [example.bash_profile](tests/example.bash_profile) and can be addapted for Windows execution as well.
