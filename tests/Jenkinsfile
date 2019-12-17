@@ -77,7 +77,6 @@ pipeline {
                       python3 -m pytest \
                       -v --junitxml=pytest_junit.xml \
                       tests \
-                      --runslow \
                       ) \
                       | tee \
                       """ + "${env.REL_LOG_PATH}" + """ \

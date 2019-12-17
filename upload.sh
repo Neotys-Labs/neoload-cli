@@ -12,7 +12,7 @@ fi
 
 echo "Testing and packaging version $version_id"
 
-python3 -m pytest tests -v --runslow
+python3 -m pytest tests -v
 if [ "$?" -ne "0" ]; then
     echo "One or more tests failed."
     exit 2

@@ -2,6 +2,7 @@ import pytest
 from utils import *
 from os import path
 
+@pytest.mark.queries
 def test_query_outfile_for_bench():
 
     # Step: getid
