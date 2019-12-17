@@ -1,0 +1,54 @@
+trigger: none
+#  - master
+
+pool:
+  vmImage: 'ubuntu-16.04'
+
+variables:
+  nlw_token: $(secret_nlw_token)
+  zone_code: 9h2lZ
+  PYTHONUNBUFFERED: 1
+
+# create sidecar containers, attach them to a zone; provide supply this pipeline demands
+resources:
+  containers:
+  - container: neoload_ctrl
+    image: paulsbruce/neoload-controller-azure:6.10
+    env: { MODE: Managed, NEOLOADWEB_TOKEN: $(nlw_token), ZONE: $(zone_code) }
+  - container: lg1
+    image: neotys/neoload-loadgenerator:6.10
+    env: { NEOLOADWEB_TOKEN: $(nlw_token), ZONE: $(zone_code), LG_HOST=lg1, LG_PORT=7101 }
+    options: -p 7101:7100
+
+jobs:
+- job: RunLoadTest
+  displayName: Run NeoLoad Test
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.6'
+
+  - bash:
+    displayName: Install NeoLoad
+    continueOnError: false
+    script: |
+      pip install neoload
+      neoload --profile docker --token $(nlw_token) --zone $(zone_code)
+
+  - bash:
+    displayName: Run NeoLoad Test
+    continueOnError: true
+    script: |
+      cd $(Build.SourcesDirectory)
+
+      neoload --scenario sanityScenario \
+              -f example_test/default.yaml \
+              -f example_test/slas/uat.yaml \
+              --junitsla $(Common.TestResultsDirectory)/neoload-slas.xml
+
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: $(Common.TestResultsDirectory)/neoload-slas.xml
+      failTaskOnFailedTests: true
