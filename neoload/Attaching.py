@@ -164,13 +164,13 @@ def attachLocalDockerInfra(profile,spec,explicit):
             lglinks[lg.id] = lgname
             container_ids.append(lg.id)
             lg_container_ids.append(lg.id)
-            cprintOrLogInfo(explicit,logger,"Created load generator " + str(x+1) + ".")
+            cprint("Created load generator " + str(x+1) + ".")
 
             network.connect(
                 container=lg.id,
                 ipv4_address=lghost
             )
-            cprintOrLogInfo(explicit,logger,"Attached load generator " + str(x+1) + " to network.")
+            cprint("Attached load generator " + str(x+1) + " to network.")
 
             baseIpX += 1
 
@@ -187,9 +187,9 @@ def attachLocalDockerInfra(profile,spec,explicit):
         )
         container_ids.append(ctrl.id)
         ctrl_container_id = ctrl.id
-        cprintOrLogInfo(explicit,logger,"Attached controller.")
+        cprint("Attached controller.")
 
-        cprintOrLogInfo(explicit,logger,"Waiting for docker containers to be attached and ready.")
+        cprint("Waiting for docker containers to be attached and ready.")
 
         #neoload.agent.Agent: Connection test to Neoload Web successful
         #neoload.controller.agent.ControllerAgent: Successfully connected to URL:
@@ -208,7 +208,7 @@ def attachLocalDockerInfra(profile,spec,explicit):
                 logger.error("Couldn't ensure controller readiness for " + container_id)
 
         if waitingSuccess:
-            cprintOrLogInfo(explicit,logger,"All containers are attached and ready for use.")
+            cprint("All containers are attached and ready for use.")
 
         if not pauseIfInteractiveDebug(logger):
             time.sleep( 1 )
@@ -287,8 +287,11 @@ def removeDockerContainer(client,explicit,containerId):
             container.remove()
 
     except Exception as err:
-        logger.error("Unexpected error in 'removeDockerContainer':", sys.exc_info()[0])
-        traceback.print_exc()
+        if "No such container" in str(sys.exc_info()[0]):
+            logger.info("Tried to remove non-existent container: " + containerId)
+        else:
+            logger.error("Unexpected error in 'removeDockerContainer':", sys.exc_info()[0])
+            traceback.print_exc()
 
 def removeDockerNetwork(client,explicit,networkId):
     logger = logging.getLogger("root")
