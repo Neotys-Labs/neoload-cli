@@ -69,14 +69,14 @@ def getTestOverviewUrl(profile,testId):
 def getTestLogsUrl(profile,testId):
     return getTestBaseUri(profile,testId)+'/logs'
 
-def getSLAs(client,testId):
+def getSLAs(client,test):
     logger = logging.getLogger("root")
     api = openapi_client.ResultsApi(client)
     try:
         return {
-            'indicators': api.get_test_sla_global_indicators(testId),
-            'perrun': api.get_test_sla_per_test(testId),
-            'perinterval': api.get_test_sla_per_interval(testId),
+            'indicators': [] if test.status != "TERMINATED" else api.get_test_sla_global_indicators(test.id),
+            'perrun': [] if test.status != "TERMINATED" else api.get_test_sla_per_test(test.id),
+            'perinterval': api.get_test_sla_per_interval(test.id),
         }
     except:
         logger.error("Unexpected error at 'getSLAs:", sys.exc_info()[0])

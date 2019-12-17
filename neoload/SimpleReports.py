@@ -190,12 +190,13 @@ def getSingleLineSLAText(test,type,sla):
 
     whereFormat = "{0} [{1} {2}]"
     where = None
-    if sla.status == "PASSED":
-        where = None
-    elif sla.status == "FAILED":
-        where = whereFormat.format(sla.failed,sla.failed_threshold.operator,sla.failed_threshold.value)
-    else:
-        where = whereFormat.format(sla.warning,sla.warning_threshold.operator,sla.warning_threshold.value)
+    if type == "PerInterval":
+        if sla.status == "PASSED":
+            where = None
+        elif sla.status == "FAILED":
+            where = whereFormat.format(sla.failed,sla.failed_threshold.operator,sla.failed_threshold.value)
+        else:
+            where = whereFormat.format(sla.warning,sla.warning_threshold.operator,sla.warning_threshold.value)
 
     return ctext(type + "SLA[{0}] {1} on [{2}]{3}".format(
         sla.kpi,

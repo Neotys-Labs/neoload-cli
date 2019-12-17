@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 version_id=$(cat ./setup.py | grep -oE "(?:version=')(.*?)(?:')")
 version_id=$(echo "${version_id/version=/}")
@@ -8,6 +9,8 @@ if [ -z "$version_id" ]; then
     echo "No version found"
     exit 1
 fi
+
+echo "Testing and packaging version $version_id"
 
 python3 -m pytest tests -v --runslow
 if [ "$?" -ne "0" ]; then
