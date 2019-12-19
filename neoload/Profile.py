@@ -235,7 +235,7 @@ def getApiInternalVersionNumber(profile):
         raise Exception("Could not load OpenAPI spec URL from profile.")
 
     response = requests.get(openapiUrl)
-    spec = yaml.load(response.text)
+    spec = yaml.load(response.text, Loader=yaml.FullLoader)
 
     schemas = spec['components']['schemas']
 
