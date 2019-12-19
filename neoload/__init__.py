@@ -4,20 +4,28 @@ from pyfiglet import figlet_format
 from termcolor import colored
 import logging
 from PyInquirer import (prompt)
+import importlib
 
 colorPrint = True
 interactiveMode = False
 quietMode = False
 
+def getDefaultLogger():
+    return logging.getLogger("root")
+
 def cprint(string, color=None, font="slant", figlet=False):
     if not isQuietMode():
-        if colored and color is not None and colorPrint:
-            if not figlet:
-                six.print_(colored(string, color))
-            else:
-                six.print_(colored(figlet_format(string, font=font), color))
+        six.print_(ctext(string,color,font,figlet))
+
+def ctext(string, color=None, font="slant", figlet=False):
+    if colored and color is not None and colorPrint:
+        if not figlet:
+            return colored(string, color)
         else:
-            six.print_(string)
+            return colored(figlet_format(string, font=font), color)
+    else:
+        return string
+
 
 def cprintOrLogInfo(explicitPrint, logger, string, color=None, font="slant", figlet=False):
     if(explicitPrint):
@@ -30,9 +38,9 @@ def dprompt(options):
     if isInteractiveMode():
         return prompt(options)
     else:
-        logger = logging.getLogger("root")
+        logger = getDefaultLogger()
         logger.warning("Required input during non-interactive session used defaults.")
-        
+
         allOptions = []
         if type(options) is list:
             allOptions.extend(options)
@@ -72,3 +80,9 @@ def pauseIfInteractiveDebug(logger,msgIfDebug=None):
         return True
 
     return False
+
+# used by openapi_client:runtime_api.post_upload_project...
+# provides dynamic inspection/injection of servers defined in OpenAPI spec
+def getCurrentFilesUrl():
+    Profile_mod = importlib.import_module(".Profile",package="neoload")
+    return Profile_mod.getProfileFilesUrl(Profile_mod.getCurrentProfile())

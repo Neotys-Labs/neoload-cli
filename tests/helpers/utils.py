@@ -22,6 +22,8 @@ def assertOutput(args,exitCode=None,contains=None,printOutput=False,clearConfig=
 
     command = "neoload -ni " + argsStr.strip()
 
+    print("Full Command: " + command)
+
     my_env = os.environ.copy()
     my_env["PYCONFIGSTORE_NAME_OVERRIDE"] = PYCONFIGSTORE_NAME_OVERRIDE
 

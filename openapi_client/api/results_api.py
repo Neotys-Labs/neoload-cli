@@ -959,7 +959,7 @@ class ResultsApi(object):
     def get_test_events(self, test_id, **kwargs):  # noqa: E501
         """Test result events  # noqa: E501
 
-        List the events of the specified test result according to the method parameters.  # noqa: E501
+        List the events of the specified test result according to the method parameters. ___ *Sortable fields :*   - offset   - fullname   - code   - source   # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_events(test_id, async_req=True)
@@ -970,6 +970,7 @@ class ResultsApi(object):
         :param list[EventType] types: The types of the events you expect to get. It will return all the types if the field is left empty. (Ctrl+click to select multiple values) 
         :param int limit: The maximum number of elements returned by this call. The maximum must be less than or equal to 200.
         :param int offset: The offset of the first element to return. Starting at this offset, the query will return a maximum of 'limit' elements.
+        :param str sort: The key to sort the elements on. It may begin with a '+' or a '-' to specify an ascending or descending sort order. The list of available keys can be found in the endpoint description.
         :param _preload_content: if False, the urllib3.HTTPResponse object will
                                  be returned without reading/decoding response
                                  data. Default is True.
@@ -987,7 +988,7 @@ class ResultsApi(object):
     def get_test_events_with_http_info(self, test_id, **kwargs):  # noqa: E501
         """Test result events  # noqa: E501
 
-        List the events of the specified test result according to the method parameters.  # noqa: E501
+        List the events of the specified test result according to the method parameters. ___ *Sortable fields :*   - offset   - fullname   - code   - source   # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_test_events_with_http_info(test_id, async_req=True)
@@ -998,6 +999,7 @@ class ResultsApi(object):
         :param list[EventType] types: The types of the events you expect to get. It will return all the types if the field is left empty. (Ctrl+click to select multiple values) 
         :param int limit: The maximum number of elements returned by this call. The maximum must be less than or equal to 200.
         :param int offset: The offset of the first element to return. Starting at this offset, the query will return a maximum of 'limit' elements.
+        :param str sort: The key to sort the elements on. It may begin with a '+' or a '-' to specify an ascending or descending sort order. The list of available keys can be found in the endpoint description.
         :param _return_http_data_only: response data without head status code
                                        and headers
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -1014,7 +1016,7 @@ class ResultsApi(object):
 
         local_var_params = locals()
 
-        all_params = ['test_id', 'types', 'limit', 'offset']  # noqa: E501
+        all_params = ['test_id', 'types', 'limit', 'offset', 'sort']  # noqa: E501
         all_params.append('async_req')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -1049,6 +1051,8 @@ class ResultsApi(object):
             query_params.append(('limit', local_var_params['limit']))  # noqa: E501
         if 'offset' in local_var_params and local_var_params['offset'] is not None:  # noqa: E501
             query_params.append(('offset', local_var_params['offset']))  # noqa: E501
+        if 'sort' in local_var_params and local_var_params['sort'] is not None:  # noqa: E501
+            query_params.append(('sort', local_var_params['sort']))  # noqa: E501
 
         header_params = {}
 
@@ -2214,7 +2218,7 @@ class ResultsApi(object):
     def get_tests(self, **kwargs):  # noqa: E501
         """Lists test results  # noqa: E501
 
-        Lists the test results of the Account according to the method parameters.  # noqa: E501
+        Lists the test results of the Account according to the method parameters. ___ *Sortable fields :*   - name   - project   - startDate   - qualityStatus   # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_tests(async_req=True)
@@ -2226,6 +2230,7 @@ class ResultsApi(object):
         :param str author: The author of the test result. Returns only the test results launched by the specified author.
         :param int limit: The maximum number of elements returned by this call. The maximum must be less than or equal to 200.
         :param int offset: The offset of the first element to return. Starting at this offset, the query will return a maximum of 'limit' elements.
+        :param str sort: The key to sort the elements on. It may begin with a '+' or a '-' to specify an ascending or descending sort order. The list of available keys can be found in the endpoint description.
         :param str fields: Comma-separated list of fields to include in the json test result definition.
         :param bool pretty: If true the Json returned is human readable.
         :param _preload_content: if False, the urllib3.HTTPResponse object will
@@ -2245,7 +2250,7 @@ class ResultsApi(object):
     def get_tests_with_http_info(self, **kwargs):  # noqa: E501
         """Lists test results  # noqa: E501
 
-        Lists the test results of the Account according to the method parameters.  # noqa: E501
+        Lists the test results of the Account according to the method parameters. ___ *Sortable fields :*   - name   - project   - startDate   - qualityStatus   # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.get_tests_with_http_info(async_req=True)
@@ -2257,6 +2262,7 @@ class ResultsApi(object):
         :param str author: The author of the test result. Returns only the test results launched by the specified author.
         :param int limit: The maximum number of elements returned by this call. The maximum must be less than or equal to 200.
         :param int offset: The offset of the first element to return. Starting at this offset, the query will return a maximum of 'limit' elements.
+        :param str sort: The key to sort the elements on. It may begin with a '+' or a '-' to specify an ascending or descending sort order. The list of available keys can be found in the endpoint description.
         :param str fields: Comma-separated list of fields to include in the json test result definition.
         :param bool pretty: If true the Json returned is human readable.
         :param _return_http_data_only: response data without head status code
@@ -2275,7 +2281,7 @@ class ResultsApi(object):
 
         local_var_params = locals()
 
-        all_params = ['status', 'project', 'author', 'limit', 'offset', 'fields', 'pretty']  # noqa: E501
+        all_params = ['status', 'project', 'author', 'limit', 'offset', 'sort', 'fields', 'pretty']  # noqa: E501
         all_params.append('async_req')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -2307,6 +2313,8 @@ class ResultsApi(object):
             query_params.append(('limit', local_var_params['limit']))  # noqa: E501
         if 'offset' in local_var_params and local_var_params['offset'] is not None:  # noqa: E501
             query_params.append(('offset', local_var_params['offset']))  # noqa: E501
+        if 'sort' in local_var_params and local_var_params['sort'] is not None:  # noqa: E501
+            query_params.append(('sort', local_var_params['sort']))  # noqa: E501
         if 'fields' in local_var_params and local_var_params['fields'] is not None:  # noqa: E501
             query_params.append(('fields', local_var_params['fields']))  # noqa: E501
         if 'pretty' in local_var_params and local_var_params['pretty'] is not None:  # noqa: E501

@@ -4,9 +4,11 @@ from neoload import *
 from .Validators import *
 from pyconfigstore3 import ConfigStore
 from PyInquirer import (prompt)
+import requests
 
 import json
 import logging
+import yaml
 
 profileprefix = "profile_"
 
@@ -55,7 +57,10 @@ def getCurrentProfileName():
         return None
 
 def getCurrentProfile():
-    return getProfileByName(getCurrentProfileName())
+    if getCurrentProfileName() is None:
+        return None
+    else:
+        return getProfileByName(getCurrentProfileName())
 
 def getProfileByName(name):
     try:
@@ -198,3 +203,43 @@ def updateProfileAttach(spec):
 
 def getProfileAttach(profile):
     return None if 'lastattach' not in profile else profile['lastattach']
+
+def getProfileFilesUrl(profile):
+    stored = None if 'filesurl' not in profile else profile["filesurl"]
+    if stored is None:
+        fromOpenAPI = None
+        openapiUrl = getSwaggerUrl(profile)
+        if openapiUrl is None:
+            raise Exception("Could not load OpenAPI spec URL from profile.")
+
+        response = requests.get(openapiUrl)
+        spec = yaml.load(response.text)
+        fromOpenAPI = spec['paths']['/projects']['servers'][0]['url']
+
+        setProfileProperty('filesurl',fromOpenAPI)
+
+        return fromOpenAPI
+    else:
+        return stored
+
+def getSwaggerUrl(profile):
+    url = profile['url']
+    parts = url.split("/")
+    return parts[0]+"//"+parts[2]+"/explore/swagger.yaml"
+
+def getApiInternalVersionNumber(profile):
+    ret = 20191115
+
+    openapiUrl = getSwaggerUrl(profile)
+    if openapiUrl is None:
+        raise Exception("Could not load OpenAPI spec URL from profile.")
+
+    response = requests.get(openapiUrl)
+    spec = yaml.load(response.text)
+
+    schemas = spec['components']['schemas']
+
+    if 'SimpleResourceApiDefinition' in schemas:
+        ret = 20191215
+
+    return ret

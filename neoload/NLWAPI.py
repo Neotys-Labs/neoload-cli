@@ -1,10 +1,11 @@
+from neoload import *
+
 import logging
 import sys
 import openapi_client
+from .Profile import (getCurrentProfile,getProfileFilesUrl)
 from openapi_client.rest import ApiException
 from openapi_client.models import *
-
-configuration = openapi_client.Configuration()
 
 app = None
 
@@ -14,14 +15,22 @@ app = None
 
 
 def getNLWAPI(profile):
+    logger = logging.getLogger("root")
+
     url = profile["url"]
     if not url.endswith("/"): url = url + "/"
-    url = url + "explore/swagger.yaml"
+    url = url + "v1"
 
     token = profile["token"]
 
-    #configuration.host = "http://petstore.swagger.io:80/v2"
+    logger.info("Using API URL: " + url)
+    logger.info("Using API token: " + token)
+
+    configuration = openapi_client.Configuration()
+
+    configuration.host = url
     configuration.api_key['accountToken'] = token
+    configuration.debug = isLoggerInDebug(logger)
 
     client = openapi_client.ApiClient(configuration)
 
@@ -69,14 +78,14 @@ def getTestOverviewUrl(profile,testId):
 def getTestLogsUrl(profile,testId):
     return getTestBaseUri(profile,testId)+'/logs'
 
-def getSLAs(client,testId):
+def getSLAs(client,test):
     logger = logging.getLogger("root")
     api = openapi_client.ResultsApi(client)
     try:
         return {
-            'indicators': api.get_test_sla_global_indicators(testId),
-            'perrun': api.get_test_sla_per_test(testId),
-            'perinterval': api.get_test_sla_per_interval(testId),
+            'indicators': [] if test.status != "TERMINATED" else api.get_test_sla_global_indicators(test.id),
+            'perrun': [] if test.status != "TERMINATED" else api.get_test_sla_per_test(test.id),
+            'perinterval': api.get_test_sla_per_interval(test.id),
         }
     except:
         logger.error("Unexpected error at 'getSLAs:", sys.exc_info()[0])
@@ -105,3 +114,53 @@ def updateTestDescription(client,testId,data):
 def getTestStatistics(client,testId):
     api = openapi_client.ResultsApi(client)
     return api.get_test_statistics(testId)
+
+def processRollTag(client,testId,rolltag):
+    logger = logging.getLogger("root")
+    api = openapi_client.ResultsApi(client)
+
+    test = getTestStatus(client,testId)
+
+    # get a clean version of the tag text, no modifiers
+    newTag = rolltag.replace("+","").replace("-","").replace("#","")
+
+    # list all prior tests matching project and scenario name
+    priors = api.get_tests(project=test.project,status="TERMINATED",limit=200,offset=0)
+    tagged = list(filter(lambda prior: prior.scenario == test.scenario and ("#"+newTag) in (prior.description+""), priors))
+    for prior in tagged:
+        logger.info("Removing tag [" + newTag + "] from test [" + prior.id + "].")
+        nowPrior = changeTestTag(client,prior.id,newTag,True)
+
+    logger.info("Adding tag [" + newTag + "] to test [" + prior.id + "].")
+    return changeTestTag(client,testId,newTag,True)
+
+
+def changeTestTag(client,testId,tagraw,isAdd):
+    logger = logging.getLogger("root")
+    api = openapi_client.ResultsApi(client)
+
+    test = getTestStatus(client,testId)
+    tag = (tagraw).replace("+","").replace("-","").replace("#","")
+    oldDesc = (test.description+"").replace("#"+tag,"")
+    spec = ("+" if isAdd else "-") + "#" + tag
+    upd = TestUpdateRequest(
+        name=test.name,
+        description=processUpdateText(oldDesc,spec),
+        quality_status=test.quality_status
+    )
+    return api.update_test(testId,upd)
+
+def getZones(client):
+    api = openapi_client.ResourcesApi(client)
+
+    return api.get_zones()
+
+def checkAPIConnectivity(client):
+    logger = logging.getLogger("root")
+    api = openapi_client.ResultsApi(client)
+    try:
+        tests = api.get_tests(limit=1,offset=0)
+        return True
+    except:
+        logger.error("Unexpected error at 'checkAPIConnectivity:", sys.exc_info()[0])
+        return False

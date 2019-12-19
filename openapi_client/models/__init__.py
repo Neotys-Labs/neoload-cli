@@ -25,11 +25,14 @@ from openapi_client.models.error import Error
 from openapi_client.models.event_definition import EventDefinition
 from openapi_client.models.event_type import EventType
 from openapi_client.models.inline_object import InlineObject
+from openapi_client.models.lg_by_zones import LgByZones
 from openapi_client.models.monitor_post_request import MonitorPostRequest
 from openapi_client.models.percentiles_points import PercentilesPoints
 from openapi_client.models.point import Point
 from openapi_client.models.project_definition import ProjectDefinition
 from openapi_client.models.rate_limit_error import RateLimitError
+from openapi_client.models.reservation_definition import ReservationDefinition
+from openapi_client.models.reservation_owner import ReservationOwner
 from openapi_client.models.run_test_definition import RunTestDefinition
 from openapi_client.models.sla_element_definition import SLAElementDefinition
 from openapi_client.models.sla_global_indicator_definition import SLAGlobalIndicatorDefinition
@@ -38,6 +41,7 @@ from openapi_client.models.sla_per_interval_definition import SLAPerIntervalDefi
 from openapi_client.models.sla_per_test_definition import SLAPerTestDefinition
 from openapi_client.models.sla_status_definition import SLAStatusDefinition
 from openapi_client.models.scenario_definition import ScenarioDefinition
+from openapi_client.models.simple_resource_api_definition import SimpleResourceApiDefinition
 from openapi_client.models.sla import Sla
 from openapi_client.models.test_definition import TestDefinition
 from openapi_client.models.test_id_definition import TestIdDefinition
@@ -46,3 +50,4 @@ from openapi_client.models.test_raster_multi_configuration import TestRasterMult
 from openapi_client.models.test_statistics import TestStatistics
 from openapi_client.models.test_update_request import TestUpdateRequest
 from openapi_client.models.threshold_definition import ThresholdDefinition
+from openapi_client.models.zone_definition import ZoneDefinition

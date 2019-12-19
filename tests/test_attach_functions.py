@@ -3,23 +3,26 @@ from utils import *
 from pytest_steps import test_steps, optional_step, depends_on
 from os import path
 
-# def test_attach_detatch_simple():
-#     requireTestSecrets()
-#     assertProfileByZone(os.environ['NEOLOAD_CLI_ZONE_STATIC'])
-#     assertOutput(
-#         contains="All containers are attached and ready for use",
-#         printOutput=True,
-#         clearConfig=False,
-#         args={
-#             '--attach': 'docker#3,neotys/neoload-loadgenerator:7.0.2'
-#         })
-#     assertOutput(
-#         contains="Removing network",
-#         printOutput=True,
-#         clearConfig=False,
-#         args={
-#             '--detatch': None
-#         })
+@pytest.mark.slow
+def test_attach_detatch_simple():
+    requireTestSecrets()
+    assertProfileByZone(os.environ['NEOLOAD_CLI_ZONE_STATIC'])
+    assertNoDockerContainersRunning()
+
+    assertOutput(
+        contains="All containers are attached and ready for use",
+        printOutput=True,
+        clearConfig=False,
+        args={
+            '--attach': 'docker#3,neotys/neoload-loadgenerator:7.0.2'
+        })
+    assertOutput(
+        contains="Removing network",
+        printOutput=True,
+        clearConfig=False,
+        args={
+            '--detatch': None
+        })
 
 @pytest.mark.slow
 def test_attach_run_allinone():

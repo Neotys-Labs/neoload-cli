@@ -1,0 +1,48 @@
+trigger: none
+#  - master
+
+pool:
+  vmImage: 'ubuntu-16.04'
+
+variables:
+  nlw_token: $(secret_nlw_token)
+  zone_code: pimnV
+  PYTHONUNBUFFERED: 1
+
+jobs:
+- job: RunLoadTest
+  displayName: Run NeoLoad Test
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.6'
+
+  - task: Bash@3
+    displayName: Install NeoLoad
+    continueOnError: false
+    inputs:
+      targetType: 'inline'
+      script: |
+        pip install neoload
+        neoload --version
+        neoload --profile openshift --token $(nlw_token) --zone $(zone_code)
+
+  - task: Bash@3
+    displayName: Run NeoLoad Test
+    continueOnError: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd $(Build.SourcesDirectory)
+
+        neoload --scenario sanityScenario \
+                -f example_test/default.yaml \
+                -f example_test/slas/uat.yaml \
+                --junitsla $(Common.TestResultsDirectory)/neoload-slas.xml
+
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: $(Common.TestResultsDirectory)/neoload-slas.xml
+      failTaskOnFailedTests: true

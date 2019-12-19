@@ -17,7 +17,7 @@ max_container_readiness_wait_sec = 60
 
 def attachInfra(profile,rawspec,explicit):
     spec = parseInfraSpec(rawspec)
-    if spec["provider"] == "docker":
+    if spec is not None and 'provider' in spec and spec['provider'] == 'docker':
         return attachLocalDockerInfra(profile,spec,explicit)
     else:
         raise NotImplementedError()
@@ -25,22 +25,29 @@ def attachInfra(profile,rawspec,explicit):
 def detatchInfra(spec,explicit):
     logger = logging.getLogger("root")
     logger.info("detatchInfra: "+spec["provider"])
-    if spec["provider"] == "docker":
+    if spec is not None and 'provider' in spec and spec['provider'] == 'docker':
         return detatchLocalDockerInfra(explicit,spec)
     else:
         logger.info("Attached infrastructure lacked a provider, so no detatched occured.")
 
 def isAlreadyAttached(infra):
     logger = logging.getLogger("root")
-    if infra['provider'] == 'docker':
+    if infra is not None and 'provider' in infra and infra['provider'] == 'docker':
         try:
             client = docker.from_env()
+            runningContainers = client.containers.list(all=True)
             containers = []
             for containerId in infra['container_ids']:
-                containers.append(client.containers.get(containerId))
-            network = client.networks.get(infra['network_id'])
+                if any(filter(lambda cr: cr.id == containerId,runningContainers)):
+                    containers.append(client.containers.get(containerId))
 
-            if all(map(lambda x: x.status == 'running', containers)) and len(network.name) > 0:
+            networkId = infra['network_id']
+            networks = client.networks.list()
+            network = None
+            if any(filter(lambda net: net.id == networkId,networks)):
+                network = client.networks.get(networkId)
+
+            if all(map(lambda x: x.status == 'running', containers)) and network is not None:
                 return True
         except:
             logger.error("Unexpected error in 'isAlreadyAttached':", sys.exc_info()[0])
@@ -157,13 +164,13 @@ def attachLocalDockerInfra(profile,spec,explicit):
             lglinks[lg.id] = lgname
             container_ids.append(lg.id)
             lg_container_ids.append(lg.id)
-            cprintOrLogInfo(explicit,logger,"Created load generator " + str(x+1) + ".")
+            cprint("Created load generator " + str(x+1) + ".")
 
             network.connect(
                 container=lg.id,
                 ipv4_address=lghost
             )
-            cprintOrLogInfo(explicit,logger,"Attached load generator " + str(x+1) + " to network.")
+            cprint("Attached load generator " + str(x+1) + " to network.")
 
             baseIpX += 1
 
@@ -180,9 +187,9 @@ def attachLocalDockerInfra(profile,spec,explicit):
         )
         container_ids.append(ctrl.id)
         ctrl_container_id = ctrl.id
-        cprintOrLogInfo(explicit,logger,"Attached controller.")
+        cprint("Attached controller.")
 
-        cprintOrLogInfo(explicit,logger,"Waiting for docker containers to be attached and ready.")
+        cprint("Waiting for docker containers to be attached and ready.")
 
         #neoload.agent.Agent: Connection test to Neoload Web successful
         #neoload.controller.agent.ControllerAgent: Successfully connected to URL:
@@ -201,7 +208,7 @@ def attachLocalDockerInfra(profile,spec,explicit):
                 logger.error("Couldn't ensure controller readiness for " + container_id)
 
         if waitingSuccess:
-            cprintOrLogInfo(explicit,logger,"All containers are attached and ready for use.")
+            cprint("All containers are attached and ready for use.")
 
         if not pauseIfInteractiveDebug(logger):
             time.sleep( 1 )
@@ -280,8 +287,11 @@ def removeDockerContainer(client,explicit,containerId):
             container.remove()
 
     except Exception as err:
-        logger.error("Unexpected error in 'removeDockerContainer':", sys.exc_info()[0])
-        traceback.print_exc()
+        if "No such container" in str(sys.exc_info()[0]):
+            logger.info("Tried to remove non-existent container: " + containerId)
+        else:
+            logger.error("Unexpected error in 'removeDockerContainer':", sys.exc_info()[0])
+            traceback.print_exc()
 
 def removeDockerNetwork(client,explicit,networkId):
     logger = logging.getLogger("root")

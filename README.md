@@ -2,12 +2,34 @@
 
 This command-line interface helps you launch and observe performance tests on the Neotys Platform. Since NeoLoad is very flexible to many deployment models (SaaS, self-hosted, cloud or local containers, etc.), configuration and test execution parameters depend on your licensing and infrastructure provisioning options. Please read the following instructions carefully.
 
+ - [Prerequisites](#prerequisites)
+ - [Installation](#installation)
+ - [Configuration](#configuration)
+ - [Running Load Tests](#running-load-tests)
+ - [Additional Options](#additional-options)
+    - [Exporting SLA Results to JUnit](#exporting-sla-results-to-junit)
+    - [Test Summary](#test-summary)
+    - [Test Modifications](#test-modifications)
+ - [Contributing](#contributing)
+
 ## Prerequisites
 The examples below assume that you have Python3 and Git command line tools installed.
 
-For Windows users, see:
+For **Windows 10 users**, see:
  - [Installing Python in Windows](https://python-docs.readthedocs.io/en/latest/starting/install3/win.html)
+   In short:
+    - Just install via [Python.org Downloads](https://www.python.org/downloads/), then
+    - Open a command prompt and install pip:
+        ```
+        python -m pip install -U pip
+        ```
  - [5 Ways to Install Git on Windows](https://www.jamessturtevant.com/posts/5-Ways-to-install-git-on-Windows/)
+ - Install Docker with Chocolatey
+    - [Install Chocolatey package manager for Windows](https://chocolatey.org/docs/installation)
+    - Open a command prompt and install Docker Desktop for Windows 10
+        ```
+        choco install docker-cli docker-desktop
+        ```
 
 For Mac OS X:
  - [Installing Python3 on Mac OS X](https://docs.python-guide.org/starting/install3/osx/)
@@ -121,3 +143,85 @@ The general process can be seen in the [NeoLoad CLI E2E PyTest suite](tests/test
   ```
   neoload --detatch
   ```
+## Additional Options
+There are many other arguments for test summarization, modification, and exporting results.
+
+### Exporting SLA Results to JUnit
+```
+  neoload --testid [guid] --junitsla=junit_sla_results.xml
+```
+### Verbose and Debug Mode
+Verbose mode changes logging level to INFO. When executing from an interactive console, it also opens a browser window to the test logs immediately after they're available (useful for monitoring the infrastructure initialization process).
+```
+neoload -f tests/example_2_0_runtime/default.yaml --scenario sanityScenario --verbose
+```
+Debug mode changes logging level to DEBUG. This is an extreme amount of internal information which infers verbose/INFO mode and provides manual pausing on critical events (such as after Docker attach but before test execution).
+```
+neoload -f tests/example_2_0_runtime/default.yaml --scenario sanityScenario --debug
+```
+### Quiet Mode
+Adding the *--quiet* flag generally produces only the relevant output (i.e. JSON, test id, etc.) and no other informational messages. This is useful when piping the structured data output into another process, such as obtaining the most recent test id from stdout file (*--quiet* is inferred by some other combinations of flags such as *--infile* AND *--query testid*).
+
+### Test Summary
+Specifying both a *--testid* value and the *--summary* flag produces a JSON result set that shows both the high level test status metadata and overall statistics.
+```
+neoload --testid c9f9c994-da31-4b63-b622-42a80e313d15 --summary --quiet
+```
+Produces:
+```
+{
+	'summary':{
+		'author':'Paul Bruce',
+		'description':'',
+		'duration':10921,
+		'end_date':1575675769036,
+		'id':'c9f9c994-da31-4b63-b622-42a80e313d15',
+		'lg_count':1,
+		'name':'NeoLoad-CLI-example-2_0_sanityScenario',
+		'project':'NeoLoad-CLI-example-2_0',
+		'quality_status':'FAILED',
+		'scenario':'sanityScenario',
+		'start_date':1575675758115,
+		'status':'TERMINATED',
+		'termination_reason':'POLICY'
+	},
+	'statistics':{
+		'last_request_count_per_second':None,
+		'last_transaction_duration_average':None,
+		'last_virtual_user_count':None,
+		'total_global_count_failure':0,
+		'total_global_downloaded_bytes':97876,
+		'total_global_downloaded_bytes_per_second':8962.183,
+		'total_iteration_count_failure':0,
+		'total_iteration_count_success':10,
+		'total_request_count_failure':0,
+		'total_request_count_per_second':1.0988004,
+		'total_request_count_success':12,
+		'total_request_duration_average':495.75,
+		'total_transaction_count_failure':0,
+		'total_transaction_count_per_second':1.0072337,
+		'total_transaction_count_success':11,
+		'total_transaction_duration_average':496.9091
+	}
+```
+*TODO: This summary will also include SLA summaries in Jan 2020*
+### Test Modifications
+Metadata on a test can be modified after the test is complete, such as name, description, and status. With the required *--testid* argument as well, these modification arguments can be used individually or in combination with each other.
+```
+neoload --testid [test id] --updatename 'Some new test name' --updatedesc 'Some new description' --updatestatus 'PASSED|FAILED'
+```
+Additionally, plus and minus (+/-) operators can be used to append or remove the text specified from the existing name or description data. This is useful in combination with hashtag keywords to flag a test as baseline, candidate, or with an issue tracking id.
+```
+neoload --testid [old baseline test id] --updatedesc '-#baseline'
+neoload --testid [new test id] --updatedesc '+#baseline'
+```
+
+### Test Result listings and queries
+*TODO: will be coming in Jan 2020*
+
+## Contributing
+Feel free to fork this repo, make changes, *test locally*, and create a pull request. As part of your testing, you should run the built-in test suite with the following command:
+```
+python3 -m pytest -v tests
+```
+*NOTE: omitting the --skipslow and --skipslas arguments also runs Docker-related attaching tests, which you will need to set environment variables up for in order to successfully run the test suite. An example of these variables can be found in [example.bash_profile](tests/example.bash_profile) and can be addapted for Windows execution as well.

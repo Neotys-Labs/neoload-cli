@@ -250,7 +250,7 @@ class RuntimeApi(object):
                  returns the request thread.
         """
 
-        local_var_hosts = ['https://neoload-files.saas.neotys.com/v1']  # noqa: E501
+        local_var_hosts = [__import__('neoload').getCurrentFilesUrl()]  # noqa: E501
         local_var_host = local_var_hosts[0]
         if kwargs.get('_host_index'):
             if int(kwags.get('_host_index')) < 0 or int(kawgs.get('_host_index')) >= len(local_var_hosts):

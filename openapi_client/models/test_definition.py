@@ -224,7 +224,7 @@ class TestDefinition(object):
         :param termination_reason: The termination_reason of this TestDefinition.  # noqa: E501
         :type: str
         """
-        allowed_values = ["FAILED_TO_START","POLICY", "VARIABLE", "MANUAL", "LG_AVAILABILITY", "LICENSE", "UNKNOWN"]  # noqa: E501
+        allowed_values = ["CANCELLED", "FAILED_TO_START", "POLICY", "VARIABLE", "MANUAL", "LG_AVAILABILITY", "LICENSE", "UNKNOWN"]  # noqa: E501
         if self.local_vars_configuration.client_side_validation and termination_reason not in allowed_values:  # noqa: E501
             raise ValueError(
                 "Invalid value for `termination_reason` ({0}), must be one of {1}"  # noqa: E501
