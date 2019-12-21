@@ -57,7 +57,7 @@ def packageFiles(fileSpecs):
     try:
         os.remove(tmpzip) # get rid of temp file without extension
     except Exception as err:
-        logger.error("Unexpected error in 'attachLocalDockerInfra':", sys.exc_info()[0])
+        logger.warning("Could not remove temp file in 'packageFiles':", sys.exc_info()[0])
 
     tmpzip = tmpzip+".zip"
     os.close(fd)
