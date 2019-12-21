@@ -211,7 +211,7 @@ def attachLocalDockerInfra(profile,spec,explicit):
             cprint("All containers are attached and ready for use.")
 
         if not pauseIfInteractiveDebug(logger):
-            time.sleep( 1 )
+            time.sleep( 5 )
 
         spec["ready"] = True
 

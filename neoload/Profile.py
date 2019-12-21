@@ -228,6 +228,7 @@ def getSwaggerUrl(profile):
     return parts[0]+"//"+parts[2]+"/explore/swagger.yaml"
 
 def getApiInternalVersionNumber(profile):
+    logger = logging.getLogger("root")
     ret = 20191115
 
     openapiUrl = getSwaggerUrl(profile)
@@ -235,6 +236,7 @@ def getApiInternalVersionNumber(profile):
         raise Exception("Could not load OpenAPI spec URL from profile.")
 
     response = requests.get(openapiUrl)
+    logger.debug("yaml.__version__: " + str(yaml.__version__))
     spec = yaml.load(response.text, Loader=yaml.FullLoader)
 
     schemas = spec['components']['schemas']
