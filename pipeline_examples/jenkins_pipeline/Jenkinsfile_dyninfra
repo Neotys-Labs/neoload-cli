@@ -1,0 +1,57 @@
+pipeline {
+  agent none
+
+  environment {
+    // either set these in 'prepare...' or get from a secrets provider
+    //NLW_TOKEN = 'YOUR NLWEB TOKEN'
+    //NLW_ZONE = 'ZONE ID'
+  }
+
+  stages {
+    stage('Grab Utility Repo') {
+      agent { label 'master' }
+      steps {
+        dir('examples') {
+            git(branch: "master", url: 'https://github.com/Neotys-Labs/neoload-cli.git')
+        }
+      }
+    }
+    stage('Attach Worker') {
+      agent {
+        dockerfile { // load python container
+          args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
+          dir 'examples/tests/docker/dind-python3'
+        }
+      }
+      stages {
+        stage('Get NeoLoad CLI') {
+          steps {
+            sh "pip install neoload"
+          }
+        }
+        stage('Init Profile') {
+          steps {
+            sh "neoload --profile openshift --token $NLW_TOKEN --zone $OPENSHIFT_NLW_ZONE"
+          }
+        }
+        stage('Run Test') {
+          steps {
+              script {
+                  sh """neoload \
+                     --scenario sanityScenario \
+                     -f examples/tests/example_2_0_runtime/default.yaml \
+                     -f examples/tests/example_2_0_runtime/slas/uat.yaml \
+                     --junitsla neoload-slas.xml \
+                    """
+              }
+          }
+          post {
+              always {
+                  junit 'neoload-slas.xml'
+              }
+          }
+        }
+      }
+    }
+  }
+}
