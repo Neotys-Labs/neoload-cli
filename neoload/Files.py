@@ -41,7 +41,7 @@ def packageFiles(fileSpecs,validate):
             if os.path.isdir(path):
                 dir = os.path.realpath(path)
             elif os.path.isfile(path):
-                if path.endswith(".yaml"):
+                if path.endswith(".yaml") or path.endswith(".yml"):
 
                     basicValidation = validateBasicYAML(path)
                     if not basicValidation["success"]:

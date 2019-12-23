@@ -28,7 +28,7 @@ def test_invalidate_empty_file():
         clearConfig=False,
         args={
             '--validate': None,
-            '-f '+ os.path.abspath("tests/example_pytests/empty.yaml") : None,
+            '-f '+ os.path.abspath("tests/example_pytests/empty.yml") : None,
         })
 
 @pytest.mark.files
