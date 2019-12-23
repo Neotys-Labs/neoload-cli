@@ -170,7 +170,7 @@ def main(   version,
         #validateFiles(files) #TODO: implement pre-check of YAML and json-schema
         pack = packageFiles(files)
         if not pack["success"]:
-            exitProcess(4,pack["message"])
+            exitProcess(4, pack["message"])
         zipfile = pack["zipfile"]
         asCodeFiles = pack["asCodeFiles"]
 

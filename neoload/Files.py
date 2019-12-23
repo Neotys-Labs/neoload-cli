@@ -3,6 +3,7 @@ import shutil
 import os
 import logging
 import sys
+import yaml
 from distutils.dir_util import copy_tree
 
 def packageFiles(fileSpecs):
@@ -36,6 +37,11 @@ def packageFiles(fileSpecs):
                 dir = os.path.realpath(path)
             elif os.path.isfile(path):
                 if path.endswith(".yaml"):
+                    basicValidation = validateBasicYAML(path)
+                    if not basicValidation["success"]:
+                        raise Exception("File '" + path + "' is not valid YAML: " + basicValidation["error"])
+                    if not validateNeoLoadYAML(path):
+                        raise Exception("File '" + path + "' is not valid NeoLoad YAML.")
                     if default_yaml is None: default_yaml = path
                     relativePath = os.path.realpath(path).replace(os.path.dirname(os.path.realpath(path)),"",1)
                     if relativePath.startswith("/"): relativePath = relativePath.replace("/","",1)
@@ -91,3 +97,19 @@ def getFolderSize(folder):
         elif os.path.isdir(itempath):
             total_size += getFolderSize(itempath)
     return total_size
+
+def validateBasicYAML(filepath):
+    logger = logging.getLogger("root")
+    result = {}
+    result["success"] = False
+    result["error"] = "Unknown parsing error."
+    try:
+        with open(filepath) as file:
+            spec = yaml.load(file, Loader=yaml.FullLoader)
+    except:
+        result["error"] = str(sys.exc_info()[1])
+
+    return result
+
+def validateNeoLoadYAML(filepath):
+    return True
