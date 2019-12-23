@@ -33,7 +33,7 @@ setup(name='neoload',
           'pytest-steps',
           'junit-xml',
           'requests',
-          'pyyaml',
+          'pyyaml==5.2',
           'python-dateutil',
       ],
       entry_points={

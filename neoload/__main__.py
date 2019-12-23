@@ -169,6 +169,8 @@ def main(   version,
     if hasFiles:
         #validateFiles(files) #TODO: implement pre-check of YAML and json-schema
         pack = packageFiles(files)
+        if not pack["success"]:
+            exitProcess(4, pack["message"])
         zipfile = pack["zipfile"]
         asCodeFiles = pack["asCodeFiles"]
 
@@ -386,7 +388,7 @@ def main(   version,
     # handle any other exception and print stack trace for diagnosis putposes
     except Exception as e:
         exitCode = 2
-        logger.error("Unexpected error:", sys.exc_info()[0])
+        #logger.error("Unexpected error:", sys.exc_info()[0])
 
     # if resources were attached and not in async where they will be detatched manually afterwards
     shouldDetatch = detatch or (shouldAttach and intentToRun)
