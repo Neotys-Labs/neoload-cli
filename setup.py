@@ -42,7 +42,6 @@ setup(name='neoload',
           'pyyaml',
           'python-dateutil',
           'jsonschema',
-          'itertools',
       ],
       entry_points={
         'console_scripts': [
