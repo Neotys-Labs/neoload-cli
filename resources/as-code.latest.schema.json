@@ -6,6 +6,9 @@
 	"type": "object",
   "additionalProperties": false,
   "minProperties": 1,
+  "required": [
+    "name"
+  ],
 	"properties": {
 		"name": {
 			"$id": "#root/name",
@@ -22,6 +25,8 @@
 			"title": "Includes",
 			"type": "array",
 			"default": [],
+      "minItems": 1,
+      "additionalProperties": false,
 			"items":{
 				"$id": "#root/includes/items",
 				"title": "Items",
@@ -38,6 +43,7 @@
 			"title": "Variables",
 			"type": "array",
 			"default": [],
+      "minItems": 1,
       "additionalProperties": false,
 			"items":{
 				"$id": "#root/variables/items",
@@ -163,7 +169,7 @@
 							"examples": [
 								"avg-request-resp-time warn >= 1000ms fail >= 25000ms per test"
 							],
-							"pattern": "^.*$"
+							"pattern": "^(.*?)\\s(warn\\s(>=|==|<=|>|<))(?=\\s)(.*?)per\\s(test|interval)$"
 						}
 					}
 				}

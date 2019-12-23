@@ -144,7 +144,17 @@ def validateNeoLoadYAML(filepath, schema):
         validateYaml(spec, schema)
         result["success"] = True
     except ValidationError as ex:
-        result["error"] = ex.message
+        msg = ex.message
+        if 'does not match' in ex.message:
+            parts = ex.message.split("does not match")
+            part = parts[0].strip()
+            if part.startswith("'") and part.endswith("'"):
+                part = part[1:-1]
+            with open(filepath) as file:
+                for num, line in enumerate(file, 1):
+                    if part in line:
+                        msg += '\n\nfound at line:' + str(num)
+        result["error"] = msg
     except:
         msg = str(sys.exc_info()[1])
         if not fileAccess:

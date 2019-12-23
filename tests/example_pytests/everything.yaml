@@ -78,10 +78,10 @@ sla_profiles: # defaults for dev/qa systems; can be overridden by additional sla
   thresholds:
   - avg-request-resp-time warn >= 1000ms fail >= 25000ms per test
   - avg-page-resp-time warn >= 1000ms fail >= 25000ms per test
-  - avg-transaction-resp-time	warn >= 1000ms fail >= 25000ms per test
+  - avg-transaction-resp-time warn >= 1000ms fail >= 25000ms per test
   - perc-transaction-resp-time (p95) warn >= 1s per test
-  - avg-request-per-sec	warn == 0/s fail >= 250/s per test
-  - avg-throughput-per-sec warn =- 0Mbps fail >= 250Mbps per test
+  - avg-request-per-sec warn == 0/s fail >= 250/s per test
+  - avg-throughput-per-sec warn <= 0Mbps fail >= 250Mbps per test
   - errors-count warn >= 50 fail >= 100 per test
   - count warn < 10 fail == 0 per test
   - throughput warn < 1MB fail == 0MB per test
