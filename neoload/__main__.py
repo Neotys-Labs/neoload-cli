@@ -73,6 +73,7 @@ def initFeatureFlags(profile):
 @click.option('--quiet', is_flag=True, default=False, help='Suppress non-critical console output.')
 @click.option('--testid', default=None, help='Specify a Test ID (guid) for contextual operations such as reporting, modification, etc.')
 @click.option('--query', default=None, help='Specifies a query (regex or jsonPath). Used in conjunction with --nowait and --outfile to derive testid and other details from after test is started.')
+@click.option('--validate', is_flag=True, default=False, help='Runs validation passes only, does not start test.')
 @click.option('--summary', is_flag=True, default=None, help='Display a summary of the test.')
 @click.option('--justid', is_flag=True, default=None, help='Output just the ID of the relevant artifact; infers --quiet flag')
 @click.option('--outfile', default=None, help='Specify a file to also write all stdout to.')
@@ -89,7 +90,7 @@ def initFeatureFlags(profile):
 def main(   version,
             profiles,profile,url,token,zone,ntslogin,ntsurl,                        # profile stuff
             files,scenario,attach,reattach,detatch,detatchall,                      # runtime inputs
-            verbose,debug,nocolor,noninteractive,quiet,                             # logging and debugging
+            verbose,debug,nocolor,noninteractive,quiet,validate,                    # logging and debugging
             testid,query,                                                           # entities (primarily, a test)
             summary,justid,outfile,infile,junitsla,                                 # export operations
             updatename,updatedesc,updatestatus,rolltag,                             # modification ops (particularly, for a test)
@@ -125,6 +126,7 @@ def main(   version,
     # critical flags for subsequent execution modes
     hasFiles = True if files is not None and len(files)>0 else False
     intentToRun = True if hasFiles or scenario is not None else False
+    if validate: intentToRun = False
 
     if not intentToRun:
         cprint("NeoLoad CLI", color="blue", figlet=True)
@@ -168,11 +170,13 @@ def main(   version,
     asCodeFiles = []
     if hasFiles:
         #validateFiles(files) #TODO: implement pre-check of YAML and json-schema
-        pack = packageFiles(files)
+        pack = packageFiles(files,validate)
         if not pack["success"]:
             exitProcess(4, pack["message"])
-        zipfile = pack["zipfile"]
-        asCodeFiles = pack["asCodeFiles"]
+
+        if not validate:
+            zipfile = pack["zipfile"]
+            asCodeFiles = pack["asCodeFiles"]
 
     # status variables for forthcoming process
     infra = {
@@ -182,6 +186,7 @@ def main(   version,
     exitCode = 0
 
     noApiNeeded = (infile is not None and query is not None)
+    if validate: noApiNeeded = True
 
     try:
         client = None
@@ -380,6 +385,9 @@ def main(   version,
 
                     if printSummary:
                         printTestSummary(client, testid, justid, moreinfo, debug)
+
+        if validate:
+            cprint("All validations passed.","green")
 
     # handle argument related issues with a different exit code than 0,1,2 (per NeoLoadCmd)
     except ArgumentException as e:

@@ -1,0 +1,471 @@
+{
+	"definitions": {},
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://example.com/object1577123331.json",
+	"title": "Root",
+	"type": "object",
+  "additionalProperties": false,
+  "minProperties": 1,
+	"properties": {
+		"name": {
+			"$id": "#root/name",
+			"title": "Name",
+			"type": "string",
+			"default": "",
+			"examples": [
+				"NeoLoad-CLI-example-2_0"
+			],
+			"pattern": "^.*$"
+		},
+		"includes": {
+			"$id": "#root/includes",
+			"title": "Includes",
+			"type": "array",
+			"default": [],
+			"items":{
+				"$id": "#root/includes/items",
+				"title": "Items",
+				"type": "string",
+				"default": "",
+				"examples": [
+					"paths/geosearch_get.yaml"
+				],
+				"pattern": "^.*$"
+			}
+		},
+		"variables": {
+			"$id": "#root/variables",
+			"title": "Variables",
+			"type": "array",
+			"default": [],
+      "additionalProperties": false,
+			"items":{
+				"$id": "#root/variables/items",
+				"title": "Items",
+				"type": "object",
+				"properties": {
+					"constant": {
+						"$id": "#root/variables/items/constant",
+						"title": "Constant",
+						"type": "object",
+						"properties": {
+							"name": {
+								"$id": "#root/variables/items/constant/name",
+								"title": "Name",
+								"type": "string",
+								"default": "",
+								"examples": [
+									"constant_variable"
+								],
+								"pattern": "^.*$"
+							},
+							"value": {
+								"$id": "#root/variables/items/constant/value",
+								"title": "Value",
+								"type": "string",
+								"default": "",
+								"examples": [
+									"12345abcd"
+								],
+								"pattern": "^.*$"
+							}
+						}
+					}
+
+				}
+			}
+
+		},
+		"servers": {
+			"$id": "#root/servers",
+			"title": "Servers",
+			"type": "array",
+			"default": [],
+			"items":{
+				"$id": "#root/servers/items",
+				"title": "Items",
+				"type": "object",
+				"properties": {
+					"name": {
+						"$id": "#root/servers/items/name",
+						"title": "Name",
+						"type": "string",
+						"default": "",
+						"examples": [
+							"geolookup_host"
+						],
+						"pattern": "^.*$"
+					},
+					"host": {
+						"$id": "#root/servers/items/host",
+						"title": "Host",
+						"type": "string",
+						"default": "",
+						"examples": [
+							"nominatim.openstreetmap.org"
+						],
+						"pattern": "^.*$"
+					},
+					"scheme": {
+						"$id": "#root/servers/items/scheme",
+						"title": "Scheme",
+						"type": "string",
+						"default": "",
+						"examples": [
+							"https"
+						],
+						"pattern": "^.*$"
+					}
+				}
+			}
+
+		},
+		"sla_profiles": {
+			"$id": "#root/sla_profiles",
+			"title": "Sla_profiles",
+			"type": "array",
+			"default": [],
+			"items":{
+				"$id": "#root/sla_profiles/items",
+				"title": "Items",
+				"type": "object",
+				"properties": {
+					"name": {
+						"$id": "#root/sla_profiles/items/name",
+						"title": "Name",
+						"type": "string",
+						"default": "",
+						"examples": [
+							"per_test_slas"
+						],
+						"pattern": "^.*$"
+					},
+					"description": {
+						"$id": "#root/sla_profiles/items/description",
+						"title": "Description",
+						"type": "string",
+						"default": "",
+						"examples": [
+							"SLAs calculated at the end of the test"
+						],
+						"pattern": "^.*$"
+					},
+					"thresholds": {
+						"$id": "#root/sla_profiles/items/thresholds",
+						"title": "Thresholds",
+						"type": "array",
+						"default": [],
+						"items":{
+							"$id": "#root/sla_profiles/items/thresholds/items",
+							"title": "Items",
+							"type": "string",
+							"default": "",
+							"examples": [
+								"avg-request-resp-time warn >= 1000ms fail >= 25000ms per test"
+							],
+							"pattern": "^.*$"
+						}
+					}
+				}
+			}
+
+		},
+		"populations": {
+			"$id": "#root/populations",
+			"title": "Populations",
+			"type": "array",
+			"default": [],
+			"items":{
+				"$id": "#root/populations/items",
+				"title": "Items",
+				"type": "object",
+				"properties": {
+					"name": {
+						"$id": "#root/populations/items/name",
+						"title": "Name",
+						"type": "string",
+						"default": "",
+						"examples": [
+							"popGets"
+						],
+						"pattern": "^.*$"
+					},
+					"description": {
+						"$id": "#root/populations/items/description",
+						"title": "Description",
+						"type": "string",
+						"default": "",
+						"examples": [
+							"a simple population (distribution of user paths)"
+						],
+						"pattern": "^.*$"
+					},
+					"user_paths": {
+						"$id": "#root/populations/items/user_paths",
+						"title": "User_paths",
+						"type": "array",
+						"default": [],
+						"items":{
+							"$id": "#root/populations/items/user_paths/items",
+							"title": "Items",
+							"type": "object",
+							"properties": {
+								"name": {
+									"$id": "#root/populations/items/user_paths/items/name",
+									"title": "Name",
+									"type": "string",
+									"default": "",
+									"examples": [
+										"ex_2_0_geosearch_get"
+									],
+									"pattern": "^.*$"
+								}
+							}
+						}
+
+					}
+				}
+			}
+
+		},
+		"scenarios": {
+			"$id": "#root/scenarios",
+			"title": "Scenarios",
+			"type": "array",
+			"default": [],
+			"items":{
+				"$id": "#root/scenarios/items",
+				"title": "Items",
+				"type": "object",
+				"properties": {
+					"name": {
+						"$id": "#root/scenarios/items/name",
+						"title": "Name",
+						"type": "string",
+						"default": "",
+						"examples": [
+							"sanityScenario"
+						],
+						"pattern": "^.*$"
+					},
+					"description": {
+						"$id": "#root/scenarios/items/description",
+						"title": "Description",
+						"type": "string",
+						"default": "",
+						"examples": [
+							"a scenario to run as a sanity check on environment and test assets"
+						],
+						"pattern": "^.*$"
+					},
+					"populations": {
+						"$id": "#root/scenarios/items/populations",
+						"title": "Populations",
+						"type": "array",
+						"default": [],
+						"items":{
+							"$id": "#root/scenarios/items/populations/items",
+							"title": "Items",
+							"type": "object",
+							"properties": {
+								"name": {
+									"$id": "#root/scenarios/items/populations/items/name",
+									"title": "Name",
+									"type": "string",
+									"default": "",
+									"examples": [
+										"popGets"
+									],
+									"pattern": "^.*$"
+								},
+								"rampup_load": {
+									"$id": "#root/scenarios/items/populations/items/rampup_load",
+									"title": "Rampup_load",
+									"type": "object",
+									"properties": {
+										"min_users": {
+											"$id": "#root/scenarios/items/populations/items/rampup_load/min_users",
+											"title": "Min_users",
+											"type": "integer",
+											"examples": [
+												1
+											],
+											"default": 0
+										},
+										"max_users": {
+											"$id": "#root/scenarios/items/populations/items/rampup_load/max_users",
+											"title": "Max_users",
+											"type": "integer",
+											"examples": [
+												2
+											],
+											"default": 0
+										},
+										"increment_users": {
+											"$id": "#root/scenarios/items/populations/items/rampup_load/increment_users",
+											"title": "Increment_users",
+											"type": "integer",
+											"examples": [
+												1
+											],
+											"default": 0
+										},
+										"increment_every": {
+											"$id": "#root/scenarios/items/populations/items/rampup_load/increment_every",
+											"title": "Increment_every",
+											"type": "string",
+											"default": "",
+											"examples": [
+												"2s"
+											],
+											"pattern": "^.*$"
+										},
+										"duration": {
+											"$id": "#root/scenarios/items/populations/items/rampup_load/duration",
+											"title": "Duration",
+											"type": "string",
+											"default": "",
+											"examples": [
+												"10s"
+											],
+											"pattern": "^.*$"
+										}
+									}
+								}
+
+							}
+						}
+
+					}
+				}
+			}
+
+		},
+		"user_paths": {
+			"$id": "#root/user_paths",
+			"title": "User_paths",
+			"type": "array",
+			"default": [],
+			"items":{
+				"$id": "#root/user_paths/items",
+				"title": "Items",
+				"type": "object",
+				"properties": {
+					"name": {
+						"$id": "#root/user_paths/items/name",
+						"title": "Name",
+						"type": "string",
+						"default": "",
+						"examples": [
+							"ex_2_0_geosearch_get"
+						],
+						"pattern": "^.*$"
+					},
+					"actions": {
+						"$id": "#root/user_paths/items/actions",
+						"title": "Actions",
+						"type": "object",
+						"properties": {
+							"steps": {
+								"$id": "#root/user_paths/items/actions/steps",
+								"title": "Steps",
+								"type": "array",
+								"default": [],
+								"items":{
+									"$id": "#root/user_paths/items/actions/steps/items",
+									"title": "Items",
+									"type": "object",
+									"properties": {
+										"transaction": {
+											"$id": "#root/user_paths/items/actions/steps/items/transaction",
+											"title": "Transaction",
+											"type": "object",
+											"properties": {
+												"name": {
+													"$id": "#root/user_paths/items/actions/steps/items/transaction/name",
+													"title": "Name",
+													"type": "string",
+													"default": "",
+													"examples": [
+														"External Geo-lookup"
+													],
+													"pattern": "^.*$"
+												},
+												"description": {
+													"$id": "#root/user_paths/items/actions/steps/items/transaction/description",
+													"title": "Description",
+													"type": "string",
+													"default": "",
+													"examples": [
+														"Call Open Street Maps to translate city names to lat/lon"
+													],
+													"pattern": "^.*$"
+												},
+												"steps": {
+													"$id": "#root/user_paths/items/actions/steps/items/transaction/steps",
+													"title": "Steps",
+													"type": "array",
+													"default": [],
+													"items":{
+														"$id": "#root/user_paths/items/actions/steps/items/transaction/steps/items",
+														"title": "Items",
+														"type": "object",
+														"properties": {
+															"request": {
+																"$id": "#root/user_paths/items/actions/steps/items/transaction/steps/items/request",
+																"title": "Request",
+																"type": "object",
+																"properties": {
+																	"url": {
+																		"$id": "#root/user_paths/items/actions/steps/items/transaction/steps/items/request/url",
+																		"title": "Url",
+																		"type": "string",
+																		"default": "",
+																		"examples": [
+																			"/search?format=json&q=${cities.City}"
+																		],
+																		"pattern": "^.*$"
+																	},
+																	"server": {
+																		"$id": "#root/user_paths/items/actions/steps/items/transaction/steps/items/request/server",
+																		"title": "Server",
+																		"type": "string",
+																		"default": "",
+																		"examples": [
+																			"geolookup_host"
+																		],
+																		"pattern": "^.*$"
+																	},
+																	"sla_profile": {
+																		"$id": "#root/user_paths/items/actions/steps/items/transaction/steps/items/request/sla_profile",
+																		"title": "Sla_profile",
+																		"type": "string",
+																		"default": "",
+																		"examples": [
+																			"geo_3rdparty_sla"
+																		],
+																		"pattern": "^.*$"
+																	}
+																}
+															}
+
+														}
+													}
+
+												}
+											}
+										}
+
+									}
+								}
+
+							}
+						}
+					}
+
+				}
+			}
+
+		}
+	}
+}

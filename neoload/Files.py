@@ -5,8 +5,11 @@ import logging
 import sys
 import yaml
 from distutils.dir_util import copy_tree
+from jsonschema.exceptions import ValidationError
 
-def packageFiles(fileSpecs):
+from .YamlParsing import *
+
+def packageFiles(fileSpecs,validate):
     logger = logging.getLogger("root")
     logger.debug(fileSpecs)
     pack = {}
@@ -31,17 +34,30 @@ def packageFiles(fileSpecs):
 
         asCodeFiles = []
 
+        schema = None
+
         for path in file_list:
             dir = None
             if os.path.isdir(path):
                 dir = os.path.realpath(path)
             elif os.path.isfile(path):
                 if path.endswith(".yaml"):
+
                     basicValidation = validateBasicYAML(path)
                     if not basicValidation["success"]:
                         raise Exception("File '" + path + "' is not valid YAML: " + basicValidation["error"])
-                    if not validateNeoLoadYAML(path):
-                        raise Exception("File '" + path + "' is not valid NeoLoad YAML.")
+
+                    if schema is None:
+                        with open(getJSONSchemaFilepath()) as file:
+                            schema = objectifyJSONSchema(file.read())
+
+                    ascodeValidation = validateNeoLoadYAML(path, schema)
+                    if not ascodeValidation["success"]:
+                        raise Exception("File '" + path + "' is not valid NeoLoad schema:\n\n" +
+                            ascodeValidation["error"] + "\n\n" +
+                            "Please visit https://github.com/Neotys-Labs/neoload-models/blob/v3/neoload-project/doc/v3/project.md for specification." +
+                            "\n")
+
                     if default_yaml is None: default_yaml = path
                     relativePath = os.path.realpath(path).replace(os.path.dirname(os.path.realpath(path)),"",1)
                     if relativePath.startswith("/"): relativePath = relativePath.replace("/","",1)
@@ -52,9 +68,10 @@ def packageFiles(fileSpecs):
             else:
                 raise Exception("File '" + path + "' could not be found.")
 
-            if dir is not None:
-                #click.echo(dir)
-                copy_tree(dir,tmpdir)
+            if not validate:
+                if dir is not None:
+                    #click.echo(dir)
+                    copy_tree(dir,tmpdir)
 
         # if default_yaml is not None:
         #     names = os.listdir(tmpdir)
@@ -62,24 +79,24 @@ def packageFiles(fileSpecs):
         #         if name == os.path.basename(default_yaml):
         #             os.rename(tmpdir+"/"+name,tmpdir+"/default.yaml")
 
+        if not validate:
+            fd, tmpzip = tempfile.mkstemp(prefix='neoload-cli_')
+            shutil.make_archive(tmpzip, 'zip', tmpdir) # creates new .zip file
+            try:
+                os.remove(tmpzip) # get rid of temp file without extension
+            except Exception as err:
+                logger.warning("Could not remove temp file in 'packageFiles':", sys.exc_info()[0])
 
-        fd, tmpzip = tempfile.mkstemp(prefix='neoload-cli_')
-        shutil.make_archive(tmpzip, 'zip', tmpdir) # creates new .zip file
-        try:
-            os.remove(tmpzip) # get rid of temp file without extension
-        except Exception as err:
-            logger.warning("Could not remove temp file in 'packageFiles':", sys.exc_info()[0])
+            tmpzip = tmpzip+".zip"
+            os.close(fd)
 
-        tmpzip = tmpzip+".zip"
-        os.close(fd)
+            shutil.rmtree(tmpdir)
 
-        shutil.rmtree(tmpdir)
+            pack["zipfile"] = os.path.realpath(tmpzip)
+            pack["asCodeFiles"] = asCodeFiles
 
-        pack["zipfile"] = os.path.realpath(tmpzip)
-        pack["asCodeFiles"] = asCodeFiles
-
-        logger.info("Zip file created: " + pack["zipfile"])
-        logger.info("As-code files: " + ",".join(asCodeFiles))
+            logger.info("Zip file created: " + pack["zipfile"])
+            logger.info("As-code files: " + ",".join(asCodeFiles))
 
         pack["success"] = True
 
@@ -106,10 +123,34 @@ def validateBasicYAML(filepath):
     try:
         with open(filepath) as file:
             spec = yaml.load(file, Loader=yaml.FullLoader)
+            result["success"] = True
     except:
         result["error"] = str(sys.exc_info()[1])
 
     return result
 
-def validateNeoLoadYAML(filepath):
-    return True
+def validateNeoLoadYAML(filepath, schema):
+    logger = logging.getLogger("root")
+    result = {}
+    result["success"] = False
+    result["error"] = "Unknown parsing error."
+    fileAccess = False
+    spec = None
+    try:
+        with open(filepath) as file:
+            fileAccess = True
+            spec = yaml.load(file, Loader=yaml.FullLoader)
+            if spec is None: spec = {}
+        validateYaml(spec, schema)
+        result["success"] = True
+    except ValidationError as ex:
+        result["error"] = ex.message
+    except:
+        msg = str(sys.exc_info()[1])
+        if not fileAccess:
+            msg = "YAML file could not be accessed."
+        elif spec is None:
+            msg = "File contents were not valid YAML."
+        result["error"] = msg
+
+    return result

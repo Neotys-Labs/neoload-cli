@@ -14,6 +14,12 @@ setup(name='neoload',
       author_email='me@paulsbruce.io',
       license='Apache 2.0',
       packages=find_packages(exclude=("tests",)),
+      package_data={'': [
+        'LICENSE',
+        'README.md',
+        'resources/as-code.latest.schema.json'
+      ]},
+      include_package_data=True,
       python_requires='>3.5.2',
       classifiers=[
             'License :: OSI Approved :: Apache Software License',
@@ -33,8 +39,10 @@ setup(name='neoload',
           'pytest-steps',
           'junit-xml',
           'requests',
-          'pyyaml==5.2',
+          'pyyaml',
           'python-dateutil',
+          'jsonschema',
+          'itertools',
       ],
       entry_points={
         'console_scripts': [
