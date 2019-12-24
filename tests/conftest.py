@@ -1,6 +1,18 @@
 import pytest
 import sys
 import os
+#from pytest_reorder import default_reordering_hook as pytest_collection_modifyitems
+from pytest_reorder import make_reordering_hook
+
+tests_order = [
+    "file",
+    "query",
+    "schema",
+    "profile",
+    "sla",
+    "attach",
+    None
+]
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
 
@@ -9,7 +21,8 @@ skipmarkers = [
     "slas",
     "profiles",
     "queries",
-    "files"
+    "files",
+    "schema",
 ]
 #TODO: figure out how to present the last line of stdout from 'neoload' to test step (after step name)
 #https://pythontesting.net/framework/pytest/pytest-logging-real-time/
@@ -30,8 +43,11 @@ def pytest_configure(config):
     for m in skipmarkers:
         config.addinivalue_line("markers", m+": mark test as "+m+" to run")
 
+def pytest_collection_modifyitems(session, config, items):
 
-def pytest_collection_modifyitems(config, items):
+    reorderingFunction = make_reordering_hook(
+        list(map(lambda s: None if s is None else r'(^|.*/)(test_)?'+s, tests_order))
+    )
 
     skip = pytest.mark.skip(reason="need option to run")
 
@@ -44,3 +60,5 @@ def pytest_collection_modifyitems(config, items):
             for m in skipmarkers:
                 if m in item.keywords and config.getoption("--skip"+m):
                     item.add_marker(skip)
+
+    reorderingFunction(session,config,items)
