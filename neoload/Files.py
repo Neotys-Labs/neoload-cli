@@ -6,6 +6,7 @@ import sys
 import yaml
 from distutils.dir_util import copy_tree
 from jsonschema.exceptions import ValidationError
+import itertools
 
 from .YamlParsing import *
 
@@ -24,62 +25,87 @@ def packageFiles(fileSpecs,validate):
             parts = path.replace(";",":").split(":")
             files.extend(parts)
 
-        file_list = files
         tmpdir = tempfile.mkdtemp()
 
         #click.echo("tmpdir:"+tmpdir)
         default_yaml = None
         #print("Logging[Files] is set to: " + str(logger.getEffectiveLevel()))
-        logger.info("Zipping project files.") #TODO: only when larger than Xmb
 
         asCodeFiles = []
 
         schema = None
 
-        for path in file_list:
+        all_files = []
+
+        for path in files:
+            logger.debug("Adding file spec: " + path)
             dir = None
             if os.path.isdir(path):
                 dir = os.path.realpath(path)
             elif os.path.isfile(path):
+                relativeTo = os.path.dirname(os.path.realpath(path))
                 if path.endswith(".yaml") or path.endswith(".yml"):
 
-                    basicValidation = validateBasicYAML(path)
-                    if not basicValidation["success"]:
-                        raise Exception("File '" + path + "' is not valid YAML: " + basicValidation["error"])
-
-                    if schema is None:
-                        with open(getJSONSchemaFilepath()) as file:
-                            schema = objectifyJSONSchema(file.read())
-
-                    ascodeValidation = validateNeoLoadYAML(path, schema)
-                    if not ascodeValidation["success"]:
-                        raise Exception("File '" + path + "' is not valid NeoLoad schema:\n\n" +
-                            ascodeValidation["error"] + "\n\n" +
-                            "Please visit https://github.com/Neotys-Labs/neoload-models/blob/v3/neoload-project/doc/v3/project.md for specification." +
-                            "\n")
-
                     if default_yaml is None: default_yaml = path
-                    relativePath = os.path.realpath(path).replace(os.path.dirname(os.path.realpath(path)),"",1)
-                    if relativePath.startswith("/"): relativePath = relativePath.replace("/","",1)
-                    if relativePath.startswith("\\"): relativePath = relativePath.replace("\\","",1)
+                    relativePath = getRelativePath(path,relativeTo) # relative to itself
                     asCodeFiles.append(relativePath)
                     logger.debug("Adding as-code file: " + relativePath)
-                dir = os.path.dirname(os.path.realpath(path))
+
+                # WAS: copy the whole directory
+                #dir = os.path.dirname(os.path.realpath(path))
+                all_files.append({ "path": path, "relativeTo": relativeTo})
+                all_files.extend(
+                    list(map(lambda p: { "path": p, "relativeTo": relativeTo},
+                        getSubfiles(path,relativeTo)
+                    ))
+                )
+
             else:
                 raise Exception("File '" + path + "' could not be found.")
 
-            if not validate:
-                if dir is not None:
-                    #click.echo(dir)
-                    copy_tree(dir,tmpdir)
+            # if not validate:
+            #     if dir is not None:
+            #         #click.echo(dir)
+            #         copy_tree(dir,tmpdir)
+            #         #TODO: only include files based on 'includes' (validate them too) and 'file' variable
 
-        # if default_yaml is not None:
-        #     names = os.listdir(tmpdir)
-        #     for name in names:
-        #         if name == os.path.basename(default_yaml):
-        #             os.rename(tmpdir+"/"+name,tmpdir+"/default.yaml")
+        for relative in all_files:
+            path = relative["path"]
+            relativeTo = relative["relativeTo"]
+
+            if path.endswith(".yaml") or path.endswith(".yml"):
+                basicValidation = validateBasicYAML(path)
+                if not basicValidation["success"]:
+                    raise Exception("File '" + path + "' is not valid YAML: " + basicValidation["error"])
+
+                if schema is None:
+                    with open(getJSONSchemaFilepath()) as file:
+                        schema = objectifyJSONSchema(file.read())
+
+                ascodeValidation = validateNeoLoadYAML(path, schema)
+                if not ascodeValidation["success"]:
+                    raise Exception("File '" + path + "' is not valid NeoLoad schema:\n\n" +
+                        ascodeValidation["error"] + "\n\n" +
+                        "Please visit https://github.com/Neotys-Labs/neoload-models/blob/v3/neoload-project/doc/v3/project.md for specification." +
+                        "\n")
+
+            relativePath = getRelativePath(path,relativeTo)
+            tmppath = joinPath([tmpdir,relativePath])
+            logger.debug("Would: '" + path + "' -> '" + tmppath + "'")
+            if not validate:
+                # copy just this file using same relative subpath structure as source
+                tmpsubdir = slicePath(tmppath,slice(0,-1))
+                tmpsubdirparts = tmpsubdir.split(os.path.sep)
+                for i in range(len(tmpsubdirparts)):
+                    tmppartsuntil = tmpsubdirparts[slice(0,i+1)]
+                    partpath = joinPath(tmppartsuntil)
+                    if len(partpath.strip()) > 0 and not os.path.exists(partpath):
+                        os.makedirs(partpath, exist_ok=True)
+                shutil.copy(path,tmppath)
+
 
         if not validate:
+            logger.info("Zipping project files.") #TODO: only when larger than Xmb
             fd, tmpzip = tempfile.mkstemp(prefix='neoload-cli_')
             shutil.make_archive(tmpzip, 'zip', tmpdir) # creates new .zip file
             try:
@@ -104,6 +130,23 @@ def packageFiles(fileSpecs,validate):
         pack["message"] = str(sys.exc_info()[1])
 
     return pack
+
+def slicePath(path,slice):
+    split = os.path.sep
+    return split.join(path.split(split)[slice])
+def joinPath(parts):
+    return os.path.sep.join(parts)
+
+def getRelativePath(path,relativeTo):
+    logger = logging.getLogger("root")
+    logger.debug("getRelativePath[path]: " + path)
+    logger.debug("getRelativePath[relativeTo]: " + relativeTo)
+    relativePath = os.path.realpath(path)#.replace(os.path.dirname(os.path.realpath(path)),"",1)
+    relativePath = relativePath.replace(relativeTo,"")
+    if relativePath.startswith("/"): relativePath = relativePath.replace("/","",1)
+    if relativePath.startswith("\\"): relativePath = relativePath.replace("\\","",1)
+    logger.debug("getRelativePath[relativePath]: " + relativePath)
+    return relativePath
 
 def getFolderSize(folder):
     total_size = os.path.getsize(folder)
@@ -164,3 +207,32 @@ def validateNeoLoadYAML(filepath, schema):
         result["error"] = msg
 
     return result
+
+def getSubfiles(filepath,relativeTo):
+    logger = logging.getLogger("root")
+    found = []
+    logger.debug("rel: " + getRelativePath(filepath,relativeTo))
+    relDir = relativeTo
+    logger.debug("relDir: " + relDir)
+
+    with open(filepath) as file:
+        spec = yaml.load(file, Loader=yaml.FullLoader)
+        #logger.debug("getSubfiles: " + str(spec))
+        if "includes" in spec:
+            newpaths = list(map(lambda p: joinPath(
+                list(filter(lambda a: len(a) > 0,[relDir,p]))
+            ),spec["includes"]))
+            logger.debug("getSubfiles: " + str(newpaths))
+            found.extend(newpaths)
+        if "variables" in spec:
+            variables = spec["variables"]
+            logger.debug("getSubfiles: found variables: " + str(variables))
+            for item in variables:
+                logger.debug("getSubfiles: found variable: " + str(item))
+                if "file" in item:
+                    value = item["file"]
+                    logger.debug("getSubfiles: found file variable: " + str(value))
+                    found.append(joinPath([relDir,value["path"]]))
+
+
+    return found

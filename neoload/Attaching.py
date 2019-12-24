@@ -13,7 +13,7 @@ from datetime import datetime
 import pprint
 
 auto_remove_containers = True
-max_container_readiness_wait_sec = 60
+max_container_readiness_wait_sec = 120
 
 def attachInfra(profile,rawspec,explicit):
     spec = parseInfraSpec(rawspec)

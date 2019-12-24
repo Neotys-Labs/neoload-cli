@@ -177,6 +177,8 @@ def main(   version,
         if not validate:
             zipfile = pack["zipfile"]
             asCodeFiles = pack["asCodeFiles"]
+            logger.debug("zipfile: " + zipfile)
+            logger.debug("asCodeFiles: " + str(asCodeFiles))
 
     # status variables for forthcoming process
     infra = {
@@ -396,7 +398,7 @@ def main(   version,
     # handle any other exception and print stack trace for diagnosis putposes
     except Exception as e:
         exitCode = 2
-        #logger.error("Unexpected error:", sys.exc_info()[0])
+        logger.error("Unexpected error:", sys.exc_info()[0])
 
     # if resources were attached and not in async where they will be detatched manually afterwards
     shouldDetatch = detatch or (shouldAttach and intentToRun)
