@@ -10,7 +10,7 @@ import itertools
 
 from .YamlParsing import *
 
-def packageFiles(fileSpecs,validate):
+def packageFiles(fileSpecs,validateOnly):
     logger = logging.getLogger("root")
     logger.debug(fileSpecs)
     pack = {}
@@ -33,7 +33,9 @@ def packageFiles(fileSpecs,validate):
 
         asCodeFiles = []
 
-        schema = None
+        yamlSchema = None
+        with open(getJSONSchemaFilepath()) as file:
+            yamlSchema = objectifyJSONSchema(file.read())
 
         all_files = []
 
@@ -44,7 +46,11 @@ def packageFiles(fileSpecs,validate):
                 dir = os.path.realpath(path)
             elif os.path.isfile(path):
                 relativeTo = os.path.dirname(os.path.realpath(path))
+                validated = False
+
                 if path.endswith(".yaml") or path.endswith(".yml"):
+
+                    validated = validateFile(path,yamlSchema) # when this doesn't throw an error
 
                     if default_yaml is None: default_yaml = path
                     relativePath = getRelativePath(path,relativeTo) # relative to itself
@@ -53,58 +59,49 @@ def packageFiles(fileSpecs,validate):
 
                 # WAS: copy the whole directory
                 #dir = os.path.dirname(os.path.realpath(path))
-                all_files.append({ "path": path, "relativeTo": relativeTo})
+                all_files.append({
+                    "path": path,
+                    "relativeTo": relativeTo,
+                    "validated": validated,
+                })
                 all_files.extend(
-                    list(map(lambda p: { "path": p, "relativeTo": relativeTo},
-                        getSubfiles(path,relativeTo)
-                    ))
+                    list(map(lambda p: {
+                        "path": p,
+                        "relativeTo": relativeTo,
+                        "validated": False,
+                    }, getSubfiles(path,relativeTo)))
                 )
 
             else:
                 raise Exception("File '" + path + "' could not be found.")
 
-            # if not validate:
-            #     if dir is not None:
-            #         #click.echo(dir)
-            #         copy_tree(dir,tmpdir)
-            #         #TODO: only include files based on 'includes' (validate them too) and 'file' variable
 
         for relative in all_files:
             path = relative["path"]
             relativeTo = relative["relativeTo"]
+            validated = relative["validated"]
 
-            if path.endswith(".yaml") or path.endswith(".yml"):
-                basicValidation = validateBasicYAML(path)
-                if not basicValidation["success"]:
-                    raise Exception("File '" + path + "' is not valid YAML: " + basicValidation["error"])
+            if not validated:
+                validated = validateFile(path,yamlSchema)
 
-                if schema is None:
-                    with open(getJSONSchemaFilepath()) as file:
-                        schema = objectifyJSONSchema(file.read())
+            if validated:
+                relativePath = getRelativePath(path,relativeTo)
+                tmppath = joinPath([tmpdir,relativePath])
+                logger.debug("Would: '" + path + "' -> '" + tmppath + "'")
 
-                ascodeValidation = validateNeoLoadYAML(path, schema)
-                if not ascodeValidation["success"]:
-                    raise Exception("File '" + path + "' is not valid NeoLoad schema:\n\n" +
-                        ascodeValidation["error"] + "\n\n" +
-                        "Please visit https://github.com/Neotys-Labs/neoload-models/blob/v3/neoload-project/doc/v3/project.md for specification." +
-                        "\n")
-
-            relativePath = getRelativePath(path,relativeTo)
-            tmppath = joinPath([tmpdir,relativePath])
-            logger.debug("Would: '" + path + "' -> '" + tmppath + "'")
-            if not validate:
-                # copy just this file using same relative subpath structure as source
-                tmpsubdir = slicePath(tmppath,slice(0,-1))
-                tmpsubdirparts = tmpsubdir.split(os.path.sep)
-                for i in range(len(tmpsubdirparts)):
-                    tmppartsuntil = tmpsubdirparts[slice(0,i+1)]
-                    partpath = joinPath(tmppartsuntil)
-                    if len(partpath.strip()) > 0 and not os.path.exists(partpath):
-                        os.makedirs(partpath, exist_ok=True)
-                shutil.copy(path,tmppath)
+                if not validateOnly:
+                    # copy just this file using same relative subpath structure as source
+                    tmpsubdir = slicePath(tmppath,slice(0,-1))
+                    tmpsubdirparts = tmpsubdir.split(os.path.sep)
+                    for i in range(len(tmpsubdirparts)):
+                        tmppartsuntil = tmpsubdirparts[slice(0,i+1)]
+                        partpath = joinPath(tmppartsuntil)
+                        if len(partpath.strip()) > 0 and not os.path.exists(partpath):
+                            os.makedirs(partpath, exist_ok=True)
+                    shutil.copy(path,tmppath)
 
 
-        if not validate:
+        if not validateOnly:
             logger.info("Zipping project files.") #TODO: only when larger than Xmb
             fd, tmpzip = tempfile.mkstemp(prefix='neoload-cli_')
             shutil.make_archive(tmpzip, 'zip', tmpdir) # creates new .zip file
@@ -157,6 +154,28 @@ def getFolderSize(folder):
         elif os.path.isdir(itempath):
             total_size += getFolderSize(itempath)
     return total_size
+
+def validateFile(path,yamlSchema):
+    ret = False
+
+    if path.endswith(".yaml") or path.endswith(".yml"):
+        basicValidation = validateBasicYAML(path)
+        if not basicValidation["success"]:
+            raise Exception("File '" + path + "' is not valid YAML: " + basicValidation["error"])
+
+        ascodeValidation = validateNeoLoadYAML(path, yamlSchema)
+        if not ascodeValidation["success"]:
+            raise Exception("File '" + path + "' is not valid NeoLoad schema:\n\n" +
+                ascodeValidation["error"] + "\n\n" +
+                "Please visit https://github.com/Neotys-Labs/neoload-models/blob/v3/neoload-project/doc/v3/project.md for specification." +
+                "\n")
+
+        ret = True # in above situations, Exception should be raised if ever False; bool return for pragmatism sake
+
+    else:
+        ret = True # consider all other files valid (csv, ...) without additional probing
+
+    return ret
 
 def validateBasicYAML(filepath):
     logger = logging.getLogger("root")
@@ -217,22 +236,22 @@ def getSubfiles(filepath,relativeTo):
 
     with open(filepath) as file:
         spec = yaml.load(file, Loader=yaml.FullLoader)
-        #logger.debug("getSubfiles: " + str(spec))
-        if "includes" in spec:
-            newpaths = list(map(lambda p: joinPath(
-                list(filter(lambda a: len(a) > 0,[relDir,p]))
-            ),spec["includes"]))
-            logger.debug("getSubfiles: " + str(newpaths))
-            found.extend(newpaths)
-        if "variables" in spec:
-            variables = spec["variables"]
-            logger.debug("getSubfiles: found variables: " + str(variables))
-            for item in variables:
-                logger.debug("getSubfiles: found variable: " + str(item))
-                if "file" in item:
-                    value = item["file"]
-                    logger.debug("getSubfiles: found file variable: " + str(value))
-                    found.append(joinPath([relDir,value["path"]]))
-
+        if spec is not None:
+            #logger.debug("getSubfiles: " + str(spec))
+            if "includes" in spec:
+                newpaths = list(map(lambda p: joinPath(
+                    list(filter(lambda a: len(a) > 0,[relDir,p]))
+                ),spec["includes"]))
+                logger.debug("getSubfiles: " + str(newpaths))
+                found.extend(newpaths)
+            if "variables" in spec:
+                variables = spec["variables"]
+                logger.debug("getSubfiles: found variables: " + str(variables))
+                for item in variables:
+                    logger.debug("getSubfiles: found variable: " + str(item))
+                    if "file" in item:
+                        value = item["file"]
+                        logger.debug("getSubfiles: found file variable: " + str(value))
+                        found.append(joinPath([relDir,value["path"]]))
 
     return found
