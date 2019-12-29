@@ -75,6 +75,7 @@ pipeline {
                   shellCommand = """#!/usr/bin/env bash
                       (uname -a && \
                       python3 -m pytest \
+                      --duration 20 \
                       -v --junitxml=pytest_junit.xml \
                       tests \
                       ) \
