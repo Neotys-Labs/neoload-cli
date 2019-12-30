@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://neotys.com/as-code-v3.json",
+	"$id": "https://neotys.com/schemas/as-code/v3",
 	"title": "JSON Schema for NeoLoad as-code files",
 	"fileMatch": [
 		"*.nl.yaml", "*.neoload.yaml", "neoload*.yaml",
@@ -43,25 +43,28 @@
 		"$id":"#root/servers",
 		"title":"Servers",
 		"type":"array",
+		"minItems": 1,
 		"items": { "$ref":  "#/definitions/server" }
 	  },
 	  "sla_profiles":{
 		"$id":"#root/sla_profiles",
 		"title":"SLA Profiles",
 		"type":"array",
-		"default":[ ],
+		"minItems": 1,
 		"items": { "$ref":  "#/definitions/sla" }
 	  },
 	  "populations":{
 		"$id":"#root/populations",
 		"title":"Populations",
 		"type":"array",
+		"minItems": 1,
 		"items": { "$ref": "#/definitions/populations/population" }
 	  },
 	  "scenarios":{
 		"$id":"#root/scenarios",
 		"title":"Scenarios",
 		"type":"array",
+		"minItems": 1,
 		"items": { "$ref": "#/definitions/scenario" }
 	  },
 	  "user_paths":{
@@ -77,19 +80,11 @@
 			"name":{
 				"title":"Name",
 				"type":"string",
-				"default":"",
-				"examples":[
-				  "some text"
-				],
 				"pattern":"^.*$"
 			  },
 			  "text":{
 				"title":"Value",
 				"type":"string",
-				"default":"",
-				"examples":[
-				  "some text value"
-				],
 				"pattern":"^.*$"
 			  },
 			  "full_url": {
@@ -250,12 +245,7 @@
 			"additionalProperties": false,
 			"properties":{
 				"name":{ "$ref": "#/definitions/common/text" },
-				"host":{
-					"type":"string",
-					"examples":[
-						"nominatim.openstreetmap.org"
-					]
-				},
+				"host":{ "$ref": "#/definitions/common/text" },
 				"scheme":{
 					"$id":"#root/servers/items/scheme",
 					"type":"string",
@@ -342,9 +332,6 @@
 				"$id":"#/definitions/sla/threshold",
 				"title":"Threshold",
 				"type":"string",
-				"examples":[
-				  "avg-request-resp-time warn >= 1000ms fail >= 25000ms per test"
-				],
 				"pattern":"^(.*?)\\s(warn\\s(>=|==|<=|>|<))(?=\\s)(.*?)per\\s(test|interval)$"
 			  }
 		},

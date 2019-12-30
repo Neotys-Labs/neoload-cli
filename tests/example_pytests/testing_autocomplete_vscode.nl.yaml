@@ -1,4 +1,4 @@
-$schema: https://neotys.com/as-code-v3.json
+$schema: https://neotys.com/schemas/as-code/v3
 name: NeoLoad-CLI-example-2_0
 includes:
 - paths/geosearch_get.yaml
