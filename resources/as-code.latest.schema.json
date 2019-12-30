@@ -12,7 +12,7 @@
 	"minProperties": 1,
 	"xrequired": ["name","because neoload files can be partial"],
 	"properties": {
-	  "$schema": { "$ref": "#/definitions/common/url" },
+	  "$schema": { "$ref": "#/definitions/common/full_url" },
 	  "name": { "$ref": "#/definitions/common/name" },
 	  "includes": {
 		"$id":"#root/includes",
@@ -92,10 +92,10 @@
 				],
 				"pattern":"^.*$"
 			  },
-			  "url": {
+			  "full_url": {
 				  "title":"Url",
 				  "type":"string",
-				  "pattern": "^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)$"
+				  "pattern": "https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
 			  },
 			  "var_change_policy": {
 				"type":"string",
