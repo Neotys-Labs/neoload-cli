@@ -206,7 +206,7 @@ def main(   version,
         client = None
         filesUrl = None
 
-        if not isProfileInitialized(currentProfile):
+        if intentToRun and not isProfileInitialized(currentProfile):
             return exitProcess(4,"No profiles are initialized.")
 
         if not noApiNeeded:
