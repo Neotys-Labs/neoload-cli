@@ -5,6 +5,7 @@ import os
 from pytest_reorder import make_reordering_hook
 
 tests_order = [
+    "basic",
     "file",
     "query",
     "schema",
@@ -23,6 +24,7 @@ skipmarkers = [
     "queries",
     "files",
     "schema",
+    "basic",
 ]
 #TODO: figure out how to present the last line of stdout from 'neoload' to test step (after step name)
 #https://pythontesting.net/framework/pytest/pytest-logging-real-time/
