@@ -1,0 +1,54 @@
+Linux bc829ee8a8c8 4.14.88-88.76.amzn2.x86_64 #1 SMP Mon Jan 7 18:43:26 UTC 2019 x86_64 Linux
+============================= test session starts ==============================
+platform linux -- Python 3.7.6, pytest-5.3.2, py-1.8.1, pluggy-0.13.1 -- /usr/local/bin/python3
+cachedir: .pytest_cache
+rootdir: /var/lib/jenkins/workspace/NL-cli-tests@2/tests, inifile: pytest.ini
+plugins: reorder-0.1.1, steps-1.7.1
+collecting ... collected 22 items
+
+tests/test_basic_functions.py::test_validate_version PASSED              [  4%]
+tests/test_file_functions.py::test_validate_valid_file PASSED            [  9%]
+tests/test_file_functions.py::test_invalidate_broken_yaml PASSED         [ 13%]
+tests/test_query_functions.py::test_query_outfile_for_bench PASSED       [ 18%]
+tests/test_schema_functions.py::test_invalidate_empty_file PASSED        [ 22%]
+tests/test_schema_functions.py::test_invalidate_invalid_to_schema_yaml PASSED [ 27%]
+tests/test_schema_functions.py::test_validate_valid_file PASSED          [ 31%]
+tests/test_profile_functions.py::test_profiles_empty PASSED              [ 36%]
+tests/test_profile_functions.py::test_profile_empty PASSED               [ 40%]
+tests/test_profile_functions.py::test_profile_create_wo_params PASSED    [ 45%]
+tests/test_profile_functions.py::test_profile_create_with_valid_zone_no_url PASSED [ 50%]
+tests/test_profile_functions.py::test_profile_create_with_valid_url_no_zone PASSED [ 54%]
+tests/test_profile_functions.py::test_profile_create_with_nts_credentials PASSED [ 59%]
+tests/test_sla_functions.py::test_run_fail_slas PASSED                   [ 63%]
+tests/test_attach_functions.py::test_attach_detatch_simple PASSED        [ 68%]
+tests/test_attach_functions.py::test_attach_run_allinone PASSED          [ 72%]
+tests/test_attach_functions.py::test_attach_run_async[prepare] PASSED    [ 77%]
+tests/test_attach_functions.py::test_attach_run_async[attach] PASSED     [ 81%]
+tests/test_attach_functions.py::test_attach_run_async[kickoff] PASSED    [ 86%]
+tests/test_attach_functions.py::test_attach_run_async[getid] PASSED      [ 90%]
+tests/test_attach_functions.py::test_attach_run_async[spinwait] PASSED   [ 95%]
+tests/test_attach_functions.py::test_attach_run_async[detatch] PASSED    [100%]
+
+- generated xml file: /var/lib/jenkins/workspace/NL-cli-tests@2/pytest_junit.xml -
+========================== slowest 20 test durations ===========================
+130.04s call     test_sla_functions.py::test_run_fail_slas
+109.74s call     test_attach_functions.py::test_attach_run_allinone
+67.05s call     test_attach_functions.py::test_attach_run_async[spinwait]
+46.46s call     test_attach_functions.py::test_attach_detatch_simple
+20.61s call     test_attach_functions.py::test_attach_run_async[attach]
+8.75s call     test_profile_functions.py::test_profile_create_with_nts_credentials
+8.11s call     test_attach_functions.py::test_attach_run_async[detatch]
+6.97s call     test_attach_functions.py::test_attach_run_async[kickoff]
+2.95s call     test_attach_functions.py::test_attach_run_async[prepare]
+1.53s call     test_attach_functions.py::test_attach_run_async[getid]
+1.10s call     test_schema_functions.py::test_validate_valid_file
+1.07s call     test_file_functions.py::test_validate_valid_file
+1.06s call     test_query_functions.py::test_query_outfile_for_bench
+1.01s call     test_file_functions.py::test_invalidate_broken_yaml
+0.99s call     test_schema_functions.py::test_invalidate_empty_file
+0.98s call     test_schema_functions.py::test_invalidate_invalid_to_schema_yaml
+0.61s call     test_profile_functions.py::test_profile_create_with_valid_url_no_zone
+0.57s call     test_profile_functions.py::test_profile_create_wo_params
+0.57s call     test_profile_functions.py::test_profile_empty
+0.57s call     test_profile_functions.py::test_profiles_empty
+======================== 22 passed in 412.06s (0:06:52) ========================
