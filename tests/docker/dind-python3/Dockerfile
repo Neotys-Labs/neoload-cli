@@ -12,6 +12,8 @@ RUN apk add -q gcc musl-dev python3-dev && \
 
 
 # for use in CI with a build agent that is a docker host (or connected to one)
-FROM docker:dind
+
+RUN curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-18.03.1-ce.tgz | \
+    tar zxvf - --strip 1 -C /usr/bin docker/docker
 
 RUN apk add -q bash shadow git
