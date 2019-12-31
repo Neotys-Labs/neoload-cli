@@ -1,0 +1,14 @@
+FROM docker:dind
+
+RUN apk add -q bash shadow git py-pip py3-setuptools build-base python3-dev \
+    && python3 -m pip install -q --upgrade pip
+
+# this would be used in production-ready images
+#RUN python3 -m pip install -q neoload
+
+## for local dev purposes only
+#$ docker build -t neoload-cli-dev --file resources/docker-neoload-cli/Dockerfile-dev .
+#$ docker run --rm neoload-cli-dev neoload --version
+#$ docker rmi neoload-cli-dev
+COPY ./ /python_root
+RUN python3 -m pip install -q -e /python_root
