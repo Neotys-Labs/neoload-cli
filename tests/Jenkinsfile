@@ -46,8 +46,6 @@ pipeline {
                   sh """addgroup -g ${env.J_GID} jenkins
                   adduser -u ${env.J_UID} -G jenkins -g 'Linux User named' -s /sbin/nologin -D jenkins
                   """
-                  sh 'apk add curl' // for Slack direct curls, no assumed plugin
-                  //sh "echo 'REL_LOG_PATH: ${env.REL_LOG_PATH}'"
               }
           }
         }
