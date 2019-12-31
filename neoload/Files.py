@@ -18,7 +18,6 @@ def packageFiles(fileSpecs,validateOnly):
     pack["message"] = ""
 
     try:
-
         # collect all files into a temporary location, zip and upload or run from there
         files = []
         for path in fileSpecs:
