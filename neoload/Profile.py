@@ -213,7 +213,7 @@ def getProfileFilesUrl(profile):
             raise Exception("Could not load OpenAPI spec URL from profile.")
 
         response = requests.get(openapiUrl)
-        spec = yaml.load(response.text)
+        spec = yaml.load(response.text, Loader=yaml.FullLoader)
         fromOpenAPI = spec['paths']['/projects']['servers'][0]['url']
 
         setProfileProperty('filesurl',fromOpenAPI)
@@ -228,6 +228,7 @@ def getSwaggerUrl(profile):
     return parts[0]+"//"+parts[2]+"/explore/swagger.yaml"
 
 def getApiInternalVersionNumber(profile):
+    logger = logging.getLogger("root")
     ret = 20191115
 
     openapiUrl = getSwaggerUrl(profile)

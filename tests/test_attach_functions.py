@@ -46,6 +46,8 @@ def test_attach_run_allinone():
             '--attach': 'docker#1,neotys/neoload-loadgenerator:7.0.2'
         })
 
+    # delete test bench?
+
 ################################################################################
 ### Test Goal: verify that all steps in non-blocking execution work as expected
 ################################################################################

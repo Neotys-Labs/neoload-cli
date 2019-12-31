@@ -3,75 +3,146 @@ import shutil
 import os
 import logging
 import sys
+import yaml
 from distutils.dir_util import copy_tree
+from jsonschema.exceptions import ValidationError
+import itertools
 
-def packageFiles(fileSpecs):
+from .YamlParsing import *
+
+def packageFiles(fileSpecs,validateOnly):
     logger = logging.getLogger("root")
     logger.debug(fileSpecs)
-
-    # collect all files into a temporary location, zip and upload or run from there
-    files = []
-    for path in fileSpecs:
-        parts = path.replace(";",":").split(":")
-        files.extend(parts)
-
-    file_list = files
-    tmpdir = tempfile.mkdtemp()
-
-    #click.echo("tmpdir:"+tmpdir)
-    default_yaml = None
-    #print("Logging[Files] is set to: " + str(logger.getEffectiveLevel()))
-    logger.info("Zipping project files.") #TODO: only when larger than Xmb
-
-    asCodeFiles = []
-
-    for path in file_list:
-        dir = None
-        if os.path.isdir(path):
-            dir = os.path.realpath(path)
-        elif os.path.isfile(path):
-            if path.endswith(".yaml"):
-                if default_yaml is None: default_yaml = path
-                relativePath = os.path.realpath(path).replace(os.path.dirname(os.path.realpath(path)),"",1)
-                if relativePath.startswith("/"): relativePath = relativePath.replace("/","",1)
-                if relativePath.startswith("\\"): relativePath = relativePath.replace("\\","",1)
-                asCodeFiles.append(relativePath)
-                logger.debug("Adding as-code file: " + relativePath)
-            dir = os.path.dirname(os.path.realpath(path))
-        else:
-            logger.warning("'"+path+"' is a special file (socket, FIFO, device file)" )
-
-        if dir is not None:
-            #click.echo(dir)
-            copy_tree(dir,tmpdir)
-
-    # if default_yaml is not None:
-    #     names = os.listdir(tmpdir)
-    #     for name in names:
-    #         if name == os.path.basename(default_yaml):
-    #             os.rename(tmpdir+"/"+name,tmpdir+"/default.yaml")
-
-
-    fd, tmpzip = tempfile.mkstemp(prefix='neoload-cli_')
-    shutil.make_archive(tmpzip, 'zip', tmpdir) # creates new .zip file
-    try:
-        os.remove(tmpzip) # get rid of temp file without extension
-    except Exception as err:
-        logger.warning("Could not remove temp file in 'packageFiles':", sys.exc_info()[0])
-
-    tmpzip = tmpzip+".zip"
-    os.close(fd)
-
-    shutil.rmtree(tmpdir)
-
     pack = {}
-    pack["zipfile"] = os.path.realpath(tmpzip)
-    pack["asCodeFiles"] = asCodeFiles
+    pack["success"] = False
+    pack["message"] = ""
 
-    logger.info("Zip file created: " + pack["zipfile"])
-    logger.info("As-code files: " + ",".join(asCodeFiles))
+    try:
+        # collect all files into a temporary location, zip and upload or run from there
+        files = []
+        for path in fileSpecs:
+            parts = path.replace(";",":").split(":")
+            files.extend(parts)
+
+        tmpdir = tempfile.mkdtemp()
+
+        #click.echo("tmpdir:"+tmpdir)
+        default_yaml = None
+        #print("Logging[Files] is set to: " + str(logger.getEffectiveLevel()))
+
+        asCodeFiles = []
+
+        yamlSchema = None
+        with open(getJSONSchemaFilepath()) as file:
+            yamlSchema = objectifyJSONSchema(file.read())
+
+        all_files = []
+
+        for path in files:
+            logger.debug("Adding file spec: " + path)
+            dir = None
+            if os.path.isdir(path):
+                dir = os.path.realpath(path)
+            elif os.path.isfile(path):
+                relativeTo = os.path.dirname(os.path.realpath(path))
+                validated = False
+
+                if path.endswith(".yaml") or path.endswith(".yml"):
+
+                    validated = validateFile(path,yamlSchema) # when this doesn't throw an error
+
+                    if default_yaml is None: default_yaml = path
+                    relativePath = getRelativePath(path,relativeTo) # relative to itself
+                    asCodeFiles.append(relativePath)
+                    logger.debug("Adding as-code file: " + relativePath)
+
+                # WAS: copy the whole directory
+                #dir = os.path.dirname(os.path.realpath(path))
+                all_files.append({
+                    "path": path,
+                    "relativeTo": relativeTo,
+                    "validated": validated,
+                })
+                all_files.extend(
+                    list(map(lambda p: {
+                        "path": p,
+                        "relativeTo": relativeTo,
+                        "validated": False,
+                    }, getSubfiles(path,relativeTo)))
+                )
+
+            else:
+                raise Exception("File '" + path + "' could not be found.")
+
+
+        for relative in all_files:
+            path = relative["path"]
+            relativeTo = relative["relativeTo"]
+            validated = relative["validated"]
+
+            if not validated:
+                validated = validateFile(path,yamlSchema)
+
+            if validated:
+                relativePath = getRelativePath(path,relativeTo)
+                tmppath = joinPath([tmpdir,relativePath])
+                logger.debug("Would: '" + path + "' -> '" + tmppath + "'")
+
+                if not validateOnly:
+                    # copy just this file using same relative subpath structure as source
+                    tmpsubdir = slicePath(tmppath,slice(0,-1))
+                    tmpsubdirparts = tmpsubdir.split(os.path.sep)
+                    for i in range(len(tmpsubdirparts)):
+                        tmppartsuntil = tmpsubdirparts[slice(0,i+1)]
+                        partpath = joinPath(tmppartsuntil)
+                        if len(partpath.strip()) > 0 and not os.path.exists(partpath):
+                            os.makedirs(partpath, exist_ok=True)
+                    shutil.copy(path,tmppath)
+
+
+        if not validateOnly:
+            logger.info("Zipping project files.") #TODO: only when larger than Xmb
+            fd, tmpzip = tempfile.mkstemp(prefix='neoload-cli_')
+            shutil.make_archive(tmpzip, 'zip', tmpdir) # creates new .zip file
+            try:
+                os.remove(tmpzip) # get rid of temp file without extension
+            except Exception as err:
+                logger.warning("Could not remove temp file in 'packageFiles':", sys.exc_info()[0])
+
+            tmpzip = tmpzip+".zip"
+            os.close(fd)
+
+            shutil.rmtree(tmpdir)
+
+            pack["zipfile"] = os.path.realpath(tmpzip)
+            pack["asCodeFiles"] = asCodeFiles
+
+            logger.info("Zip file created: " + pack["zipfile"])
+            logger.info("As-code files: " + ",".join(asCodeFiles))
+
+        pack["success"] = True
+
+    except:
+        pack["message"] = str(sys.exc_info()[1])
 
     return pack
+
+def slicePath(path,slice):
+    split = os.path.sep
+    return split.join(path.split(split)[slice])
+def joinPath(parts):
+    return os.path.sep.join(parts)
+
+def getRelativePath(path,relativeTo):
+    logger = logging.getLogger("root")
+    logger.debug("getRelativePath[path]: " + path)
+    logger.debug("getRelativePath[relativeTo]: " + relativeTo)
+    relativePath = os.path.realpath(path)#.replace(os.path.dirname(os.path.realpath(path)),"",1)
+    relativePath = relativePath.replace(relativeTo,"")
+    if relativePath.startswith("/"): relativePath = relativePath.replace("/","",1)
+    if relativePath.startswith("\\"): relativePath = relativePath.replace("\\","",1)
+    logger.debug("getRelativePath[relativePath]: " + relativePath)
+    return relativePath
 
 def getFolderSize(folder):
     total_size = os.path.getsize(folder)
@@ -82,3 +153,104 @@ def getFolderSize(folder):
         elif os.path.isdir(itempath):
             total_size += getFolderSize(itempath)
     return total_size
+
+def validateFile(path,yamlSchema):
+    ret = False
+
+    if path.endswith(".yaml") or path.endswith(".yml"):
+        basicValidation = validateBasicYAML(path)
+        if not basicValidation["success"]:
+            raise Exception("File '" + path + "' is not valid YAML: " + basicValidation["error"])
+
+        ascodeValidation = validateNeoLoadYAML(path, yamlSchema)
+        if not ascodeValidation["success"]:
+            raise Exception("File '" + path + "' is not valid NeoLoad schema:\n\n" +
+                ascodeValidation["error"] + "\n\n" +
+                "Please visit https://github.com/Neotys-Labs/neoload-models/blob/v3/neoload-project/doc/v3/project.md for specification." +
+                "\n")
+
+        ret = True # in above situations, Exception should be raised if ever False; bool return for pragmatism sake
+
+    else:
+        ret = True # consider all other files valid (csv, ...) without additional probing
+
+    return ret
+
+def validateBasicYAML(filepath):
+    logger = logging.getLogger("root")
+    result = {}
+    result["success"] = False
+    result["error"] = "Unknown parsing error."
+    try:
+        with open(filepath) as file:
+            spec = yaml.load(file, Loader=yaml.FullLoader)
+            result["success"] = True
+    except:
+        result["error"] = str(sys.exc_info()[1])
+
+    return result
+
+def validateNeoLoadYAML(filepath, schema):
+    logger = logging.getLogger("root")
+    result = {}
+    result["success"] = False
+    result["error"] = "Unknown parsing error."
+    fileAccess = False
+    spec = None
+    try:
+        with open(filepath) as file:
+            fileAccess = True
+            spec = yaml.load(file, Loader=yaml.FullLoader)
+            if spec is None: spec = {}
+        validateYaml(spec, schema)
+        result["success"] = True
+    except ValidationError as ex:
+        msg = ex.message
+        if 'does not match' in ex.message:
+            parts = ex.message.split("does not match")
+            part = parts[0].strip()
+            if part.startswith("'") and part.endswith("'"):
+                part = part[1:-1]
+            with open(filepath) as file:
+                for num, line in enumerate(file, 1):
+                    if part in line:
+                        msg += '\n\nfound at line:' + str(num)
+        result["error"] = msg
+    except:
+        msg = str(sys.exc_info()[1])
+        if not fileAccess:
+            msg = "YAML file could not be accessed."
+        elif spec is None:
+            msg = "File contents were not valid YAML."
+        result["error"] = msg
+
+    return result
+
+def getSubfiles(filepath,relativeTo):
+    logger = logging.getLogger("root")
+    found = []
+    logger.debug("rel: " + getRelativePath(filepath,relativeTo))
+    relDir = relativeTo
+    logger.debug("relDir: " + relDir)
+
+    with open(filepath) as file:
+        spec = yaml.load(file, Loader=yaml.FullLoader)
+        if spec is not None:
+            #logger.debug("getSubfiles: " + str(spec))
+            if "includes" in spec:
+                newpaths = list(map(lambda p: joinPath(
+                    list(filter(lambda a: len(a) > 0,[relDir,p]))
+                ),spec["includes"]))
+                logger.debug("getSubfiles: " + str(newpaths))
+                found.extend(newpaths)
+            if "variables" in spec:
+                variables = spec["variables"]
+                logger.debug("getSubfiles: found variables: " + str(variables))
+                for item in variables:
+                    logger.debug("getSubfiles: found variable: " + str(item))
+                    if "file" in item:
+                        value = item["file"]
+                        logger.debug("getSubfiles: found file variable: " + str(value))
+                        found.append(joinPath([relDir,value["path"]]))
+
+    return found

@@ -1,0 +1,14 @@
+name: NeoLoad-CLI-example-2_0
+includes:
+- paths/geosearch_get.yaml
+
+ifyourelookingforcutthroat:
+  singingabumnote:
+    lookingforascapegoat:
+      yourgonnafindyourself: alone
+
+variables:
+- constant:
+    name: constant_variable
+    value: 12345abcd
+    notright: true
