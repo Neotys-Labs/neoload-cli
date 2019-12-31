@@ -34,7 +34,8 @@ pipeline {
     stage('Attach Worker') {
       agent {
         dockerfile { // load python container
-          args "--user root -v /var/run/docker.sock:/var/run/docker.sock --build-arg PYPI_VERSION=0.3.6"
+          additionalBuildArgs "--build-arg PYPI_VERSION=0.3.6" // version is arbitrary for this pipeline
+          args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
           dir 'tests/docker/dind-python3'
         }
       }
