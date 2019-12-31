@@ -1,6 +1,11 @@
-FROM docker:dind
+FROM python:3.7-alpine
 
-RUN apk add -q bash shadow git py-pip py3-setuptools build-base python3-dev \
-    && python3 -m pip install -q --upgrade pip
+ARG PYPI_VERSION
 
-RUN python3 -m pip install -q neoload
+RUN \
+# Check for mandatory build arguments
+    : "${PYPI_VERSION:?Build argument needs to be set and non-empty.}"
+
+RUN apk add gcc musl-dev && \
+    python3 -m pip install -q --upgrade pip && \
+    python3 -m pip install -q neoload==$PYPI_VERSION

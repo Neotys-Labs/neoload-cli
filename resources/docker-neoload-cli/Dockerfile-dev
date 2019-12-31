@@ -1,7 +1,14 @@
-FROM docker:dind
+FROM python:3.7-alpine
 
-RUN apk add -q bash shadow git py-pip py3-setuptools build-base python3-dev \
-    && python3 -m pip install -q --upgrade pip
+##RUN apk add -q bash shadow git py-pip py3-setuptools build-base python3-dev \
+#RUN apk add -q build-base
+#RUN ls -latr /usr/libexec/gcc/x86_64-alpine-linux-musl/9.2.0/
+#RUN rm -rf $(find /usr/libexec/gcc/x86_64-alpine-linux-musl/ -name "cc1obj") && \
+#    rm -rf $(find /usr/libexec/gcc/x86_64-alpine-linux-musl/ -name "lto*") && \
+#    rm -rf /usr/bin/x86_64-alpine-linux-musl-gcj
+#RUN ls -latr /usr/libexec/gcc/x86_64-alpine-linux-musl/9.2.0/
+RUN apk add gcc musl-dev
+RUN python3 -m pip install -q --upgrade pip
 
 # this would be used in production-ready images
 #RUN python3 -m pip install -q neoload
@@ -11,4 +18,6 @@ RUN apk add -q bash shadow git py-pip py3-setuptools build-base python3-dev \
 #$ docker run --rm neoload-cli-dev neoload --version
 #$ docker rmi neoload-cli-dev
 COPY ./ /python_root
+RUN rm -rf /python_root/tests /python_root/pipeline_examples && \
+    rm -rf /python_root/dist /python_root/build /python_root/.git/python_root/.git*
 RUN python3 -m pip install -q -e /python_root
