@@ -10,8 +10,6 @@ pipeline {
       agent any
       steps {
         script {
-          cleanWs()
-          
           env.DATETIMESTAMP = sh(returnStdout: true, script: "echo \$(date '+%Y%m%d-%H%M%S')").trim()
           env.JUST_BRANCH_NAME = "${env.GIT_BRANCH}".replace("origin/","")
           env.REL_LOG_PATH = "tests/history/test_${env.DATETIMESTAMP}_" +
