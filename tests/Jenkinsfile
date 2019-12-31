@@ -59,6 +59,7 @@ pipeline {
                 }
               sh "python3 -m pip uninstall -y neoload" // remove base image version in favor of...
               sh "python3 -m pip install -q -e ./" // ...the current commit's version
+              sh "neoload --version"
           }
         }
         stage('Run PyTest') {
