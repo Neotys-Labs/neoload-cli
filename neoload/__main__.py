@@ -39,8 +39,14 @@ def initFeatureFlags(profile):
     if profile is None:
         return
 
-    global CHECKZONESBEFORERUN, ALLOWZONELISTING
-    API_VERSION = getApiInternalVersionNumber(profile)
+    logger = getDefaultLogger()
+
+    global API_VERSION, CHECKZONESBEFORERUN, ALLOWZONELISTING
+
+    try:
+        API_VERSION = getApiInternalVersionNumber(profile)
+    except Exception as e:
+        logger.error(e)
 
     # Zone capabilities support
     ZONES_SUPPORTED = (API_VERSION >= 20191215)
@@ -98,6 +104,10 @@ def main(   version,
             tests,zones
     ):
 
+    if not isProfileInitialized(getCurrentProfile()) and version:
+        printVersionNumber()
+        return exitProcess(0)
+
     # initialize most rudimentary runtime indicators
     moreinfo = True if debug is not None or verbose is not None else False
     interactive = False if platform.system().lower() == 'linux' or noninteractive else True
@@ -121,7 +131,8 @@ def main(   version,
     configurePythonUnbufferedMode(moreinfo)
 
     # initialize poor person's feature flags
-    initFeatureFlags(getCurrentProfile())
+    if isProfileInitialized(getCurrentProfile()):
+        initFeatureFlags(getCurrentProfile())
 
     # critical flags for subsequent execution modes
     hasFiles = True if files is not None and len(files)>0 else False
@@ -172,7 +183,7 @@ def main(   version,
         #validateFiles(files) #TODO: implement pre-check of YAML and json-schema
         pack = packageFiles(files,validate)
         if not pack["success"]:
-            exitProcess(4, pack["message"])
+            return exitProcess(4, pack["message"])
 
         if not validate:
             zipfile = pack["zipfile"]
@@ -189,10 +200,14 @@ def main(   version,
 
     noApiNeeded = (infile is not None and query is not None)
     if validate: noApiNeeded = True
+    if version and not intentToRun: noApiNeeded = True
 
     try:
         client = None
         filesUrl = None
+
+        if intentToRun and not isProfileInitialized(currentProfile):
+            return exitProcess(4,"No profiles are initialized.")
 
         if not noApiNeeded:
             client = getNLWAPI(currentProfile)
@@ -202,7 +217,7 @@ def main(   version,
 
             # check API connectivity
             if not checkAPIConnectivity(client):
-                exitProcess(4)
+                return exitProcess(4)
 
         logger.debug("shouldAttach=" + str(shouldAttach))
         logger.debug("intentToRun=" + str(intentToRun))
@@ -303,9 +318,8 @@ def main(   version,
                 ):
                 raise ArgumentException("Activity without context (i.e. --updatedesc but no --testid)")
 
-            if version is not None:
-                version = pkg_resources.require("neoload")[0].version
-                cprint("NeoLoad CLI version " + str(version))
+            if version:
+                printVersionNumber()
 
             if zones is not None:
                 if not ALLOWZONELISTING:
@@ -424,6 +438,10 @@ def exitProcess(exitCode,msg=None):
 
     return exitCode
 
+def printVersionNumber():
+    version = pkg_resources.require("neoload")[0].version
+    cprint("NeoLoad CLI version " + str(version))
+
 def configureLogging(debug,verbose,moreinfo,interactive,nocolor):
     loggingLevel = logging.ERROR
 
@@ -468,6 +486,9 @@ def configurePythonUnbufferedMode(moreinfo):
             getDefaultLogger().warning('Unbuffered output is on; CI jobs should report in real-time')
         else:
             getDefaultLogger().warning('Unbuffered output is off; CI jobs may delay output; set PYTHONUNBUFFERED=1')
+
+def isProfileInitialized(profile):
+    return (profile is not None and 'token' in profile and profile['token'] is not None and len(profile['token'].strip())>0)
 
 def configureProfiles(profiles,profile,url,token,zone,ntsurl,ntslogin):
     if profiles is not None:
