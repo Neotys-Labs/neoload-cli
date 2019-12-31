@@ -34,7 +34,7 @@ pipeline {
     stage('Attach Worker') {
       agent {
         dockerfile { // load python container
-          args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
+          args "--user root -v /var/run/docker.sock:/var/run/docker.sock --build-arg PYPI_VERSION=0.3.6"
           dir 'tests/docker/dind-python3'
         }
       }
@@ -59,7 +59,8 @@ pipeline {
                   --data '""" + payload + """' \
                   """ + env.SLACK_URL
                 }
-              sh "python3 -m pip install -q -e ./"
+              sh "python3 -m pip uninstall neoload" // remove base image version in favor of...
+              sh "python3 -m pip install -q -e ./" // ...the current commit's version
           }
         }
         stage('Run PyTest') {
