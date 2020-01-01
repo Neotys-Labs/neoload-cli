@@ -1,23 +1,24 @@
 FROM python:3.7-alpine
 
-##RUN apk add -q bash shadow git py-pip py3-setuptools build-base python3-dev \
-#RUN apk add -q build-base
-#RUN ls -latr /usr/libexec/gcc/x86_64-alpine-linux-musl/9.2.0/
-#RUN rm -rf $(find /usr/libexec/gcc/x86_64-alpine-linux-musl/ -name "cc1obj") && \
-#    rm -rf $(find /usr/libexec/gcc/x86_64-alpine-linux-musl/ -name "lto*") && \
-#    rm -rf /usr/bin/x86_64-alpine-linux-musl-gcj
-#RUN ls -latr /usr/libexec/gcc/x86_64-alpine-linux-musl/9.2.0/
-RUN apk add gcc musl-dev
-RUN python3 -m pip install -q --upgrade pip
+# add GCC deps, Python (NeoLoad in dev comes later)
+RUN apk add -q gcc musl-dev && \
+    python3 -m pip install -q --upgrade pip
 
-# this would be used in production-ready images
-#RUN python3 -m pip install -q neoload
+
+# for use in CI with a build agent that is a docker host (or connected to one)
+ENV DOCKERVERSION=18.03.1-ce
+RUN curl -fsSLO https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKERVERSION}.tgz \
+ && tar xzvf docker-${DOCKERVERSION}.tgz --strip 1 \
+                -C /usr/local/bin docker/docker \
+ && rm docker-${DOCKERVERSION}.tgz
+
+# copy in current codebase and install CLI
+COPY ./ /python_root
+RUN rm -rf /python_root/tests /python_root/pipeline_examples && \
+    rm -rf /python_root/dist /python_root/build /python_root/.git/python_root/.git*
+RUN python3 -m pip install -q -e /python_root
 
 ## for local dev purposes only
 #$ docker build -t neoload-cli-dev --file resources/docker-neoload-cli/Dockerfile-dev .
 #$ docker run --rm neoload-cli-dev neoload --version
 #$ docker rmi neoload-cli-dev
-COPY ./ /python_root
-RUN rm -rf /python_root/tests /python_root/pipeline_examples && \
-    rm -rf /python_root/dist /python_root/build /python_root/.git/python_root/.git*
-RUN python3 -m pip install -q -e /python_root
