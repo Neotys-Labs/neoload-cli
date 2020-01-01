@@ -23,28 +23,35 @@ resources:
 jobs:
 - job: RunLoadTest
   displayName: Run NeoLoad Test
+  services:
+    neoload_ctrl: neoload_ctrl
+    lg1: lg1
   steps:
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.6'
 
-  - bash:
+  - task: Bash@3
     displayName: Install NeoLoad
     continueOnError: false
-    script: |
-      pip install neoload
-      neoload --profile docker --token $(nlw_token) --zone $(zone_code)
+    inputs:
+      targetType: 'inline'
+      script: |
+        pip install neoload && neoload --version
+        neoload --profile docker --token $(nlw_token) --zone $(zone_code)
 
-  - bash:
+  - task: Bash@3
     displayName: Run NeoLoad Test
     continueOnError: true
-    script: |
-      cd $(Build.SourcesDirectory)
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd $(Build.SourcesDirectory)
 
-      neoload --scenario sanityScenario \
-              -f example_test/default.yaml \
-              -f example_test/slas/uat.yaml \
-              --junitsla $(Common.TestResultsDirectory)/neoload-slas.xml
+        neoload --scenario sanityScenario \
+                -f example_test/default.yaml \
+                -f example_test/slas/uat.yaml \
+                --junitsla $(Common.TestResultsDirectory)/neoload-slas.xml
 
 
   - task: PublishTestResults@2
