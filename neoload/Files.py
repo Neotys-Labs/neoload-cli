@@ -7,6 +7,7 @@ import yaml
 from distutils.dir_util import copy_tree
 from jsonschema.exceptions import ValidationError
 import itertools
+import requests
 
 from .YamlParsing import *
 
@@ -32,9 +33,21 @@ def packageFiles(fileSpecs,validateOnly):
 
         asCodeFiles = []
 
+        #TODO: need to abstract out file-based acquisition, fall-back to public URL
         yamlSchema = None
-        with open(getJSONSchemaFilepath()) as file:
-            yamlSchema = objectifyJSONSchema(file.read())
+        if os.path.exists(getJSONSchemaFilepath()):
+            with open(getJSONSchemaFilepath()) as file:
+                yamlSchema = objectifyJSONSchema(file.read())
+        else:
+            try:
+                logger.debug("Getting latest schema from Github")
+                yamlSchema = objectifyJSONSchema(getLatestJSONSchema())
+            except:
+                logger.warning("JSON Schema to validate YAML could not be obtained, but allowing for YAML to bypass validation.\nUnderlying error: " + str(sys.exc_info()[1]))
+
+        hasYamlToValidateAgainst = (yamlSchema is not None)
+
+        logger.info("hasYamlToValidateAgainst: " + str(hasYamlToValidateAgainst))
 
         all_files = []
 
@@ -49,7 +62,7 @@ def packageFiles(fileSpecs,validateOnly):
 
                 if path.endswith(".yaml") or path.endswith(".yml"):
 
-                    validated = validateFile(path,yamlSchema) # when this doesn't throw an error
+                    validated = validateFile(path,yamlSchema, not hasYamlToValidateAgainst) # when this doesn't throw an error
 
                     if default_yaml is None: default_yaml = path
                     relativePath = getRelativePath(path,relativeTo) # relative to itself
@@ -81,7 +94,7 @@ def packageFiles(fileSpecs,validateOnly):
             validated = relative["validated"]
 
             if not validated:
-                validated = validateFile(path,yamlSchema)
+                validated = validateFile(path,yamlSchema,not hasYamlToValidateAgainst)
 
             if validated:
                 relativePath = getRelativePath(path,relativeTo)
@@ -154,22 +167,26 @@ def getFolderSize(folder):
             total_size += getFolderSize(itempath)
     return total_size
 
-def validateFile(path,yamlSchema):
+def validateFile(path,yamlSchema,passIfCantValidate):
     ret = False
 
     if path.endswith(".yaml") or path.endswith(".yml"):
-        basicValidation = validateBasicYAML(path)
-        if not basicValidation["success"]:
-            raise Exception("File '" + path + "' is not valid YAML: " + basicValidation["error"])
 
-        ascodeValidation = validateNeoLoadYAML(path, yamlSchema)
-        if not ascodeValidation["success"]:
-            raise Exception("File '" + path + "' is not valid NeoLoad schema:\n\n" +
-                ascodeValidation["error"] + "\n\n" +
-                "Please visit https://github.com/Neotys-Labs/neoload-models/blob/v3/neoload-project/doc/v3/project.md for specification." +
-                "\n")
+        if yamlSchema is None and passIfCantValidate:
+            ret = True
+        else:
+            basicValidation = validateBasicYAML(path)
+            if not basicValidation["success"]:
+                raise Exception("File '" + path + "' is not valid YAML: " + basicValidation["error"])
 
-        ret = True # in above situations, Exception should be raised if ever False; bool return for pragmatism sake
+            ascodeValidation = validateNeoLoadYAML(path, yamlSchema)
+            if not ascodeValidation["success"]:
+                raise Exception("File '" + path + "' is not valid NeoLoad schema:\n\n" +
+                    ascodeValidation["error"] + "\n\n" +
+                    "Please visit https://github.com/Neotys-Labs/neoload-models/blob/v3/neoload-project/doc/v3/project.md for specification." +
+                    "\n")
+
+            ret = True # in above situations, Exception should be raised if ever False; bool return for pragmatism sake
 
     else:
         ret = True # consider all other files valid (csv, ...) without additional probing
@@ -254,3 +271,9 @@ def getSubfiles(filepath,relativeTo):
                         found.append(joinPath([relDir,value["path"]]))
 
     return found
+
+def getLatestJSONSchema():
+    # this is a temporary hold-over until a more permanent 302 mechanism is created
+    schemaUrl = "https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json"
+    response = requests.get(schemaUrl)
+    return response.text
