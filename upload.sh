@@ -36,3 +36,25 @@ if [ "$?" -ne "0" ]; then
   echo "Twine upload failed"
   exit 5
 fi
+
+#TODO: run this script with a new version number. afterwards, run Azure job and ensure JSON schema validation
+echo "Waiting for < 1m after publishing to PyPi"
+sleep 30 # allow for some time on pypi
+
+docker build --build-arg PYPI_VERSION=$version_id -t neoload-cli --file resources/docker-neoload-cli/Dockerfile .
+if [ "$?" -ne "0" ]; then
+  echo "Docker-minimalist build failed"
+  exit 6
+fi
+docker run --rm neoload-cli neoload --version
+if [ "$?" -ne "0" ]; then
+  echo "Docker-minimalist image failed"
+  exit 7
+fi
+docker tag neoload-cli paulsbruce/neoload-cli:$version_id
+docker push paulsbruce/neoload-cli:$version_id
+if [ "$?" -ne "0" ]; then
+  echo "Docker-minimalist push failed"
+  exit 8
+fi
+docker rmi neoload-cli
