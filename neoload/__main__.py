@@ -72,6 +72,7 @@ def initFeatureFlags(profile):
 @click.option('--reattach', is_flag=True, help='Uses last --attach statement to create containers for Controller and Load Generator(s)')
 @click.option('--detatch','-d', is_flag=True, help='Attempts to detatch and remove containers attached by this tool.')
 @click.option('--detatchall','-da', is_flag=True, help='Detatches all local infrastructure instigated by this tool.')
+@click.option('--retainresults', is_flag=True, default=None, help='Retain results in NeoLoad Web after test is completed.')
 @click.option('--verbose', is_flag=True, default=None, help='Include INFO and WARNING detail.')
 @click.option('--debug', is_flag=True, default=None, help='Include DEBUG, INFO and WARNING detail.')
 @click.option('--nocolor', is_flag=True, default=None, help='Control color logs')
@@ -80,6 +81,7 @@ def initFeatureFlags(profile):
 @click.option('--testid', default=None, help='Specify a Test ID (guid) for contextual operations such as reporting, modification, etc.')
 @click.option('--query', default=None, help='Specifies a query (regex or jsonPath). Used in conjunction with --nowait and --outfile to derive testid and other details from after test is started.')
 @click.option('--validate', is_flag=True, default=False, help='Runs validation passes only, does not start test.')
+@click.option('--offline', is_flag=True, default=None, help='Run as if there is not an internet connection.')
 @click.option('--summary', is_flag=True, default=None, help='Display a summary of the test.')
 @click.option('--justid', is_flag=True, default=None, help='Output just the ID of the relevant artifact; infers --quiet flag')
 @click.option('--outfile', default=None, help='Specify a file to also write all stdout to.')
@@ -95,14 +97,18 @@ def initFeatureFlags(profile):
 @click.option('--zones', is_flag=True, default=None, help='List zones')
 def main(   version,
             profiles,profile,url,token,zone,ntslogin,ntsurl,                        # profile stuff
-            files,scenario,attach,reattach,detatch,detatchall,                      # runtime inputs
-            verbose,debug,nocolor,noninteractive,quiet,validate,                    # logging and debugging
+            files,scenario,attach,reattach,detatch,detatchall,retainresults,        # runtime inputs
+            verbose,debug,nocolor,noninteractive,quiet,validate,offline,            # logging and debugging
             testid,query,                                                           # entities (primarily, a test)
             summary,justid,outfile,infile,junitsla,                                 # export operations
             updatename,updatedesc,updatestatus,rolltag,                             # modification ops (particularly, for a test)
             nowait,spinwait,                                                        # support for non-blocking execution
             tests,zones
     ):
+
+    setOfflineMode(offline)
+
+    #TODO: implement retainresults=False to delete results afterward (for sanity tests)
 
     if not isProfileInitialized(getCurrentProfile()) and version:
         printVersionNumber()
@@ -699,8 +705,8 @@ def detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
         logger.info("containerCount: " + str(containerCount))
         if containerCount > 0:
             logger.warning("Detatching " + str(shouldDetatch) + " prior containers.")
-        else:
-            cprintOrLogInfo(True,logger,"No containers to detatch!")
+        #else:
+        #    cprintOrLogInfo(True,logger,"No containers to detatch!")
 
     if not shouldDetatch and intentToRun and alreadyAttached:
         logger.warning("Reminder: you just ran a test without detatching infrastructure. Make sure you clean up after yourself with the --detatch argument!")

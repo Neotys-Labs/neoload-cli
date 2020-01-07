@@ -38,12 +38,16 @@ def packageFiles(fileSpecs,validateOnly):
         if os.path.exists(getJSONSchemaFilepath()):
             with open(getJSONSchemaFilepath()) as file:
                 yamlSchema = objectifyJSONSchema(file.read())
-        else:
+        if yamlSchema is None:
             try:
-                logger.debug("Getting latest schema from Github")
-                yamlSchema = objectifyJSONSchema(getLatestJSONSchema())
+                yamlRaw = getLatestJSONSchema()
+                if yamlRaw is not None:
+                    yamlSchema = objectifyJSONSchema(yamlRaw)
             except:
-                logger.warning("JSON Schema to validate YAML could not be obtained, but allowing for YAML to bypass validation.\nUnderlying error: " + str(sys.exc_info()[1]))
+                logger.error("Error while obtaining JSON Schema online: " + str(sys.exc_info()[1]))
+                
+        if yamlSchema is None:
+            logger.warning("JSON Schema to validate YAML could not be obtained, but allowing for YAML to bypass validation.\nUnderlying error: " + str(sys.exc_info()[1]))
 
         hasYamlToValidateAgainst = (yamlSchema is not None)
 
@@ -273,6 +277,12 @@ def getSubfiles(filepath,relativeTo):
     return found
 
 def getLatestJSONSchema():
+    if isOfflineMode():
+        return None
+
+    logger = logging.getLogger("root")
+
+    logger.debug("Getting latest schema from Github")
     # this is a temporary hold-over until a more permanent 302 mechanism is created
     schemaUrl = "https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json"
     response = requests.get(schemaUrl)
