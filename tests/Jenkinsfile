@@ -59,7 +59,7 @@ pipeline {
                 }
               sh 'ls -latr /usr/local/lib/python3.7/site-packages/'
               sh "python3 -m pip uninstall -y neoload" // remove base image version in favor of...
-              sh "python3 -m pip uninstall -y -r <(python3 -m pip freeze)"
+              sh "pip freeze | xargs pip uninstall -y"
               sh 'ls -latr /usr/local/lib/python3.7/site-packages/'
               sh "python3 -m pip install -q -e ./" // ...the current commit's version
               sh 'ls -latr /usr/local/lib/python3.7/site-packages/'
