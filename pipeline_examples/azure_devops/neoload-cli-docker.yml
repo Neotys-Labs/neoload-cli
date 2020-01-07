@@ -10,6 +10,7 @@ variables:
   PYTHONUNBUFFERED: 1
 
 # create sidecar containers, attach them to a zone; provide supply this pipeline demands
+# if multiple LGs are required, add them as sidecars and add --attach zone#? argument below
 resources:
   containers:
   - container: neoload_ctrl
@@ -41,7 +42,8 @@ jobs:
       script: |
         pip install neoload
         neoload --version
-        neoload --profile docker --token $(nlw_token) --zone $(zone_code)
+        neoload --profile docker --token $(nlw_token) --zone $(zone_code) \
+                --attach zone#2
 
   - task: Bash@3
     displayName: Run NeoLoad Test
