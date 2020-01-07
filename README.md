@@ -146,6 +146,14 @@ The general process can be seen in the [NeoLoad CLI E2E PyTest suite](tests/test
 ## Additional Options
 There are many other arguments for test summarization, modification, and exporting results.
 
+### Using more than one Controller and Load Generator from a zone
+Presuming that you already have a zone with available resources in it, you can specify
+ to use more than one load generator. The zone should be stored in your current profile.
+```
+  neoload --attach zone#3 -f tests/example_2_0_runtime/default.yaml --scenario sanityScenario
+```
+...where the number three is the number of available load generators you want this test to utilize.
+
 ### Exporting SLA Results to JUnit
 ```
   neoload --testid [guid] --junitsla=junit_sla_results.xml
