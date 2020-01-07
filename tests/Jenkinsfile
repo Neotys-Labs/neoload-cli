@@ -33,7 +33,7 @@ pipeline {
     stage('Attach Worker') {
       agent {
         dockerfile { // load python container
-          additionalBuildArgs "--build-arg PYPI_VERSION=0.3.6" // version is arbitrary for this pipeline
+          additionalBuildArgs "--build-arg PYPI_VERSION=0.3.6" // version is arbitrary for this pipeline b/c we will remove it with pip uninstall
           args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
           dir 'tests/docker/dind-python3'
         }
@@ -58,7 +58,9 @@ pipeline {
                   """ + env.SLACK_URL
                 }
               sh "python3 -m pip uninstall -y neoload" // remove base image version in favor of...
+              sh 'ls -latr /usr/local/lib/python3.7/site-packages/'
               sh "python3 -m pip install -q -e ./" // ...the current commit's version
+              sh 'ls -latr /usr/local/lib/python3.7/site-packages/'
               sh "neoload --version"
           }
         }
