@@ -13,12 +13,14 @@ variables:
 resources:
   containers:
   - container: neoload_ctrl
-    image: paulsbruce/neoload-controller-azure:6.10
+    image: neotys/neoload-controller:latest
     env: { MODE: Managed, NEOLOADWEB_TOKEN: $(nlw_token), ZONE: $(zone_code) }
   - container: lg1
-    image: neotys/neoload-loadgenerator:6.10
-    env: { NEOLOADWEB_TOKEN: $(nlw_token), ZONE: $(zone_code), LG_HOST=lg1, LG_PORT=7101 }
-    options: -p 7101:7100
+    image: neotys/neoload-loadgenerator:latest
+    env: { NEOLOADWEB_TOKEN: $(nlw_token), ZONE: $(zone_code), LG_HOST=lg1, LG_PORT=7100 }
+  - container: lg2
+    image: neotys/neoload-loadgenerator:latest
+    env: { NEOLOADWEB_TOKEN: $(nlw_token), ZONE: $(zone_code), LG_HOST=lg2, LG_PORT=7100 }
 
 jobs:
 - job: RunLoadTest
@@ -37,7 +39,8 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        pip install neoload && neoload --version
+        pip install neoload
+        neoload --version
         neoload --profile docker --token $(nlw_token) --zone $(zone_code)
 
   - task: Bash@3
