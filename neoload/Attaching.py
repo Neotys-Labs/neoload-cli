@@ -16,17 +16,27 @@ auto_remove_containers = True
 max_container_readiness_wait_sec = 120
 
 def attachInfra(profile,rawspec,explicit):
+    logger = logging.getLogger("root")
     spec = parseInfraSpec(rawspec)
-    if spec is not None and 'provider' in spec and spec['provider'] == 'docker':
+    provider = spec['provider'] if spec is not None and 'provider' in spec else ""
+    logger.info("detatchInfra: "+provider)
+
+    if provider == 'docker':
         return attachLocalDockerInfra(profile,spec,explicit)
+    elif provider == 'zone':
+        return attachZoneInfra(profile,spec,explicit)
     else:
         raise NotImplementedError()
 
 def detatchInfra(spec,explicit):
     logger = logging.getLogger("root")
-    logger.info("detatchInfra: "+spec["provider"])
-    if spec is not None and 'provider' in spec and spec['provider'] == 'docker':
+    provider = spec['provider'] if spec is not None and 'provider' in spec else ""
+    logger.info("detatchInfra: "+provider)
+
+    if provider == 'docker':
         return detatchLocalDockerInfra(explicit,spec)
+    elif provider == 'zone':
+        return spec # nothing to do, really. controller releases resources used if necessary
     else:
         logger.info("Attached infrastructure lacked a provider, so no detatched occured.")
 
@@ -56,6 +66,11 @@ def isAlreadyAttached(infra):
     return False
 
 _containerNamingPrefix = "neoload_cli"
+
+def attachZoneInfra(profile,spec,explicit):
+    #TODO: check to make sure that there are enough available resources, else fail
+    spec["ready"] = True
+    return spec
 
 def attachLocalDockerInfra(profile,spec,explicit):
     logger = logging.getLogger("root")
@@ -364,9 +379,9 @@ def parseInfraSpec(rawspec):
     provider = parts[0].lower()
 
     ret["provider"] = provider
+    numOfLGs = 1
 
     if provider == "docker":
-        numOfLGs = 1
         lgImage = "neotys/neoload-loadgenerator:latest"
         if len(parts)>1:
             lgparts = parts[1].split(",")
@@ -385,5 +400,15 @@ def parseInfraSpec(rawspec):
         ret["ctrlImage"] = lgImage.replace("-loadgenerator","-controller")
         ret["lgImage"] = lgImage
         return ret
+
+    elif provider == "zone":
+        if len(parts)>1:
+            lgparts = parts[1].split(",")
+            if lgparts[0].isdigit():
+                numOfLGs = int(lgparts[0])
+
+        ret["numOfLGs"] = numOfLGs
+        return ret
+
     else:
         raise ValueError("Unknown provider prefix in infrastructure specification.")
