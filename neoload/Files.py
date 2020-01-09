@@ -1,3 +1,6 @@
+
+from neoload import *
+
 import tempfile
 import shutil
 import os
@@ -35,9 +38,12 @@ def packageFiles(fileSpecs,validateOnly):
 
         #TODO: need to abstract out file-based acquisition, fall-back to public URL
         yamlSchema = None
-        if os.path.exists(getJSONSchemaFilepath()):
-            with open(getJSONSchemaFilepath()) as file:
-                yamlSchema = objectifyJSONSchema(file.read())
+        
+        if False: # when locally building, this was nice, but packaged it missed below live pull in testing
+            if os.path.exists(getJSONSchemaFilepath()):
+                with open(getJSONSchemaFilepath()) as file:
+                    yamlSchema = objectifyJSONSchema(file.read())
+
         if yamlSchema is None:
             try:
                 yamlRaw = getLatestJSONSchema()
@@ -45,7 +51,7 @@ def packageFiles(fileSpecs,validateOnly):
                     yamlSchema = objectifyJSONSchema(yamlRaw)
             except:
                 logger.error("Error while obtaining JSON Schema online: " + str(sys.exc_info()[1]))
-                
+
         if yamlSchema is None:
             logger.warning("JSON Schema to validate YAML could not be obtained, but allowing for YAML to bypass validation.\nUnderlying error: " + str(sys.exc_info()[1]))
 
