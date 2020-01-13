@@ -58,7 +58,6 @@ pipeline {
                   """ + env.SLACK_URL
                 }
               sh "pip freeze | xargs pip uninstall -q -y"
-              sh 'ls -latr /usr/local/lib/python3.7/site-packages/'
               sh "python3 -m pip install -q -e ./" // ...the current commit's version
               sh "neoload --version"
           }
