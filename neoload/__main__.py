@@ -422,7 +422,8 @@ def main(   version,
                     logger.debug("Exporting test details...")
 
                     if junitsla is not None:
-                        writeSLAs(client,test,junitsla)
+                        slas = getSLAs(client,test)
+                        writeSLAs(client,test,slas,junitsla)
 
                     if printSummary:
                         printTestSummary(client, testid, justid, moreinfo, debug)
@@ -593,6 +594,8 @@ def printSLASummary(client,test):
     cprint(text)
 
 def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,junitsla,quiet,justid):
+    logger = getDefaultLogger()
+
     overviewUrl = getTestOverviewUrl(currentProfile,launchedTestId)
     logsUrl = getTestLogsUrl(currentProfile,launchedTestId)
     getDefaultLogger().info("Test logs available at: " + logsUrl)
@@ -649,32 +652,35 @@ def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,j
             if not terminated:
                 if not quiet:
                     print("") # end the ...s
-                handleTestTermination(test)
+                handleTestTermination(client,test)
                 terminated = True
         else:
             cprint("Unknown status encountered '" + test.status + "'.", "red")
 
         if test.status == "TERMINATED":
-            outcome = getTestOutcome(test)
+            outcome = getTestOutcome(client,test)
+            slas = outcome["slas"]
 
             exitCode = outcome["exitCode"]
+            logger.debug("exitCode[a]: " + str(exitCode))
 
             if test.quality_status == "FAILED" and test.termination_reason == "POLICY":
                 if not quiet:
                     cprint("One or more SLAs failed.")
 
-            afterTermination(client,test,junitsla)
+            afterTermination(client,test,slas,junitsla)
 
         time.sleep( 5 )
 
+    logger.debug("exitCode[b]: " + str(exitCode))
     return exitCode
 
-def afterTermination(client,test,junitsla):
+def afterTermination(client,test,slas,junitsla):
     if junitsla is not None:
-        writeSLAs(client,test,junitsla)
+        writeSLAs(client,test,slas,junitsla)
 
-def writeSLAs(client,test,filepath):
-    slas = getSLAs(client,test)
+def writeSLAs(client,test,slas,filepath):
+    #slas = getSLAs(client,test)
     writeJUnitSLAContent(slas,test,filepath)
 
 def cleanupAfter(pack,shouldDetatch,explicit,infra):
@@ -694,15 +700,18 @@ def cleanupAfter(pack,shouldDetatch,explicit,infra):
     else:
         cprintOrLogInfo(False,logger,"Skipping file cleanup as deleteAfter != True")
 
-def handleTestTermination(test): # dictionary from NLW API of final status
-    outcome = getTestOutcome(test)
+def handleTestTermination(client,test): # dictionary from NLW API of final status
+    outcome = getTestOutcome(client,test)
     color = "green" if outcome["exitCode"] == 0 else "yellow" if outcome["exitCode"] == 1 else "red"
     cprint(outcome["message"], color)
     return outcome
 
-def getTestOutcome(test): # dictionary from NLW API of final status
+def getTestOutcome(client,test): # dictionary from NLW API of final status
     msg = "Unknown"
     exitCode = 2
+    slas = getSLAs(client,test)
+    slaFailureCount = slas["failureCount"]
+
     if test.termination_reason == "FAILED_TO_START":
         msg = "Test failed to start."
         exitCode = 2
@@ -732,9 +741,15 @@ def getTestOutcome(test): # dictionary from NLW API of final status
         exitCode = 2
         pprint(test)
 
+    if exitCode == 0 and slaFailureCount > 0:
+        msg += "One or more SLAs failed." # additive VERY important for test suite
+        exitCode = 1
+
     outcome = {}
     outcome["exitCode"] = exitCode
     outcome["message"] = msg
+    outcome["slas"] = slas
+
     return outcome
 
 def detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
