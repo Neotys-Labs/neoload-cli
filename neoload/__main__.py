@@ -8,6 +8,7 @@ import time
 import logging
 import re
 import pkg_resources
+import inspect
 
 from neoload import *
 from .Validators import *
@@ -60,7 +61,6 @@ def initFeatureFlags(profile):
 @click.option('--version', is_flag=True, default=None, help='Print the version of NeoLoad CLI')
 @click.option('--profiles', is_flag=True, default=None, help='List profiles')
 @click.option('--profile', default=None, help='Set profiles')
-#@click.option('--deleteprofile', help='Deletes a profiles')
 @click.option('--url', default=None, help='Set a url for selected profile')
 @click.option('--token', default=None, help='Set a token for selected profile')
 @click.option('--zone', default=None, help='Set a zone for selected profile')
@@ -91,6 +91,7 @@ def initFeatureFlags(profile):
 @click.option('--updatedesc', default=None, help='Updates the description of a test, incl. hashtag processing.')
 @click.option('--updatestatus', default=None, help='Updates the status of a test (PASSED|FAILED).')
 @click.option('--rolltag', default=None, help='Adds the specified hashtag to the description of a test AND removes the tag from all prior executions of that test (by scenario and project name). Used in rolling baselines.')
+@click.option('--delete', help='Deletes a resource; used with --profile --testid and other resource identifiers; prompts unless --quiet')
 @click.option('--nowait', is_flag=True, default=None, help='Do not wait for blocking events, return immediately. To be used in conjunction with running a test.')
 @click.option('--spinwait', is_flag=True, default=None, help='Block execution until a test is done or failure to connect to API. To be used in conjunction with --testid specifier.')
 @click.option('--tests', is_flag=True, default=None, help='List tests')
@@ -102,11 +103,27 @@ def main(   version,
             testid,query,                                                           # entities (primarily, a test)
             summary,justid,outfile,infile,junitsla,                                 # export operations
             updatename,updatedesc,updatestatus,rolltag,                             # modification ops (particularly, for a test)
+            delete,
             nowait,spinwait,                                                        # support for non-blocking execution
             tests,zones
     ):
 
     setOfflineMode(offline)
+
+
+    # collections of arguments for verification of combinations
+    execops = [spinwait]
+    exportops = [summary,justid,junitsla,query]
+    modops = [updatename,updatedesc,updatestatus,rolltag,delete]
+    infraops = [attach,reattach,detatch]
+    listops = [tests,zones]
+    # operations that can live on their own (like detatch, profiles, etc.)
+    standaloneops = [detatch,profiles,version,zones]
+
+    # in prep for argument combinatory validations
+    allops = execops + exportops + modops + infraops + standaloneops + listops
+    allids = [testid,profile,infile]
+
 
     #TODO: implement retainresults=False to delete results afterward (for sanity tests)
 
@@ -142,8 +159,24 @@ def main(   version,
 
     # critical flags for subsequent execution modes
     hasFiles = True if files is not None and len(files)>0 else False
-    intentToRun = True if hasFiles or scenario is not None else False
+    intentToRun = True if hasFiles and scenario is not None else False
     if validate: intentToRun = False
+
+    # argSpec = inspect.getargvalues(inspect.currentframe())
+    # print(argSpec)
+    # paramsSpecified = list(filter(lambda x: (
+    #     eval(x.name) is not None
+    #     ) and not (
+    #         x.default is not None and eval(x.name) == x.default
+    #     ), main.params))
+    # print(paramsSpecified)
+    # print(any(list(filter(lambda x: x.name != "files", paramsSpecified))))
+    # if not validate and (
+    #     hasFiles and scenario is None and not (
+    #          any(list(map(lambda x: x.name == "files", main.params)))
+    #     )
+    # ):
+    #     validate = True
 
     if not intentToRun:
         cprint("NeoLoad CLI", color="blue", figlet=True)
@@ -185,8 +218,8 @@ def main(   version,
     # if there are files specified, package for the API and prep variables
     zipfile = None
     asCodeFiles = []
+    pack = None
     if hasFiles:
-        #validateFiles(files) #TODO: implement pre-check of YAML and json-schema
         pack = packageFiles(files,validate)
         if not pack["success"]:
             return exitProcess(4, pack["message"])
@@ -301,20 +334,6 @@ def main(   version,
             #end infraReady
         else: # not intentToRun
 
-            # collections of arguments for verification of combinations
-            execops = [spinwait]
-            exportops = [summary,justid,junitsla,query]
-            modops = [updatename,updatedesc,updatestatus,rolltag]
-            infraops = [attach,reattach,detatch]
-            listops = [tests,zones]
-
-            # operations that can live on their own (like detatch, profiles, etc.)
-            standaloneops = [detatch,profiles,version,zones]
-
-            # in prep for below argument combinatory validations
-            allops = execops + exportops + modops + infraops + standaloneops + listops
-            allids = [testid,profile,infile]
-
             if not any(list(map(lambda x: x is not None, standaloneops))) and (
                     (
                         any(list(map(lambda x: x is not None, allops))) and all(list(map(lambda x: x is None, allids)))
@@ -426,10 +445,10 @@ def main(   version,
     # do detatchments if appropriate
     if nowait:
         logger.warning("Skipping all cleanup tasks in --nowait mode.")
-        cleanupAfter(zipfile,shouldDetatch=False,explicit=False,infra=infra)
+        cleanupAfter(pack,shouldDetatch=False,explicit=False,infra=infra)
     else:
         detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
-                            alreadyAttached,explicitAttach,explicitDetatch,zipfile,detatchall)
+                            alreadyAttached,explicitAttach,explicitDetatch,pack,detatchall)
 
     if moreinfo:
         logger.info("Exiting with code: " + str(exitCode))
@@ -636,10 +655,9 @@ def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,j
             cprint("Unknown status encountered '" + test.status + "'.", "red")
 
         if test.status == "TERMINATED":
-            if test.quality_status == "PASSED":
-                exitCode = 0
-            else:
-                exitCode = 1
+            outcome = getTestOutcome(test)
+
+            exitCode = outcome["exitCode"]
 
             if test.quality_status == "FAILED" and test.termination_reason == "POLICY":
                 if not quiet:
@@ -659,37 +677,68 @@ def writeSLAs(client,test,filepath):
     slas = getSLAs(client,test)
     writeJUnitSLAContent(slas,test,filepath)
 
-def cleanupAfter(zipfile,shouldDetatch,explicit,infra):
+def cleanupAfter(pack,shouldDetatch,explicit,infra):
+    logger = getDefaultLogger()
+
     if shouldDetatch:
         if infra is None:
             getDefaultLogger().warning("No prior infrastructure to detatch.")
         else:
             detatchInfra(infra,explicit)
 
-    if zipfile is not None:
-        os.remove(zipfile)
+    zipfile = pack["zipfile"] if pack is not None and "zipfile" in pack else None
+    deleteAfter = pack["deleteAfter"] if pack is not None and "deleteAfter" in pack else False
+    if deleteAfter:
+        if zipfile is not None:
+            os.remove(zipfile)
+    else:
+        cprintOrLogInfo(False,logger,"Skipping file cleanup as deleteAfter != True")
 
 def handleTestTermination(test): # dictionary from NLW API of final status
+    outcome = getTestOutcome(test)
+    color = "green" if outcome["exitCode"] == 0 else "yellow" if outcome["exitCode"] == 1 else "red"
+    cprint(outcome["message"], color)
+    return outcome
+
+def getTestOutcome(test): # dictionary from NLW API of final status
+    msg = "Unknown"
+    exitCode = 2
     if test.termination_reason == "FAILED_TO_START":
-        cprint("Test failed to start.", "red")
+        msg = "Test failed to start."
+        exitCode = 2
+    elif test.termination_reason == "CANCELLED":
+        msg = "Test cancelled."
+        exitCode = 2
     elif test.termination_reason == "POLICY":
-        cprint("Test completed.", "green")
+        msg = "Test completed."
+        exitCode = 0
     elif test.termination_reason == "VARIABLE":
-        cprint("Test completed variably.", "green")
+        msg = "Test completed variably."
+        exitCode = 0
     elif test.termination_reason == "MANUAL":
-        cprint("Test was stopped manually.", "yellow")
+        msg = "Test was stopped manually."
+        exitCode = 2
     elif test.termination_reason == "LG_AVAILABILITY":
-        cprint("Test failed due to load generator availability.", "red")
+        msg = "Test failed due to load generator availability."
+        exitCode = 2
     elif test.termination_reason == "LICENSE":
-        cprint("Test failed because of license.", "red")
+        msg = "Test failed because of license."
+        exitCode = 2
     elif test.termination_reason == "UNKNOWN":
-        cprint("Test failed for an unknown reason. Check logs.", "red")
+        msg = "Test failed for an unknown reason. Check logs."
+        exitCode = 2
     else:
-        cprint("Unknown 'termination_reason' value: " + test.termination_reason, "red")
+        msg = "Unknown 'termination_reason' value: " + test.termination_reason
+        exitCode = 2
         pprint(test)
 
+    outcome = {}
+    outcome["exitCode"] = exitCode
+    outcome["message"] = msg
+    return outcome
+
 def detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
-            alreadyAttached,explicitAttach,explicitDetatch,zipfile,detatchall):
+            alreadyAttached,explicitAttach,explicitDetatch,pack,detatchall):
     logger = getDefaultLogger()
 
     if detatch and not intentToRun:
@@ -712,7 +761,7 @@ def detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
         logger.warning("Reminder: you just ran a test without detatching infrastructure. Make sure you clean up after yourself with the --detatch argument!")
 
     explicitEither = True if explicitAttach or explicitDetatch else False
-    cleanupAfter(zipfile,shouldDetatch,explicitEither,infra)
+    cleanupAfter(pack,shouldDetatch,explicitEither,infra)
 
     if detatchall:
         detatchAllInfra(explicitDetatch)
