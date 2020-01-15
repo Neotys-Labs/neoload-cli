@@ -741,7 +741,7 @@ def getTestOutcome(client,test): # dictionary from NLW API of final status
         pprint(test)
 
     if exitCode == 0 and slaFailureCount > 0:
-        msg = "One or more SLAs failed."
+        msg += "One or more SLAs failed." # additive VERY important for test suite
         exitCode = 1
 
     outcome = {}
