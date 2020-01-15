@@ -82,11 +82,17 @@ def getSLAs(client,test):
     logger = logging.getLogger("root")
     api = openapi_client.ResultsApi(client)
     try:
-        return {
+        res = {
             'indicators': [] if test.status != "TERMINATED" else api.get_test_sla_global_indicators(test.id),
             'perrun': [] if test.status != "TERMINATED" else api.get_test_sla_per_test(test.id),
             'perinterval': api.get_test_sla_per_interval(test.id),
         }
+        res["failureCount"] = (
+            len(list(filter(lambda x: x.status == "FAILED", res["indicators"]))) +
+            len(list(filter(lambda x: x.status == "FAILED", res["perrun"]))) +
+            len(list(filter(lambda x: x.status == "FAILED", res["perinterval"])))
+        )
+        return res
     except:
         logger.error("Unexpected error at 'getSLAs:", sys.exc_info()[0])
         return None
