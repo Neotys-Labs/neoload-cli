@@ -711,6 +711,7 @@ def getTestOutcome(client,test): # dictionary from NLW API of final status
     exitCode = 2
     slas = getSLAs(client,test)
     slaFailureCount = slas["failureCount"]
+
     if test.termination_reason == "FAILED_TO_START":
         msg = "Test failed to start."
         exitCode = 2
@@ -748,6 +749,7 @@ def getTestOutcome(client,test): # dictionary from NLW API of final status
     outcome["exitCode"] = exitCode
     outcome["message"] = msg
     outcome["slas"] = slas
+
     return outcome
 
 def detatchAndCleanup(detatch,intentToRun,infra,currentProfile,shouldDetatch,
