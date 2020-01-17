@@ -38,7 +38,7 @@ if [ "$?" -ne "0" ]; then
 fi
 
 #TODO: run this script with a new version number. afterwards, run Azure job and ensure JSON schema validation
-echo "Waiting for < 1m after publishing to PyPi"
+echo "Waiting for < 1m after publishing to Dockerhub >> Pypi latest version dependency"
 sleep 300 # allow for some time on pypi
 
 docker build --build-arg PYPI_VERSION=$version_id -t neoload-cli --file resources/docker-neoload-cli/Dockerfile .
