@@ -2,6 +2,7 @@ import pytest
 from utils import *
 from pytest_steps import test_steps, optional_step, depends_on
 from os import path
+import time
 
 @pytest.mark.slow
 def test_attach_detatch_simple():
