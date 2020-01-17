@@ -79,6 +79,8 @@ def initFeatureFlags(profile):
 @click.option('--noninteractive','-ni', is_flag=True, default=False, help='Force processing as if console is non-interactive (i.e. not a user session)')
 @click.option('--quiet', is_flag=True, default=False, help='Suppress non-critical console output.')
 @click.option('--testid', default=None, help='Specify a Test ID (guid) for contextual operations such as reporting, modification, etc.')
+@click.option('--testname', default=None, help='Specify a test name. Used when executing a test.')
+@click.option('--testdesc', default=None, help='Specify a test description. Used when executing a test.')
 @click.option('--query', default=None, help='Specifies a query (regex or jsonPath). Used in conjunction with --nowait and --outfile to derive testid and other details from after test is started.')
 @click.option('--validate', is_flag=True, default=False, help='Runs validation passes only, does not start test.')
 @click.option('--offline', is_flag=True, default=None, help='Run as if there is not an internet connection.')
@@ -100,7 +102,7 @@ def main(   version,
             profiles,profile,url,token,zone,ntslogin,ntsurl,                        # profile stuff
             files,scenario,attach,reattach,detatch,detatchall,retainresults,        # runtime inputs
             verbose,debug,nocolor,noninteractive,quiet,validate,offline,            # logging and debugging
-            testid,query,                                                           # entities (primarily, a test)
+            testid,testname,testdesc,query,                                                           # entities (primarily, a test)
             summary,justid,outfile,infile,junitsla,                                 # export operations
             updatename,updatedesc,updatestatus,rolltag,                             # modification ops (particularly, for a test)
             delete,
@@ -307,11 +309,12 @@ def main(   version,
                     projectId = projectDef.project_id
                     projectName = projectDef.project_name
                     zone = currentProfile["zone"]
-                    #TODO: add CLI argument to override test name
-                    testName = projectName + "_" + scenario
-                    cprint("Launching new test '" + testName + "'.", "yellow")
+                    if not (testname is not None and len(testname.strip()) > 0): # can't be blank
+                        testname = projectName + "_" + scenario
+                    testdesc = "" if testdesc is None else testdesc
+                    cprint("Launching new test '" + testname + "': " + testdesc, "yellow") #testable
                     try:
-                        projectLaunched = runProject(client,projectId,asCodeFiles,scenario,zone,infra,testName)
+                        projectLaunched = runProject(client,projectId,asCodeFiles,scenario,zone,infra,testname,testdesc)
                         cprint("Test queued [" + time.ctime() + "], receiving initial telemetry.", "green")
                     except ApiException as err:
                         logger.critical("API error: {0}".format(err))
