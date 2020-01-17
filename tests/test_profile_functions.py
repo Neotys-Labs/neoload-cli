@@ -44,7 +44,7 @@ def test_profile_create_with_nts_credentials():
         'NEOLOAD_CLI_NTS_URL',
     ]
     assertOutput(
-        contains=values,
+        contains=verifies,
         printOutput=True,
         clearConfig=False,
         args={
