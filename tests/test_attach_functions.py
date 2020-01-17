@@ -26,7 +26,6 @@ def test_attach_detatch_simple():
         })
 
 @pytest.mark.slow
-@pytest.mark.diag
 def test_attach_run_allinone():
     requireTestSecrets()
     assertProfileByZone(os.environ['NEOLOAD_CLI_ZONE_STATIC'])
