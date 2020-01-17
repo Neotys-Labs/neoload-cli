@@ -25,6 +25,7 @@ skipmarkers = [
     "files",
     "schema",
     "basic",
+    "diag",
 ]
 #TODO: figure out how to present the last line of stdout from 'neoload' to test step (after step name)
 #https://pythontesting.net/framework/pytest/pytest-logging-real-time/

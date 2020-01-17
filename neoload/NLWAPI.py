@@ -41,7 +41,7 @@ def uploadProject(client,zipfile):
     resp = api.post_upload_project(file=zipfile)
     return resp
 
-def runProject(client,projectId,asCodeFiles,scenario,zone,infra,testName):
+def runProject(client,projectId,asCodeFiles,scenario,zone,infra,testName,testDesc):
     logger = logging.getLogger("root")
     api = openapi_client.RuntimeApi(client)
     asCodeLine = ",".join(asCodeFiles)#"default.yaml" + "," + ",".join(asCodeFiles)
@@ -53,6 +53,7 @@ def runProject(client,projectId,asCodeFiles,scenario,zone,infra,testName):
 
     resp = api.get_tests_run(
         name=testName,
+        description=testDesc,
         project_id=projectId,
         scenario_name=scenario,
         as_code=asCodeLine,
