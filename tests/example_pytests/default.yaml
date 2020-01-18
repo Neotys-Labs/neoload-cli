@@ -41,7 +41,7 @@ scenarios:
       max_users: 2
       increment_users: 1
       increment_every: 2s
-      duration: 10s
+      duration: 30s
 - name: slaMinScenario
   populations:
   - name: popGets
@@ -51,3 +51,12 @@ scenarios:
       increment_users: 1
       increment_every: 5s
       duration: 30s
+- name: fullTest
+  populations:
+  - name: popGets
+    rampup_load:
+      min_users: 1
+      max_users: 25
+      increment_users: 2
+      increment_every: 5s
+      duration: 5m
