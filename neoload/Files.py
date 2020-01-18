@@ -1,3 +1,6 @@
+
+from neoload import *
+
 import tempfile
 import shutil
 import os
@@ -7,6 +10,8 @@ import yaml
 from distutils.dir_util import copy_tree
 from jsonschema.exceptions import ValidationError
 import itertools
+import requests
+import zipfile
 
 from .YamlParsing import *
 
@@ -32,95 +37,141 @@ def packageFiles(fileSpecs,validateOnly):
 
         asCodeFiles = []
 
+        #TODO: need to abstract out file-based acquisition, fall-back to public URL
         yamlSchema = None
-        with open(getJSONSchemaFilepath()) as file:
-            yamlSchema = objectifyJSONSchema(file.read())
+
+        if False: # when locally building, this was nice, but packaged it missed below live pull in testing
+            if os.path.exists(getJSONSchemaFilepath()):
+                with open(getJSONSchemaFilepath()) as file:
+                    yamlSchema = objectifyJSONSchema(file.read())
+
+        if yamlSchema is None:
+            try:
+                yamlRaw = getLatestJSONSchema()
+                if yamlRaw is not None:
+                    yamlSchema = objectifyJSONSchema(yamlRaw)
+            except:
+                logger.error("Error while obtaining JSON Schema online: " + str(sys.exc_info()[1]))
+
+        if yamlSchema is None:
+            logger.warning("JSON Schema to validate YAML could not be obtained, but allowing for YAML to bypass validation.\nUnderlying error: " + str(sys.exc_info()[1]))
+
+        hasYamlToValidateAgainst = (yamlSchema is not None)
+
+        logger.info("hasYamlToValidateAgainst: " + str(hasYamlToValidateAgainst))
 
         all_files = []
 
-        for path in files:
-            logger.debug("Adding file spec: " + path)
-            dir = None
-            if os.path.isdir(path):
-                dir = os.path.realpath(path)
-            elif os.path.isfile(path):
-                relativeTo = os.path.dirname(os.path.realpath(path))
-                validated = False
+        overridingZipFile = None
 
-                if path.endswith(".yaml") or path.endswith(".yml"):
-
-                    validated = validateFile(path,yamlSchema) # when this doesn't throw an error
-
-                    if default_yaml is None: default_yaml = path
-                    relativePath = getRelativePath(path,relativeTo) # relative to itself
-                    asCodeFiles.append(relativePath)
-                    logger.debug("Adding as-code file: " + relativePath)
-
-                # WAS: copy the whole directory
-                #dir = os.path.dirname(os.path.realpath(path))
-                all_files.append({
-                    "path": path,
-                    "relativeTo": relativeTo,
-                    "validated": validated,
-                })
-                all_files.extend(
-                    list(map(lambda p: {
-                        "path": p,
-                        "relativeTo": relativeTo,
-                        "validated": False,
-                    }, getSubfiles(path,relativeTo)))
-                )
-
+        if any(list(filter(lambda x: x.endswith(".zip"), files))):
+            if len(files) > 1:
+                raise Exception("If specifying a zip file, you can only specify that as the one file.")
             else:
-                raise Exception("File '" + path + "' could not be found.")
+                overridingZipFile = files[0]
 
+        pack["removeAfter"] = True
 
-        for relative in all_files:
-            path = relative["path"]
-            relativeTo = relative["relativeTo"]
-            validated = relative["validated"]
+        logger.info("overridingZipFile: " + str(overridingZipFile))
+        pack["asCodeFiles"] = []
 
-            if not validated:
-                validated = validateFile(path,yamlSchema)
-
-            if validated:
-                relativePath = getRelativePath(path,relativeTo)
-                tmppath = joinPath([tmpdir,relativePath])
-                logger.debug("Would: '" + path + "' -> '" + tmppath + "'")
-
-                if not validateOnly:
-                    # copy just this file using same relative subpath structure as source
-                    tmpsubdir = slicePath(tmppath,slice(0,-1))
-                    tmpsubdirparts = tmpsubdir.split(os.path.sep)
-                    for i in range(len(tmpsubdirparts)):
-                        tmppartsuntil = tmpsubdirparts[slice(0,i+1)]
-                        partpath = joinPath(tmppartsuntil)
-                        if len(partpath.strip()) > 0 and not os.path.exists(partpath):
-                            os.makedirs(partpath, exist_ok=True)
-                    shutil.copy(path,tmppath)
-
-
-        if not validateOnly:
-            logger.info("Zipping project files.") #TODO: only when larger than Xmb
-            fd, tmpzip = tempfile.mkstemp(prefix='neoload-cli_')
-            shutil.make_archive(tmpzip, 'zip', tmpdir) # creates new .zip file
+        if overridingZipFile is not None:
             try:
-                os.remove(tmpzip) # get rid of temp file without extension
+                zip = zipfile.ZipFile(overridingZipFile)
+                namelist = zip.namelist()
+                defaultyamls = list(filter(lambda x: x.lower() == "default.yaml",namelist))
+                if any(defaultyamls):
+                    pack["asCodeFiles"] = defaultyamls
             except Exception as err:
-                logger.warning("Could not remove temp file in 'packageFiles':", sys.exc_info()[0])
+                logger.warning("Error while scouring zip file for YAMLs.", sys.exc_info()[0])
 
-            tmpzip = tmpzip+".zip"
-            os.close(fd)
+            pack["removeAfter"] = False
+            pack["zipfile"] = overridingZipFile
+            pack["success"] = True
+        else:
+            for path in files:
+                logger.debug("Adding file spec: " + path)
+                dir = None
+                if os.path.isdir(path):
+                    dir = os.path.realpath(path)
+                elif os.path.isfile(path):
+                    relativeTo = os.path.dirname(os.path.realpath(path))
+                    validated = False
 
-            shutil.rmtree(tmpdir)
+                    if isAsCodeFile(path):
 
-            pack["zipfile"] = os.path.realpath(tmpzip)
-            pack["asCodeFiles"] = asCodeFiles
+                        validated = validateFile(path,yamlSchema, not hasYamlToValidateAgainst) # when this doesn't throw an error
 
-            logger.info("Zip file created: " + pack["zipfile"])
-            logger.info("As-code files: " + ",".join(asCodeFiles))
+                        if default_yaml is None: default_yaml = path
+                        relativePath = getRelativePath(path,relativeTo) # relative to itself
+                        asCodeFiles.append(relativePath)
+                        logger.debug("Adding as-code file: " + relativePath)
 
-        pack["success"] = True
+                    # WAS: copy the whole directory
+                    #dir = os.path.dirname(os.path.realpath(path))
+                    all_files.append({
+                        "path": path,
+                        "relativeTo": relativeTo,
+                        "validated": validated,
+                    })
+                    all_files.extend(
+                        list(map(lambda p: {
+                            "path": p,
+                            "relativeTo": relativeTo,
+                            "validated": False,
+                        }, getSubfiles(path,relativeTo)))
+                    )
+
+                else:
+                    raise Exception("File '" + path + "' could not be found.")
+
+
+            for relative in all_files:
+                path = relative["path"]
+                relativeTo = relative["relativeTo"]
+                validated = relative["validated"]
+
+                if not validated:
+                    validated = validateFile(path,yamlSchema,not hasYamlToValidateAgainst)
+
+                if validated:
+                    relativePath = getRelativePath(path,relativeTo)
+                    tmppath = joinPath([tmpdir,relativePath])
+                    logger.debug("Would: '" + path + "' -> '" + tmppath + "'")
+
+                    if not validateOnly:
+                        # copy just this file using same relative subpath structure as source
+                        tmpsubdir = slicePath(tmppath,slice(0,-1))
+                        tmpsubdirparts = tmpsubdir.split(os.path.sep)
+                        for i in range(len(tmpsubdirparts)):
+                            tmppartsuntil = tmpsubdirparts[slice(0,i+1)]
+                            partpath = joinPath(tmppartsuntil)
+                            if len(partpath.strip()) > 0 and not os.path.exists(partpath):
+                                os.makedirs(partpath, exist_ok=True)
+                        shutil.copy(path,tmppath)
+
+
+            if not validateOnly:
+                logger.info("Zipping project files.") #TODO: only when larger than Xmb
+                fd, tmpzip = tempfile.mkstemp(prefix='neoload-cli_')
+                shutil.make_archive(tmpzip, 'zip', tmpdir) # creates new .zip file
+                try:
+                    os.remove(tmpzip) # get rid of temp file without extension
+                except Exception as err:
+                    logger.warning("Could not remove temp file in 'packageFiles':", sys.exc_info()[0])
+
+                tmpzip = tmpzip+".zip"
+                os.close(fd)
+
+                shutil.rmtree(tmpdir)
+
+                pack["zipfile"] = os.path.realpath(tmpzip)
+                pack["asCodeFiles"] = asCodeFiles
+
+                logger.info("Zip file created: " + pack["zipfile"])
+                logger.info("As-code files: " + ",".join(asCodeFiles))
+
+            pack["success"] = True
 
     except:
         pack["message"] = str(sys.exc_info()[1])
@@ -154,22 +205,26 @@ def getFolderSize(folder):
             total_size += getFolderSize(itempath)
     return total_size
 
-def validateFile(path,yamlSchema):
+def validateFile(path,yamlSchema,passIfCantValidate):
     ret = False
 
-    if path.endswith(".yaml") or path.endswith(".yml"):
-        basicValidation = validateBasicYAML(path)
-        if not basicValidation["success"]:
-            raise Exception("File '" + path + "' is not valid YAML: " + basicValidation["error"])
+    if isAsCodeFile(path):
 
-        ascodeValidation = validateNeoLoadYAML(path, yamlSchema)
-        if not ascodeValidation["success"]:
-            raise Exception("File '" + path + "' is not valid NeoLoad schema:\n\n" +
-                ascodeValidation["error"] + "\n\n" +
-                "Please visit https://github.com/Neotys-Labs/neoload-models/blob/v3/neoload-project/doc/v3/project.md for specification." +
-                "\n")
+        if yamlSchema is None and passIfCantValidate:
+            ret = True
+        else:
+            basicValidation = validateBasicYAML(path)
+            if not basicValidation["success"]:
+                raise Exception("File '" + path + "' is not valid YAML: " + basicValidation["error"])
 
-        ret = True # in above situations, Exception should be raised if ever False; bool return for pragmatism sake
+            ascodeValidation = validateNeoLoadYAML(path, yamlSchema)
+            if not ascodeValidation["success"]:
+                raise Exception("File '" + path + "' is not valid NeoLoad schema:\n\n" +
+                    ascodeValidation["error"] + "\n\n" +
+                    "Please visit https://github.com/Neotys-Labs/neoload-models/blob/v3/neoload-project/doc/v3/project.md for specification." +
+                    "\n")
+
+            ret = True # in above situations, Exception should be raised if ever False; bool return for pragmatism sake
 
     else:
         ret = True # consider all other files valid (csv, ...) without additional probing
@@ -233,24 +288,41 @@ def getSubfiles(filepath,relativeTo):
     relDir = relativeTo
     logger.debug("relDir: " + relDir)
 
-    with open(filepath) as file:
-        spec = yaml.load(file, Loader=yaml.FullLoader)
-        if spec is not None:
-            #logger.debug("getSubfiles: " + str(spec))
-            if "includes" in spec:
-                newpaths = list(map(lambda p: joinPath(
-                    list(filter(lambda a: len(a) > 0,[relDir,p]))
-                ),spec["includes"]))
-                logger.debug("getSubfiles: " + str(newpaths))
-                found.extend(newpaths)
-            if "variables" in spec:
-                variables = spec["variables"]
-                logger.debug("getSubfiles: found variables: " + str(variables))
-                for item in variables:
-                    logger.debug("getSubfiles: found variable: " + str(item))
-                    if "file" in item:
-                        value = item["file"]
-                        logger.debug("getSubfiles: found file variable: " + str(value))
-                        found.append(joinPath([relDir,value["path"]]))
+    if isAsCodeFile(filepath):
+        with open(filepath) as file:
+            spec = yaml.load(file, Loader=yaml.FullLoader)
+            if spec is not None:
+                #logger.debug("getSubfiles: " + str(spec))
+                if "includes" in spec:
+                    newpaths = list(map(lambda p: joinPath(
+                        list(filter(lambda a: len(a) > 0,[relDir,p]))
+                    ),spec["includes"]))
+                    logger.debug("getSubfiles: " + str(newpaths))
+                    found.extend(newpaths)
+                if "variables" in spec:
+                    variables = spec["variables"]
+                    logger.debug("getSubfiles: found variables: " + str(variables))
+                    for item in variables:
+                        logger.debug("getSubfiles: found variable: " + str(item))
+                        if "file" in item:
+                            value = item["file"]
+                            logger.debug("getSubfiles: found file variable: " + str(value))
+                            found.append(joinPath([relDir,value["path"]]))
 
     return found
+
+def isAsCodeFile(filepath):
+    asCodeExtensions = ["yaml","yml","json"]
+    return any(list(filter(lambda x: filepath.endswith("."+x), asCodeExtensions)))
+
+def getLatestJSONSchema():
+    if isOfflineMode():
+        return None
+
+    logger = logging.getLogger("root")
+
+    logger.debug("Getting latest schema from Github")
+    # this is a temporary hold-over until a more permanent 302 mechanism is created
+    schemaUrl = "https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json"
+    response = requests.get(schemaUrl)
+    return response.text

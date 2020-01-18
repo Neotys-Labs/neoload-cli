@@ -18,7 +18,15 @@ def assertOutput(args,exitCode=None,contains=None,printOutput=False,clearConfig=
             for key in args:
                 argsStr += " " + key + ''
                 if args[key] is not None:
-                    argsStr += '=' + str(args[key]) + ''
+                    val = str(args[key])
+                    if val.startswith("'"): val = val[1:]
+                    if val.endswith("'"): val = val[:-1]
+                    if val.startswith('"'): val = val[1:]
+                    if val.endswith('"'): val = val[:-1]
+                    quo = "'" if val.find('"')>=0 else '"' if val.find("'")>=0 else ""
+                    if quo == "" and any(list(filter(lambda x: val.find(x)>=0,[" ",";","|"]))):
+                        quo = '"'
+                    argsStr += '=' + quo + str(args[key]) + quo
 
     command = "neoload -ni " + argsStr.strip()
 

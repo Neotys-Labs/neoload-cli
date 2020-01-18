@@ -41,7 +41,7 @@ def uploadProject(client,zipfile):
     resp = api.post_upload_project(file=zipfile)
     return resp
 
-def runProject(client,projectId,asCodeFiles,scenario,zone,infra,testName):
+def runProject(client,projectId,asCodeFiles,scenario,zone,infra,testName,testDesc):
     logger = logging.getLogger("root")
     api = openapi_client.RuntimeApi(client)
     asCodeLine = ",".join(asCodeFiles)#"default.yaml" + "," + ",".join(asCodeFiles)
@@ -53,6 +53,7 @@ def runProject(client,projectId,asCodeFiles,scenario,zone,infra,testName):
 
     resp = api.get_tests_run(
         name=testName,
+        description=testDesc,
         project_id=projectId,
         scenario_name=scenario,
         as_code=asCodeLine,
@@ -82,11 +83,17 @@ def getSLAs(client,test):
     logger = logging.getLogger("root")
     api = openapi_client.ResultsApi(client)
     try:
-        return {
+        res = {
             'indicators': [] if test.status != "TERMINATED" else api.get_test_sla_global_indicators(test.id),
             'perrun': [] if test.status != "TERMINATED" else api.get_test_sla_per_test(test.id),
             'perinterval': api.get_test_sla_per_interval(test.id),
         }
+        res["failureCount"] = (
+            len(list(filter(lambda x: x.status == "FAILED", res["indicators"]))) +
+            len(list(filter(lambda x: x.status == "FAILED", res["perrun"]))) +
+            len(list(filter(lambda x: x.status == "FAILED", res["perinterval"])))
+        )
+        return res
     except:
         logger.error("Unexpected error at 'getSLAs:", sys.exc_info()[0])
         return None

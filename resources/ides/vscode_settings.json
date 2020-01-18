@@ -1,0 +1,15 @@
+{
+    "json.schemas": [
+        {
+            "fileMatch": ["*.nl.json"],
+            "url": "https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json"
+        }
+    ],
+    "yaml.schemas": {
+        "https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json": "*.nl.yaml"
+    },
+    "yaml.format.enable": true,
+    "yaml.validate": true,
+    "yaml.hover": true,
+    "yaml.completion": true
+}

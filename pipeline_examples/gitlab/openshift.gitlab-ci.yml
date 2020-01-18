@@ -1,0 +1,18 @@
+image: "python:3.7"
+
+stages:
+ - test
+
+loadtest:
+ stage: test
+ allow_failure: false
+ script:
+   - |
+    git clone https://github.com/Neotys-Labs/neoload-cli.git && cd neoload-cli
+    pip install -q neoload
+    neoload --profile openshift --zone pimnV --token ${nlw_secret_token}
+    neoload \
+       --scenario sanityScenario \
+       -f tests/example_2_0_runtime/default.yaml \
+       -f tests/example_2_0_runtime/slas/uat.yaml \
+       --junitsla neoload-slas.xml

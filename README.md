@@ -2,6 +2,19 @@
 
 This command-line interface helps you launch and observe performance tests on the Neotys Platform. Since NeoLoad is very flexible to many deployment models (SaaS, self-hosted, cloud or local containers, etc.), configuration and test execution parameters depend on your licensing and infrastructure provisioning options. Please read the following instructions carefully.
 
+## TL;DR
+```
+pip3 install neoload
+git clone https://github.com/Neotys-Labs/neoload-cli.git && cd neoload-cli
+neoload --profile saas --token [NLW_TOKEN] --zone [NLW_ZONE_ID] \
+        --attach docker#2,neotys/neoload-loadgenerator:latest \
+        -f tests/example_2_0_runtime/default.yaml \
+        --scenario sanityScenario
+```
+NOTE: For Windows command line, replace the '\\' multi-line separators above with '^'
+
+## Contents
+
  - [Prerequisites](#prerequisites)
  - [Installation](#installation)
  - [Configuration](#configuration)
@@ -41,7 +54,7 @@ For Docker builds:
 ## Installation
 To install, simply run the following command. As of Jan 2020, Python 2 will be permanently deprecated, therefore this utility is written for Python 3.
 ```
-python3 -m pip install neoload
+pip3 install neoload
 ```
 
 ## Interactive CLI Help
@@ -93,6 +106,15 @@ neoload --scenario sanityScenario -f [path_to_your_nlp_or_yaml_file]
 ```
 Once a test is initialized, if you are running in interactive console mode, the NeoLoad CLI will automatically open the system default browser to your live test results.
 
+## Customizing Test Name and Description
+Though the default test name includes the scenario, you may want to customize the test name with
+specific details (e.g. CI job and build number, etc.). To do so add --testname, and optionally --testdesc to provide a readable test description:
+```
+neoload --scenario sanityScenario -f [path_to_your_nlp_or_yaml_file] \
+        --testname "MyCustomTestName_${JOB_ID}" \
+        --testdesc "A custom test description containing hashtags like #latest or #issueNum"
+```
+
 ### Obtain Basic Examples
 Some basic examples are in our Git repository for this utility, under the directory ./tests/. To get them, simply clone the repo:
 ```
@@ -118,7 +140,7 @@ The general process can be seen in the [NeoLoad CLI E2E PyTest suite](tests/test
   ```
 - (Optional for static zone) Attach dynamic resources
   ```
-  neoload --attach docker#2,neotys/neoload-loadgenerator:7.0.1
+  neoload --attach docker#2,neotys/neoload-loadgenerator:latest
   ```
   (Note: this assumes that the host you run the above command is a Docker host or is connected to one, DinD)
 
@@ -145,6 +167,14 @@ The general process can be seen in the [NeoLoad CLI E2E PyTest suite](tests/test
   ```
 ## Additional Options
 There are many other arguments for test summarization, modification, and exporting results.
+
+### Using more than one Controller and Load Generator from a zone
+Presuming that you already have a zone with available resources in it, you can specify
+ to use more than one load generator. The zone should be stored in your current profile.
+```
+  neoload --attach zone#3 -f tests/example_2_0_runtime/default.yaml --scenario sanityScenario
+```
+...where the number three is the number of available load generators you want this test to utilize.
 
 ### Exporting SLA Results to JUnit
 ```

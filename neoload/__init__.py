@@ -9,6 +9,7 @@ import importlib
 colorPrint = True
 interactiveMode = False
 quietMode = False
+offlineMode = False
 
 def getDefaultLogger():
     return logging.getLogger("root")
@@ -72,6 +73,13 @@ def isQuietMode():
 def setQuietMode(quiet):
     global quietMode
     quietMode = quiet
+
+def isOfflineMode():
+    return offlineMode
+
+def setOfflineMode(offline):
+    global offlineMode
+    offlineMode = offline
 
 def pauseIfInteractiveDebug(logger,msgIfDebug=None):
     msg = "Debugging WAIT: press enter to continue...at your own risk" if msgIfDebug is None else msgIfDebug

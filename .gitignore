@@ -1,5 +1,6 @@
 tests/example_1_1_request/
 .DS_Store
+*.bak
 
 openapi_client.7.0.2.zip
 openapi_client.7.0.2/

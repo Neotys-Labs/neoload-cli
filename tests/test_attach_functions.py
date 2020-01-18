@@ -2,6 +2,7 @@ import pytest
 from utils import *
 from pytest_steps import test_steps, optional_step, depends_on
 from os import path
+import time
 
 @pytest.mark.slow
 def test_attach_detatch_simple():
@@ -30,12 +31,18 @@ def test_attach_run_allinone():
     assertProfileByZone(os.environ['NEOLOAD_CLI_ZONE_STATIC'])
     assertNoDockerContainersRunning()
 
+    runUuid = str(time.time())
+    testName = "NeoLoad-CLI-Pytest-" + runUuid
+    testDesc = "Pytest execution of all-in-one example; " + runUuid
+
     assertOutput(
         contains=[
             "All containers are attached and ready for use",
             "Project uploaded",
             "Test running",
             "Removing network",
+            testName, # should be reflected in verbose output
+            testDesc, # should be reflected in verbose output
         ],
         printOutput=True,
         clearConfig=False,
@@ -43,9 +50,12 @@ def test_attach_run_allinone():
             '--debug': None,
             '-f '+ os.path.abspath("tests/example_pytests/default.yaml") : None,
             '--scenario': 'sanityScenario',
+            '--testname': testName,
+            '--testdesc': testDesc,
             '--attach': 'docker#1,neotys/neoload-loadgenerator:7.0.2'
         })
 
+    # after test, get test status and details, confirm testName/Desc and other details
     # delete test bench?
 
 ################################################################################

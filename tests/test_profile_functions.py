@@ -43,13 +43,12 @@ def test_profile_create_with_nts_credentials():
         'NEOLOAD_CLI_NTS_LOGIN',
         'NEOLOAD_CLI_NTS_URL',
     ]
-    for key in verifies:
-        value = os.environ[key]
-        assertOutput(
-            contains=value,
-            printOutput=True,
-            clearConfig=False,
-            args={
-                '--profile': 'test',
-                '--summary': None,
-            })
+    verifies = list(map(lambda x: os.environ[x],verifies))
+    assertOutput(
+        contains=verifies,
+        printOutput=True,
+        clearConfig=False,
+        args={
+            '--profile': 'test',
+            '--summary': None,
+        })
