@@ -12,6 +12,7 @@ tests_order = [
     "profile",
     "sla",
     "attach",
+    "slow",
     None
 ]
 

@@ -1,5 +1,4 @@
 trigger: none
-#  - master
 
 pool:
   vmImage: 'ubuntu-16.04'
@@ -24,8 +23,7 @@ jobs:
       targetType: 'inline'
       script: |
         pip install neoload
-        neoload --version
-        neoload --profile openshift --token $(nlw_token) --zone $(zone_code)
+        neoload --version --profile openshift --token $(nlw_token) --zone $(zone_code)
 
   - task: Bash@3
     displayName: Run NeoLoad Test
@@ -38,6 +36,8 @@ jobs:
         neoload --scenario sanityScenario \
                 -f example_test/default.yaml \
                 -f example_test/slas/uat.yaml \
+                --testname "Azure_sidecars_$(Build.BuildNumber)" \
+                --testdesc "Azure example load test with sidecars; $(Build.BuildUri)" \
                 --junitsla $(Common.TestResultsDirectory)/neoload-slas.xml
 
 
