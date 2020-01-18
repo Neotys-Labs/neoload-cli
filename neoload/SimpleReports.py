@@ -127,6 +127,8 @@ def getSLAJUnitText(test,group,sla,slaprofile,userpath):
     if sla.warning_threshold is not None and sla.status == "WARNING":
         opAndValue = sla.warning_threshold.operator + " " + str(sla.warning_threshold.value)
 
+    reported = sla.value if group == "perrun" else sla.failed if sla.status == "FAILED" else sla.warning if sla.status == "WARNING" else 0
+
     txt = ("Container: " + sla.element.name + "\n"
             "Path: User Paths > " + userpath + " > Init > " + sla.element.parent + " > " + sla.element.name + "\n"
             "Virtual User: " + userpath + "\n"
@@ -145,7 +147,7 @@ def getSLAJUnitText(test,group,sla,slaprofile,userpath):
             "\n"
             "Results: " + "\n"
             "\n"
-            "" + sla.kpi + " = " + str(sla.kpi) + "\n"
+            "" + sla.kpi + " = " + str(reported) + "%" + "\n"
             "\n"
             "Created N/A " + "\n") # maybe from test completion time?/?
     return txt
