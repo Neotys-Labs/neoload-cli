@@ -23,6 +23,7 @@ NOTE: For Windows command line, replace the '\\' multi-line separators above wit
     - [Exporting SLA Results to JUnit](#exporting-sla-results-to-junit)
     - [Test Summary](#test-summary)
     - [Test Modifications](#test-modifications)
+ - [Continuous Testing Examples](#continuous-testing-examples)
  - [Contributing](#contributing)
 
 ## Prerequisites
@@ -106,7 +107,7 @@ neoload --scenario sanityScenario -f [path_to_your_nlp_or_yaml_file]
 ```
 Once a test is initialized, if you are running in interactive console mode, the NeoLoad CLI will automatically open the system default browser to your live test results.
 
-## Customizing Test Name and Description
+### Customizing Test Name and Description
 Though the default test name includes the scenario, you may want to customize the test name with
 specific details (e.g. CI job and build number, etc.). To do so add --testname, and optionally --testdesc to provide a readable test description:
 ```
@@ -248,6 +249,15 @@ neoload --testid [new test id] --updatedesc '+#baseline'
 
 ### Test Result listings and queries
 *TODO: will be coming in Jan 2020*
+
+## Continuous Testing Examples
+The main goal of the NeoLoad-CLI is to standardize the semantics of how load tests are executed across development, non-prod, and production environments. While the above instructions could be run from a contributor workstation, they can easily translated to various continuous build and deployment orchestration environments, as exampled:
+
+ - [Jenkins](https://github.com/Neotys-Labs/neoload-cli/tree/master/pipeline_examples/jenkins_pipeline)
+ - [Azure DevOps](https://github.com/Neotys-Labs/neoload-cli/tree/master/pipeline_examples/azure_devops)
+ - [Gitlab](https://github.com/Neotys-Labs/neoload-cli/tree/master/pipeline_examples/gitlab)
+ - Sorry AWS CodeBuild, haven't seen any F100 clients using the pform
+ - CircleCI, TBD when [@punkdata](https://www.linkedin.com/in/punkdata/) gets back to [@paulsbruce](https://www.linkedin.com/in/paulsbruce/) :)
 
 ## Contributing
 Feel free to fork this repo, make changes, *test locally*, and create a pull request. As part of your testing, you should run the built-in test suite with the following command:
