@@ -2,7 +2,13 @@
 
 This command-line interface helps you launch and observe performance tests on the Neotys Platform. Since NeoLoad is very flexible to many deployment models (SaaS, self-hosted, cloud or local containers, etc.), configuration and test execution parameters depend on your licensing and infrastructure provisioning options. Please read the following instructions carefully.
 
-## TL;DR
+## TL;DR ... What
+The goal of this guide is to demonstrate how you can:
+ 1. create API load tests using code (YAML)
+ 2. run them from any environment
+ 3. visualize test results in web dashboards
+
+## TL;DR ... How
 ```
 pip3 install neoload
 git clone https://github.com/Neotys-Labs/neoload-cli.git && cd neoload-cli
@@ -24,33 +30,39 @@ NOTE: For Windows command line, replace the '\\' multi-line separators above wit
     - [Test Summary](#test-summary)
     - [Test Modifications](#test-modifications)
  - [Continuous Testing Examples](#continuous-testing-examples)
+ - [Packaging the CLI with Build Agents](#packaging-the-cli-with-build-agents)
+ - [IDE Integrations](#ide-integrations)
  - [Contributing](#contributing)
 
 ## Prerequisites
 The examples below assume that you have Python3 and Git command line tools installed.
 
 For **Windows 10 users**, see:
- - [Installing Python in Windows](https://python-docs.readthedocs.io/en/latest/starting/install3/win.html)
+ - **Python**
    In short:
     - Just install via [Python.org Downloads](https://www.python.org/downloads/), then
     - Open a command prompt and install pip:
         ```
         python -m pip install -U pip
         ```
- - [5 Ways to Install Git on Windows](https://www.jamessturtevant.com/posts/5-Ways-to-install-git-on-Windows/)
- - Install Docker with Chocolatey
+    - If the above doesn't work (Microsoft App Store sometimes confuses the situation), more
+      details on installing Python in Windows can be found [here](https://python-docs.readthedocs.io/en/latest/starting/install3/win.html).
+ - **Git Command Line Tools**
+   See [5 Ways to Install Git on Windows](https://www.jamessturtevant.com/posts/5-Ways-to-install-git-on-Windows/)
+ - **Docker for Windows**
+   To install Docker with Chocolatey
     - [Install Chocolatey package manager for Windows](https://chocolatey.org/docs/installation)
     - Open a command prompt and install Docker Desktop for Windows 10
         ```
         choco install docker-cli docker-desktop
         ```
+    - You probably will need to log out (or restart) Windows for Docker to work properly
 
 For Mac OS X:
  - [Installing Python3 on Mac OS X](https://docs.python-guide.org/starting/install3/osx/)
  - [From: *Installing Git, the Easy Way*](https://gist.github.com/derhuerst/1b15ff4652a867391f03#step-2--install-git)
 
-For Docker builds:
- - [See the test harness Alpine-based Dockerfile](https://github.com/Neotys-Labs/neoload-cli/blob/master/tests/docker/dind-python3/Dockerfile)
+For packaging in Docker (custom build agents, not Docker for Windows), see [appendix](#packaging-the-cli-with-build-agents).
 
 ## Installation
 To install, simply run the following command. As of Jan 2020, Python 2 will be permanently deprecated, therefore this utility is written for Python 3.
@@ -91,6 +103,12 @@ You can also view the raw/complete stored JSON representation of saved profile d
 neoload --profile [your_profile_name] --summary
 ```
 
+### Running Your First Load Test
+Before proceeding, for now skip to the [Obtain Basic Examples](#obtain-basic-examples) and run your
+first test to make sure everything is working as expected.
+
+**STOP HERE AND DO THE ABOVE BEFORE READING FURTHER**
+
 ### *Future* Plans to Execute Local Tests on a Free Trial License
 If you do not already have an enterprise license, such as if you only have NeoLoad installed on your local workstation (from a Free Trial download or professional license), NeoLoad CLI will eventually support using your installation as an attached controller and load generator.
 
@@ -119,10 +137,11 @@ neoload --scenario sanityScenario -f [path_to_your_nlp_or_yaml_file] \
 ### Obtain Basic Examples
 Some basic examples are in our Git repository for this utility, under the directory ./tests/. To get them, simply clone the repo:
 ```
-git clone https://github.com/Neotys-Labs/neoload-cli.git
+git clone https://github.com/Neotys-Labs/neoload-cli.git && neoload-cli
 ```
-Then, underneath this directory, you can run them simply by typing in:
+Then you can run a basic test simply by typing in:
 ```
+neoload --attach docker#2,neotys/neoload-loadgenerator:latest
 neoload -f tests/example_2_0_runtime/default.yaml --scenario sanityScenario
 ```
 Additionally, you can specify multiple files, such as additional SLA, variables, or servers overriding files. This works for both [.nlp] and [.yaml] files.
@@ -258,6 +277,32 @@ The main goal of the NeoLoad-CLI is to standardize the semantics of how load tes
  - [Gitlab](https://github.com/Neotys-Labs/neoload-cli/tree/master/pipeline_examples/gitlab)
  - Sorry AWS CodeBuild, haven't seen any F100 clients using the pform
  - CircleCI, TBD when [@punkdata](https://www.linkedin.com/in/punkdata/) gets back to [@paulsbruce](https://www.linkedin.com/in/paulsbruce/) :)
+
+## Packaging the CLI with Build Agents
+Many of the above CI examples include a step to explicitly install the NeoLoad CLI as part of the
+build steps. However, if you want the CLI baked into some build agent directly so that it
+is ready for use during a job, here's a Docker example:
+
+For Docker builds:
+ - [See the test harness Alpine-based Dockerfile](https://github.com/Neotys-Labs/neoload-cli/blob/master/tests/docker/dind-python3/Dockerfile)
+
+
+## IDE Integrations
+Since most of what we do in an IDE is create/edit code, we're mostly interested in how
+to:
+ - make it easy to write API tests in YAML (automatic syntax validation)
+ - validate that tests do not contain unanticipated errors even at small scale
+ - dry-run small (smoke) load tests locally so that code check-ins will work in CI/pipeline tests
+
+Since the latter two cases are already covered by command-line semantics, our primary focus
+is to accelerate test authoring by providing NeoLoad as-code DSL (Domain-specific Language) validation
+and in some cases editor auto-complete.
+
+Status of IDE / editor integrations
+
+ | IDE / Editor       | Syntax checks | Auto-complete | Setup steps
+ |:------------------:|:-------------:|:-------------:|:----------------:|
+ | Visual Studio Code |      [x]      |      [x]      | [see instructions](resources/ides/vscode_settings.json) |
 
 ## Contributing
 Feel free to fork this repo, make changes, *test locally*, and create a pull request. As part of your testing, you should run the built-in test suite with the following command:
