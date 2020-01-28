@@ -153,12 +153,16 @@ def attachLocalDockerInfra(profile,spec,explicit):
             lghost = subnet3s+"."+str(baseIpX)
 
             lg2ctrl_port = lgport
-            if lgVersion.startswith('7.'):
+            # some Docker environments (like Windows vs. linux/mac) map ports differently
+            # apparently on Windows systems, you must map to the dynamic port
+            # whereas on linux/Mac, you would route to the default port
+            if platform.system().lower() != 'windows':
                 lg2ctrl_port = 7100
 
             hostandport = {
                 "LG_HOST": lghost,#"10.0.0.111",#lgname,
-                "LG_PORT": lg2ctrl_port
+                "LG_PORT": lg2ctrl_port,
+                "AGENT_SERVER_PORT": lg2ctrl_port
             }
             lgenv = commonenv.copy()
             lgenv.update(hostandport)
