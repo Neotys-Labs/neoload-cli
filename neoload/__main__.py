@@ -213,7 +213,7 @@ def main(   version,
 
     # if looking for a summary of the profile specified as an argument
     if summary and profile is not None and currentProfile is not None:
-        print(currentProfile)
+        print(currentProfile) # legit use of print for raw output
 
     #TODO: need to add validation that, if to be run, minimum-viable params are specified (like Scenario)
 
@@ -221,12 +221,21 @@ def main(   version,
     zipfile = None
     asCodeFiles = []
     pack = None
+    shouldUpload = False
+    anyIsNLP = False
+    validateNLP = False
+
     if hasFiles:
         pack = packageFiles(files,validate)
         if not pack["success"]:
             return exitProcess(4, pack["message"])
 
-        if not validate:
+        anyIsNLP = pack["anyIsNLP"]
+
+        validateNLP = validate and anyIsNLP
+
+        if not validate or anyIsNLP:
+            shouldUpload = True
             zipfile = pack["zipfile"]
             asCodeFiles = pack["asCodeFiles"]
             logger.debug("zipfile: " + zipfile)
@@ -242,6 +251,7 @@ def main(   version,
     noApiNeeded = (infile is not None and query is not None)
     if validate: noApiNeeded = True
     if version and not intentToRun: noApiNeeded = True
+    if validateNLP: noApiNeeded = False
 
     try:
         client = None
@@ -290,19 +300,25 @@ def main(   version,
                             msg += "\n Did you forget to --attach some dynamic resources or specify a dynamic infrastructure zone?"
                             return exitProcess(5,msg)
 
+        infraReady = infra["ready"]
+
+        # if intentToRun:
+        #
+        #     # TODO: if explicitly argumented numOfLGs, ensure below or equal to
+        #     # that defined considering zones should be interrogated for max
+
+        if (intentToRun and infraReady) or shouldUpload:
+            # upload the project to the NeoLoad Web Runtime in prep of test
+            projectDef = None
+            if zipfile is not None:
+                cprint("Uploading project.", "yellow")
+                projectDef = uploadProject(client,zipfile)
+                cprint("Project uploaded", "green")
+
+
         if intentToRun:
 
-            # TODO: if explicitly argumented numOfLGs, ensure below or equal to
-            # that defined considering zones should be interrogated for max
-
-            if infra["ready"]:
-
-                # upload the project to the NeoLoad Web Runtime in prep of test
-                projectDef = None
-                if zipfile is not None:
-                    cprint("Uploading project.", "yellow")
-                    projectDef = uploadProject(client,zipfile)
-                    cprint("Project uploaded", "green")
+            if infraReady:
 
                 # if upload successful, kick off the test
                 projectLaunched = None
@@ -376,7 +392,7 @@ def main(   version,
                     return exitProcess(3, "Query value '" + query + "' not implemented!")
 
                 if found is not None:
-                    print(found)
+                    print(found) # legit use of print for raw output
                 else:
                     logger.warning("Nothing in file [" + infile + "] matching query [" + query + "]")
 
@@ -572,7 +588,7 @@ def configureAttach(attach,intentToRun,currentProfile,reattach):
 
 def printTestSummary(client,testId,justid,moreinfo,debug):
     if justid:
-        print(test.id)
+        print(test.id) # legit use of print for raw output
     else:
         test = getTestStatus(client,testId)
 
@@ -589,7 +605,7 @@ def printTestSummary(client,testId,justid,moreinfo,debug):
             }
             if stats is not None:
                 json['statistics'] = stats
-            print(json)
+            print(json) # legit use of print for raw output
 
 def printSLASummary(client,test):
     cprint("SLA summary:")
@@ -620,9 +636,9 @@ def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,j
             if not inited:
                 inited = True
                 cprint("Est. duration: " + printNiceTime(test.duration/1000) + ", LG count: " + str(test.lg_count), "yellow")
-                print("Test is initializing", end="")
+                print("Test is initializing", end="") # legit use of print for incremental/always output
             if not quiet:
-                print(""+waterator, end="")
+                print(""+waterator, end="") # legit use of print for incremental/always output
             waiterations += 1
             sys.stdout.flush()
         elif test.status == "STARTING":
@@ -634,28 +650,28 @@ def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,j
         elif test.status == "RUNNING":
             if not running:
                 if not quiet:
-                    print("") # end the ...s
+                    print("") # end the ...s  # legit use of print for incremental/always output
                 waiterations = 0
                 running = True
                 cprint("Test overview now available at: " + overviewUrl)
                 startedAt = datetime.datetime.now()
                 if not quiet:
-                    print("Test running", end="")
+                    print("Test running", end="") # legit use of print for incremental/always output
                 if liveSummary:
-                    print("")
+                    print("") # legit use of print for incremental/always output
                 if isInteractiveMode():
                     webbrowser.open_new_tab(overviewUrl)
             if liveSummary:
                 if (waiterations % 3) == 0:
-                    print(getCurrentTestSummaryLine(waiterations,startedAt,client,test))
+                    print(getCurrentTestSummaryLine(waiterations,startedAt,client,test)) # legit use of print for incremental/always output
             elif not quiet:
-                print(""+waterator, end="")
+                print(""+waterator, end="") # legit use of print for incremental/always output
             waiterations += 1
             sys.stdout.flush()
         elif test.status == "TERMINATED":
             if not terminated:
                 if not quiet:
-                    print("") # end the ...s
+                    print("") # end the ...s # legit use of print for incremental/always output
                 handleTestTermination(client,test)
                 terminated = True
         else:

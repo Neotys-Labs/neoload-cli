@@ -76,6 +76,7 @@ def packageFiles(fileSpecs,validateOnly):
 
         logger.info("overridingZipFile: " + str(overridingZipFile))
         pack["asCodeFiles"] = []
+        pack["anyIsNLP"] = False
 
         if overridingZipFile is not None:
             try:
@@ -127,6 +128,7 @@ def packageFiles(fileSpecs,validateOnly):
                 else:
                     raise Exception("File '" + path + "' could not be found.")
 
+            anyIsNLP = False
 
             for relative in all_files:
                 path = relative["path"]
@@ -136,61 +138,63 @@ def packageFiles(fileSpecs,validateOnly):
                 if not validated:
                     validated = validateFile(path,yamlSchema,not hasYamlToValidateAgainst)
 
+                isNLP = path.lower().endswith(("."+SPECIAL_NLW_EXTENSION).lower())
+                anyIsNLP = anyIsNLP or isNLP
+
                 if validated:
                     relativePath = getRelativePath(path,relativeTo)
                     tmppath = joinPath([tmpdir,relativePath])
                     logger.debug("Would: '" + path + "' -> '" + tmppath + "'")
 
-                    if not validateOnly:
-                        # copy just this file using same relative subpath structure as source
-                        tmpsubdir = slicePath(tmppath,slice(0,-1))
-                        tmpsubdirparts = tmpsubdir.split(os.path.sep)
-                        for i in range(len(tmpsubdirparts)):
-                            tmppartsuntil = tmpsubdirparts[slice(0,i+1)]
-                            partpath = joinPath(tmppartsuntil)
-                            if len(partpath.strip()) > 0 and not os.path.exists(partpath):
-                                os.makedirs(partpath, exist_ok=True)
-                        shutil.copy(path,tmppath)
+                    # copy just this file using same relative subpath structure as source
+                    tmpsubdir = slicePath(tmppath,slice(0,-1))
+                    tmpsubdirparts = tmpsubdir.split(os.path.sep)
+                    for i in range(len(tmpsubdirparts)):
+                        tmppartsuntil = tmpsubdirparts[slice(0,i+1)]
+                        partpath = joinPath(tmppartsuntil)
+                        if len(partpath.strip()) > 0 and not os.path.exists(partpath):
+                            os.makedirs(partpath, exist_ok=True)
+                    shutil.copy(path,tmppath)
 
-                        if path.lower().endswith(("."+SPECIAL_NLW_EXTENSION).lower()):
-                            parentDirPath = os.path.dirname(os.path.abspath(path))
-                            contents = next(os.walk(parentDirPath))
-                            subdirs = contents[1]
-                            filenames = contents[2]
-                            notexcludedfils = list(filter(lambda x: not path.lower().endswith(x.lower()) and not any(filter(lambda y: x.lower().endswith("."+y),["bak","old","ds_store"])), filenames))
-                            notexcludedsubs = list(filter(lambda x: not x.lower() in ['results'] and not x.lower().startswith('recorded-'), subdirs))
-                            parentRelPath = joinPath(tmppath.split(os.path.sep)[0:-1])
-                            for fil in notexcludedfils:
-                                subfilpath = parentDirPath + os.path.sep + fil
-                                destpath = parentRelPath + os.path.sep + fil
-                                shutil.copy(subfilpath,destpath)
+                if isNLP:
+                    parentDirPath = os.path.dirname(os.path.abspath(path))
+                    contents = next(os.walk(parentDirPath))
+                    subdirs = contents[1]
+                    filenames = contents[2]
+                    notexcludedfils = list(filter(lambda x: not path.lower().endswith(x.lower()) and not any(filter(lambda y: x.lower().endswith("."+y),["bak","old","ds_store"])), filenames))
+                    notexcludedsubs = list(filter(lambda x: not x.lower() in ['results'] and not x.lower().startswith('recorded-'), subdirs))
+                    parentRelPath = joinPath(tmppath.split(os.path.sep)[0:-1])
+                    for fil in notexcludedfils:
+                        subfilpath = parentDirPath + os.path.sep + fil
+                        destpath = parentRelPath + os.path.sep + fil
+                        shutil.copy(subfilpath,destpath)
 
-                            for subdirname in notexcludedsubs:
-                                subdirpath = parentDirPath + os.path.sep + subdirname
-                                destpath = parentRelPath + os.path.sep + subdirname
-                                shutil.copytree(subdirpath, destpath)
+                    for subdirname in notexcludedsubs:
+                        subdirpath = parentDirPath + os.path.sep + subdirname
+                        destpath = parentRelPath + os.path.sep + subdirname
+                        shutil.copytree(subdirpath, destpath)
 
+            ##if not validateOnly or anyIsNLP: # 20200301PSB since we're using --validate for NLPs, always produce zip
+            logger.info("Zipping project files.") #TODO: only when larger than Xmb
+            fd, tmpzip = tempfile.mkstemp(prefix='neoload-cli_')
+            shutil.make_archive(tmpzip, 'zip', tmpdir) # creates new .zip file
+            try:
+                os.remove(tmpzip) # get rid of temp file without extension
+            except Exception as err:
+                logger.warning("Could not remove temp file in 'packageFiles':", sys.exc_info()[0])
 
-            if not validateOnly:
-                logger.info("Zipping project files.") #TODO: only when larger than Xmb
-                fd, tmpzip = tempfile.mkstemp(prefix='neoload-cli_')
-                shutil.make_archive(tmpzip, 'zip', tmpdir) # creates new .zip file
-                try:
-                    os.remove(tmpzip) # get rid of temp file without extension
-                except Exception as err:
-                    logger.warning("Could not remove temp file in 'packageFiles':", sys.exc_info()[0])
+            tmpzip = tmpzip+".zip"
+            os.close(fd)
 
-                tmpzip = tmpzip+".zip"
-                os.close(fd)
+            shutil.rmtree(tmpdir)
 
-                shutil.rmtree(tmpdir)
+            pack["zipfile"] = os.path.realpath(tmpzip)
+            pack["asCodeFiles"] = asCodeFiles
 
-                pack["zipfile"] = os.path.realpath(tmpzip)
-                pack["asCodeFiles"] = asCodeFiles
+            logger.info("Zip file created: " + pack["zipfile"])
+            logger.info("As-code files: " + ",".join(asCodeFiles))
 
-                logger.info("Zip file created: " + pack["zipfile"])
-                logger.info("As-code files: " + ",".join(asCodeFiles))
-
+            pack["anyIsNLP"] = anyIsNLP
             pack["success"] = True
 
     except:
