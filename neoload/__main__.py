@@ -181,7 +181,7 @@ def main(   version,
     #     validate = True
 
     if not intentToRun:
-        cprint("NeoLoad CLI", color="blue", figlet=True)
+        cprint("NeoLoad CLI", color="green", figlet=True)
 
     if not configureProfiles(profiles,profile,url,token,zone,ntsurl,ntslogin):
         return exitProcess(0)# this is informational listing only, no need to execute anything else
@@ -276,18 +276,19 @@ def main(   version,
                 else:
                     currentZone = currentZones[0]
 
-                    all_ctrl_count = len(currentZone.controllers)
-                    active_ctrl_count = len(list(filter(lambda r: r.status=="AVAILABLE",currentZone.controllers)))
-                    all_lgs_count = len(currentZone.loadgenerators)
-                    active_lgs_count = len(list(filter(lambda r: r.status=="AVAILABLE",currentZone.loadgenerators)))
-                    if not (active_ctrl_count > 0 and active_lgs_count > 0):
-                        msg = "\n Zone [" + zoneId + "] has no available controller + load generator(s)."
-                        if not ('lastattach' in currentProfile and currentProfile['lastattach'] is not None):
-                            msg += "\n The current local profile [" + getCurrentProfileName() + "] does not have a 'lastattach' key."
-                        if not ('lastinfra' in currentProfile and currentProfile['lastinfra'] is not None):
-                            msg += "\n The current local profile [" + getCurrentProfileName() + "] does not have a 'lastinfra' key."
-                        msg += "\n Did you forget to --attach some dynamic resources or specify a dynamic infrastructure zone?"
-                        return exitProcess(5,msg)
+                    if currentZone.type != "DYNAMIC":
+                        all_ctrl_count = len(currentZone.controllers)
+                        active_ctrl_count = len(list(filter(lambda r: r.status=="AVAILABLE",currentZone.controllers)))
+                        all_lgs_count = len(currentZone.loadgenerators)
+                        active_lgs_count = len(list(filter(lambda r: r.status=="AVAILABLE",currentZone.loadgenerators)))
+                        if not (active_ctrl_count > 0 and active_lgs_count > 0):
+                            msg = "\n Zone [" + zoneId + "] has no available controller + load generator(s)."
+                            if not ('lastattach' in currentProfile and currentProfile['lastattach'] is not None):
+                                msg += "\n The current local profile [" + getCurrentProfileName() + "] does not have a 'lastattach' key."
+                            if not ('lastinfra' in currentProfile and currentProfile['lastinfra'] is not None):
+                                msg += "\n The current local profile [" + getCurrentProfileName() + "] does not have a 'lastinfra' key."
+                            msg += "\n Did you forget to --attach some dynamic resources or specify a dynamic infrastructure zone?"
+                            return exitProcess(5,msg)
 
         if intentToRun:
 
@@ -799,11 +800,11 @@ def getCurrentTestSummaryLine(waiterations,startedAt,client,test):
     test = getTestStatus(client,test.id)
     if test.status in ['STARTED','RUNNING','TERMINATED']:
         stats = getTestStatistics(client,test.id)
-        ret = prefix + "Status[{0}],Fail[{4}],LGs[{1}]\tCNC:{5}\tBPS[{2}]\tRPS:{3}\tavg(rql):{6}".format(
+        ret = prefix + "{0},Fail[{4}],LGs[{1}]\tCNC/VUs:{5}\tBPS[{2}]\tRPS:{3}\tavg(ms):{6}".format(
             test.status,
             test.lg_count,
-            stats.total_global_downloaded_bytes_per_second,
-            stats.total_request_count_per_second,
+            str(round(stats.total_global_downloaded_bytes_per_second,3)),
+            str(round(stats.total_request_count_per_second,3)),
             stats.total_global_count_failure,
             ("N/A" if stats.last_virtual_user_count is None else stats.last_virtual_user_count),
             stats.total_request_duration_average
