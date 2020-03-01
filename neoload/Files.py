@@ -15,6 +15,8 @@ import zipfile
 
 from .YamlParsing import *
 
+SPECIAL_NLW_EXTENSION = "nlp"
+
 def packageFiles(fileSpecs,validateOnly):
     logger = logging.getLogger("root")
     logger.debug(fileSpecs)
@@ -149,6 +151,24 @@ def packageFiles(fileSpecs,validateOnly):
                             if len(partpath.strip()) > 0 and not os.path.exists(partpath):
                                 os.makedirs(partpath, exist_ok=True)
                         shutil.copy(path,tmppath)
+
+                        if path.lower().endswith(("."+SPECIAL_NLW_EXTENSION).lower()):
+                            parentDirPath = os.path.dirname(os.path.abspath(path))
+                            contents = next(os.walk(parentDirPath))
+                            subdirs = contents[1]
+                            filenames = contents[2]
+                            notexcludedfils = list(filter(lambda x: not path.lower().endswith(x.lower()) and not any(filter(lambda y: x.lower().endswith("."+y),["bak","old","ds_store"])), filenames))
+                            notexcludedsubs = list(filter(lambda x: not x.lower() in ['results'] and not x.lower().startswith('recorded-'), subdirs))
+                            parentRelPath = joinPath(tmppath.split(os.path.sep)[0:-1])
+                            for fil in notexcludedfils:
+                                subfilpath = parentDirPath + os.path.sep + fil
+                                destpath = parentRelPath + os.path.sep + fil
+                                shutil.copy(subfilpath,destpath)
+
+                            for subdirname in notexcludedsubs:
+                                subdirpath = parentDirPath + os.path.sep + subdirname
+                                destpath = parentRelPath + os.path.sep + subdirname
+                                shutil.copytree(subdirpath, destpath)
 
 
             if not validateOnly:
