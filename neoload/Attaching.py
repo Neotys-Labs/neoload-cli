@@ -45,17 +45,25 @@ def isAlreadyAttached(infra):
     if infra is not None and 'provider' in infra and infra['provider'] == 'docker':
         try:
             client = docker.from_env()
+
+            try:
+                client.ping()
+            except:
+                logger.error("Docker is not installed or not responding to local socket connections.")
+                return False
+
             runningContainers = client.containers.list(all=True)
             containers = []
             for containerId in infra['container_ids']:
                 if any(filter(lambda cr: cr.id == containerId,runningContainers)):
                     containers.append(client.containers.get(containerId))
 
-            networkId = infra['network_id']
-            networks = client.networks.list()
+            networkId = infra['network_id'] if 'network_id' in infra else None
             network = None
-            if any(filter(lambda net: net.id == networkId,networks)):
-                network = client.networks.get(networkId)
+            if networkId is not None:
+                networks = client.networks.list()
+                if any(filter(lambda net: net.id == networkId,networks)):
+                    network = client.networks.get(networkId)
 
             if all(map(lambda x: x.status == 'running', containers)) and network is not None:
                 return True
