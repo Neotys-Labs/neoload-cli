@@ -203,10 +203,18 @@ def main(   version,
 
     # prep local infra attachment based on arguments, produce output state for later steps
     attachConfig = configureAttach(attach,intentToRun,currentProfile,reattach)
+
+    attach = attachConfig['attach']
+    if attach is not None:
+        logger.debug("Attach: " + attach)
+    else:
+        logger.debug("No attachment spec; defaulting to local")
+        attach = 'local'
+        attachConfig['shouldAttach'] = intentToRun # what about --attach?
+
     currentProfile = attachConfig['currentProfile']
     alreadyAttached = attachConfig['alreadyAttached']
     shouldAttach = attachConfig['shouldAttach']
-    attach = attachConfig['attach']
 
     #TODO: if profile's zone has no resources available (i.e. if not attaching), fail here (TBD Jan 2020)
 
