@@ -76,7 +76,7 @@ pipeline {
                       (uname -a && \
                       python3 -m pytest \
                       --durations=20 \
-                      -v --junitxml=pytest_junit.xml --onlydiag \
+                      -v --junitxml=pytest_junit.xml \
                       tests \
                       ) \
                       | tee \

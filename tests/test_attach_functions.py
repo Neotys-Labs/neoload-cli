@@ -61,8 +61,7 @@ def test_attach_run_allinone():
 ################################################################################
 ### Test Goal: verify that all steps in non-blocking execution work as expected
 ################################################################################
-#@pytest.mark.slow
-@pytest.mark.diag
+@pytest.mark.slow
 @test_steps('prepare','attach', 'kickoff', 'getid', 'spinwait', 'detatch')
 def test_attach_run_async():
 
