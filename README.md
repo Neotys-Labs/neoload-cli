@@ -40,8 +40,9 @@ The examples below assume that you have Python3 and Git command line tools insta
 For **Windows 10 users**, see:
  - **Python**
    In short:
-    - Just install via [Python.org Downloads](https://www.python.org/downloads/), then
-    - Open a command prompt and install pip:
+    - Just install via [Python.org Downloads](https://www.python.org/downloads/)
+       - Make sure you check the option 'Add Python to the environment variables' option
+    - Open a NEW command prompt and install pip:
         ```
         python -m pip install -U pip
         ```
@@ -57,6 +58,7 @@ For **Windows 10 users**, see:
         choco install docker-cli docker-desktop
         ```
     - You probably will need to log out (or restart) Windows for Docker to work properly
+ - For each of the above steps, you may need to close prior command prompts and start new ones
 
 For Mac OS X:
  - [Installing Python3 on Mac OS X](https://docs.python-guide.org/starting/install3/osx/)

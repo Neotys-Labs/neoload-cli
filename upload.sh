@@ -19,12 +19,15 @@ if [ "$?" -ne "0" ]; then
 fi
 
 #rm -rf dist/*
+## python3 -m pip install --user --upgrade setuptools wheel
 python setup.py sdist bdist_wheel
 if [ "$?" -ne "0" ]; then
     echo "Packaging to wheel step failed"
     exit 3
 fi
 
+## python3 -m pip install --user --upgrade twine
+## echo 'export PATH="/Users/paul/.local/bin:$PATH"' >> ~/.bash_profile
 twine check dist/*
 if [ "$?" -ne "0" ]; then
   echo "Checks on wheel failed"
