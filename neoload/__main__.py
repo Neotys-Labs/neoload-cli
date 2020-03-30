@@ -208,6 +208,9 @@ def main(   version,
     attachConfig = configureAttach(attach,intentToRun,currentProfile,reattach)
 
     attach = attachConfig['attach']
+    if attachConfig['alreadyAttached']:
+        attach = getProfileAttach(currentProfile)
+    
     if attach is not None:
         logger.debug("Attach: " + attach)
     else:
