@@ -1,0 +1,44 @@
+Linux 42a5c7ae19a1 4.14.88-88.76.amzn2.x86_64 #1 SMP Mon Jan 7 18:43:26 UTC 2019 x86_64 Linux
+============================= test session starts ==============================
+platform linux -- Python 3.7.6, pytest-5.4.1, py-1.8.1, pluggy-0.13.1 -- /usr/local/bin/python3
+cachedir: .pytest_cache
+rootdir: /var/lib/jenkins/workspace/NL-cli-tests@2/tests, inifile: pytest.ini
+plugins: steps-1.7.2, reorder-0.1.1
+collecting ... collected 24 items
+
+tests/test_basic_functions.py::test_validate_version SKIPPED             [  4%]
+tests/test_file_functions.py::test_validate_valid_file SKIPPED           [  8%]
+tests/test_file_functions.py::test_invalidate_broken_yaml SKIPPED        [ 12%]
+tests/test_file_functions.py::test_nlp_file SKIPPED                      [ 16%]
+tests/test_filetype_e2e_functions.py::test_verify_zip_file_type SKIPPED  [ 20%]
+tests/test_query_functions.py::test_query_outfile_for_bench SKIPPED      [ 25%]
+tests/test_schema_functions.py::test_invalidate_empty_file SKIPPED       [ 29%]
+tests/test_schema_functions.py::test_invalidate_invalid_to_schema_yaml SKIPPED [ 33%]
+tests/test_schema_functions.py::test_validate_valid_file SKIPPED         [ 37%]
+tests/test_profile_functions.py::test_profiles_empty SKIPPED             [ 41%]
+tests/test_profile_functions.py::test_profile_empty SKIPPED              [ 45%]
+tests/test_profile_functions.py::test_profile_create_wo_params SKIPPED   [ 50%]
+tests/test_profile_functions.py::test_profile_create_with_valid_zone_no_url SKIPPED [ 54%]
+tests/test_profile_functions.py::test_profile_create_with_valid_url_no_zone SKIPPED [ 58%]
+tests/test_profile_functions.py::test_profile_create_with_nts_credentials SKIPPED [ 62%]
+tests/test_sla_functions.py::test_run_fail_slas SKIPPED                  [ 66%]
+tests/test_attach_functions.py::test_attach_detatch_simple SKIPPED       [ 70%]
+tests/test_attach_functions.py::test_attach_run_allinone SKIPPED         [ 75%]
+tests/test_attach_functions.py::test_attach_run_async[prepare] PASSED    [ 79%]
+tests/test_attach_functions.py::test_attach_run_async[attach] PASSED     [ 83%]
+tests/test_attach_functions.py::test_attach_run_async[kickoff] PASSED    [ 87%]
+tests/test_attach_functions.py::test_attach_run_async[getid] PASSED      [ 91%]
+tests/test_attach_functions.py::test_attach_run_async[spinwait] PASSED   [ 95%]
+tests/test_attach_functions.py::test_attach_run_async[detatch] PASSED    [100%]
+
+- generated xml file: /var/lib/jenkins/workspace/NL-cli-tests@2/pytest_junit.xml -
+========================== slowest 20 test durations ===========================
+92.37s call     test_attach_functions.py::test_attach_run_async[spinwait]
+19.90s call     test_attach_functions.py::test_attach_run_async[attach]
+8.20s call     test_attach_functions.py::test_attach_run_async[detatch]
+7.52s call     test_attach_functions.py::test_attach_run_async[kickoff]
+4.84s call     test_attach_functions.py::test_attach_run_async[prepare]
+1.66s call     test_attach_functions.py::test_attach_run_async[getid]
+
+(0.00 durations hidden.  Use -vv to show these durations.)
+================== 6 passed, 18 skipped in 134.70s (0:02:14) ===================
