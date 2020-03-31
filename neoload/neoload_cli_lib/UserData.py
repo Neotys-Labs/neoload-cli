@@ -2,8 +2,7 @@ import pyconfig
 
 
 class UserData:
-    __conf_name = "neoload-cli-v2"
-    __user_data_singleton = pyconfig.get(__conf_name)
+    __conf_name = "neoload-cli-v1"
 
     def __init__(self, token: str, url: str):
         self.token = token
@@ -15,7 +14,6 @@ class UserData:
             raise Exception('token is mandatory. please see neoload login --help.')
         user_data = UserData(token, url)
         pyconfig.set(UserData.__conf_name, user_data)
-        UserData.__user_data_singleton = user_data
         return user_data
 
     @staticmethod
@@ -24,6 +22,7 @@ class UserData:
 
     @staticmethod
     def get_login():
-        if UserData.__user_data_singleton is None:
+        user_data = pyconfig.get(UserData.__conf_name)
+        if user_data is None:
             raise Exception("You are'nt logged. Please use \"command neoload login\" first")
-        return UserData.__user_data_singleton
+        return user_data
