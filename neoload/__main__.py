@@ -46,6 +46,7 @@ def initFeatureFlags(profile):
 
     try:
         API_VERSION = getApiInternalVersionNumber(profile)
+        logger.debug("profile[apiversion]: " + (profile["apiversion"] if 'apiversion' in profile else ''))
     except Exception as e:
         logger.error(e)
 
@@ -156,8 +157,10 @@ def main(   version,
     configurePythonUnbufferedMode(moreinfo)
 
     # initialize poor person's feature flags
-    if isProfileInitialized(getCurrentProfile()):
-        initFeatureFlags(getCurrentProfile())
+    currentProfile = getCurrentProfile()
+    if isProfileInitialized(currentProfile):
+        initFeatureFlags(currentProfile)
+    rememberedAPIVersion = currentProfile['apiversion'] if currentProfile is not None and 'apiversion' in currentProfile else None
 
     # critical flags for subsequent execution modes
     hasFiles = True if files is not None and len(files)>0 else False
@@ -188,10 +191,10 @@ def main(   version,
 
     #TODO: implement --profile x --attach blahblah as a profile-update-only operation, no actual attach
 
-    # initialize poor person's feature flags after profile selection
-    initFeatureFlags(getCurrentProfile())
-
     currentProfile = getCurrentProfile()
+    currentProfile['apiversion'] = rememberedAPIVersion
+    #initFeatureFlags(currentProfile)
+
     explicitAttach = True if attach is not None else False
     explicitDetatch = True if detatch or detatchall else False
     #alreadyAttached = False
@@ -203,10 +206,21 @@ def main(   version,
 
     # prep local infra attachment based on arguments, produce output state for later steps
     attachConfig = configureAttach(attach,intentToRun,currentProfile,reattach)
+
+    attach = attachConfig['attach']
+    if attachConfig['alreadyAttached']:
+        attach = getProfileAttach(currentProfile)
+    
+    if attach is not None:
+        logger.debug("Attach: " + attach)
+    else:
+        logger.debug("No attachment spec; defaulting to local")
+        attach = 'local'
+        attachConfig['shouldAttach'] = intentToRun # what about --attach?
+
     currentProfile = attachConfig['currentProfile']
     alreadyAttached = attachConfig['alreadyAttached']
     shouldAttach = attachConfig['shouldAttach']
-    attach = attachConfig['attach']
 
     #TODO: if profile's zone has no resources available (i.e. if not attaching), fail here (TBD Jan 2020)
 

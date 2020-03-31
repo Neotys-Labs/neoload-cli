@@ -15,7 +15,7 @@ def test_attach_detatch_simple():
         printOutput=True,
         clearConfig=False,
         args={
-            '--attach': 'docker#3,neotys/neoload-loadgenerator:7.0.2'
+            '--attach': 'docker#3,neotys/neoload-loadgenerator:latest'
         })
     assertOutput(
         contains="Removing network",
@@ -52,7 +52,7 @@ def test_attach_run_allinone():
             '--scenario': 'sanityScenario',
             '--testname': testName,
             '--testdesc': testDesc,
-            '--attach': 'docker#1,neotys/neoload-loadgenerator:7.0.2'
+            '--attach': 'docker#1,neotys/neoload-loadgenerator:latest'
         })
 
     # after test, get test status and details, confirm testName/Desc and other details
@@ -79,7 +79,7 @@ def test_attach_run_async():
         printOutput=True,
         clearConfig=False,
         args={
-            '--attach': 'docker#1,neotys/neoload-loadgenerator:7.0.2'
+            '--attach': 'docker#1,neotys/neoload-loadgenerator:latest'
         })
     yield
 
@@ -93,6 +93,7 @@ def test_attach_run_async():
         printOutput=True,
         clearConfig=False,
         args={
+            '--debug': None,
             '--nowait': None,
             '--scenario': 'sanityScenario',
             '-f '+ os.path.abspath("tests/example_pytests/default.yaml") : None,
