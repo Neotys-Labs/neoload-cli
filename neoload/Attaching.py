@@ -11,59 +11,212 @@ import logging
 import platform
 from datetime import datetime
 import pprint
+import platform
+from subprocess import Popen, PIPE
+import time
 
 auto_remove_containers = True
 max_container_readiness_wait_sec = 120
 
 def attachInfra(profile,rawspec,explicit):
-    logger = logging.getLogger("root")
+    logger = getDefaultLogger()
     spec = parseInfraSpec(rawspec)
-    provider = spec['provider'] if spec is not None and 'provider' in spec else ""
-    logger.info("detatchInfra: "+provider)
+    provider = spec['provider'] if spec is not None and 'provider' in spec else "local"
+    logger.info("attachInfra: "+provider)
 
     if provider == 'docker':
         return attachLocalDockerInfra(profile,spec,explicit)
     elif provider == 'zone':
         return attachZoneInfra(profile,spec,explicit)
+    elif provider == 'local':
+        return attachLocalNeoLoadInfra(profile,spec,explicit)
     else:
         raise NotImplementedError()
 
 def detatchInfra(spec,explicit):
-    logger = logging.getLogger("root")
-    provider = spec['provider'] if spec is not None and 'provider' in spec else ""
+    logger = getDefaultLogger()
+    provider = spec['provider'] if spec is not None and 'provider' in spec else "local"
     logger.info("detatchInfra: "+provider)
 
     if provider == 'docker':
         return detatchLocalDockerInfra(explicit,spec)
     elif provider == 'zone':
         return spec # nothing to do, really. controller releases resources used if necessary
+    elif provider == 'local':
+        return detatchLocalNeoLoadInfra(explicit,spec)
     else:
         logger.info("Attached infrastructure lacked a provider, so no detatched occured.")
 
 def isAlreadyAttached(infra):
-    logger = logging.getLogger("root")
-    if infra is not None and 'provider' in infra and infra['provider'] == 'docker':
+    logger = getDefaultLogger()
+
+    provider = infra['provider'] if infra is not None and 'provider' in infra else ''
+
+    if provider == 'docker':
         try:
             client = docker.from_env()
+
+            try:
+                client.ping()
+            except:
+                logger.error("Docker is not installed or not responding to local socket connections.")
+                return False
+
             runningContainers = client.containers.list(all=True)
             containers = []
             for containerId in infra['container_ids']:
                 if any(filter(lambda cr: cr.id == containerId,runningContainers)):
                     containers.append(client.containers.get(containerId))
 
-            networkId = infra['network_id']
-            networks = client.networks.list()
+            networkId = infra['network_id'] if 'network_id' in infra else None
             network = None
-            if any(filter(lambda net: net.id == networkId,networks)):
-                network = client.networks.get(networkId)
+            if networkId is not None:
+                networks = client.networks.list()
+                if any(filter(lambda net: net.id == networkId,networks)):
+                    network = client.networks.get(networkId)
 
             if all(map(lambda x: x.status == 'running', containers)) and network is not None:
                 return True
         except:
-            logger.error("Unexpected error in 'isAlreadyAttached':", sys.exc_info()[0])
+            logger.error("Unexpected error in 'isAlreadyAttached' (1):", sys.exc_info()[0])
+            traceback.print_exc()
+
+    elif provider == 'local':
+        try:
+            installRootPath = getLocalNeoLoadInstallPath()
+            if installRootPath is None:
+                raise ValueError("Could not find a local installation of NeoLoad")
+            #raise NotImplementedError("isAlreadyAttached[local] not yet implemented!")
+        except:
+            logger.error("Unexpected error in 'isAlreadyAttached' (2):", sys.exc_info()[0])
             traceback.print_exc()
 
     return False
+
+
+def getLocalNeoLoadInstallPath():
+    logger = getDefaultLogger()
+
+    ret = None
+    foundBinary = None
+    osid = platform.system().lower()
+    logger.debug("OS: " + osid)
+
+    if osid == 'linux':
+        raise NotImplementedError("Use of a local installation is not implemented yet on Linux")
+    elif osid == 'darwin':
+        output = os.popen("find /Applications/NeoLoad* -iname NeoLoadGUI.app").read()
+        if output is not None and len(output)>0:
+            paths = list(filter(lambda x: len(x.strip())>0,output.split("\n")))
+            paths.sort()
+            logger.debug(paths)
+            foundBinary = paths[-1]
+            logger.debug("Found NeoLoad: " + foundBinary)
+        else:
+            logger.error("No NeoLoad installation could be found!")
+        ret = None
+    elif osid == 'windows':
+        winShortcutsRoot = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\"
+        raise NotImplementedError("Use of a local installation is not implemented yet on Windows")
+
+    if foundBinary is not None:
+        dirpath = os.path.dirname(os.path.abspath(foundBinary))
+        dirpath = os.path.sep.join(dirpath.split(os.path.sep)[0:-1]) # remove /bin/
+        ret = dirpath
+
+    return ret
+
+
+def attachLocalNeoLoadInfra(profile,spec,explicit):
+    logger = getDefaultLogger()
+    try:
+        installRootPath = getLocalNeoLoadInstallPath()
+        if installRootPath is None:
+            raise ValueError("Could not find a local installation of NeoLoad")
+        else:
+            launchLocalNeoLoadLGAgent(profile,installRootPath)
+            launchLocalNeoLoadCTRLAgent(profile,installRootPath)
+            time.sleep(5) #TODO: implement zone status polling instead
+
+        spec["ready"] = True
+    except Exception as ex:
+        logger.error("Unexpected error in 'attachLocalNeoLoadInfra':", sys.exc_info()[0])
+        traceback.print_exc()
+        raise ex
+
+    return spec
+
+def getAgentBinaryFileExtension():
+    osid = platform.system().lower()
+    if osid == 'linux':
+        return '.sh'
+    elif osid == 'darwin':
+        return '.app'
+    elif osid == 'windows':
+        return '.exe'
+    else:
+        raise NotImplementedError("getAgentBinaryFileExtension: OS '"+ osid + "' not supported.")
+
+def getLocalAgentBinaryPath(installRootPath,binaryFilename):
+    logger = getDefaultLogger()
+    logger.debug("getLocalAgentBinaryPath[installRootPath]: " + installRootPath)
+    return os.path.sep.join(installRootPath.split(os.path.sep) + ['bin',binaryFilename+getAgentBinaryFileExtension()])
+
+def launchAgentWithOutput(profile, binaryPath):
+    logger = getDefaultLogger()
+
+    token = profile["token"]
+    zone = profile["zone"]
+    url = profile["url"]
+    #TODO: what about license? if already installed, no worries, but what about NTS not leased?
+
+    osid = platform.system().lower()
+    if osid == 'linux':
+        command = [''+binaryPath+''," --nlwebToken " + token + " --nlwebZoneId " + zone]
+    elif osid == 'darwin':
+        command = ["open -a "+'"'+binaryPath+'"'+" --background --args --nlwebToken=" + token+" --nlwebZoneId=" + zone + " --nlwebAPIURL=" + url]
+    elif osid == 'windows':
+        command = [''+binaryPath+''," -nlwebToken " + token + " -nlwebZoneId " + zone]
+    else:
+        raise NotImplementedError("getAgentBinaryFileExtension: OS '"+ osid + "' not supported.")
+
+    proc = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
+
+    t1 = datetime.now()
+    while proc.poll() is None:
+      if (datetime.now()-t1).seconds > 10:
+        break
+      time.sleep(.1)
+
+    result = proc.communicate()
+    out = result[0]
+    err = result[1]
+    retcode = proc.poll()
+    output = out.decode("utf-8") + err.decode("utf-8")
+
+    logger.debug('exitCode: ' + str(retcode))
+    if retcode is not None and retcode > 0:
+        raise Exception("launchAgentWithOutput["+binaryPath+"]" + output)
+
+    return output
+
+def launchLocalNeoLoadCTRLAgent(profile,installRootPath):
+    logger = getDefaultLogger()
+
+    ctrlBinaryPath = getLocalAgentBinaryPath(installRootPath,'ControllerAgent')
+    logger.debug('ctrlBinaryPath: '+ctrlBinaryPath)
+    launchAgentWithOutput(profile, ctrlBinaryPath)
+
+def launchLocalNeoLoadLGAgent(profile,installRootPath):
+    logger = getDefaultLogger()
+
+    lgBinaryPath = getLocalAgentBinaryPath(installRootPath,'LoadGeneratorAgent')
+    logger.debug('lgBinaryPath: '+lgBinaryPath)
+    launchAgentWithOutput(profile, lgBinaryPath)
+
+def detatchLocalNeoLoadInfra(explicit,spec):
+    spec["ready"] = False
+    #raise NotImplementedError("Detatching a local installation is not implemented yet.")
 
 _containerNamingPrefix = "neoload_cli"
 
@@ -73,7 +226,7 @@ def attachZoneInfra(profile,spec,explicit):
     return spec
 
 def attachLocalDockerInfra(profile,spec,explicit):
-    logger = logging.getLogger("root")
+    logger = getDefaultLogger()
 
     cprintOrLogInfo(explicit,logger,"Connecting to local Docker host")
     client = docker.from_env()
@@ -153,12 +306,16 @@ def attachLocalDockerInfra(profile,spec,explicit):
             lghost = subnet3s+"."+str(baseIpX)
 
             lg2ctrl_port = lgport
-            if lgVersion.startswith('7.'):
+            # some Docker environments (like Windows vs. linux/mac) map ports differently
+            # apparently on Windows systems, you must map to the dynamic port
+            # whereas on linux/Mac, you would route to the default port
+            if platform.system().lower() != 'windows':
                 lg2ctrl_port = 7100
 
             hostandport = {
                 "LG_HOST": lghost,#"10.0.0.111",#lgname,
-                "LG_PORT": lg2ctrl_port
+                "LG_PORT": lg2ctrl_port,
+                "AGENT_SERVER_PORT": lg2ctrl_port
             }
             lgenv = commonenv.copy()
             lgenv.update(hostandport)
@@ -240,7 +397,7 @@ def attachLocalDockerInfra(profile,spec,explicit):
     return spec
 
 def waitForContainerLogsToInclude(explicit,logger,container_id, str_to_find):
-    logger = logging.getLogger("root")
+    logger = getDefaultLogger()
     cprintOrLogInfo(explicit,logger,"Waiting for container " + container_id + " logs to indicate attachment readiness")
     client = docker.from_env()
     logs = ""
@@ -272,7 +429,7 @@ def waitForContainerLogsToInclude(explicit,logger,container_id, str_to_find):
 
 
 def detatchLocalDockerInfra(explicit,spec):
-    logger = logging.getLogger("root")
+    logger = getDefaultLogger()
     client = docker.from_env()
 
     pauseIfInteractiveDebug(logger,"Press any key to continue detatching Docker resources...")
@@ -289,7 +446,7 @@ def detatchLocalDockerInfra(explicit,spec):
             removeDockerNetwork(client,explicit,networkId)
 
 def removeDockerContainer(client,explicit,containerId):
-    logger = logging.getLogger("root")
+    logger = getDefaultLogger()
     try:
         container = client.containers.get(containerId)
 
@@ -309,7 +466,7 @@ def removeDockerContainer(client,explicit,containerId):
             traceback.print_exc()
 
 def removeDockerNetwork(client,explicit,networkId):
-    logger = logging.getLogger("root")
+    logger = getDefaultLogger()
     cprintOrLogInfo(explicit,logger,"Removing network " + networkId)
     try:
         network = client.networks.get(networkId)
@@ -319,7 +476,7 @@ def removeDockerNetwork(client,explicit,networkId):
         traceback.print_exc()
 
 def detatchAllInfra(explicit):
-    logger = logging.getLogger("root")
+    logger = getDefaultLogger()
     client = docker.from_env()
     filters = {
         'label': 'neoload-cli'
@@ -399,7 +556,6 @@ def parseInfraSpec(rawspec):
         ret["numOfLGs"] = numOfLGs
         ret["ctrlImage"] = lgImage.replace("-loadgenerator","-controller")
         ret["lgImage"] = lgImage
-        return ret
 
     elif provider == "zone":
         if len(parts)>1:
@@ -408,7 +564,11 @@ def parseInfraSpec(rawspec):
                 numOfLGs = int(lgparts[0])
 
         ret["numOfLGs"] = numOfLGs
-        return ret
+
+    elif provider == "local":
+        ret["numOfLGs"] = 1 # local
 
     else:
         raise ValueError("Unknown provider prefix in infrastructure specification.")
+
+    return ret

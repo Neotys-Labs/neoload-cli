@@ -88,13 +88,16 @@ def requireTestSecrets():
         if key not in os.environ:
             raise Exception('Could not find an environment variable required for this test: ' + key)
 
+def getTestProfileName():
+    return 'test'
+    
 def assertProfileByZone(zone):
     assertOutput(
         contains="Created profile: test",
         printOutput=True,
         clearConfig=True,
         args={
-            '--profile': 'test',
+            '--profile': getTestProfileName(),
             '--zone': zone,
             '--url': '$NEOLOAD_CLI_NLW_URL',
             '--token': '$NEOLOAD_CLI_NLW_TOKEN',

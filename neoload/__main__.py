@@ -46,6 +46,7 @@ def initFeatureFlags(profile):
 
     try:
         API_VERSION = getApiInternalVersionNumber(profile)
+        logger.debug("profile[apiversion]: " + (profile["apiversion"] if 'apiversion' in profile else ''))
     except Exception as e:
         logger.error(e)
 
@@ -156,8 +157,10 @@ def main(   version,
     configurePythonUnbufferedMode(moreinfo)
 
     # initialize poor person's feature flags
-    if isProfileInitialized(getCurrentProfile()):
-        initFeatureFlags(getCurrentProfile())
+    currentProfile = getCurrentProfile()
+    if isProfileInitialized(currentProfile):
+        initFeatureFlags(currentProfile)
+    rememberedAPIVersion = currentProfile['apiversion'] if currentProfile is not None and 'apiversion' in currentProfile else None
 
     # critical flags for subsequent execution modes
     hasFiles = True if files is not None and len(files)>0 else False
@@ -181,17 +184,17 @@ def main(   version,
     #     validate = True
 
     if not intentToRun:
-        cprint("NeoLoad CLI", color="blue", figlet=True)
+        cprint("NeoLoad CLI", color="green", figlet=True)
 
     if not configureProfiles(profiles,profile,url,token,zone,ntsurl,ntslogin):
         return exitProcess(0)# this is informational listing only, no need to execute anything else
 
     #TODO: implement --profile x --attach blahblah as a profile-update-only operation, no actual attach
 
-    # initialize poor person's feature flags after profile selection
-    initFeatureFlags(getCurrentProfile())
-
     currentProfile = getCurrentProfile()
+    currentProfile['apiversion'] = rememberedAPIVersion
+    #initFeatureFlags(currentProfile)
+
     explicitAttach = True if attach is not None else False
     explicitDetatch = True if detatch or detatchall else False
     #alreadyAttached = False
@@ -203,17 +206,28 @@ def main(   version,
 
     # prep local infra attachment based on arguments, produce output state for later steps
     attachConfig = configureAttach(attach,intentToRun,currentProfile,reattach)
+
+    attach = attachConfig['attach']
+    if attachConfig['alreadyAttached']:
+        attach = getProfileAttach(currentProfile)
+    
+    if attach is not None:
+        logger.debug("Attach: " + attach)
+    else:
+        logger.debug("No attachment spec; defaulting to local")
+        attach = 'local'
+        attachConfig['shouldAttach'] = intentToRun # what about --attach?
+
     currentProfile = attachConfig['currentProfile']
     alreadyAttached = attachConfig['alreadyAttached']
     shouldAttach = attachConfig['shouldAttach']
-    attach = attachConfig['attach']
 
     #TODO: if profile's zone has no resources available (i.e. if not attaching), fail here (TBD Jan 2020)
 
 
     # if looking for a summary of the profile specified as an argument
     if summary and profile is not None and currentProfile is not None:
-        print(currentProfile)
+        print(currentProfile) # legit use of print for raw output
 
     #TODO: need to add validation that, if to be run, minimum-viable params are specified (like Scenario)
 
@@ -221,12 +235,21 @@ def main(   version,
     zipfile = None
     asCodeFiles = []
     pack = None
+    shouldUpload = False
+    anyIsNLP = False
+    validateNLP = False
+
     if hasFiles:
         pack = packageFiles(files,validate)
         if not pack["success"]:
             return exitProcess(4, pack["message"])
 
-        if not validate:
+        anyIsNLP = pack["anyIsNLP"]
+
+        validateNLP = validate and anyIsNLP
+
+        if not validate or anyIsNLP:
+            shouldUpload = True
             zipfile = pack["zipfile"]
             asCodeFiles = pack["asCodeFiles"]
             logger.debug("zipfile: " + zipfile)
@@ -242,6 +265,7 @@ def main(   version,
     noApiNeeded = (infile is not None and query is not None)
     if validate: noApiNeeded = True
     if version and not intentToRun: noApiNeeded = True
+    if validateNLP: noApiNeeded = False
 
     try:
         client = None
@@ -276,32 +300,39 @@ def main(   version,
                 else:
                     currentZone = currentZones[0]
 
-                    all_ctrl_count = len(currentZone.controllers)
-                    active_ctrl_count = len(list(filter(lambda r: r.status=="AVAILABLE",currentZone.controllers)))
-                    all_lgs_count = len(currentZone.loadgenerators)
-                    active_lgs_count = len(list(filter(lambda r: r.status=="AVAILABLE",currentZone.loadgenerators)))
-                    if not (active_ctrl_count > 0 and active_lgs_count > 0):
-                        msg = "\n Zone [" + zoneId + "] has no available controller + load generator(s)."
-                        if not ('lastattach' in currentProfile and currentProfile['lastattach'] is not None):
-                            msg += "\n The current local profile [" + getCurrentProfileName() + "] does not have a 'lastattach' key."
-                        if not ('lastinfra' in currentProfile and currentProfile['lastinfra'] is not None):
-                            msg += "\n The current local profile [" + getCurrentProfileName() + "] does not have a 'lastinfra' key."
-                        msg += "\n Did you forget to --attach some dynamic resources or specify a dynamic infrastructure zone?"
-                        return exitProcess(5,msg)
+                    if currentZone.type != "DYNAMIC":
+                        all_ctrl_count = len(currentZone.controllers)
+                        active_ctrl_count = len(list(filter(lambda r: r.status=="AVAILABLE",currentZone.controllers)))
+                        all_lgs_count = len(currentZone.loadgenerators)
+                        active_lgs_count = len(list(filter(lambda r: r.status=="AVAILABLE",currentZone.loadgenerators)))
+                        if not (active_ctrl_count > 0 and active_lgs_count > 0):
+                            msg = "\n Zone [" + zoneId + "] has no available controller + load generator(s)."
+                            if not ('lastattach' in currentProfile and currentProfile['lastattach'] is not None):
+                                msg += "\n The current local profile [" + getCurrentProfileName() + "] does not have a 'lastattach' key."
+                            if not ('lastinfra' in currentProfile and currentProfile['lastinfra'] is not None):
+                                msg += "\n The current local profile [" + getCurrentProfileName() + "] does not have a 'lastinfra' key."
+                            msg += "\n Did you forget to --attach some dynamic resources or specify a dynamic infrastructure zone?"
+                            return exitProcess(5,msg)
+
+        infraReady = infra["ready"]
+
+        # if intentToRun:
+        #
+        #     # TODO: if explicitly argumented numOfLGs, ensure below or equal to
+        #     # that defined considering zones should be interrogated for max
+
+        if (intentToRun and infraReady) or shouldUpload:
+            # upload the project to the NeoLoad Web Runtime in prep of test
+            projectDef = None
+            if zipfile is not None:
+                cprint("Uploading project.", "yellow")
+                projectDef = uploadProject(client,zipfile)
+                cprint("Project uploaded", "green")
+
 
         if intentToRun:
 
-            # TODO: if explicitly argumented numOfLGs, ensure below or equal to
-            # that defined considering zones should be interrogated for max
-
-            if infra["ready"]:
-
-                # upload the project to the NeoLoad Web Runtime in prep of test
-                projectDef = None
-                if zipfile is not None:
-                    cprint("Uploading project.", "yellow")
-                    projectDef = uploadProject(client,zipfile)
-                    cprint("Project uploaded", "green")
+            if infraReady:
 
                 # if upload successful, kick off the test
                 projectLaunched = None
@@ -375,7 +406,7 @@ def main(   version,
                     return exitProcess(3, "Query value '" + query + "' not implemented!")
 
                 if found is not None:
-                    print(found)
+                    print(found) # legit use of print for raw output
                 else:
                     logger.warning("Nothing in file [" + infile + "] matching query [" + query + "]")
 
@@ -571,7 +602,7 @@ def configureAttach(attach,intentToRun,currentProfile,reattach):
 
 def printTestSummary(client,testId,justid,moreinfo,debug):
     if justid:
-        print(test.id)
+        print(test.id) # legit use of print for raw output
     else:
         test = getTestStatus(client,testId)
 
@@ -588,7 +619,7 @@ def printTestSummary(client,testId,justid,moreinfo,debug):
             }
             if stats is not None:
                 json['statistics'] = stats
-            print(json)
+            print(json) # legit use of print for raw output
 
 def printSLASummary(client,test):
     cprint("SLA summary:")
@@ -619,9 +650,9 @@ def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,j
             if not inited:
                 inited = True
                 cprint("Est. duration: " + printNiceTime(test.duration/1000) + ", LG count: " + str(test.lg_count), "yellow")
-                print("Test is initializing", end="")
+                print("Test is initializing", end="") # legit use of print for incremental/always output
             if not quiet:
-                print(""+waterator, end="")
+                print(""+waterator, end="") # legit use of print for incremental/always output
             waiterations += 1
             sys.stdout.flush()
         elif test.status == "STARTING":
@@ -633,28 +664,28 @@ def blockingWaitForTestCompleted(currentProfile,client,launchedTestId,moreinfo,j
         elif test.status == "RUNNING":
             if not running:
                 if not quiet:
-                    print("") # end the ...s
+                    print("") # end the ...s  # legit use of print for incremental/always output
                 waiterations = 0
                 running = True
                 cprint("Test overview now available at: " + overviewUrl)
                 startedAt = datetime.datetime.now()
                 if not quiet:
-                    print("Test running", end="")
+                    print("Test running", end="") # legit use of print for incremental/always output
                 if liveSummary:
-                    print("")
+                    print("") # legit use of print for incremental/always output
                 if isInteractiveMode():
                     webbrowser.open_new_tab(overviewUrl)
             if liveSummary:
                 if (waiterations % 3) == 0:
-                    print(getCurrentTestSummaryLine(waiterations,startedAt,client,test))
+                    print(getCurrentTestSummaryLine(waiterations,startedAt,client,test)) # legit use of print for incremental/always output
             elif not quiet:
-                print(""+waterator, end="")
+                print(""+waterator, end="") # legit use of print for incremental/always output
             waiterations += 1
             sys.stdout.flush()
         elif test.status == "TERMINATED":
             if not terminated:
                 if not quiet:
-                    print("") # end the ...s
+                    print("") # end the ...s # legit use of print for incremental/always output
                 handleTestTermination(client,test)
                 terminated = True
         else:
@@ -799,11 +830,11 @@ def getCurrentTestSummaryLine(waiterations,startedAt,client,test):
     test = getTestStatus(client,test.id)
     if test.status in ['STARTED','RUNNING','TERMINATED']:
         stats = getTestStatistics(client,test.id)
-        ret = prefix + "Status[{0}],Fail[{4}],LGs[{1}]\tCNC:{5}\tBPS[{2}]\tRPS:{3}\tavg(rql):{6}".format(
+        ret = prefix + "{0},Fail[{4}],LGs[{1}]\tCNC/VUs:{5}\tBPS[{2}]\tRPS:{3}\tavg(ms):{6}".format(
             test.status,
             test.lg_count,
-            stats.total_global_downloaded_bytes_per_second,
-            stats.total_request_count_per_second,
+            str(round(stats.total_global_downloaded_bytes_per_second,3)),
+            str(round(stats.total_request_count_per_second,3)),
             stats.total_global_count_failure,
             ("N/A" if stats.last_virtual_user_count is None else stats.last_virtual_user_count),
             stats.total_request_duration_average

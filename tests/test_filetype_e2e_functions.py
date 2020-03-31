@@ -23,5 +23,5 @@ def test_verify_zip_file_type():
             '--debug': None,
             '-f '+ os.path.abspath("tests/example_2_0_runtime/Archive.zip") : None,
             '--scenario': 'sanityScenario',
-            '--attach': 'docker#1,neotys/neoload-loadgenerator:7.0.2'
+            '--attach': 'docker#1,neotys/neoload-loadgenerator:latest'
         })

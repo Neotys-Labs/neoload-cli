@@ -23,5 +23,5 @@ def test_run_fail_slas():
             '-f '+ os.path.abspath("tests/example_pytests/default.yaml") : None,
             '-f '+ os.path.abspath("tests/example_pytests/slas/fail.yaml") : None,
             '--scenario': 'slaMinScenario',
-            '--attach': 'docker#1,neotys/neoload-loadgenerator:7.0.2'
+            '--attach': 'docker#1,neotys/neoload-loadgenerator:latest'
         })

@@ -222,20 +222,52 @@ def getProfileFilesUrl(profile):
     else:
         return stored
 
-def getSwaggerUrl(profile):
+
+def getSwaggerUrlWithVersion(profile,versionPart):
     url = profile['url']
     parts = url.split("/")
-    return parts[0]+"//"+parts[2]+"/explore/swagger.yaml"
+    versionPath = versionPart+"/" if versionPart is not None and len(versionPart)>0 else ""
+    return parts[0]+"//"+parts[2]+"/explore/"+versionPath+"swagger.yaml"
+
+
+def getSwaggerUrl(profile):
+    logger = logging.getLogger("root")
+
+    pathOpts = ['v1',''] # during 0.x.x, we only use the V1 API
+    curVer = None if 'apiversion' not in profile else profile['apiversion']
+    if curVer is not None:
+        return getSwaggerUrlWithVersion(profile,curVer)
+
+    for opt in pathOpts:
+        specUrl = getSwaggerUrlWithVersion(profile,opt)
+        try:
+            requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+            response = requests.get(specUrl, verify=False, timeout=3)
+            spec = yaml.load(response.text, Loader=yaml.FullLoader)
+            profile['apiversion'] = opt
+            logger.info("API spec URL '" + specUrl + "' worked.")
+            return specUrl
+        except Exception as e:
+            logger.error("Tried '" + specUrl + "', failed with timeout=3")
+
+    return None
+
+
+
+
 
 def getApiInternalVersionNumber(profile):
     logger = logging.getLogger("root")
     ret = 20191115
 
+    logger.debug("getApiInternalVersionNumber[0]: Getting API spec")
     openapiUrl = getSwaggerUrl(profile)
     if openapiUrl is None:
         raise Exception("Could not load OpenAPI spec URL from profile.")
 
-    response = requests.get(openapiUrl)
+    logger.debug("getApiInternalVersionNumber[1]: Getting API spec from " + openapiUrl)
+    response = requests.get(openapiUrl, verify=False, timeout=10)
+    logger.debug("getApiInternalVersionNumber[2]: Parsing API spec")
     spec = yaml.load(response.text, Loader=yaml.FullLoader)
 
     schemas = spec['components']['schemas']
