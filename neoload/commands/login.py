@@ -1,3 +1,5 @@
+import sys
+
 import click
 
 from neoload_cli_lib.UserData import UserData
@@ -10,5 +12,9 @@ def cli(token, uri):
     """Store your token and uri of NeoLoad Web. The token is read from stdin if none is set.
     The default url is "https://neoload-api.saas.neotys.com/" """
     if token is None:
-        token = click.prompt("Enter your token", None, True)
+        if sys.stdin.isatty():
+            token = click.prompt("Enter your token", None, True)
+        else:
+            token = input()
     UserData.do_login(token, uri)
+    print("login successfully")
