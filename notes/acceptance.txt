@@ -1,0 +1,94 @@
+NLW_TOKEN=
+NLW_ZONE_DYNAMIC=
+NLW_URL=https://neoload-rest.saas.neotys.com
+
+pip install neoload:1.0.0
+
+neoload --version
+neoload --help
+
+# NOTE: the CLI must sense if it is in non-interactive mode, so that:
+#  1. if there is a blocking stdin operation, it defaults to exit with failure of why
+#  2. if there is a operation (delete) which usually prompts a user before, it assumes yes if in non-interactive
+# NOTE: quiet mode referred to overriding other verbose/debug outputs to produce a single, simple outcome no matter what
+# GOAL: simplify test execution and platform management tasks to as-close-to one-liners as possible
+# NOT-GOAL: write commands that simply reflect our API structure, as nice and normalized as it is
+
+# TL;DR: login to the platform and run a test
+neoload login --token $NLW_TOKEN --apiurl $NLW_URL --zone $NLW_ZONE_DYNAMIC
+  # stores these data points in a 'defaults' config set (aliasing functionality in 'neoload config...' for one-liner simplicity)
+neoload run --file tests/neoload_projects/example_1/everything.yaml --scenario sanityScenario
+  # produces blocking, unbuffered output about test execution process, including readout of current data points
+
+#login
+neoload login
+  # if no --token provided, asks for it by stdin prompt if in interactive mode
+neoload login --token $NLW_TOKEN   # defaults to use SaaS, store in 'defaults'
+neoload login --token $NLW_TOKEN --apiurl $NLW_URL # uses a specific NLW instance for login, store in 'defaults'
+
+#config
+  # we need config sets beyond simple login, such as default zone etc, see https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/
+neoload config --name custom1 # shows stored YAML for stored 'custom1' config set
+neoload config --name custom1 set-token $NLW_TOKEN # sets token for stored 'custom1' config set
+neoload config --name custom1 set-zone $NLW_ZONE_DYNAMIC # sets zone for stored 'custom1' config set
+neoload config --name custom1 set-apiurl $NLW_URL
+neoload config set-zone $NLW_ZONE_DYNAMIC # if no config set name specified, assume 'defaults'
+
+#validate
+neoload validate --file tests/neoload_projects/example_1/everything.yaml
+  # is this valid YAML, and is it valid to our DSL based on JSON-schema? If not, provide detailed reasons why
+neoload validate --zone $NLW_ZONE_DYNAMIC --available-lgs 5
+  # is this a valid zone, and does it have at least 5 available load generators? if not, throw exit code > 1 with detailed printout of why not
+
+#infra
+neoload infra attach docker --lg-count 5
+  # create and attach 1 controller and 5 load generators via the currently configured Docker socket; use current config set zone; but assume to use public docker images "neotys/neoload-..."
+neoload infra attach docker --lg-count 5 --version "7.0.2"
+  # same as above, but specify exact version (Docker tag)
+neoload infra attach docker --lg-count 5 --version "7.0.2" --ctrl-image "paulsbruce/neoload-controller" --lg-image "paulsbruce/neoload-loadgenerator"
+  # same as above and use base image URIs for CTRL and LGs
+neoload infra detatch
+  # destroy the last local docker containers attached (see above)
+neoload infra detatchall
+  # destroy all containers on the connected Docker host that were initialized using this CLI at any point in time
+
+#run
+#(any assets provided should be validated internally as above before being uploaded if at all possible)
+neoload run --file tests/neoload_projects/example_1/everything.yaml --scenario sanityScenario
+  # produces blocking, unbuffered output about test execution process, including readout of current data points
+neoload run --file tests/neoload_projects/example_1/everything.yaml --scenario sanityScenario --junitsla junit.xml
+  # everything above, but also one-liners the sla report output to named file
+testid=$(neoload run --non-blocking --testid fsdg-1234-1234-gfds --name myFirstRun) # given an existing test explicitly uploaded
+  # if non-blocking (detach), produces only the testid on stdout
+neoload stop $testid --force
+  # blocking status until complete, with a timeout of 30s
+
+#lists
+  # I'd like to have listings that produce one or more outputs, be referenced in the plural, not singular command
+  # For operations on a specific object (test, result), those should use the singular command name
+  # (if --sort-by is a date, default to --sort-order desc, else --sort-order asc)
+
+#list tests (defaults --limit 50 --sort-by lastUpdateDate)
+neoload tests ls
+  # should list out top 50 tests, sorted by lastUpdateDate descending
+neoload tests ls --limit 200
+  # should list out top 200 tests, ...
+neoload tests ls --project "projectName"
+  # why is the project name not part of the v2/tests response spec (but scenarioName is)?
+neoload tests ls --scenario "scenarioName"
+  # lists the top 50 tests matching this scenario name, ordered by lastUpdateDate desc
+
+#list results (defaults --limit 50 --sort-by startDate)
+#(if --sort-by is a date, default to --sort-order desc, else --sort-order asc)
+neoload results ls
+  # should list out top 50 results, sorted by startDate descending
+neoload results ls --status RUNNING
+neoload results ls --project "projectName"
+neoload results ls --scenario "scenarioName"
+neoload results ls --qualityStatus FAILED
+
+neoload projects ls
+  # not yet implemented in v2 API spec
+
+neoload zones ls
+  # list out all zones
