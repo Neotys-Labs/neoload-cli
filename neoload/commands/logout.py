@@ -1,8 +1,8 @@
 import click
-import neoload_cli_lib
+from neoload_cli_lib.UserData import UserData
 
 @click.group()
 def cli():
     """Log out remove configuration file"""
-    neoload_cli_lib.UserData.do_logout()
+    UserData.do_logout()
 

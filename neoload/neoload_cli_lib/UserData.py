@@ -10,7 +10,9 @@ class UserData:
         self.url = url
 
     @staticmethod
-    def do_login(token, url="https://neoload-api.saas.neotys.com/"):
+    def do_login(token, url):
+        if token is None:
+            raise Exception('token is mandatory. please see neoload login --help.')
         user_data = UserData(token, url)
         pyconfig.set(UserData.__conf_name, user_data)
         UserData.__user_data_singleton = user_data
