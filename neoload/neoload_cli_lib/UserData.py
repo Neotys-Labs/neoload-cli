@@ -1,28 +1,71 @@
-import pyconfig
+import appdirs
+import os
+import yaml
+
+__conf_name = "neoload-cli"
+__version = "1.0"
+__author = "neotys"
+__config_dir = appdirs.user_data_dir(__conf_name, __author, __version)
+__config_file = os.path.join(__config_dir, "config.yaml")
+
+
+def do_logout():
+    global __user_data_singleton
+    __user_data_singleton = None
+    os.remove(__config_file)
+
+
+def get_login(throw=True):
+    if __user_data_singleton is None and throw:
+        raise Exception("You are'nt logged. Please use command \"neoload login\" first")
+    return __user_data_singleton
+
+
+def do_login(token, url, no_write):
+    if token is None:
+        raise Exception('token is mandatory. please see neoload login --help.')
+    global __user_data_singleton
+    __user_data_singleton = UserData.from_login(token, url)
+    if not no_write:
+        __save()
+    return __user_data_singleton
 
 
 class UserData:
-    __conf_name = "neoload-cli-v1"
-
-    def __init__(self, token: str, url: str):
-        self.token = token
-        self.url = url
+    def __init__(self):
+        pass
 
     @staticmethod
-    def do_login(token, url):
-        if token is None:
-            raise Exception('token is mandatory. please see neoload login --help.')
-        user_data = UserData(token, url)
-        pyconfig.set(UserData.__conf_name, user_data)
-        return user_data
+    def from_dict(entries):
+        data = UserData()
+        data.__dict__.update(entries)
+        return data
 
     @staticmethod
-    def do_logout():
-        pyconfig.set(UserData.__conf_name, None)
+    def from_login(token: str, url: str):
+        data = UserData()
+        data.token = token
+        data.url = url
+        return data
 
-    @staticmethod
-    def get_login():
-        user_data = pyconfig.get(UserData.__conf_name)
-        if user_data is None:
-            raise Exception("You are'nt logged. Please use \"command neoload login\" first")
-        return user_data
+    def __str__(self):
+        token = '*' * (len(self.token) - 3) + self.token[-3:]
+        return "you are logged on " + self.url + " with token " + token
+
+
+def __load():
+    if os.path.exists(__config_file):
+        with open(__config_file, "r") as stream:
+            load = yaml.load(stream, Loader=yaml.BaseLoader)
+            return UserData.from_dict(load)
+
+    return None
+
+
+__user_data_singleton = __load()
+
+
+def __save():
+    os.makedirs(__config_dir, exist_ok=True)
+    with open(__config_file, "w") as stream:
+        yaml.dump(__user_data_singleton.__dict__, stream)

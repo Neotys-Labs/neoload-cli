@@ -3,6 +3,7 @@ import os
 
 plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
 
+
 class NeoLoadCLI(click.MultiCommand):
     def list_commands(self, ctx):
         """Dynamically get the list of commands."""
@@ -23,7 +24,7 @@ class NeoLoadCLI(click.MultiCommand):
         return ns['cli']
 
 
-cli = NeoLoadCLI(help='')
+cli = NeoLoadCLI(help='', chain=True)
 
 if __name__ == '__main__':
     cli()

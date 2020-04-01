@@ -1,20 +1,19 @@
 import sys
-
 import click
 
-from neoload_cli_lib.UserData import UserData
+from neoload_cli_lib import UserData
 
 
 @click.command()
-@click.option('--uri', default="https://neoload-api.saas.neotys.com/", help="The URL of api ", metavar='URL')
+@click.option('--url', default="https://neoload-api.saas.neotys.com/", help="The URL of api ", metavar='URL')
+@click.option('--no-write', is_flag=True, help="don't save login on application data")
 @click.argument('token', required=False)  # prompt=True, hide_input=True, help="Token used for NeoLoad Web",
-def cli(token, uri):
+def cli(token, url, no_write):
     """Store your token and uri of NeoLoad Web. The token is read from stdin if none is set.
     The default url is "https://neoload-api.saas.neotys.com/" """
-    if token is None:
+    if not token:
         if sys.stdin.isatty():
             token = click.prompt("Enter your token", None, True)
         else:
             token = input()
-    UserData.do_login(token, uri)
-    print("login successfully")
+    print(UserData.do_login(token, url, no_write))

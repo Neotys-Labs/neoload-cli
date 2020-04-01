@@ -1,8 +1,13 @@
 import click
 
+from neoload_cli_lib import UserData
+
 @click.command()
-@click.option('--uri', default="https://neoload-api.saas.neotys.com/", help="The URL of api")
-@click.option('--token', prompt=True, hide_input=True, help="Token used for NeoLoad Web")
-def cli(token,uri):
-    """get status of neoload-cli Settings"""
+def cli():
+    """get status of NeoLoad cli Settings"""
+    login = UserData.get_login(False)
+    if login is None:
+        print("No settings is stored. Please use \"neoload login\" to start.")
+    else:
+        print(login)
     pass
