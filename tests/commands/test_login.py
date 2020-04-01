@@ -1,13 +1,19 @@
+import pytest
 from click.testing import CliRunner
 from commands.login import cli as login
+from commands.status import cli as status
 
 
+@pytest.mark.authentication
 class TestLogin:
     def test_login_basic(self):
         runner = CliRunner()
-        result = runner.invoke(login, ['token'])
+        result = runner.invoke(login, ['123456789fe70bf4a991ae6d8af62e21c4a00203abcdef'])
         assert result.exit_code == 0
         assert result.output == 'login successfully\n'
+        result = runner.invoke(status)
+        assert result.exit_code == 0
+        assert 'you are logged on https://neoload-api.saas.neotys.com/ with token **' in result.output
 
     def test_login_all_args(self):
         runner = CliRunner()
@@ -15,19 +21,26 @@ class TestLogin:
         assert result.exit_code == 0
         assert result.output in 'login successfully\n'
 
+        result = runner.invoke(status)
+        assert result.exit_code == 0
+        assert 'you are logged on someURL with token **' in result.output
+
     def test_login_prompt(self):
         runner = CliRunner()
         result = runner.invoke(login, ['--uri', 'someURL'], input='token')
         assert result.exit_code == 0
         assert result.output in 'login successfully\n'
 
+        result = runner.invoke(status)
+        assert result.exit_code == 0
+        assert 'you are logged on someURL with token **' in result.output
+
     def test_login_token_required(self):
         runner = CliRunner()
         result = runner.invoke(login, ['--uri', 'someURL'])
         assert result.exception.code == 1
-        assert result.output == '\nAborted!\n'
+        assert 'Aborted!\n' in result.output  # The prompt was aborted
 
-        runner = CliRunner()
         result = runner.invoke(login)
         assert result.exception.code == 1
-        assert result.output == '\nAborted!\n'
+        assert 'Aborted!\n' in result.output  # The prompt was aborted

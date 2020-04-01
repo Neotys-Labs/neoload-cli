@@ -1,9 +1,9 @@
-import unittest
-
+import pytest
 from neoload_cli_lib.UserData import UserData
 
 
-class TestUserData(unittest.TestCase):
+@pytest.mark.authentication
+class TestUserData:
     def test_login(self):
         login = UserData.do_login('abcdefghf201df15d897e7afe99a24159da764c7cc82b2ab',
                                   'https://preprod-neoload.saas.neotys.com/')
@@ -13,13 +13,13 @@ class TestUserData(unittest.TestCase):
         assert UserData.get_login().url == 'https://preprod-neoload.saas.neotys.com/'
 
     def test_login_without_token(self):
-        with self.assertRaises(Exception) as context:
+        with pytest.raises(Exception) as context:
             UserData.do_login(None, 'some url')
-        self.assertTrue('token is mandatory. please see neoload login --help.' in context.exception.args)
+        assert 'token is mandatory. please see neoload login --help.' in str(context.value)
 
     def test_logout(self):
         UserData.do_login('some token', 'some url')
         UserData.do_logout()
-        with self.assertRaises(Exception) as context:
+        with pytest.raises(Exception) as context:
             UserData.get_login()
-        self.assertTrue('You are\'nt logged. Please use "command neoload login" first' in context.exception.args)
+        assert 'You are\'nt logged. Please use "command neoload login" first' in str(context.value)
