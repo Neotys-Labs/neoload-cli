@@ -1,6 +1,6 @@
 import click
 from click import ClickException
-from neoload_cli_lib.SchemaValidation import SchemaValidation
+import neoload_cli_lib.schema_validation as schema_validation
 
 
 @click.command()
@@ -10,7 +10,7 @@ from neoload_cli_lib.SchemaValidation import SchemaValidation
 def cli(file, schema_url):
     """Verify that the yaml FILE matches the neoload as-code file format"""
     try:
-        SchemaValidation.validate_yaml(file, schema_url)
+        schema_validation.validate_yaml(file, schema_url)
     except Exception as err:
         raise ClickException(str(err))
     print('Yaml file is valid.')
