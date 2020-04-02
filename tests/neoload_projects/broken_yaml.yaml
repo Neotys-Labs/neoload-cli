@@ -1,0 +1,44 @@
+name: NeoLoad-CLI-example-2_0
+includes
+- paths/geosearch_get.yaml
+
+variables:
+- file:
+    name: cities
+    column_names: ["City"]
+    is_first_line_column_names: false
+    start_from_line: 1
+    delimiter ","
+    path: data/cities.csv
+    change_policy: each_iteration
+    scope: global
+    order: any
+    out_of_value: cycle
+
+servers:
+- name: geolookup_host
+  host: nominatim.openstreetmap.org
+  scheme: https
+
+sla_profiles: # defaults for dev/qa systems; can be overridden by additional slas/uat...
+- name: geo_3rdparty_sla
+  description: Avg Resp Time >=1000ms >= 25000ms for cached queries
+  thresholds:
+  - avg-resp-time warn >= 1000ms fail >= 25000ms per interval
+  - error-rate warn >= 2% fail >= 25% per test
+
+populations:
+- name: popGets
+  user_paths:
+  - name: ex_2_0_geosearch_get
+
+scenarios:
+- name: sanityScenario
+  populations:
+  - name: popGets
+    rampup_load:
+      min_users: 1
+      max_users: 2
+      increment_users: 1
+      increment_every: 2s
+      duration: 10s
