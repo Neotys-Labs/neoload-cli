@@ -1,5 +1,5 @@
 import pytest
-from neoload_cli_lib import UserData
+import neoload_cli_lib.user_data  as UserData
 
 
 @pytest.mark.authentication

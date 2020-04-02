@@ -1,7 +1,7 @@
 import sys
 import click
 
-from neoload_cli_lib import UserData
+from neoload_cli_lib import user_data
 
 
 @click.command()
@@ -16,4 +16,7 @@ def cli(token, url, no_write):
             token = click.prompt("Enter your token", None, True)
         else:
             token = input()
-    print(UserData.do_login(token, url, no_write))
+
+    __user_data = user_data.do_login(token, url, no_write)
+    if sys.stdin.isatty():
+        print(__user_data)

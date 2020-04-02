@@ -15,7 +15,7 @@ def do_logout():
     os.remove(__config_file)
 
 
-def get_login(throw=True):
+def get_user_data(throw=True):
     if __user_data_singleton is None and throw:
         raise Exception("You are'nt logged. Please use command \"neoload login\" first")
     return __user_data_singleton
@@ -32,26 +32,30 @@ def do_login(token, url, no_write):
 
 
 class UserData:
-    def __init__(self):
-        pass
+    def __init__(self, token=None, url=None, desc=None):
+        if desc:
+            self.__dict__.update(desc)
+        else:
+            self.token = token
+            self.url = url
 
     @staticmethod
     def from_dict(entries):
-        data = UserData()
-        data.__dict__.update(entries)
-        return data
+        return UserData(desc=entries)
 
     @staticmethod
     def from_login(token: str, url: str):
-        data = UserData()
-        data.token = token
-        data.url = url
-        return data
+        return UserData(token, url)
 
     def __str__(self):
         token = '*' * (len(self.token) - 3) + self.token[-3:]
         return "you are logged on " + self.url + " with token " + token
 
+    def getUrl(self):
+        return self.url
+
+    def getToken(self):
+        return self.token
 
 def __load():
     if os.path.exists(__config_file):
