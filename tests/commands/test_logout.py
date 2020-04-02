@@ -13,8 +13,8 @@ def test_logout_basic():
     assert result.output == 'logout successfully\n'
 
     result = runner.invoke(status)
-    assert result.exit_code == 1
-    assert 'You are\'nt logged. Please use "command neoload login" first' in result.output
+    assert result.exit_code == 0
+    assert 'No settings is stored. Please use "neoload login" to start' in result.output
 
     # try again when already logged out
     result = runner.invoke(logout)

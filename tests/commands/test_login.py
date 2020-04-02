@@ -10,16 +10,16 @@ class TestLogin:
         runner = CliRunner()
         result = runner.invoke(login, ['123456789fe70bf4a991ae6d8af62e21c4a00203abcdef'])
         assert result.exit_code == 0
-        assert result.output == 'login successfully\n'
+        assert 'you are logged on https://neoload-api.saas.neotys.com/ with token **' in result.output
         result = runner.invoke(status)
         assert result.exit_code == 0
         assert 'you are logged on https://neoload-api.saas.neotys.com/ with token **' in result.output
 
     def test_login_all_args(self):
         runner = CliRunner()
-        result = runner.invoke(login, ['--uri', 'someURL', 'token'])
+        result = runner.invoke(login, ['--url', 'someURL', 'token'])
         assert result.exit_code == 0
-        assert result.output in 'login successfully\n'
+        assert 'you are logged on someURL with token **' in result.output
 
         result = runner.invoke(status)
         assert result.exit_code == 0
@@ -27,9 +27,9 @@ class TestLogin:
 
     def test_login_prompt(self):
         runner = CliRunner()
-        result = runner.invoke(login, ['--uri', 'someURL'], input='token')
+        result = runner.invoke(login, ['--url', 'someURL'], input='token')
         assert result.exit_code == 0
-        assert result.output in 'login successfully\n'
+        assert 'you are logged on someURL with token **' in result.output
 
         result = runner.invoke(status)
         assert result.exit_code == 0
@@ -37,7 +37,7 @@ class TestLogin:
 
     def test_login_token_required(self):
         runner = CliRunner()
-        result = runner.invoke(login, ['--uri', 'someURL'])
+        result = runner.invoke(login, ['--url', 'someURL'])
         assert result.exception.code == 1
         assert 'Aborted!\n' in result.output  # The prompt was aborted
 
