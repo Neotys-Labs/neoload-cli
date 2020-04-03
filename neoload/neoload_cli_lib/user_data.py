@@ -8,6 +8,8 @@ __author = "neotys"
 __config_dir = appdirs.user_data_dir(__conf_name, __author, __version)
 __config_file = os.path.join(__config_dir, "config.yaml")
 
+__no_write = False
+
 
 def do_logout():
     global __user_data_singleton
@@ -22,17 +24,19 @@ def get_user_data(throw=True):
 
 
 def do_login(token, url, no_write):
+    global __no_write
+    __no_write = no_write
     if token is None:
         raise Exception('token is mandatory. please see neoload login --help.')
     global __user_data_singleton
     __user_data_singleton = UserData.from_login(token, url)
-    if not no_write:
-        __save()
+    __save()
     return __user_data_singleton
 
 
 class UserData:
     def __init__(self, token=None, url=None, desc=None):
+        self.metadata = {}
         if desc:
             self.__dict__.update(desc)
         else:
@@ -49,13 +53,17 @@ class UserData:
 
     def __str__(self):
         token = '*' * (len(self.token) - 3) + self.token[-3:]
-        return "you are logged on " + self.url + " with token " + token
+        metadata = ""
+        for (key, value) in self.metadata.items():
+            metadata += key + ": " + value + "\n"
+        return "You are logged on " + self.url + " with token " + token + "\n" + metadata
 
-    def getUrl(self):
+    def get_url(self):
         return self.url
 
-    def getToken(self):
+    def get_token(self):
         return self.token
+
 
 def __load():
     if os.path.exists(__config_file):
@@ -70,6 +78,16 @@ __user_data_singleton = __load()
 
 
 def __save():
-    os.makedirs(__config_dir, exist_ok=True)
-    with open(__config_file, "w") as stream:
-        yaml.dump(__user_data_singleton.__dict__, stream)
+    if not __no_write:
+        os.makedirs(__config_dir, exist_ok=True)
+        with open(__config_file, "w") as stream:
+            yaml.dump(__user_data_singleton.__dict__, stream)
+
+
+def set_meta(key, value):
+    get_user_data().metadata[key] = value
+    __save()
+
+
+def get_meta(key):
+    return get_user_data().metadata.get(key, None)

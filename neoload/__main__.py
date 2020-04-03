@@ -2,6 +2,8 @@ import click
 import os
 import logging
 
+from neoload_cli_lib import tools
+
 plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
 
 
@@ -24,19 +26,20 @@ class NeoLoadCLI(click.MultiCommand):
             eval(code, ns, ns)
         return ns['cli']
 
-    # cli = NeoLoadCLI(help='', chain=True)
-
 
 @click.command(cls=NeoLoadCLI, help='', chain=True)  # , chain=True
 @click.option('--debug', default=False, is_flag=True)
+@click.option('--batch', default=False, is_flag=True, help="Don't ask a confirmation")
 @click.version_option('1.0.0')
-def cli(debug):
+def cli(debug, batch):
     if debug:
         logging.basicConfig()
         logging.getLogger().setLevel(logging.DEBUG)
         requests_log = logging.getLogger("requests.packages.urllib3")
         requests_log.setLevel(logging.DEBUG)
         requests_log.propagate = True
+
+    tools.set_batch(batch)
 
 
 if __name__ == '__main__':

@@ -8,17 +8,17 @@ def get(endpoint: str):
     return response.json()
 
 
-def post(endpoint: str, data: str):
+def post(endpoint: str, data):
     response = requests.get(__create_url(endpoint), headers=__create_additional_headers(), data=data)
     return response.json()
 
 
-def put(endpoint: str, data: str):
+def put(endpoint: str, data):
     response = requests.put(__create_url(endpoint), headers=__create_additional_headers(), data=data)
     return response.json()
 
 
-def patch(endpoint: str, data: str):
+def patch(endpoint: str, data):
     response = requests.patch(__create_url(endpoint), headers=__create_additional_headers(), data=data)
     return response.json()
 
@@ -29,12 +29,12 @@ def delete(endpoint: str):
 
 
 def __create_url(endpoint: str):
-    return urlparse.urljoin(user_data.get_user_data().getUrl(), endpoint)
+    return urlparse.urljoin(user_data.get_user_data().get_url(), endpoint)
 
 
 def __create_additional_headers():
     return {
-        'accountToken': user_data.get_user_data().getToken(),
+        'accountToken': user_data.get_user_data().get_token(),
         'accept': 'application/json',
         'User-Agent': 'NeoloadCli'
     }
