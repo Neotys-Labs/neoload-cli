@@ -12,6 +12,11 @@ def post(endpoint: str, data):
     response = requests.get(__create_url(endpoint), headers=__create_additional_headers(), data=data)
     return response.json()
 
+def post_binary(endpoint: str, data):#todo
+    response = requests.get(__create_url(endpoint), headers=__create_additional_headers(), data=data)
+    return response.json()
+
+
 
 def put(endpoint: str, data):
     response = requests.put(__create_url(endpoint), headers=__create_additional_headers(), data=data)

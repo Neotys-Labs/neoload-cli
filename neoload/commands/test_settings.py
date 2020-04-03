@@ -42,6 +42,13 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
 
     __id = get_id(name, is_id)
 
+    if command == "use":
+        tools.use(__id, meta_key, __resolver)
+        return
+
+    if not __id:
+        __id = user_data.get_meta(meta_key)
+
     if command == "put":
         put(__id, create_json(rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
         user_data.set_meta(meta_key, __id)
@@ -50,8 +57,6 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
         user_data.set_meta(meta_key, __id)
     elif command == "delete":
         tools.delete(__endpoint, __id, "settings")
-    elif command == "use":
-        tools.use(__id, meta_key, __resolver)
 
 
 def create(json_data):

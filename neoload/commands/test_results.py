@@ -2,7 +2,7 @@ import click
 import sys
 import json
 
-from neoload_cli_lib import tools, rest_crud
+from neoload_cli_lib import tools, rest_crud, user_data
 from neoload_cli_lib.name_resolver import Resolver
 
 __endpoint = "v2/test-results"
@@ -32,12 +32,17 @@ def cli(command, name, rename, description, quality_status):
 
     __id = get_id(name, is_id)
 
+    if command == "use":
+        tools.use(__id, meta_key, __resolver)
+        return
+
+    if not __id:
+        __id = user_data.get_meta(meta_key)
+
     if command == "put":
         rest_crud.put(get_end_point(__id), create_json(rename, description, quality_status))
     elif command == "delete":
         tools.delete(__endpoint, __id, "test results")
-    elif command == "use":
-        tools.use(__id, meta_key, __resolver)
 
 
 def get_id(name, is_id):
