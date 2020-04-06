@@ -9,5 +9,5 @@ python:
 install:
   - pip install .
 # command to run tests
-script: pytest
+script: PYTHONPATH=neoload pytest
 

@@ -1,7 +1,6 @@
 import pytest
-import re
 from click.testing import CliRunner
-from commands.test import cli as test
+from commands.test_settings import cli as test
 
 
 @pytest.mark.test

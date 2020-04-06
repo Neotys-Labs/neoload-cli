@@ -4,6 +4,10 @@ from click.testing import CliRunner
 from commands.login import cli as login
 from commands.status import cli as status
 
+import sys
+
+sys.path.append('neoload')
+
 @pytest.fixture
 def neoload_login():
     runner = CliRunner()
