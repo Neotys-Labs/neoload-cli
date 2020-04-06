@@ -60,7 +60,8 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
         patch(__id, create_json(rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
         user_data.set_meta(meta_key, __id)
     elif command == "delete":
-        tools.delete(__endpoint, __id, "settings")
+        delete(__id)
+        user_data.set_meta(meta_key, None)
 
 
 def create(json_data):
@@ -80,7 +81,7 @@ def patch(id_settings, json_data):
 
 
 def delete(__id):
-    rep = rest_crud.delete(get_end_point(__id))
+    rep = tools.delete(__endpoint, __id, "settings")
     tools.print_json(rep)
 
 
@@ -116,7 +117,11 @@ def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, na
                 data[field] = input(field)
             data['lgZoneIds'] = parse_zone_ids(input("lgZoneIds"))
         else:
-            return json.load(sys.stdin.read())
+            try:
+                return json.loads(sys.stdin.read())
+            except json.JSONDecodeError as err:
+                raise click.ClickException('%s\nThis command requires a valid Json input.\n'
+                                           'Example: neoload test-settings create {"name":"TestName"}' % str(err))
     return data
 
 

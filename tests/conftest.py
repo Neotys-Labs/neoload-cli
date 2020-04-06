@@ -18,7 +18,7 @@ def neoload_login():
 @pytest.fixture
 def valid_data():
     return SimpleNamespace(
-        test_id='75b63bc2-e75d-42ad-be3e-f712a69db723',
+        test_settings_id='75b63bc2-e75d-42ad-be3e-f712a69db723',
         test_result_id='75b63bc2-e75d-42ad-be3e-f712a69db723'
     )
 

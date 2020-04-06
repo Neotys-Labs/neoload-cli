@@ -2,6 +2,7 @@ import re
 import sys
 import click
 import json
+from click import ClickException
 from neoload_cli_lib import rest_crud, user_data
 
 __regex_id = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
@@ -40,8 +41,9 @@ def ls(name, is_id_, resolver):
 
 
 def delete(endpoint, id_data, kind):
-    if confirm("You will delete a " + kind + "with id: " + id_data + "Are your sure ?"):
-        rest_crud.delete(endpoint + "/" + id_data)
+    if confirm("You will delete a " + kind + " with id: " + id_data + " Are your sure ?"):
+        return rest_crud.delete(endpoint + "/" + id_data)
+    raise click.Abort
 
 
 def use(name, meta_key, resolver):
@@ -57,3 +59,5 @@ def use(name, meta_key, resolver):
 
 def print_json(json_data):
     print(json.dumps(json_data, indent=2))
+    if 'id' not in json_data:
+        raise ClickException('No uui returned. Operation may have failed !')
