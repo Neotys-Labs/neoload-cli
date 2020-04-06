@@ -6,8 +6,6 @@ from neoload_cli_lib import rest_crud
 
 
 def zipdir(path):
-    # ziph is zipfile handle
-
     temp_zip = tempfile.TemporaryFile('wb')
     ziph = zipfile.ZipFile(temp_zip, 'wx', zipfile.ZIP_DEFLATED)
     for root, dirs, files in os.walk(path):
