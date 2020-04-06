@@ -2,7 +2,7 @@ import click
 import os
 import logging
 
-from neoload_cli_lib import tools
+from neoload_cli_lib import tools, rest_crud
 
 plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
 
@@ -21,13 +21,18 @@ class NeoLoadCLI(click.MultiCommand):
         """Dynamically get the command."""
         ns = {}
         fn = os.path.join(plugin_folder, name.replace('-', '_') + '.py')
-        with open(fn) as f:
-            code = compile(f.read(), fn, 'exec')
-            eval(code, ns, ns)
-        return ns['cli']
+        rest_crud.set_current_command(name)
+        if os.path.isfile(fn):
+            with open(fn) as f:
+                code = compile(f.read(), fn, 'exec')
+                eval(code, ns, ns)
+            return ns['cli']
+        else:
+            logging.exception(name + " is not a neoload command")
+            return None
 
 
-@click.command(cls=NeoLoadCLI, help='', chain=True)  # , chain=True
+@click.command(cls=NeoLoadCLI, help='', chain=True)
 @click.option('--debug', default=False, is_flag=True)
 @click.option('--batch', default=False, is_flag=True, help="Don't ask a confirmation")
 @click.version_option('1.0.0')

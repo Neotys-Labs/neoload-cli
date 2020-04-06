@@ -24,6 +24,9 @@ def cli(command, name, rename, description, quality_status):
     if not command:
         print("command is mandatory. Please see neoload tests-settings --help")
         return
+    rest_crud.set_current_sub_command(command)
+    if name == "cur":
+        name = user_data.get_meta(meta_key)
     is_id = tools.is_id(name)
     # avoid to make two requests if we have not id.
     if command == "ls":

@@ -20,16 +20,20 @@ meta_key = 'settings id'
                 required=False)
 @click.argument("name", type=str, required=False)
 @click.option('--rename', help="rename test settings")
-@click.option('--description', help="")
-@click.option('--scenario', help="")
-@click.option('--controller-zone-id', 'controller_zone_id', help="")
-@click.option('--lg-zone-ids', 'lg_zone_ids', help="")
+@click.option('--description', help="provide a description")
+@click.option('--scenario', help="change the scenario of project")
+@click.option('--zone', 'controller_zone_id', help="controller zone and it default zone for the lg.")
+@click.option('--lgs', 'lg_zone_ids', default="1",
+              help="precise how many lg and other zone if needed. by default we use one lg.")
 @click.option('--naming-pattern', 'naming_pattern', help="")
 def cli(command, name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern):
     """create/read/update/delete test settings"""
     if not command:
         print("command is mandatory. Please see neoload tests-settings --help")
         return
+    rest_crud.set_current_sub_command(command)
+    if name == "cur":
+        name = user_data.get_meta(meta_key)
     is_id = tools.is_id(name)
     # avoid to make two requests if we have not id.
     if command == "ls":
