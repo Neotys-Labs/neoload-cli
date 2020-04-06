@@ -1,6 +1,18 @@
 # NeoLoad CLI
 
+## Overview
+
 This command-line interface helps you launch and observe performance tests on the Neotys Platform. Since NeoLoad is very flexible to many deployment models (SaaS, self-hosted, cloud or local containers, etc.), configuration and test execution parameters depend on your licensing and infrastructure provisioning options. Please read the following instructions carefully.
+
+
+| Property | Value |
+| ----------------    | ----------------   |
+| Maturity | Experimental |
+| Author | Neotys |
+| License           | [Apache License 2.0](https://github.com/Neotys-Labs/neoload-cli/blob/master/LICENSE) |
+| NeoLoad Licensing | License FREE edition, or Enterprise edition, or Professional |
+| Supported versions | Tested with NeoLoad Web from version [2.2.3](https://neoload.saas.neotys.com)
+| Download Binaries | See the [latest release on pypi](https://pypi.org/project/neoload)|
 
 ## TL;DR ... What
 The goal of this guide is to demonstrate how you can:
