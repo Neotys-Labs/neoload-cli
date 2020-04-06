@@ -7,33 +7,29 @@ from commands.status import cli as status
 @pytest.mark.authentication
 class TestLogin:
     def test_login_basic(self):
+        # monkeypatch.setattr(user_data, "do_login", lambda token, url, no_write: "nimp%s %s %s"%(token, url, no_write))
         runner = CliRunner()
         result = runner.invoke(login, ['123456789fe70bf4a991ae6d8af62e21c4a00203abcdef'])
         assert result.exit_code == 0
-        assert 'you are logged on https://neoload-api.saas.neotys.com/ with token **' in result.output
         result = runner.invoke(status)
         assert result.exit_code == 0
-        assert 'you are logged on https://neoload-api.saas.neotys.com/ with token **' in result.output
+        assert 'You are logged on https://neoload-api.saas.neotys.com/ with token **' in result.output
 
     def test_login_all_args(self):
         runner = CliRunner()
         result = runner.invoke(login, ['--url', 'someURL', 'token'])
         assert result.exit_code == 0
-        assert 'you are logged on someURL with token **' in result.output
-
         result = runner.invoke(status)
         assert result.exit_code == 0
-        assert 'you are logged on someURL with token **' in result.output
+        assert 'You are logged on someURL with token **' in result.output
 
     def test_login_prompt(self):
         runner = CliRunner()
         result = runner.invoke(login, ['--url', 'someURL'], input='token')
         assert result.exit_code == 0
-        assert 'you are logged on someURL with token **' in result.output
-
         result = runner.invoke(status)
         assert result.exit_code == 0
-        assert 'you are logged on someURL with token **' in result.output
+        assert 'You are logged on someURL with token **' in result.output
 
     def test_login_token_required(self):
         runner = CliRunner()

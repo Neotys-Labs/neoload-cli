@@ -2,13 +2,13 @@ import pytest
 from types import SimpleNamespace
 from click.testing import CliRunner
 from commands.login import cli as login
-
+from commands.status import cli as status
 
 @pytest.fixture
 def neoload_login():
     runner = CliRunner()
-    result = runner.invoke(login, ['123456789fe70bf4a991ae6d8af62e21c4a00203abcdef'])
-    print('\n@Before : %s' % str(result.output))
+    runner.invoke(login, ['123456789fe70bf4a991ae6d8af62e21c4a00203abcdef'])
+    print('\n@Before : %s' % str(runner.invoke(status).output))
 
 
 @pytest.fixture

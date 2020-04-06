@@ -1,16 +1,17 @@
 import click
 import urllib.parse as urlparse
-from neoload_cli_lib import user_data
+from commands.test_results import get_id
+from neoload_cli_lib import user_data, tools
 
 
 @click.command()
-@click.option('--id', 'is_id', is_flag=True, default=False, help="Use uuid instead of name")
 @click.argument('name', type=str)
-def cli(name, is_id):
+def cli(name):
     """get logs url of a test result managed by NeoLoad Web"""
-    print(urlparse.urljoin(user_data.get_user_data().getUrl(), get_endpoint(name, is_id)))
+    print(urlparse.urljoin(user_data.get_user_data().get_frontend_url(), get_endpoint(name)))
 
 
-def get_endpoint(name: str, is_id: bool):
-    if is_id:
-        return '#!result/%s/overview' % name
+def get_endpoint(name: str):
+    __is_id = tools.is_id(name)
+    __id = get_id(name, __is_id)
+    return '#!result/%s/overview' % __id

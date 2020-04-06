@@ -61,6 +61,9 @@ class UserData:
     def get_url(self):
         return self.url
 
+    def get_frontend_url(self):
+        return self.url.replace('-api', '')
+
     def get_token(self):
         return self.token
 
