@@ -35,8 +35,8 @@ class TestCreate:
                       '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runId}"}' % test_name)
         result = runner.invoke(settings,
                                ['create', test_name, '--description', 'test description ',
-                                '--scenario', 'scenario name', '--controller-zone-id', 'defaultzone',
-                                '--lg-zone-ids', 'defaultzone:5,UdFyn:1', '--naming-pattern', 'test_${runId}'])
+                                '--scenario', 'scenario name', '--zone', 'defaultzone',
+                                '--lgs', 'defaultzone:5,UdFyn:1', '--naming-pattern', 'test_${runId}'])
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['name'] == test_name

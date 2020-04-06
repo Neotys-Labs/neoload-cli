@@ -6,7 +6,7 @@ from neoload_cli_lib import rest_crud
 
 def assert_success(result):
     if result.exception is not None:
-        assert 'EXIT_CODE (%s): %s' % (result.exit_code, str(result.exception)) == 'no error'
+        assert 'EXIT_CODE (%s): %s\n%s' % (result.exit_code, str(result.exception), result.output) == 'no error'
     assert result.exit_code == 0
 
 

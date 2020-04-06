@@ -61,3 +61,11 @@ def print_json(json_data):
     print(json.dumps(json_data, indent=2))
     if 'id' not in json_data:
         raise ClickException('No uui returned. Operation may have failed !')
+
+
+def is_integer(string):
+    try:
+        int(string)
+        return True
+    except ValueError:
+        return False

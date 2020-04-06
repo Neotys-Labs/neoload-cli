@@ -8,10 +8,10 @@ import neoload_cli_lib.schema_validation as schema_validation
               default="https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json")
 @click.option('--refresh', is_flag=True, help="this options update schema from the web")
 @click.argument('file')
-def cli(file, schema_url):
+def cli(file, refresh, schema_url):
     """Verify that the yaml FILE matches the neoload as-code file format"""
     try:
-        schema_validation.validate_yaml(file, schema_url)
+        schema_validation.validate_yaml(file, schema_url if refresh else None)
     except Exception as err:
         raise ClickException(str(err))
     print('Yaml file is valid.')

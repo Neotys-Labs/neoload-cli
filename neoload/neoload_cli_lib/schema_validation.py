@@ -17,10 +17,15 @@ def validate_yaml(yaml_file_path, schema_url):
     except ScannerError as err:
         raise Exception('This is not a valid yaml file :\n%s' % str(err))
 
-    try:
-        json_schema = requests.get(schema_url).text
-    except Exception as err:
-        raise Exception('Error getting the schema from the url: %s\n%s' % (schema_url, str(err)))
+    if schema_url is None:
+        # TODO get it from storage
+        pass
+    else:
+        try:
+            json_schema = requests.get(schema_url).text
+            # TODO store it
+        except Exception as err:
+            raise Exception('Error getting the schema from the url: %s\n%s' % (schema_url, str(err)))
 
     try:
         schema_as_object = json.loads(json_schema)
