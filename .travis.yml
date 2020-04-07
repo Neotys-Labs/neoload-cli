@@ -10,4 +10,3 @@ install:
   - pip install .
 # command to run tests
 script: PYTHONPATH=neoload;tests/helpers pytest
-
