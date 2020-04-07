@@ -1,4 +1,9 @@
 language: python
+addons:
+  sonarcloud:
+    organization: "neotys-rd" # the key of the org you chose at step #3
+    token:
+      secure: "HhE16ZgvvodJ26UN8moVjqltsUI9VEQH2FmunMBH2nKQ1iHG3RcBri30f6aotaIR3Pq+ULaX6QcNHWyYQa9nnFukEO2VEPafY3A2V3Si63G3nzIO0AKSaHLNSRLMgvfgCDHWp+BmDPi2e0F4CSeRbrCOt/HQ0Fq1cVomQ09hAKSyLVIMzT3EGHUPyoud4+VAAEZfU+rvG88BjZ86bmNdF7FbKOLCf6GKo1OBFzr2nfQWKKqMdxOPN/2XOsd4lVw3fQ7ZYzAXS+hz8n57Q+mHjc1+K/V7L1dSLUQNymy3xtccmLyMcR5Va1uZu/VzorHUdpvsU3aLZv+vZUvNXTnPKTpMtDm9RVfGUC1op+plqN1HXFd14s6F4uNM1YJv7lcHBed7qjhsh4Q0+uiZFBn50WTxzuBG7XGOlUYvwXoZ6kif/xM3fz3SUH/wAOnY4TRhVDNzfBCdppZnkZPSurY9AhM2/HXhKFiNV68MLzmGMwfNnn/eUfDsEz3Qv+Q339gbAXuS8pjuuzkCmzUCnOLRn9Tbz8wZyw/9QqCASd1kpImI1+6CLVBe3FaweY0AtvmNLDBrRXjdBmO/JAs448l0vLhhLkJPInHiAlp/2u8W0oGpJx7SgWpiMgUYgTUsRanG8aAGhX/OnuiN+xtN9WvQDq05c0D2yHpDuI2Znc0oy00="
 python:
   - "3.6"
   - "3.8"
@@ -9,4 +14,6 @@ python:
 install:
   - pip install .
 # command to run tests
-script: PYTHONPATH=neoload;tests/helpers pytest
+script:
+  - PYTHONPATH=neoload pytest
+  - sonar-scanner
