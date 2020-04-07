@@ -6,12 +6,12 @@ import neoload_cli_lib.schema_validation as schema_validation
 @pytest.mark.validation
 class TestSchemaValidation:
 
-    @pytest.mark.datafiles('../neoload_projects/example_1/everything.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1/everything.yaml')
     def test_success(self, datafiles):
         yaml_file_path = datafiles.listdir()[0]
         schema_validation.validate_yaml(yaml_file_path, __schema_url__)
 
-    @pytest.mark.datafiles('../neoload_projects/broken_yaml.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/broken_yaml.yaml')
     def test_broken_yaml(self, datafiles):
         yaml_file_path = datafiles.listdir()[0]
         with pytest.raises(Exception) as context:
@@ -21,7 +21,7 @@ class TestSchemaValidation:
         assert 'could not find expected \':\'' in str(context.value)
         assert 'line 3, column 1' in str(context.value)
 
-    @pytest.mark.datafiles('../neoload_projects/empty.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/empty.yaml')
     def test_empty(self, datafiles):
         yaml_file_path = datafiles.listdir()[0]
         with pytest.raises(Exception) as context:
@@ -30,7 +30,7 @@ class TestSchemaValidation:
         assert 'None is not of type \'object\'' in str(context.value)
         assert 'On instance:\nNone' in str(context.value)
 
-    @pytest.mark.datafiles('../neoload_projects/invalid_to_schema.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/invalid_to_schema.yaml')
     def test_invalid_to_schema(self, datafiles):
         yaml_file_path = datafiles.listdir()[0]
         with pytest.raises(Exception) as context:
