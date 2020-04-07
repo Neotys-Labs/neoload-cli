@@ -3,7 +3,7 @@ from click.testing import CliRunner
 from commands.test_settings import cli as settings
 from commands.status import cli as status
 from commands.logout import cli as logout
-from test_utils import *
+from helpers.test_utils import *
 
 
 @pytest.mark.test

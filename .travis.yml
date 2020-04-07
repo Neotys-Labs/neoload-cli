@@ -15,7 +15,8 @@ python:
 # command to install dependencies
 install:
   - pip install .
+  - pip install coverage
 # command to run tests
 script:
-  - PYTHONPATH="neoload;tests/helpers" pytest
+  - PYTHONPATH="neoload" coverage3 run -m pytest
   - sonar-scanner

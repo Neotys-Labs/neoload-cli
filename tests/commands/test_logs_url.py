@@ -3,7 +3,7 @@ from click.testing import CliRunner
 from commands.login import cli as login
 from commands.test_results import cli as test_results
 from commands.logs_url import cli as logs_url
-from test_utils import assert_success, mock_api_get
+from helpers.test_utils import assert_success, mock_api_get
 
 
 @pytest.mark.authentication

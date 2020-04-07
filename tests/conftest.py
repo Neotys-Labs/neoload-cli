@@ -8,6 +8,7 @@ import sys
 
 sys.path.append('neoload')
 
+
 @pytest.fixture
 def neoload_login():
     runner = CliRunner()

@@ -1,10 +1,9 @@
 import pytest
 from click.testing import CliRunner
-from commands.test_settings import cli as settings
-from commands.status import cli as status
-from neoload_cli_lib import rest_crud
 
-from test_utils import *
+from commands.status import cli as status
+from commands.test_settings import cli as settings
+from helpers.test_utils import *
 
 
 @pytest.mark.test
