@@ -16,5 +16,5 @@ install:
   - pip install .
 # command to run tests
 script:
-  - PYTHONPATH=neoload pytest
+  - PYTHONPATH="neoload;tests/helpers" pytest
   - sonar-scanner
