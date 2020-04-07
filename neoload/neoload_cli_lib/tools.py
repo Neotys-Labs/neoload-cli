@@ -59,7 +59,7 @@ def use(name, meta_key, resolver):
 
 def print_json(json_data):
     print(json.dumps(json_data, indent=2))
-    if 'id' not in json_data:
+    if 'id' not in json_data and not isinstance(json_data, list):
         raise ClickException('No uui returned. Operation may have failed !')
 
 
