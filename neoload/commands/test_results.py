@@ -13,12 +13,12 @@ meta_key = 'result id'
 
 
 @click.command()
-@click.argument('command', type=click.Choice(['ls', 'put', 'patch', 'delete', 'use'], case_sensitive=False),
+@click.argument('command', type=click.Choice(['ls', 'patch', 'delete', 'use'], case_sensitive=False),
                 required=False)
 @click.argument("name", type=str, required=False)
 @click.option('--rename', help="")
 @click.option('--description', help="")
-@click.option('--quality-status', 'quality_status', help="")
+@click.option('--quality-status', 'quality_status', type=click.Choice(['PASSED', 'FAILED']), help="")
 def cli(command, name, rename, description, quality_status):
     """create/read/update/delete test settings"""
     if not command:
@@ -42,10 +42,15 @@ def cli(command, name, rename, description, quality_status):
     if not __id:
         __id = user_data.get_meta(meta_key)
 
-    if command == "put":
-        rest_crud.put(get_end_point(__id), create_json(rename, description, quality_status))
+    if command == "patch":
+        json_data = create_json(rename, description, quality_status)
+        rep = rest_crud.put(get_end_point(__id), json_data)
+        tools.print_json(rep)
+        user_data.set_meta(meta_key, __id)
     elif command == "delete":
-        tools.delete(__endpoint, __id, "test results")
+        rep = tools.delete(__endpoint, __id, "test results")
+        tools.print_json(rep)
+        user_data.set_meta(meta_key, None)
 
 
 def get_id(name, is_id):
@@ -73,5 +78,9 @@ def create_json(name, description, quality_status):
             for field in ['name', 'description', 'qualityStatus']:
                 data[field] = input(field)
         else:
-            return json.load(sys.stdin.read())
+            try:
+                return json.loads(sys.stdin.read())
+            except json.JSONDecodeError as err:
+                raise click.ClickException('%s\nThis command requires a valid Json input.\n'
+                                           'Example: neoload test-results put {"name":"TestResultName"}' % str(err))
     return data

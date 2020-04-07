@@ -20,7 +20,8 @@ def neoload_login():
 def valid_data():
     return SimpleNamespace(
         test_settings_id='75b63bc2-e75d-42ad-be3e-f712a69db723',
-        test_result_id='75b63bc2-e75d-42ad-be3e-f712a69db723'
+        test_result_id='843418dd-c24d-468a-a885-cab2c039f12a',
+        test_result_id_to_delete = '184e0b68-eb4e-4368-9f6e-a56fd9c177cf'
     )
 
 

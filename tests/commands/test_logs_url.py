@@ -2,7 +2,7 @@ import re
 import pytest
 from click.testing import CliRunner
 from commands.login import cli as login
-from commands.test_results import cli as test_results
+from commands.test_results import cli as results
 from commands.logs_url import cli as logs_url
 from helpers.test_utils import assert_success, mock_api_get
 
@@ -31,7 +31,7 @@ class TestLogsUrl:
         mock_api_get(monkeypatch, 'v2/test-results',
                      '[{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"test-name"}]')
         runner = CliRunner()
-        result_use = runner.invoke(test_results, ['use', 'test-name'])
+        result_use = runner.invoke(results, ['use', 'test-name'])
         assert_success(result_use)
         result = runner.invoke(logs_url, ['test-name'])
         assert result.output == 'https://neoload.saas.neotys.com/#!result/70ed01da-f291-4e29-b75c-1f7977edf252/overview\n'
