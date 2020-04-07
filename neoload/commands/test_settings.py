@@ -23,8 +23,7 @@ meta_key = 'settings id'
 @click.option('--description', help="provide a description")
 @click.option('--scenario', help="change the scenario of project")
 @click.option('--zone', 'controller_zone_id', help="controller zone and it default zone for the lg.")
-@click.option('--lgs', 'lg_zone_ids', default="1",
-              help="precise how many lg and other zone if needed. by default we use one lg.")
+@click.option('--lgs', 'lg_zone_ids', help="precise how many lg and other zone if needed. by default we use one lg.")
 @click.option('--naming-pattern', 'naming_pattern', help="")
 def cli(command, name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern):
     """create/read/update/delete test settings"""
