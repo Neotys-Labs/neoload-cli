@@ -1,3 +1,4 @@
+import re
 import pytest
 from click.testing import CliRunner
 from commands.validate import cli as validate
@@ -45,7 +46,7 @@ class TestValidate:
     def test_no_argument(self):
         runner = CliRunner()
         result = runner.invoke(validate)
-        assert 'Error: Missing argument "FILE"' in str(result.output)
+        assert re.compile(".*Error: Missing argument [\"']FILE[\"'].*", re.DOTALL).match(result.output) is not None
         assert result.exit_code == 2
 
     @pytest.mark.slow

@@ -1,3 +1,4 @@
+import re
 import pytest
 from click.testing import CliRunner
 from commands.login import cli as login
@@ -40,5 +41,5 @@ class TestLogsUrl:
     def test_logs_required(self):
         runner = CliRunner()
         result = runner.invoke(logs_url)
-        assert 'Error: Missing argument "NAME"' in result.output
+        assert re.compile(".*Error: Missing argument [\"']NAME[\"'].*", re.DOTALL).match(result.output) is not None
         assert result.exit_code == 2

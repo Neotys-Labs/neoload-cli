@@ -15,7 +15,8 @@ __no_write = False
 def do_logout():
     global __user_data_singleton
     __user_data_singleton = None
-    os.remove(__config_file)
+    if os.path.exists(__config_file):
+        os.remove(__config_file)
 
 
 def get_user_data(throw=True):
