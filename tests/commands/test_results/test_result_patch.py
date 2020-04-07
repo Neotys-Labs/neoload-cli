@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from click.testing import CliRunner
 from commands.test_results import cli as results
@@ -103,4 +105,5 @@ class TestResultPatch:
         runner = CliRunner()
         result = runner.invoke(results, ['patch', '--quality-status', 'not_valid_quality'])
         assert result.exit_code == 2
-        assert 'Invalid value for "--quality-status": invalid choice: not_valid_quality. (choose from PASSED, FAILED)' in result.output
+        assert re.compile(".*Error: Invalid value for [\"']--quality-status[\"']: invalid choice: not_valid_quality."
+                          " \(choose from PASSED, FAILED\).*", re.DOTALL).match(result.output) is not None
