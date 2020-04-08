@@ -35,15 +35,17 @@ def mock_api_delete(monkeypatch, endpoint, json_result):
 
 
 def __mock_api_without_data(monkeypatch, method, endpoint, json_result):
-    monkeypatch.setattr(rest_crud, method,
-                        lambda actual_endpoint: __return_json(actual_endpoint, endpoint, json_result))
-    print('Mock %s %s to return %s' % (method.upper(), endpoint, json_result))
+    if monkeypatch is not None:
+        monkeypatch.setattr(rest_crud, method,
+                            lambda actual_endpoint: __return_json(actual_endpoint, endpoint, json_result))
+        print('Mock %s %s to return %s' % (method.upper(), endpoint, json_result))
 
 
 def __mock_api_with_data(monkeypatch, method, endpoint, json_result):
-    monkeypatch.setattr(rest_crud, method,
-                        lambda actual_endpoint, data: __return_json(actual_endpoint, endpoint, json_result))
-    print('Mock %s %s to return %s' % (method.upper(), endpoint, json_result))
+    if monkeypatch is not None:
+        monkeypatch.setattr(rest_crud, method,
+                            lambda actual_endpoint, data: __return_json(actual_endpoint, endpoint, json_result))
+        print('Mock %s %s to return %s' % (method.upper(), endpoint, json_result))
 
 
 def __return_json(actual_endpoint, expected_endpoint, json_result):

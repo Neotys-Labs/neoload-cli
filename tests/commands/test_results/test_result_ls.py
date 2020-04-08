@@ -5,7 +5,7 @@ from commands.logout import cli as logout
 from helpers.test_utils import *
 
 
-@pytest.mark.test
+@pytest.mark.results
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
 class TestResultLs:
     def test_list_all(self, monkeypatch):
@@ -22,9 +22,9 @@ class TestResultLs:
 
     def test_list_one(self, monkeypatch, valid_data):
         runner = CliRunner()
-        mock_api_get(monkeypatch, 'v2/test-results/%s' % valid_data.test_settings_id,
+        mock_api_get(monkeypatch, 'v2/test-results/%s' % valid_data.test_result_id,
                      '{"id":"someId", "name":"test-name", "description":".... "}')
-        result_ls = runner.invoke(results, ['ls', valid_data.test_settings_id])
+        result_ls = runner.invoke(results, ['ls', valid_data.test_result_id])
         assert_success(result_ls)
         json_result = json.loads(result_ls.output)
         assert json_result['id'] is not None
@@ -42,7 +42,7 @@ class TestResultLs:
 
     def test_not_found(self, monkeypatch, invalid_data):
         runner = CliRunner()
-        mock_api_get(monkeypatch, 'v2/test-results/%s' % invalid_data.uuid, '{"code":"404", "message": "Test not found."}')
+        mock_api_get(monkeypatch, 'v2/test-results/%s' % invalid_data.uuid, '{"code":"404", "message": "Test result not found."}')
         result = runner.invoke(results, ['ls', invalid_data.uuid])
-        assert 'Test not found' in result.output
+        assert 'Test result not found' in result.output
         assert result.exit_code == 1

@@ -6,7 +6,7 @@ from commands.logout import cli as logout
 from helpers.test_utils import *
 
 
-@pytest.mark.test
+@pytest.mark.settings
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
 class TestPatch:
     def test_minimal(self, monkeypatch, valid_data):

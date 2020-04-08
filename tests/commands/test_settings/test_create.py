@@ -6,7 +6,7 @@ from commands.logout import cli as logout
 from helpers.test_utils import *
 
 
-@pytest.mark.test
+@pytest.mark.settings
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
 class TestCreate:
     def test_minimal(self, monkeypatch):
@@ -16,12 +16,12 @@ class TestCreate:
 
         test_name = generate_test_settings_name()
         mock_api_post(monkeypatch, 'v2/tests',
-                      '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":""}' % test_name)
+                      '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "nextRunId":1}' % test_name)
         result = runner.invoke(settings, ['create', test_name])
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['name'] == test_name
-        assert json_result['description'] == ''
+        assert json_result['nextRunId'] == 1
 
         result_status = runner.invoke(status)
         assert 'settings id: %s' % json_result['id'] in result_status.output

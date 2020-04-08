@@ -8,67 +8,67 @@ from commands.logout import cli as logout
 from helpers.test_utils import *
 
 
-@pytest.mark.test
+@pytest.mark.results
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
 class TestResultPatch:
     def test_minimal(self, monkeypatch, valid_data):
         runner = CliRunner()
         result_status = runner.invoke(status)
-        assert 'settings id:' not in result_status.output
+        assert 'result id:' not in result_status.output
 
-        mock_api_get(monkeypatch, 'v2/test-results/%s' % valid_data.test_settings_id,
+        mock_api_get(monkeypatch, 'v2/test-results/%s' % valid_data.test_result_id,
                      '{"id":"%s", "name":"test-name before", "description":"test description ",'
-                     '"quality-status":"PASSED"}' % valid_data.test_settings_id)
-        result_ls = runner.invoke(results, ['ls', valid_data.test_settings_id])
+                     '"qualityStatus":"PASSED"}' % valid_data.test_result_id)
+        result_ls = runner.invoke(results, ['ls', valid_data.test_result_id])
         assert_success(result_ls)
+        json_before = json.loads(result_ls.output)
 
-        mock_api_put(monkeypatch, 'v2/test-results/%s' % valid_data.test_settings_id,
-                     '{"id":"%s", "name":"test-name before", "description":"test description",'
-                     '"quality-status":"PASSED"}' % valid_data.test_settings_id)
-        result = runner.invoke(results, ['patch', valid_data.test_settings_id], input='{}')
+        mock_api_put(monkeypatch, 'v2/test-results/%s' % valid_data.test_result_id,
+                     '{"id":"%s", "name":"test-name before", "description":"test description ",'
+                     '"qualityStatus":"PASSED"}' % valid_data.test_result_id)
+        result = runner.invoke(results, ['patch', valid_data.test_result_id], input='{}')
         assert_success(result)
         json_result = json.loads(result.output)
-        assert json_result['id'] == valid_data.test_settings_id
+        assert json_result['id'] == valid_data.test_result_id
         # keep other fields
-        assert json_result['name'] == 'test-name before'
-        assert json_result['description'] == 'test description'
-        assert json_result['quality-status'] == 'PASSED'
+        assert json_result['name'] == json_before['name']
+        assert json_result['description'] == json_before['description']
+        assert json_result['qualityStatus'] == json_before['qualityStatus']
 
         result_status = runner.invoke(status)
         assert 'result id: %s' % json_result['id'] in result_status.output
 
     def test_all_options(self, monkeypatch, valid_data):
         runner = CliRunner()
-        test_name = generate_test_settings_name()
-        mock_api_put(monkeypatch, 'v2/test-results/%s' % valid_data.test_settings_id,
+        test_name = generate_test_result_name()
+        mock_api_put(monkeypatch, 'v2/test-results/%s' % valid_data.test_result_id,
                      '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":"test description patch ",'
-                     '"quality-status":"FAILED"}' % test_name)
+                     '"qualityStatus":"FAILED"}' % test_name)
         result = runner.invoke(results,
-                               ['patch', valid_data.test_settings_id, '--description', 'test description patch ',
+                               ['patch', valid_data.test_result_id, '--description', 'test description patch ',
                                 '--quality-status', 'FAILED', '--rename', test_name])
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['name'] == test_name
         assert json_result['description'] == 'test description patch '
-        assert json_result['quality-status'] == 'FAILED'
+        assert json_result['qualityStatus'] == 'FAILED'
 
     def test_input_map(self, monkeypatch, valid_data):
         runner = CliRunner()
-        result_use = runner.invoke(results, ['use', valid_data.test_settings_id])
+        result_use = runner.invoke(results, ['use', valid_data.test_result_id])
         assert_success(result_use)
 
-        test_name = generate_test_settings_name()
-        mock_api_put(monkeypatch, 'v2/test-results/%s' % valid_data.test_settings_id,
+        test_name = generate_test_result_name()
+        mock_api_put(monkeypatch, 'v2/test-results/%s' % valid_data.test_result_id,
                      '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":"test description ",'
-                     '"quality-status":"test_${runId}"}' % test_name)
-        result = runner.invoke(results, ['patch'],
-                               input='{"name":"%s", "description":"test description ",'
-                                     '"quality-status":"test_${runId}"}' % test_name)
+                     '"qualityStatus":"PASSED"}' % test_name)
+        result = runner.invoke(results, ['patch'], input='{"name":"%s", "description":"test description ",'
+                                                         '"qualityStatus":"PASSED"}' % test_name)
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['name'] == test_name
         assert json_result['description'] == 'test description '
-        assert json_result['quality-status'] == 'test_${runId}'
+        assert json_result['qualityStatus'] == 'PASSED'
 
     def test_error_required(self):
         runner = CliRunner()

@@ -6,7 +6,7 @@ from commands.test_settings import cli as settings
 from helpers.test_utils import *
 
 
-@pytest.mark.test
+@pytest.mark.settings
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
 class TestDelete:
     def test_minimal(self, monkeypatch):

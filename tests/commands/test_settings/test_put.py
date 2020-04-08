@@ -6,35 +6,29 @@ from commands.logout import cli as logout
 from helpers.test_utils import *
 
 
-@pytest.mark.test
+@pytest.mark.settings
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
 class TestPut:
     def test_minimal(self, monkeypatch, valid_data):
         runner = CliRunner()
+        test_name = generate_test_settings_name()
         result_status = runner.invoke(status)
         assert 'settings id:' not in result_status.output
 
-        mock_api_get(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id,
-                     '{"id":"%s", "name":"test-name before", "description":"test description ",'
-                     '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", '
-                     '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runId}"}' % valid_data.test_settings_id)
-        result_ls = runner.invoke(settings, ['ls', valid_data.test_settings_id])
-        assert_success(result_ls)
-
         mock_api_put(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id,
-                     '{"id":"%s", "name":"test-name before", "description":"",'
+                     '{"id":"%s", "name":"%s", "description":"",'
                      '"scenarioName":"", "controllerZoneId":"", '
-                     '"lgZoneIds":"", "testResultNamingPattern":""}' % valid_data.test_settings_id)
-        result = runner.invoke(settings, ['put', valid_data.test_settings_id], input='{}')
+                     '"lgZoneIds":{}, "testResultNamingPattern":""}' % (valid_data.test_settings_id, test_name))
+        result = runner.invoke(settings, ['put', valid_data.test_settings_id, '--rename', test_name])
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['id'] == valid_data.test_settings_id
         # clear other fields
-        assert json_result['name'] == 'test-name before'
+        assert json_result['name'] == test_name
         assert json_result['description'] == ''
         assert json_result['scenarioName'] == ''
         assert json_result['controllerZoneId'] == ''
-        assert json_result['lgZoneIds'] == ''
+        assert json_result['lgZoneIds'] == {}
         assert json_result['testResultNamingPattern'] == ''
 
         result_status = runner.invoke(status)
@@ -112,6 +106,6 @@ class TestPut:
     def test_not_found(self, monkeypatch, invalid_data):
         runner = CliRunner()
         mock_api_put(monkeypatch, 'v2/tests/%s' % invalid_data.uuid, '{"code":"404", "message": "Test not found."}')
-        result = runner.invoke(settings, ['put', invalid_data.uuid], input='{}')
+        result = runner.invoke(settings, ['put', invalid_data.uuid], input='{"name":"any"}')
         assert 'Test not found' in result.output
         assert result.exit_code == 1

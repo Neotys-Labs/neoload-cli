@@ -1,3 +1,4 @@
+import json
 import re
 import pytest
 from click.testing import CliRunner
@@ -9,9 +10,11 @@ from helpers.test_utils import assert_success, mock_api_get
 
 @pytest.mark.authentication
 class TestLogsUrl:
-    @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
     def test_logs_saas(self):
         runner = CliRunner()
+        login_result = runner.invoke(login, ['123456789fe70bf4a991ae6d8af62e21c4a00203abcdef'])
+        assert_success(login_result)
+
         result = runner.invoke(logs_url, ['70ed01da-f291-4e29-b75c-1f7977edf252'])
         assert result.output == 'https://neoload.saas.neotys.com/#!result/70ed01da-f291-4e29-b75c-1f7977edf252/overview\n'
         assert_success(result)
@@ -28,13 +31,24 @@ class TestLogsUrl:
 
     @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
     def test_logs_with_name(self, monkeypatch):
+        runner = CliRunner()
         mock_api_get(monkeypatch, 'v2/test-results',
                      '[{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"test-name"}]')
-        runner = CliRunner()
-        result_use = runner.invoke(results, ['use', 'test-name'])
+        result_ls = runner.invoke(results, ['ls'])
+        assert_success(result_ls)
+
+        json_first_test_result_id = json.loads(result_ls.output)[0]['id']
+        json_first_test_result_name = json.loads(result_ls.output)[0]['name']
+        mock_api_get(monkeypatch, 'v2/test-results',
+                     '[{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s"}]' % json_first_test_result_name)
+        result_use = runner.invoke(results, ['use', json_first_test_result_name])
         assert_success(result_use)
-        result = runner.invoke(logs_url, ['test-name'])
-        assert result.output == 'https://neoload.saas.neotys.com/#!result/70ed01da-f291-4e29-b75c-1f7977edf252/overview\n'
+
+        mock_api_get(monkeypatch, 'nlweb/rest/rest-api/url-api/v1/action/get-front-end-url',
+                     '{"frontEndUrl":{"pathFormatMap":{"HOME":"https://neoload.saas.neotys.com/#!",'
+                     '"RESULT_OVERVIEW":"https://neoload.saas.neotys.com/#!result/:benchId/overview"}}}')
+        result = runner.invoke(logs_url, [json_first_test_result_name])
+        assert '#!result/%s/overview' % json_first_test_result_id in result.output
         assert_success(result)
 
     @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
