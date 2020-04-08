@@ -66,22 +66,26 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
 def create(json_data):
     rep = rest_crud.post(__endpoint, json_data)
     tools.print_json(rep)
+    tools.check_json_has_id(rep)
     return rep['id']
 
 
 def put(id_settings, json_data):
     rep = rest_crud.put(get_end_point(id_settings), json_data)
     tools.print_json(rep)
+    tools.check_json_has_id(rep)
 
 
 def patch(id_settings, json_data):
     rep = rest_crud.patch(get_end_point(id_settings), json_data)
     tools.print_json(rep)
+    tools.check_json_has_id(rep)
 
 
 def delete(__id):
     rep = tools.delete(__endpoint, __id, "settings")
     tools.print_json(rep)
+    tools.check_json_has_id(rep)
 
 
 def get_end_point(id_test: str):
@@ -102,7 +106,7 @@ def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, na
     if description is not None:
         data['description'] = description
     if scenario is not None:
-        data['scenario'] = scenario
+        data['scenarioName'] = scenario
     if controller_zone_id is not None:
         data['controllerZoneId'] = controller_zone_id
     if lg_zone_ids is not None:
@@ -112,7 +116,7 @@ def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, na
 
     if len(data) == 0:
         if sys.stdin.isatty():
-            for field in ['name', 'description', 'scenario', 'controllerZoneId', 'testResultNamingPattern']:
+            for field in ['name', 'description', 'scenarioName', 'controllerZoneId', 'testResultNamingPattern']:
                 data[field] = input(field)
             data['lgZoneIds'] = parse_zone_ids(input("lgZoneIds"))
         else:
@@ -129,4 +133,4 @@ def parse_zone_ids(lg_zone_ids):
     for zone in lg_zone_ids.split(","):
         split = zone.split(":")
         values[split[0].strip()] = split[1].strip()
-    return json.dumps(values)
+    return values

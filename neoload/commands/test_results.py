@@ -46,10 +46,13 @@ def cli(command, name, rename, description, quality_status):
         json_data = create_json(rename, description, quality_status)
         rep = rest_crud.put(get_end_point(__id), json_data)
         tools.print_json(rep)
+        tools.check_json_has_id(rep)
         user_data.set_meta(meta_key, __id)
     elif command == "delete":
         rep = tools.delete(__endpoint, __id, "test results")
         tools.print_json(rep)
+        if rep['code'] != '204':
+            raise click.ClickException('Operation may have failed !')
         user_data.set_meta(meta_key, None)
 
 

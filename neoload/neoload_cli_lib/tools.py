@@ -37,7 +37,10 @@ def ls(name, is_id_, resolver):
             if type(json_or_id) is not str:
                 print_json(json_or_id)
                 return
-    print_json(rest_crud.get(endpoint))
+    res = rest_crud.get(endpoint)
+    print_json(res)
+    if name is not None:
+        check_json_has_id(res)
 
 
 def delete(endpoint, id_data, kind):
@@ -59,6 +62,9 @@ def use(name, meta_key, resolver):
 
 def print_json(json_data):
     print(json.dumps(json_data, indent=2))
+
+
+def check_json_has_id(json_data):
     if 'id' not in json_data and not isinstance(json_data, list):
         raise ClickException('No uui returned. Operation may have failed !')
 

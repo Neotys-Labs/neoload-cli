@@ -1,5 +1,6 @@
 import requests
 import os
+import json
 
 import urllib.parse as urlparse
 from neoload_cli_lib import user_data
@@ -26,7 +27,7 @@ def get(endpoint: str):
 
 
 def post(endpoint: str, data):
-    response = requests.get(__create_url(endpoint), headers=__create_additional_headers(), data=data)
+    response = requests.post(__create_url(endpoint), headers=__create_additional_headers(), json=data)
     return response.json()
 
 
@@ -42,17 +43,19 @@ def post_binary(endpoint: str, path):
 
 
 def put(endpoint: str, data):
-    response = requests.put(__create_url(endpoint), headers=__create_additional_headers(), data=data)
+    response = requests.put(__create_url(endpoint), headers=__create_additional_headers(), json=data)
     return response.json()
 
 
 def patch(endpoint: str, data):
-    response = requests.patch(__create_url(endpoint), headers=__create_additional_headers(), data=data)
+    response = requests.patch(__create_url(endpoint), headers=__create_additional_headers(), json=data)
     return response.json()
 
 
 def delete(endpoint: str):
     response = requests.delete(__create_url(endpoint), headers=__create_additional_headers())
+    if response.text == '':
+        return json.loads('{"code":"%s","ok":"%s"}' % (response.status_code, response.ok))
     return response.json()
 
 
