@@ -1,0 +1,65 @@
+trigger: none
+
+pool:
+  vmImage: 'ubuntu-16.04'
+
+variables:
+  nlw_token: $(secret_nlw_token)
+  zone_code: 9h2lZ
+  PYTHONUNBUFFERED: 1
+
+# create sidecar containers, attach them to a zone; provide supply this pipeline demands
+resources:
+  containers:
+  - container: neoload_ctrl
+    image: neotys/neoload-controller:latest
+    env: { MODE: Managed, NEOLOADWEB_TOKEN: $(nlw_token), ZONE: $(zone_code) }
+  - container: lg1
+    image: neotys/neoload-loadgenerator:latest
+    env: { NEOLOADWEB_TOKEN: $(nlw_token), ZONE: $(zone_code), LG_HOST=lg1, LG_PORT=7101, AGENT_SERVER_PORT=7101 }
+  - container: lg2
+    image: neotys/neoload-loadgenerator:latest
+    env: { NEOLOADWEB_TOKEN: $(nlw_token), ZONE: $(zone_code), LG_HOST=lg2, LG_PORT=7102, AGENT_SERVER_PORT=7102 }
+
+jobs:
+- job: RunLoadTest
+  displayName: Run NeoLoad Test
+  services:
+    neoload_ctrl: neoload_ctrl
+    lg1: lg1
+    lg2: lg2
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.8'
+
+  - task: Bash@3
+    displayName: Install NeoLoad
+    continueOnError: false
+    inputs:
+      targetType: 'inline'
+      script: |
+        pip install neoload
+        neoload login $(nlw_token) \
+                test-settings create MyAzureTest --zone $(zone_code) --lgs 2 --scenario smokeScenario \
+                upload tests/neoload_projects/example_1/everything.yaml
+
+  - task: Bash@3
+    displayName: Run NeoLoad Test
+    continueOnError: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd $(Build.SourcesDirectory)
+
+        neoload run \
+                --as-code tests/neoload_projects/example_1/everything.yaml,tests/neoload_projects/example_1/slas/uat.yaml \
+                --testname "Azure_sidecars_$(Build.BuildNumber)" \
+                --testdesc "Azure example load test with sidecars; $(Build.BuildUri)" \
+                --junitsla $(Common.TestResultsDirectory)/neoload-slas.xml
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: $(Common.TestResultsDirectory)/neoload-slas.xml
+      failTaskOnFailedTests: true
