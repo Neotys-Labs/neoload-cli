@@ -49,7 +49,7 @@ def cli(command, name, rename, description, quality_status):
         user_data.set_meta(meta_key, __id)
     elif command == "delete":
         rep = tools.delete(__endpoint, __id, "test results")
-        tools.print_json(rep)
+        tools.print_json(rep.json())
         if rep['code'] != '204':
             raise click.ClickException('Operation may have failed !')
         user_data.set_meta(meta_key, None)

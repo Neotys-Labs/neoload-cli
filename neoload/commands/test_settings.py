@@ -83,7 +83,7 @@ def patch(id_settings, json_data):
 
 def delete(__id):
     rep = tools.delete(__endpoint, __id, "settings")
-    tools.get_id_and_print_json(rep)
+    tools.get_id_and_print_json(rep.json())
 
 
 def get_end_point(id_test: str):
