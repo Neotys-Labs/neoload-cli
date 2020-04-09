@@ -19,7 +19,7 @@ def mock_api_post(monkeypatch, endpoint, json_result):
 
 
 def mock_api_post_binary(monkeypatch, endpoint, json_result):
-    __mock_api_with_data(monkeypatch, 'post', endpoint, json_result)
+    __mock_api_with_data(monkeypatch, 'post_binary', endpoint, json_result)
 
 
 def mock_api_put(monkeypatch, endpoint, json_result):

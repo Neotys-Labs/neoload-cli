@@ -100,15 +100,15 @@ neoload --force stop
 neoload run test-result junitreport junit.xml test-result summary
 
 
-# logs/wait (BONUS)
+# wait (BONUS)
   # blocking, display status of a running test starting from now, or display TERMINATED with [success|error] if the test finished
-neoload logs -f
+neoload wait
   Example output :
     Result: #1 ea0b655f-0bd9-4d89-85c1-ed9c8a35feea
     Logs available at https://neoload.saas.neotys.com/#!result/ea0b655f-0bd9-4d89-85c1-ed9c8a35feea/overview
     STARTING... Done
     RUNNING...
-neoload logs -f
+neoload wait
   Example output :
     Result: #1 ea0b655f-0bd9-4d89-85c1-ed9c8a35feea
     Logs available at https://neoload.saas.neotys.com/#!result/ea0b655f-0bd9-4d89-85c1-ed9c8a35feea/overview

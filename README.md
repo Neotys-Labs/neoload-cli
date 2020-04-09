@@ -24,8 +24,8 @@ The goal of this guide is to demonstrate how you can:
 ```
 pip3 install neoload
 neoload login $NLW_TOKEN \
-        test-settings create NewTest1 --zone $NLW_ZONE_DYNAMIC --lgs 5 --scenario sanityScenario \
-        upload tests/neoload_projects/example_1/everything.yaml \
+        test-settings --zone $NLW_ZONE_DYNAMIC --lgs 5 --scenario sanityScenario create NewTest1 \
+        project --path tests/neoload_projects/example_1 upload \
         run
 ```
 NOTE: For Windows command line, replace the '\\' multi-line separators above with '^'
@@ -80,7 +80,7 @@ neoload status          # Displays stored data
 Test settings are how to run a test, a sort of template. Tests are stored in Neoload Web.
 ```
 Usage: neoload test-settings [OPTIONS] [[ls|create|put|patch|delete|use]] [NAME]
-neoload test-settings create NewTest1 --zone defaultzone --lgs 5 --scenario sanityScenario
+neoload test-settings --zone defaultzone --lgs 5 --scenario sanityScenario create NewTest1
 ```
 You must define :
  - Which scenario of the Neoload project to use
@@ -98,13 +98,13 @@ neoload test-settings use 4a5e7707-75c0-4106-bbd4-68962ac7f2b3
 ```
 
 ### Upload a Neoload project
-See basic projects examples on github [sample_projects folder](https://github.com/Neotys-Labs/neoload-cli/tree/master/sample_projects)
+See basic projects examples on github [tests/neoload_projects folder](https://github.com/Neotys-Labs/neoload-cli/tree/master/tests/neoload_projects)
 To upload a NeoLoad project zip file or a standalone as code file into a test-settings
 ```
 Usage: neoload project [OPTIONS] [FILE]
-neoload upload sample_projects/example_1/everything.yaml
-neoload upload sample_projects/example_2/SampleProject.zip
-?????? neoload upload sample_projects/example_1/everything.yaml,sample_projects/example_1/paths/geosearch_get.yaml
+neoload --path tests/neoload_projects/example_1/everything.yaml upload NewTest1
+neoload --path tests/neoload_projects/example_1.zip upload
+neoload --path tests/neoload_projects/example_1/ upload
 ```
 ?????? Additionally, you can specify multiple files, such as additional SLA, variables, or servers overriding files. This works for both [.nlp] and [.yaml] files.
 ```
@@ -156,9 +156,9 @@ Upcoming
 The main goal of the NeoLoad-CLI is to standardize the semantics of how load tests are executed across development, non-prod, and production environments.
 While the above instructions could be run from a contributor workstation, they can easily be translated to various continuous build and deployment orchestration environments, as exampled:
 
- - [Jenkins](https://github.com/Neotys-Labs/neoload-cli/tree/master/sample_pipelines/jenkins_pipeline)
- - [Azure DevOps](https://github.com/Neotys-Labs/neoload-cli/tree/master/sample_pipelines/azure_devops)
- - [Gitlab](https://github.com/Neotys-Labs/neoload-cli/tree/master/sample_pipelines/gitlab)
+ - [Jenkins](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/jenkins_pipeline)
+ - [Azure DevOps](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/azure_devops)
+ - [Gitlab](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/gitlab)
  - Sorry AWS CodeBuild, haven't seen any F100 clients using the pform
  - CircleCI, TBD when [@punkdata](https://www.linkedin.com/in/punkdata/) gets back to [@paulsbruce](https://www.linkedin.com/in/paulsbruce/) :)
 
@@ -167,7 +167,7 @@ Many of the above CI examples include a step to explicitly install the NeoLoad C
 build steps. However, if you want the CLI baked into some build agent directly so that it
 is ready for use during a job, here's a Docker example:
 
-For Docker builds [See the test harness Alpine-based Dockerfile](https://github.com/Neotys-Labs/neoload-cli/blob/master/sample_pipelines/docker/Dockerfile)
+For Docker builds [See the test harness Alpine-based Dockerfile](https://github.com/Neotys-Labs/neoload-cli/blob/master/examples/docker/Dockerfile)
 
 
 ## IDE Integrations

@@ -20,7 +20,7 @@ pipeline {
       agent {
         dockerfile { // load python container
           args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
-          dir 'examples/docker/dind-python3'
+          dir 'examples/docker'
         }
       }
       stages {
@@ -33,8 +33,8 @@ pipeline {
           steps {
             sh """neoload \
                    login $NLW_TOKEN \
-                   test-settings create MyJenkinsTest --zone $OPENSHIFT_NLW_ZONE --scenario sanityScenario \
-                   upload tests/neoload_projects/example_1/everything.yaml
+                   test-settings create MyJenkinsTest --zone $NLW_ZONE --scenario sanityScenario \
+                   project --path tests/neoload_projects/example_1/ upload
               """
           }
         }

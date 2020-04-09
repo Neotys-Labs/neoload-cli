@@ -60,12 +60,6 @@ servers:
     login: ${auth_login}
     password: ${auth_password}
     realm: realm-value
-- name: basic_auth
-  host: nominatim.openstreetmap.org
-  ntlm_authentication:
-    login: ${auth_login}
-    password: ${auth_password}
-    domain: domain-value
 - name: negotiate_auth
   host: nominatim.openstreetmap.org
   negotiate_authentication:
@@ -83,16 +77,11 @@ sla_profiles: # defaults for dev/qa systems; can be overridden by additional sla
   - avg-request-per-sec warn == 0/s fail >= 250/s per test
   - avg-throughput-per-sec warn <= 0Mbps fail >= 250Mbps per test
   - errors-count warn >= 50 fail >= 100 per test
-  - count warn < 10 fail == 0 per test
-  - throughput warn < 1MB fail == 0MB per test
   - error-rate warn >= 2% fail >= 25% per test
 - name: per_interval_slas
   description: SLAs calculated during the test
   thresholds:
   - avg-resp-time warn >= 1000ms fail >= 25000ms per interval
-  - avg-elt-per-sec warn < 1/s fail == 0/s per interval
-  - avg-throughput-per-sec warn < 1Mbps fail >= 250Mbps per interval
-  - errors-per-sec warn > 1/s fail > 5/s per interval
   - error-rate warn >= 2% fail >= 25% per interval
 
 
@@ -148,9 +137,7 @@ scenarios:
   - name: constantPopUnlimited
     constant_load:
       users: 5
-      duration: unlimited
-      start_after: 15 iterations
-      stop_after: 25 iterations
+      duration: 20m
   - name: constantPop
     constant_load:
       users: 5
