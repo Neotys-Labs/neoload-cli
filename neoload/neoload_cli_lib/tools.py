@@ -44,7 +44,7 @@ def get_named_or_id(name, is_id_, resolver):
 def ls(name, is_id_, resolver):
     endpoint = resolver.get_endpoint()
     if name:
-        print_json(get_named_or_id(name, is_id_, resolver))
+        get_id_and_print_json(get_named_or_id(name, is_id_, resolver))
     else:
         print_json(rest_crud.get(endpoint))
 

@@ -21,6 +21,8 @@ class TestCreate:
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['name'] == test_name
+        assert json_result['controllerZoneId'] == 'defaultzone'
+        assert json_result['lgZoneIds'] == {'defaultzone': 1}
         assert json_result['nextRunId'] == 1
 
         result_status = runner.invoke(status)
@@ -52,21 +54,35 @@ class TestCreate:
         test_name = generate_test_settings_name()
         mock_api_post(monkeypatch, 'v2/tests',
                       '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":"test description ",'
-                      '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", '
-                      '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runId}"}' % test_name)
+                      '"scenarioName":"scenario name", "controllerZoneId":"UdFyn", '
+                      '"lgZoneIds":{"UdFyn":5}, "testResultNamingPattern":"test_${runId}"}' % test_name)
         result = runner.invoke(settings, ['create'],
                                input='{"name":"%s", "description":"test description ",'
-                                     '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", '
-                                     '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runId}"}' % test_name)
+                                     '"scenarioName":"scenario name", "controllerZoneId":"UdFyn", '
+                                     '"lgZoneIds":5, "testResultNamingPattern":"test_${runId}"}' % test_name)
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['name'] == test_name
         assert json_result['description'] == 'test description '
         assert json_result['scenarioName'] == 'scenario name'
-        assert json_result['controllerZoneId'] == 'defaultzone'
-        assert json_result['lgZoneIds']['defaultzone'] == 5
-        assert json_result['lgZoneIds']['UdFyn'] == 1
+        assert json_result['controllerZoneId'] == 'UdFyn'
+        assert json_result['lgZoneIds']['UdFyn'] == 5
         assert json_result['testResultNamingPattern'] == 'test_${runId}'
+
+    def test_default_fields(self, monkeypatch):
+        runner = CliRunner()
+        test_name = generate_test_settings_name()
+        mock_api_post(monkeypatch, 'v2/tests',
+                      '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "controllerZoneId":"UdFyn", '
+                      '"lgZoneIds":{"UdFyn":1}, "testResultNamingPattern":"#${runId}"}' % test_name)
+        result = runner.invoke(settings,
+                               ['create', test_name, '--zone', 'UdFyn'])
+        assert_success(result)
+        json_result = json.loads(result.output)
+        assert json_result['name'] == test_name
+        assert json_result['controllerZoneId'] == 'UdFyn'
+        assert json_result['lgZoneIds']['UdFyn'] == 1
+        assert json_result['testResultNamingPattern'] == '#${runId}'
 
     def test_error_required(self):
         runner = CliRunner()

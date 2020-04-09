@@ -1,3 +1,4 @@
+import copy
 import click
 
 import sys
@@ -64,17 +65,19 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
 
 
 def create(json_data):
-    rep = rest_crud.post(__endpoint, json_data)
+    rep = rest_crud.post(__endpoint, fill_default_fields(json_data))
     return tools.get_id_and_print_json(rep)
 
 
 def put(id_settings, json_data):
     rep = rest_crud.put(get_end_point(id_settings), json_data)
+    rep = patch_default_fields(id_settings, rep)
     tools.get_id_and_print_json(rep)
 
 
 def patch(id_settings, json_data):
     rep = rest_crud.patch(get_end_point(id_settings), json_data)
+    rep = patch_default_fields(id_settings, rep)
     tools.get_id_and_print_json(rep)
 
 
@@ -124,8 +127,46 @@ def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, na
 
 
 def parse_zone_ids(lg_zone_ids):
+    if tools.is_integer(lg_zone_ids):
+        return lg_zone_ids
     values = {}
     for zone in lg_zone_ids.split(","):
         split = zone.split(":")
         values[split[0].strip()] = split[1].strip()
     return values
+
+
+def default_zone(zone: str):
+    return 'defaultzone' if zone is None or zone.strip() == '' else zone
+
+
+def default_lgs(lg_zone_ids: str, controller_zone_id: str):
+    lgs = '1' if lg_zone_ids is None or lg_zone_ids == {} else lg_zone_ids
+    if tools.is_integer(lgs):
+        zone = default_zone(controller_zone_id)
+        return parse_zone_ids('%s:%s' % (zone, lgs))
+    return parse_zone_ids(lg_zone_ids)
+
+
+def fill_default_fields(json_data):
+    data = copy.deepcopy(json_data)
+    data.update([
+        ('controllerZoneId', default_zone(json_data.get('controllerZoneId'))),
+        ('lgZoneIds', default_lgs(json_data.get('lgZoneIds'), json_data.get('controllerZoneId')))
+    ])
+    return data
+
+
+def patch_default_fields(id_settings, json_data):
+    if 'id' not in json_data:
+        # Display errors if there is some
+        tools.get_id_and_print_json(json_data)
+
+    json_filled = fill_default_fields(json_data)
+    default_fields_to_patch = {}
+    if json_data.get('controllerZoneId') != json_filled['controllerZoneId']:
+        default_fields_to_patch['controllerZoneId'] = json_filled['controllerZoneId']
+    if json_data.get('lgZoneIds') != json_filled['lgZoneIds']:
+        default_fields_to_patch['lgZoneIds'] = json_filled['lgZoneIds']
+    if len(default_fields_to_patch) > 0:
+        return rest_crud.patch(get_end_point(id_settings), default_fields_to_patch)

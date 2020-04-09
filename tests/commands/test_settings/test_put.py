@@ -80,6 +80,27 @@ class TestPut:
         assert json_result['lgZoneIds']['UdFyn'] == 1
         assert json_result['testResultNamingPattern'] == 'test_${runId}'
 
+    def test_default_fields(self, monkeypatch, valid_data):
+        runner = CliRunner()
+        if monkeypatch is None:
+            # If mocks are disabled, call the real API to empty fields
+            rest_crud.patch('v2/tests/%s' % valid_data.test_settings_id, {'controllerZoneId': '', 'lgZoneIds': {}})
+
+        mock_api_put(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id,
+                     '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "description":"test description ",'
+                     '"scenarioName":"scenario name", "controllerZoneId":"", "lgZoneIds":{} }')
+        mock_api_patch(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id,
+                       '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "description":"test description ",'
+                       '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", "lgZoneIds":{"defaultzone":1} }')
+        result = runner.invoke(settings, ['put', valid_data.test_settings_id, '--description', 'test description ',
+                                          '--rename', generate_test_settings_name()])
+        assert_success(result)
+        json_result = json.loads(result.output)
+        print(result.output)
+        assert json_result['description'] == 'test description '
+        assert json_result['controllerZoneId'] == 'defaultzone'
+        assert json_result['lgZoneIds']['defaultzone'] == 1
+
     def test_error_required(self):
         runner = CliRunner()
         result = runner.invoke(settings, ['put'])
