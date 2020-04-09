@@ -2,7 +2,9 @@ import re
 import sys
 import click
 import json
+
 from click import ClickException
+
 from neoload_cli_lib import rest_crud, user_data
 
 __regex_id = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
@@ -27,20 +29,24 @@ def confirm(message: str):
     return True
 
 
+def get_named_or_id(name, is_id_, resolver):
+    endpoint = resolver.get_endpoint()
+    if not is_id_:
+        json_or_id = resolver.resolve_name_or_json(name)
+        if type(json_or_id) is not str:
+            return json_or_id
+        else:
+            name = json_or_id
+
+    return rest_crud.get(endpoint + "/" + name)
+
+
 def ls(name, is_id_, resolver):
     endpoint = resolver.get_endpoint()
     if name:
-        if is_id_:
-            endpoint = endpoint + "/" + name
-        else:
-            json_or_id = resolver.resolve_name_or_json(name)
-            if type(json_or_id) is not str:
-                print_json(json_or_id)
-                return
-    res = rest_crud.get(endpoint)
-    print_json(res)
-    if name is not None:
-        check_json_has_id(res)
+        print_json(get_named_or_id(name, is_id_, resolver))
+    else:
+        print_json(rest_crud.get(endpoint))
 
 
 def delete(endpoint, id_data, kind):
@@ -64,9 +70,11 @@ def print_json(json_data):
     print(json.dumps(json_data, indent=2))
 
 
-def check_json_has_id(json_data):
-    if 'id' not in json_data and not isinstance(json_data, list):
+def get_id_and_print_json(json_data: json):
+    print_json(json_data)
+    if 'id' not in json_data:
         raise ClickException('No uui returned. Operation may have failed !')
+    return json_data['id']
 
 
 def is_integer(string):

@@ -65,27 +65,22 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
 
 def create(json_data):
     rep = rest_crud.post(__endpoint, json_data)
-    tools.print_json(rep)
-    tools.check_json_has_id(rep)
-    return rep['id']
+    return tools.get_id_and_print_json(rep)
 
 
 def put(id_settings, json_data):
     rep = rest_crud.put(get_end_point(id_settings), json_data)
-    tools.print_json(rep)
-    tools.check_json_has_id(rep)
+    tools.get_id_and_print_json(rep)
 
 
 def patch(id_settings, json_data):
     rep = rest_crud.patch(get_end_point(id_settings), json_data)
-    tools.print_json(rep)
-    tools.check_json_has_id(rep)
+    tools.get_id_and_print_json(rep)
 
 
 def delete(__id):
     rep = tools.delete(__endpoint, __id, "settings")
-    tools.print_json(rep)
-    tools.check_json_has_id(rep)
+    tools.get_id_and_print_json(rep)
 
 
 def get_end_point(id_test: str):

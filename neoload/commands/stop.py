@@ -1,10 +1,7 @@
 import click
-import json
 
 from commands import test_results
-from neoload_cli_lib import rest_crud, tools, user_data
-
-__endpoint = "v2/tests-results/"
+from neoload_cli_lib import tools, user_data, running_tools
 
 
 @click.command()
@@ -16,10 +13,7 @@ def cli(name, force):
     if not name:
         raise Exception('No test id is provided')
 
-    policy = 'FORCE' if force else 'GRACEFUL'
-    map_policy = {"stopPolicy": policy}
     if not tools.is_id(name):
         name = test_results.__resolver.resolve_name(name)
 
-    if tools.confirm("Do you want stop the test" + name + " with " + policy.lower() + " policy ?"):
-        rest_crud.post(__endpoint + "/" + name + "/stop", json.dumps(map_policy))
+    running_tools.stop(name, force)

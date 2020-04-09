@@ -1,6 +1,6 @@
 import click
 
 @click.command()
-def cli():
+def cli(name_or_id):
     """Wait a test result"""
     pass

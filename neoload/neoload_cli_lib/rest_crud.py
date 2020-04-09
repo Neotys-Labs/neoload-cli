@@ -1,8 +1,8 @@
-import requests
 import os
-import json
-
 import urllib.parse as urlparse
+
+import requests
+
 from neoload_cli_lib import user_data
 
 __current_command = ""
@@ -22,8 +22,11 @@ def set_current_sub_command(command: str):
 
 
 def get(endpoint: str):
-    response = requests.get(__create_url(endpoint), headers=__create_additional_headers())
-    return response.json()
+    return get_raw(endpoint).json()
+
+
+def get_raw(endpoint: str):
+    return requests.get(__create_url(endpoint), headers=__create_additional_headers())
 
 
 def post(endpoint: str, data):
@@ -31,7 +34,15 @@ def post(endpoint: str, data):
     return response.json()
 
 
-def post_binary(endpoint: str, path):
+def __create_url_file_storage(endpoint):
+    return urlparse.urljoin(user_data.get_user_data().get_file_storage_url(), endpoint)
+
+
+def get_from_file_storage(endpoint: str):
+    return requests.get(__create_url_file_storage(endpoint), headers=__create_additional_headers())
+
+
+def post_binary_files_storage(endpoint: str, path):
     filename = os.path.basename(path)
 
     multipart_form_data = {
@@ -39,6 +50,11 @@ def post_binary(endpoint: str, path):
     }
 
     response = requests.post(__create_url(endpoint), files=multipart_form_data)
+    return response.json()
+
+
+def get_file_storage(endpoint: str):
+    response = requests.get(__create_url_file_storage(endpoint), headers=__create_additional_headers())
     return response.json()
 
 
@@ -53,10 +69,7 @@ def patch(endpoint: str, data):
 
 
 def delete(endpoint: str):
-    response = requests.delete(__create_url(endpoint), headers=__create_additional_headers())
-    if response.text == '':
-        return json.loads('{"code":"%s","ok":"%s"}' % (response.status_code, response.ok))
-    return response.json()
+    return requests.delete(__create_url(endpoint), headers=__create_additional_headers())
 
 
 def __create_url(endpoint: str):

@@ -1,6 +1,7 @@
 import appdirs
 import os
 import yaml
+from neoload_cli_lib import rest_crud
 
 __conf_name = "neoload-cli"
 __version = "1.0"
@@ -32,8 +33,36 @@ def do_login(token, url, no_write):
         raise Exception('token is mandatory. please see neoload login --help.')
     global __user_data_singleton
     __user_data_singleton = UserData.from_login(token, url)
+    __compute_version_and_path()
     __save_user_data()
     return __user_data_singleton
+
+
+def get_front_url_by_private_entrypoint():
+    response = rest_crud.get('/nlweb/rest/rest-api/url-api/v1/action/get-front-end-url')
+    return response['frontEndUrl']
+
+
+def __compute_version_and_path():
+    file_storage = get_file_storage_from_swagger()
+    front = get_front_url_by_private_entrypoint()
+    __user_data_singleton.__set_url(front, file_storage, None)
+
+
+def get_file_storage_from_swagger():
+    response = rest_crud.get_raw('/v2/swagger.yml')
+    spec = yaml.load(response.text, Loader=yaml.FullLoader)
+    return spec['paths']['/projects']['servers'][0]['url']
+
+
+def get_nlweb_informations():
+    response = rest_crud.get_raw('v2/informations')
+    if response.status_code == 200:
+        json = response.json()
+        __user_data_singleton.url(json['front_url'], json['filestorage_url'], json['version'])
+        return True
+    else:
+        return False
 
 
 class UserData:
@@ -58,16 +87,27 @@ class UserData:
         metadata = ""
         for (key, value) in self.metadata.items():
             metadata += key + ": " + value + "\n"
-        return "You are logged on " + self.url + " with token " + token + "\n" + metadata
+        return "You are logged on " + self.url + " with token " + token + "\n\n" + metadata
 
     def get_url(self):
         return self.url
 
     def get_frontend_url(self):
-        return self.url.replace('-api', '')
+        return self.frontend_url
 
     def get_token(self):
         return self.token
+
+    def get_file_storage_url(self):
+        return self.files_storage_url
+
+    def get_version(self):
+        return self.version
+
+    def __set_url(self, frontend, files_storage, version):
+        self.frontend_url = frontend
+        self.files_storage_url = files_storage
+        self.version = version
 
 
 def __load_user_data():
