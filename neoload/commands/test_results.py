@@ -2,10 +2,14 @@ import click
 import sys
 import json
 
-from neoload_cli_lib import tools, rest_crud, user_data
+from neoload_cli_lib import tools, rest_crud, user_data, displayer
 from neoload_cli_lib.name_resolver import Resolver
 
 __endpoint = "v2/test-results"
+__operation_statistics = "/statistics"
+__operation_sla_global = "/slas/statistics"
+__operation_sla_test = "/slas/per-test"
+__operation_sla_interval = "/slas/per-interval"
 
 __resolver = Resolver(__endpoint)
 
@@ -13,7 +17,7 @@ meta_key = 'result id'
 
 
 @click.command()
-@click.argument('command', type=click.Choice(['ls', 'patch', 'delete', 'use'], case_sensitive=False),
+@click.argument('command', type=click.Choice(['ls', 'summary', 'patch', 'delete', 'use'], case_sensitive=False),
                 required=False)
 @click.argument("name", type=str, required=False)
 @click.option('--rename', help="")
@@ -42,7 +46,15 @@ def cli(command, name, rename, description, quality_status):
     if not __id:
         __id = user_data.get_meta(meta_key)
 
-    if command == "patch":
+    if command == "summary":
+        json_result = rest_crud.get(get_end_point(__id))
+        json_sla_global = rest_crud.get(get_end_point(__id, __operation_sla_global))
+        json_sla_test = rest_crud.get(get_end_point(__id, __operation_sla_test))
+        json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
+        json_stats = rest_crud.get(get_end_point(__id, __operation_statistics))
+        displayer.print_result_summary(json_result, json_sla_global, json_sla_test, json_sla_interval, json_stats)
+        user_data.set_meta(meta_key, __id)
+    elif command == "patch":
         json_data = create_json(rename, description, quality_status)
         rep = rest_crud.put(get_end_point(__id), json_data)
         tools.get_id_and_print_json(rep)
@@ -62,8 +74,8 @@ def get_id(name, is_id):
         return __resolver.resolve_name(name)
 
 
-def get_end_point(id_test: str):
-    return __endpoint + "/" + id_test
+def get_end_point(id_test: str, operation=''):
+    return __endpoint + "/" + id_test + operation
 
 
 def create_json(name, description, quality_status):
