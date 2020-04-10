@@ -1,6 +1,7 @@
 import click
 import os
 import logging
+import coloredlogs
 
 from neoload_cli_lib import tools, rest_crud
 
@@ -45,7 +46,7 @@ def cli(debug, batch):
         requests_log.propagate = True
 
     tools.set_batch(batch)
-
+    coloredlogs.install(level=logging.getLogger().level)
 
 if __name__ == '__main__':
     cli()
