@@ -2,7 +2,7 @@ NLW_TOKEN=
 NLW_ZONE_DYNAMIC=
 NLW_URL=https://neoload-rest.saas.neotys.com
 
-pip install neoload:1.0.0
+pip install neoload==1.0.0
 
 neoload --version
 neoload --help
@@ -11,33 +11,37 @@ neoload --help
 #  1. if there is a blocking stdin operation, it defaults to exit with failure of why
 #  2. if there is a operation (delete) which usually prompts a user before, it assumes yes if in non-interactive
 # NOTE: quiet mode referred to overriding other verbose/debug outputs to produce a single, simple outcome no matter what
-# GOAL: simplify test execution and platform management tasks to as-close-to one-liners as possible
+# GOAL: simplify test execution and platform management tasks to as-close-to one-liners as possible : click framework allows commands chaining
 # NOT-GOAL: write commands that simply reflect our API structure, as nice and normalized as it is
 
 # TL;DR: login to the platform and run a test
-neoload login --token $NLW_TOKEN --apiurl $NLW_URL --zone $NLW_ZONE_DYNAMIC
-  # stores these data points in a 'defaults' config set (aliasing functionality in 'neoload config...' for one-liner simplicity)
-neoload run --file tests/neoload_projects/example_1/everything.yaml --scenario sanityScenario
+neoload login --apiurl $NLW_URL $NLW_TOKEN \
+        test-settings --zone $NLW_ZONE --scenario sanityScenario create NewTest1 \
+        upload tests/neoload_projects/example_1/everything.yaml \
+  # stores the configuration of the test in Neoload Web (store the current test-settings id in the CLI for one-liner simplicity)
+neoload run
   # produces blocking, unbuffered output about test execution process, including readout of current data points
 
 #login
 neoload login
   # if no --token provided, asks for it by stdin prompt if in interactive mode
-neoload login --token $NLW_TOKEN   # defaults to use SaaS, store in 'defaults'
-neoload login --token $NLW_TOKEN --apiurl $NLW_URL # uses a specific NLW instance for login, store in 'defaults'
+neoload login $NLW_TOKEN   # defaults to use SaaS, store in 'defaults'
+neoload login --apiurl $NLW_UR $NLW_TOKENL # uses a specific NLW instance for login, store in 'defaults'
+  # Display the api url and the currently stored data (test-settings-id, test-result-id)
+neoload status
 
 #config
   # we need config sets beyond simple login, such as default zone etc, see https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/
-neoload config --name custom1 # shows stored YAML for stored 'custom1' config set
-neoload config --name custom1 set-token $NLW_TOKEN # sets token for stored 'custom1' config set
-neoload config --name custom1 set-zone $NLW_ZONE_DYNAMIC # sets zone for stored 'custom1' config set
-neoload config --name custom1 set-apiurl $NLW_URL
-neoload config set-zone $NLW_ZONE_DYNAMIC # if no config set name specified, assume 'defaults'
+neoload test-settings ls NewTest1 # shows stored YAML for stored 'NewTest1'
+neoload test-settings --zone $NLW_ZONE_DYNAMIC --lgs 5 patch NewTest1  # sets zone and number of lgs for stored 'NewTest1'
+neoload test-settings --zone $NLW_CONTROLLER_ZONE --lgs $NLW_LG_ZONE_DYNAMIC:1,zone2:5 patch NewTest1 # sets advanced controls on controller zones and lg zones
+  #(any assets provided should be validated internally as above before being uploaded if at all possible)
+neoload test-settings upload tests/neoload_projects/example_1/everything.yaml
 
 #validate
-neoload validate --file tests/neoload_projects/example_1/everything.yaml
+neoload validate tests/neoload_projects/example_1/everything.yaml
   # is this valid YAML, and is it valid to our DSL based on JSON-schema? If not, provide detailed reasons why
-neoload validate --zone $NLW_ZONE_DYNAMIC --available-lgs 5
+# TODO neoload validate --zone $NLW_ZONE_DYNAMIC --available-lgs 5
   # is this a valid zone, and does it have at least 5 available load generators? if not, throw exit code > 1 with detailed printout of why not
 
 #infra
@@ -53,15 +57,72 @@ neoload infra detatchall
   # destroy all containers on the connected Docker host that were initialized using this CLI at any point in time
 
 #run
-#(any assets provided should be validated internally as above before being uploaded if at all possible)
-neoload run --file tests/neoload_projects/example_1/everything.yaml --scenario sanityScenario
   # produces blocking, unbuffered output about test execution process, including readout of current data points
-neoload run --file tests/neoload_projects/example_1/everything.yaml --scenario sanityScenario --junitsla junit.xml
-  # everything above, but also one-liners the sla report output to named file
-testid=$(neoload run --non-blocking --testid fsdg-1234-1234-gfds --name myFirstRun) # given an existing test explicitly uploaded
-  # if non-blocking (detach), produces only the testid on stdout
-neoload stop $testid --force
+neoload run
+  Example output :
+    Result created: #1 ea0b655f-0bd9-4d89-85c1-ed9c8a35feea
+    Logs available at https://neoload.saas.neotys.com/#!result/ea0b655f-0bd9-4d89-85c1-ed9c8a35feea/overview
+    INITIALIZING... Done
+    STARTING... Done
+    RUNNING...
+	0: 0:00:00.253307       Err[0],LGs[1]  VUs:1   BPS[0.0]        RPS:0.0         avg(rql):0.0
+	3: 0:00:15.799357       Err[0],LGs[1]  VUs:4   BPS[1268.1061]  RPS:0.17650174  avg(rql):5558.0
+	6: 0:00:31.338746       Err[0],LGs[1]  VUs:5   BPS[1956.0303]  RPS:0.24242425  avg(rql):6613.0
+	9: 0:00:46.884859       Err[2],LGs[1]  VUs:2   BPS[1505.337]   RPS:0.22450355  avg(rql):9242.0
+	12: 0:01:02.436620      Err[2],LGs[1]  VUs:2   BPS[1134.7405]  RPS:0.16923337  avg(rql):9242.0
+    TERMINATED with [success|failure]   # This color should be green for success and red for failure
+    # After TERMINATED, display the summary that includes SLAs. Failed SLAs lines are red, success are green (@see existing code)
+
+  # run OPTIONS
+    -d, --detach            (optional) Launch the test and return immediately without waiting until it terminates. Only print the Two first lines of the output
+    --test-settings         (optional) Test-settings name to run
+    --id                    (optional) Use uuid instead of name
+    -n, --name              (optional) Result name. By default, use the test result naming pattern defined in the test-settings (#1, #2...)
+    --description           (optional) Result description
+    -f, --as-code           Comma-separated as-code files to use. Those files must be part of the uploaded project
+    --reservation-id        The reservation identifier to use for the test
+    --reservation-duration
+    --reservation-web-vu
+    --reservation-sap-vu
+    --reservation-citrix-vu
+    --publish-test-result <flag>   Only for collaborative projects: publish the test results onto the server
+
+  # Run in interactive mode (a user from a shell)
+    # When hitting Ctrl+C : send the stop test signal (graceful stop). Blocking status until stop completes.
+    # When hitting the second time Ctrl+C : send the stop test --force (terminate)
+  # Run in non interactive mode (from a CI script), when aborting the job, do as if Ctrl+C was hit in interactive mode
+
+  # if non-blocking (detach)
+neoload --force stop
   # blocking status until complete, with a timeout of 30s
+
+  # and also one-liners, at the end of the test: the sla report output to named file and the summary
+neoload run test-result junitreport junit.xml test-result summary
+
+
+# wait (BONUS)
+  # blocking, display status of a running test starting from now, or display TERMINATED with [success|error] if the test finished
+neoload wait
+  Example output :
+    Result: #1 ea0b655f-0bd9-4d89-85c1-ed9c8a35feea
+    Logs available at https://neoload.saas.neotys.com/#!result/ea0b655f-0bd9-4d89-85c1-ed9c8a35feea/overview
+    STARTING... Done
+    RUNNING...
+neoload wait
+  Example output :
+    Result: #1 ea0b655f-0bd9-4d89-85c1-ed9c8a35feea
+    Logs available at https://neoload.saas.neotys.com/#!result/ea0b655f-0bd9-4d89-85c1-ed9c8a35feea/overview
+    TERMINATED with success
+
+
+# results
+  # Set a specific test result to work with (the result is automatically set when running a test)
+neoload test-result use ee50e3a2-3cf4-4667-8186-9950895e0a04
+  # the sla report output to named file
+neoload test-result junitreport junit.xml
+  # The current test result summary
+neoload test-result summary
+
 
 #lists
   # I'd like to have listings that produce one or more outputs, be referenced in the plural, not singular command

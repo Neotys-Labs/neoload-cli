@@ -1,0 +1,59 @@
+pipeline {
+  agent none
+
+  environment {
+    // either set these in 'prepare...' or get from a secrets provider
+    //NLW_TOKEN = 'YOUR NLWEB TOKEN'
+    //NLW_ZONE = 'ZONE ID'
+  }
+
+  stages {
+    stage('Grab Utility Repo') {
+      agent { label 'master' }
+      steps {
+        dir('examples') {
+            git(branch: "master", url: 'https://github.com/Neotys-Labs/neoload-cli.git')
+        }
+      }
+    }
+    stage('Attach Worker') {
+      agent {
+        dockerfile { // load python container
+          args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
+          dir 'examples/docker'
+        }
+      }
+      stages {
+        stage('Get NeoLoad CLI') {
+          steps {
+            sh "pip install neoload"
+          }
+        }
+        stage('Prepare Neoload test') {
+          steps {
+            sh """neoload \
+                   login $NLW_TOKEN \
+                   test-settings create MyJenkinsTest --zone $NLW_ZONE --scenario sanityScenario \
+                   project --path tests/neoload_projects/example_1/ upload
+              """
+          }
+        }
+        stage('Run Test') {
+          steps {
+              script {
+                  sh """neoload run \
+                     -as-code tests/neoload_projects/example_1/everything.yaml,tests/neoload_projects/example_1/slas/uat.yaml \
+                     --junitsla neoload-slas.xml \
+                    """
+              }
+          }
+          post {
+              always {
+                  junit 'neoload-slas.xml'
+              }
+          }
+        }
+      }
+    }
+  }
+}

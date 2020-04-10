@@ -1,0 +1,49 @@
+trigger: none
+
+pool:
+  vmImage: 'ubuntu-16.04'
+
+variables:
+  nlw_token: $(secret_nlw_token)
+  zone_code: pimnV
+  PYTHONUNBUFFERED: 1
+
+jobs:
+- job: RunLoadTest
+  displayName: Run NeoLoad Test
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.8'
+
+  - task: Bash@3
+    displayName: Install NeoLoad
+    continueOnError: false
+    inputs:
+      targetType: 'inline'
+      script: |
+        pip install neoload
+        neoload login $(nlw_token) \
+                test-settings create MyAzureDynInfraTest --zone $(zone_code) --scenario sanityScenario \
+                project --path tests/neoload_projects/example_1/ upload
+
+  - task: Bash@3
+    displayName: Run NeoLoad Test
+    continueOnError: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd $(Build.SourcesDirectory)
+
+        neoload run \
+                --as-code tests/neoload_projects/example_1/everything.yaml,tests/neoload_projects/example_1/slas/uat.yaml \
+                --testname "Azure_sidecars_$(Build.BuildNumber)" \
+                --testdesc "Azure example load test with sidecars; $(Build.BuildUri)" \
+                --junitsla $(Common.TestResultsDirectory)/neoload-slas.xml
+
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: $(Common.TestResultsDirectory)/neoload-slas.xml
+      failTaskOnFailedTests: true
