@@ -23,7 +23,8 @@ meta_key = 'result id'
 @click.option('--rename', help="")
 @click.option('--description', help="")
 @click.option('--quality-status', 'quality_status', type=click.Choice(['PASSED', 'FAILED']), help="")
-def cli(command, name, rename, description, quality_status):
+@click.option('--junit-file', 'junit_file', default="junit-sla.xml", help="Output the junit sla report to this path")
+def cli(command, name, rename, description, quality_status, junit_file):
     """create/read/update/delete test settings"""
     if not command:
         print("command is mandatory. Please see neoload tests-settings --help")
@@ -53,6 +54,12 @@ def cli(command, name, rename, description, quality_status):
         json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
         json_stats = rest_crud.get(get_end_point(__id, __operation_statistics))
         displayer.print_result_summary(json_result, json_sla_global, json_sla_test, json_sla_interval, json_stats)
+        user_data.set_meta(meta_key, __id)
+    if command == "junitsla":
+        json_result = rest_crud.get(get_end_point(__id))
+        json_sla_test = rest_crud.get(get_end_point(__id, __operation_sla_test))
+        json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
+        displayer.print_result_junit(json_result, json_sla_test, json_sla_interval, junit_file)
         user_data.set_meta(meta_key, __id)
     elif command == "patch":
         json_data = create_json(rename, description, quality_status)
