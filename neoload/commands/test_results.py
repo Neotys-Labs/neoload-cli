@@ -38,7 +38,7 @@ def cli(command, name, rename, description, quality_status, junit_file):
         tools.ls(name, is_id, __resolver)
         return
 
-    __id = get_id(name, is_id)
+    __id = tools.get_id(name, __resolver, is_id)
 
     if command == "use":
         tools.use(__id, meta_key, __resolver)

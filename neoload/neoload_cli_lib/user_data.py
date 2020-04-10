@@ -1,6 +1,7 @@
 import appdirs
 import os
 import yaml
+import click
 from neoload_cli_lib import rest_crud
 
 __conf_name = "neoload-cli"
@@ -22,7 +23,7 @@ def do_logout():
 
 def get_user_data(throw=True):
     if __user_data_singleton is None and throw:
-        raise Exception("You are'nt logged. Please use command \"neoload login\" first")
+        raise click.ClickException("You are'nt logged. Please use command \"neoload login\" first")
     return __user_data_singleton
 
 
@@ -30,7 +31,7 @@ def do_login(token, url, no_write):
     global __no_write
     __no_write = no_write
     if token is None:
-        raise Exception('token is mandatory. please see neoload login --help.')
+        raise click.ClickException('token is mandatory. please see neoload login --help.')
     global __user_data_singleton
     __user_data_singleton = UserData.from_login(token, url)
     __compute_version_and_path()
@@ -40,22 +41,22 @@ def do_login(token, url, no_write):
 
 def get_front_url_by_private_entrypoint():
     response = rest_crud.get('/nlweb/rest/rest-api/url-api/v1/action/get-front-end-url')
-    return response['frontEndUrl']
+    return response['frontEndUrl']['rootUrl']
 
 
 def __compute_version_and_path():
     file_storage = get_file_storage_from_swagger()
     front = get_front_url_by_private_entrypoint()
-    __user_data_singleton.__set_url(front, file_storage, None)
+    __user_data_singleton.set_url(front, file_storage, None)
 
 
 def get_file_storage_from_swagger():
-    response = rest_crud.get_raw('/v2/swagger.yml')
+    response = rest_crud.get_raw('explore/v2/swagger.yaml')
     spec = yaml.load(response.text, Loader=yaml.FullLoader)
-    return spec['paths']['/projects']['servers'][0]['url']
+    return spec['paths']['/tests/{testId}/project']['servers'][0]['url']
 
 
-def get_nlweb_informations():
+def get_nlweb_information():
     response = rest_crud.get_raw('v2/informations')
     if response.status_code == 200:
         json = response.json()
@@ -93,21 +94,26 @@ class UserData:
         return self.url
 
     def get_frontend_url(self):
-        return self.frontend_url
+        return self.metadata['frontend url']
 
     def get_token(self):
         return self.token
 
     def get_file_storage_url(self):
-        return self.files_storage_url
+        return self.metadata['file storage url']
 
     def get_version(self):
-        return self.version
+        return self.metadata['version']
 
-    def __set_url(self, frontend, files_storage, version):
-        self.frontend_url = frontend
-        self.files_storage_url = files_storage
-        self.version = version
+    def set_url(self, frontend, files_storage, version):
+        if frontend:
+            self.metadata['frontend url'] = frontend
+        if files_storage:
+            self.metadata['file storage url'] = files_storage
+        if version:
+            self.metadata['version'] = version
+        else:
+            self.metadata['version'] = 'legacy'
 
 
 def __load_user_data():
@@ -150,7 +156,7 @@ __yaml_schema_singleton = __load_yaml_schema()
 
 def get_yaml_schema(throw=True):
     if __yaml_schema_singleton is None and throw:
-        raise Exception("No yaml schema found. Please add --schema-url option to download it first")
+        raise click.ClickException("No yaml schema found. Please add --schema-url option to download it first")
     return __yaml_schema_singleton
 
 

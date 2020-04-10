@@ -1,6 +1,6 @@
 import click
 import urllib.parse as urlparse
-from commands.test_results import get_id
+from commands import test_results
 from neoload_cli_lib import user_data, tools
 
 
@@ -8,10 +8,14 @@ from neoload_cli_lib import user_data, tools
 @click.argument('name', type=str)
 def cli(name):
     """get logs url of a test result managed by NeoLoad Web"""
-    print(urlparse.urljoin(user_data.get_user_data().get_frontend_url(), get_endpoint(name)))
+
+    print(get_url(name))
+
+
+def get_url(name: str):
+    urlparse.urljoin(user_data.get_user_data().get_frontend_url(), get_endpoint(name))
 
 
 def get_endpoint(name: str):
-    __is_id = tools.is_id(name)
-    __id = get_id(name, __is_id)
+    __id = tools.get_id(name, test_results.__resolver)
     return '#!result/%s/overview' % __id

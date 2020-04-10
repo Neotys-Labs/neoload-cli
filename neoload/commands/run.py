@@ -10,7 +10,7 @@ from commands import test_settings, test_results
 @click.option("-d", "--detached", help="Doesn't wait the end of test")
 def cli(name_or_id, scenario, detached, name):
     """run a test"""
-    if name_or_id == "cur":
+    if not name_or_id or name_or_id == "cur":
         name_or_id = user_data.get_meta(test_settings.meta_key)
 
     is_id = tools.is_id(name_or_id)

@@ -44,7 +44,7 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
         user_data.set_meta(meta_key, id_created)
         return
 
-    __id = get_id(name, is_id)
+    __id = tools.get_id(name, __resolver, is_id)
 
     if command == "use":
         tools.use(__id, meta_key, __resolver)
@@ -83,18 +83,17 @@ def patch(id_settings, json_data):
 
 def delete(__id):
     rep = tools.delete(__endpoint, __id, "settings")
-    tools.get_id_and_print_json(rep.json())
+    if rep.status_code > 299:
+        print(rep.text)
+        raise click.ClickException('deletion has failed. The server has returned an error: '+rep.status_code)
+    tools.print_json(rep.json())
+
+    user_data.set_meta(meta_key, None)
 
 
 def get_end_point(id_test: str):
     return __endpoint + "/" + id_test
 
-
-def get_id(name, is_id):
-    if is_id or not name:
-        return name
-    else:
-        return __resolver.resolve_name(name)
 
 
 def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern):

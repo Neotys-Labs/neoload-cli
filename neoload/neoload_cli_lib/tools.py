@@ -23,9 +23,15 @@ def is_id(chain: str):
     return False
 
 
-def confirm(message: str):
+def confirm(message: str, quit_option=False):
     if sys.stdin.isatty() and not __batch:
-        return click.confirm(message, err=True)
+        choice = ['y', 'n']
+        if quit_option:
+            choice.append('q')
+        response = click.prompt(message, default='n', type=click.Choice(choice, case_sensitive=False), err=True)
+        if quit_option and response == 'q':
+            quit(0)
+        return response == 'y'
     return True
 
 
@@ -83,3 +89,12 @@ def is_integer(string):
         return True
     except ValueError:
         return False
+
+
+def get_id(name, resolver, is_an_id=None):
+    if is_an_id is None:
+        is_an_id = is_id(name)
+    if is_an_id or not name:
+        return name
+    else:
+        return resolver.resolve_name(name)
