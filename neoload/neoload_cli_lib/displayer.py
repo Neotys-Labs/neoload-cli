@@ -7,6 +7,13 @@ __SLA_test = 'Per Run'
 __SLA_interval = 'Per Interval'
 
 
+def get_color_from_status(status: str):
+    return {
+        "FAILED": "red",
+        "PASSED": "green"
+    }.get(status, "yellow")
+
+
 def print_result_summary(json_result, sla_json_global, sla_json_test, sla_json_interval, json_stats):
     print_sla(sla_json_global, sla_json_test, sla_json_interval)
     tools.print_json({
@@ -30,11 +37,7 @@ def print_sla(sla_json_global, sla_json_test, sla_json_interval):
 
 def __print_one_sla(kind, sla_json):
     status = sla_json['status']
-    color = "red"
-    if status == "PASSED":
-        color = "green"
-    elif status == "WARNING":
-        color = "yellow"
+    color = get_color_from_status(status)
     element = ''
     where = ''
 
