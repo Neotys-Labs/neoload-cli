@@ -10,7 +10,15 @@ setup(
     author_email='',
     description='A command-line native utility for launching and observing NeoLoad performance tests',
     install_requires=[
-        'click', 'pyconfig', 'appdirs', 'requests', 'jsonschema', 'PyYAML', 'termcolor', 'junit_xml',
-        'pytest', 'pytest-datafiles'
+        'click',
+        'pyconfig',
+        'appdirs',
+        'requests',
+        'jsonschema',
+        'PyYAML',
+        'pytest',
+        'pytest-datafiles',
+        'junit_xml',
+        'termcolor'
     ]
 )

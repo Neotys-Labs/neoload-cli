@@ -48,30 +48,47 @@ def cli(command, name, rename, description, quality_status, junit_file):
         __id = user_data.get_meta(meta_key)
 
     if command == "summary":
-        json_result = rest_crud.get(get_end_point(__id))
-        json_sla_global = rest_crud.get(get_end_point(__id, __operation_sla_global))
-        json_sla_test = rest_crud.get(get_end_point(__id, __operation_sla_test))
-        json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
-        json_stats = rest_crud.get(get_end_point(__id, __operation_statistics))
-        displayer.print_result_summary(json_result, json_sla_global, json_sla_test, json_sla_interval, json_stats)
-        user_data.set_meta(meta_key, __id)
-    if command == "junitsla":
-        json_result = rest_crud.get(get_end_point(__id))
-        json_sla_test = rest_crud.get(get_end_point(__id, __operation_sla_test))
-        json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
-        displayer.print_result_junit(json_result, json_sla_test, json_sla_interval, junit_file)
-        user_data.set_meta(meta_key, __id)
+        summary(__id)
+    elif command == "junitsla":
+        junit(__id, junit_file)
     elif command == "patch":
-        json_data = create_json(rename, description, quality_status)
-        rep = rest_crud.put(get_end_point(__id), json_data)
-        tools.get_id_and_print_json(rep)
-        user_data.set_meta(meta_key, __id)
+        patch(__id, description, quality_status, rename)
     elif command == "delete":
-        rep = tools.delete(__endpoint, __id, "test results")
-        tools.print_json(rep.json())
-        if rep['code'] != '204':
-            raise click.ClickException('Operation may have failed !')
+        delete(__id)
         user_data.set_meta(meta_key, None)
+
+    if command != "delete":
+        user_data.set_meta(meta_key, __id)
+
+
+def delete(__id):
+    rep = tools.delete(__endpoint, __id, "test results")
+    if rep.status_code > 299:
+        print(rep.text)
+        raise click.ClickException('Operation may have failed !')
+    tools.print_json(rep.json())
+
+
+def patch(__id, description, quality_status, rename):
+    json_data = create_json(rename, description, quality_status)
+    rep = rest_crud.put(get_end_point(__id), json_data)
+    tools.get_id_and_print_json(rep)
+
+
+def junit(__id, junit_file):
+    json_result = rest_crud.get(get_end_point(__id))
+    json_sla_test = rest_crud.get(get_end_point(__id, __operation_sla_test))
+    json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
+    displayer.print_result_junit(json_result, json_sla_test, json_sla_interval, junit_file)
+
+
+def summary(__id):
+    json_result = rest_crud.get(get_end_point(__id))
+    json_sla_global = rest_crud.get(get_end_point(__id, __operation_sla_global))
+    json_sla_test = rest_crud.get(get_end_point(__id, __operation_sla_test))
+    json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
+    json_stats = rest_crud.get(get_end_point(__id, __operation_statistics))
+    displayer.print_result_summary(json_result, json_sla_global, json_sla_test, json_sla_interval, json_stats)
 
 
 def get_id(name, is_id):
