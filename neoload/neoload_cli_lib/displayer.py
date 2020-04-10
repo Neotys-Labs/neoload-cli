@@ -30,7 +30,11 @@ def print_sla(sla_json_global, sla_json_test, sla_json_interval):
 
 def __print_one_sla(kind, sla_json):
     status = sla_json['status']
-    color = "red" if status == "FAILED" else "green" if status == "PASSED" else "yellow"
+    color = "red"
+    if status == "PASSED":
+        color = "green"
+    elif status == "WARNING":
+        color = "yellow"
     element = ''
     where = ''
 
