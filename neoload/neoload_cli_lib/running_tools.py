@@ -26,6 +26,7 @@ def wait(results_id):
     __current_id = results_id
     signal(SIGINT, handler)
     header_status(results_id)
+    time.sleep(5)
     while display_status(results_id):
         time.sleep(5)
 
@@ -41,7 +42,7 @@ def header_status(results_id):
 # INIT, STARTING, RUNNING, TERMINATED
 def display_status(results_id):
     global __last_status
-    res = rest_crud.get('v2/test_result' + results_id)
+    res = rest_crud.get('v2/test-results/' + results_id)
     status = res['status']
 
     if __last_status != status:
@@ -49,6 +50,8 @@ def display_status(results_id):
         __last_status = status
     if status == "RUNNING":
         display_statistics(results_id, res)
+    if status == "TERMINATED":
+        return False
 
     return True
 

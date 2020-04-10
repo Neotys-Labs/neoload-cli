@@ -13,7 +13,7 @@ def cli(name):
 
 
 def get_url(name: str):
-    urlparse.urljoin(user_data.get_user_data().get_frontend_url(), get_endpoint(name))
+    return urlparse.urljoin(user_data.get_user_data().get_frontend_url(), get_endpoint(name))
 
 
 def get_endpoint(name: str):

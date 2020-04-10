@@ -1,10 +1,11 @@
+from urllib.parse import quote
 import click
 from neoload_cli_lib import running_tools, tools, rest_crud, user_data
 from commands import test_settings, test_results
 
 
 @click.command()
-@click.argument("name_or_id", type=str)
+@click.argument("name_or_id", type=str, required=False)
 @click.option("--scenario", help="select scenario")
 @click.option("--name", help="name of test results")
 @click.option("-d", "--detached", help="Doesn't wait the end of test")
@@ -20,16 +21,17 @@ def cli(name_or_id, scenario, detached, name):
     if scenario:
         rest_crud.patch('v2/test_result/' + _id, {'scenarioName': scenario})
 
-    naming_pattern = name if name else test_settings['testResultNamingPattern']
+    naming_pattern = name if name else test_settings_json['testResultNamingPattern']
     if not naming_pattern:
         naming_pattern = "#${runID}"
+    naming_pattern = naming_pattern.replace('${runID}', str(test_settings_json['nextRunId']))
     data = {
-        'testId': _id,
         'testResultName': naming_pattern
     }
 
-    post_result = rest_crud.post('v2/' + _id + '/start', data)
+    # Sorry for that, post data are in the query string :'( :'(
+    post_result = rest_crud.post('v2/tests/%s/start?testResultName=%s' % (_id, quote(data['testResultName'])), data)
     user_data.set_meta(test_settings.meta_key, _id)
-    user_data.set_meta(test_results.meta_key, post_result['id'])
+    user_data.set_meta(test_results.meta_key, post_result['resultId'])
     if not detached:
-        running_tools.wait(_id)
+        running_tools.wait(post_result['resultId'])

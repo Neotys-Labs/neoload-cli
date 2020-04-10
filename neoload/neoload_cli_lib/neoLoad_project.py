@@ -29,7 +29,7 @@ def zip_dir(path):
 
 def upload_project(path, endpoint):
     file = zip_dir(path)
-    display_project(rest_crud.post_binary(endpoint, file))
+    display_project(rest_crud.post_binary_files_storage(endpoint, file))
 
 
 def display_project(res):
