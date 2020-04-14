@@ -1,9 +1,8 @@
-import os
 import urllib.parse as urlparse
 
 import requests
 
-from neoload_cli_lib import user_data
+from neoload_cli_lib import user_data, cli_exception
 
 __current_command = ""
 __current_sub_command = ""
@@ -22,7 +21,7 @@ def set_current_sub_command(command: str):
 
 
 def get(endpoint: str):
-    return get_raw(endpoint).json()
+    return __handle_error(get_raw(endpoint)).json()
 
 
 def get_raw(endpoint: str):
@@ -31,6 +30,7 @@ def get_raw(endpoint: str):
 
 def post(endpoint: str, data):
     response = requests.post(__create_url(endpoint), headers=__create_additional_headers(), json=data)
+    __handle_error(response)
     return response.json()
 
 
@@ -39,7 +39,7 @@ def __create_url_file_storage(endpoint):
 
 
 def get_from_file_storage(endpoint: str):
-    return requests.get(__create_url_file_storage(endpoint), headers=__create_additional_headers())
+    return __handle_error(requests.get(__create_url_file_storage(endpoint), headers=__create_additional_headers()))
 
 
 def post_binary_files_storage(endpoint: str, path, filename):
@@ -47,17 +47,21 @@ def post_binary_files_storage(endpoint: str, path, filename):
         'file': (filename, path),
     }
 
-    response = requests.post(__create_url_file_storage(endpoint), headers=__create_additional_headers(), files=multipart_form_data)
+    response = requests.post(__create_url_file_storage(endpoint), headers=__create_additional_headers(),
+                             files=multipart_form_data)
+    __handle_error(response)
     return response
 
 
 def get_file_storage(endpoint: str):
     response = requests.get(__create_url_file_storage(endpoint), headers=__create_additional_headers())
+    __handle_error(response)
     return response.json()
 
 
 def put(endpoint: str, data):
     response = requests.put(__create_url(endpoint), headers=__create_additional_headers(), json=data)
+    __handle_error(response)
     return response.json()
 
 
@@ -72,6 +76,20 @@ def delete(endpoint: str):
 
 def __create_url(endpoint: str):
     return urlparse.urljoin(user_data.get_user_data().get_url(), endpoint)
+
+
+def __handle_error(response):
+    status_code = response.status_code
+    if status_code > 299:
+        request = response.request
+        if status_code == 401:
+            cli_exception.CliException("Server has returned 401 Access denied. Please check your token and rights")
+        else:
+            cli_exception.CliException(
+                "Error " + status_code + "during the request :"
+                + request.method + " " + request.url + "\n" + response.text
+            )
+    return response
 
 
 def __create_additional_headers():

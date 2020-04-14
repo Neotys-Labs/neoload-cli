@@ -1,9 +1,11 @@
 import json
+from json import JSONDecodeError
+
 import jsonschema
 import requests
 import yaml
-from json import JSONDecodeError
 from yaml.scanner import ScannerError
+
 from neoload_cli_lib.user_data import update_schema, get_yaml_schema
 
 

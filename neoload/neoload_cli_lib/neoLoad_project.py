@@ -1,9 +1,8 @@
 import os
-import zipfile
 import tempfile
-import click
+import zipfile
 
-from neoload_cli_lib import rest_crud, tools
+from neoload_cli_lib import rest_crud, tools, cli_exception
 
 black_list = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/']
 
@@ -39,4 +38,4 @@ def display_project(res):
         tools.print_json(res.json())
     else:
         print(res.text)
-        raise click.ClickException("Error during get meta data code: " + res.status_code)
+        raise cli_exception.CliException("Error during get meta data code: " + res.status_code)

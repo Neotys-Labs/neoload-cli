@@ -1,8 +1,9 @@
-import appdirs
 import os
+
+import appdirs
 import yaml
-import click
-from neoload_cli_lib import rest_crud
+
+from neoload_cli_lib import rest_crud, cli_exception
 
 __conf_name = "neoload-cli"
 __version = "1.0"
@@ -23,7 +24,7 @@ def do_logout():
 
 def get_user_data(throw=True):
     if __user_data_singleton is None and throw:
-        raise click.ClickException("You are'nt logged. Please use command \"neoload login\" first")
+        raise cli_exception.CliException("You are'nt logged. Please use command \"neoload login\" first")
     return __user_data_singleton
 
 
@@ -31,7 +32,7 @@ def do_login(token, url, no_write):
     global __no_write
     __no_write = no_write
     if token is None:
-        raise click.ClickException('token is mandatory. please see neoload login --help.')
+        raise cli_exception.CliException('token is mandatory. please see neoload login --help.')
     global __user_data_singleton
     __user_data_singleton = UserData.from_login(token, url)
     __compute_version_and_path()
@@ -157,7 +158,7 @@ __yaml_schema_singleton = __load_yaml_schema()
 
 def get_yaml_schema(throw=True):
     if __yaml_schema_singleton is None and throw:
-        raise click.ClickException("No yaml schema found. Please add --schema-url option to download it first")
+        raise cli_exception.CliException("No yaml schema found. Please add --schema-url option to download it first")
     return __yaml_schema_singleton
 
 

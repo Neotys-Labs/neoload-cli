@@ -1,7 +1,7 @@
 import click
 
 from commands import test_results
-from neoload_cli_lib import tools, user_data, running_tools
+from neoload_cli_lib import tools, user_data, running_tools, cli_exception
 
 
 @click.command()
@@ -11,7 +11,7 @@ def cli(name, force):
     if not name or name == "cur":
         name = user_data.get_meta(test_results.meta_key)
     if not name:
-        raise click.ClickException('No test id is provided')
+        raise cli_exception.CliException('No test id is provided')
 
     if not tools.is_id(name):
         name = test_results.__resolver.resolve_name(name)

@@ -19,6 +19,7 @@ setup(
         'pytest',
         'pytest-datafiles',
         'junit_xml',
-        'termcolor'
+        'termcolor',
+        'coloredlogs'
     ]
 )

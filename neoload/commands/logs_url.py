@@ -1,5 +1,7 @@
-import click
 import urllib.parse as urlparse
+
+import click
+
 from commands import test_results
 from neoload_cli_lib import user_data, tools
 

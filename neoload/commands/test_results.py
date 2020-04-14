@@ -1,8 +1,9 @@
-import click
-import sys
 import json
+import sys
 
-from neoload_cli_lib import tools, rest_crud, user_data, displayer
+import click
+
+from neoload_cli_lib import tools, rest_crud, user_data, displayer, cli_exception
 from neoload_cli_lib.name_resolver import Resolver
 
 __endpoint = "v2/test-results"
@@ -65,7 +66,7 @@ def delete(__id):
     rep = tools.delete(__endpoint, __id, "test results")
     if rep.status_code > 299:
         print(rep.text)
-        raise click.ClickException('Operation may have failed !')
+        raise cli_exception.CliException('Operation may have failed !')
     tools.print_json(rep.json())
 
 
@@ -119,6 +120,6 @@ def create_json(name, description, quality_status):
             try:
                 return json.loads(sys.stdin.read())
             except json.JSONDecodeError as err:
-                raise click.ClickException('%s\nThis command requires a valid Json input.\n'
+                raise cli_exception.CliException('%s\nThis command requires a valid Json input.\n'
                                            'Example: neoload test-results put {"name":"TestResultName"}' % str(err))
     return data

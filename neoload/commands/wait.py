@@ -1,6 +1,7 @@
 import click
-from neoload_cli_lib import running_tools, user_data, tools
+
 from commands import test_results
+from neoload_cli_lib import running_tools, user_data, tools
 
 
 @click.command()

@@ -3,7 +3,7 @@ import json
 import time
 from signal import signal, SIGINT
 
-from commands import logs_url,test_results
+from commands import logs_url, test_results
 from neoload_cli_lib import tools, rest_crud
 
 __current_id = None

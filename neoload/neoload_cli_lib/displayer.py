@@ -1,6 +1,7 @@
-from termcolor import cprint
-from neoload_cli_lib import tools
 from junit_xml import TestSuite, TestCase
+from termcolor import cprint
+
+from neoload_cli_lib import tools
 
 __SLA_global = 'Global'
 __SLA_test = 'Per Run'

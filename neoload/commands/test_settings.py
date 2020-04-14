@@ -1,16 +1,15 @@
 import copy
+import json
+import sys
+
 import click
 
-import sys
-import json
-from neoload_cli_lib.name_resolver import Resolver
-from neoload_cli_lib import user_data
-from neoload_cli_lib import tools
-
 from neoload_cli_lib import rest_crud
+from neoload_cli_lib import tools
+from neoload_cli_lib import user_data, cli_exception
+from neoload_cli_lib.name_resolver import Resolver
 
 __endpoint = "v2/tests"
-
 __resolver = Resolver(__endpoint)
 
 meta_key = 'settings id'
@@ -84,7 +83,7 @@ def delete(__id):
     rep = tools.delete(__endpoint, __id, "settings")
     if rep.status_code > 299:
         print(rep.text)
-        raise click.ClickException('deletion has failed. The server has returned an error: '+rep.status_code)
+        raise cli_exception.CliException('deletion has failed. The server has returned an error: ' + rep.status_code)
     tools.print_json(rep.json())
 
     user_data.set_meta(meta_key, None)
@@ -92,7 +91,6 @@ def delete(__id):
 
 def get_end_point(id_test: str):
     return __endpoint + "/" + id_test
-
 
 
 def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern):
@@ -119,7 +117,7 @@ def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, na
             try:
                 return json.loads(sys.stdin.read())
             except json.JSONDecodeError as err:
-                raise click.ClickException('%s\nThis command requires a valid Json input.\n'
+                raise cli_exception.CliException('%s\nThis command requires a valid Json input.\n'
                                            'Example: neoload test-settings create {"name":"TestName"}' % str(err))
     return data
 

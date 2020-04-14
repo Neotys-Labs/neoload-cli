@@ -1,8 +1,8 @@
+import json
 import re
 import sys
-import click
-import json
 
+import click
 from click import ClickException
 
 from neoload_cli_lib import rest_crud, user_data

@@ -2,6 +2,7 @@ import click
 
 from neoload_cli_lib import user_data
 
+
 @click.command()
 def cli():
     """get status of NeoLoad cli Settings"""

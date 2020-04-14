@@ -1,7 +1,9 @@
 from urllib.parse import quote
+
 import click
-from neoload_cli_lib import running_tools, tools, rest_crud, user_data
+
 from commands import test_settings, test_results
+from neoload_cli_lib import running_tools, tools, rest_crud, user_data
 
 
 @click.command()

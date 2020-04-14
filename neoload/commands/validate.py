@@ -1,5 +1,5 @@
 import click
-from click import ClickException
+from neoload_cli_lib import cli_exception
 import neoload_cli_lib.schema_validation as schema_validation
 
 
@@ -13,5 +13,5 @@ def cli(file, refresh, schema_url):
     try:
         schema_validation.validate_yaml(file, schema_url if refresh else None)
     except Exception as err:
-        raise ClickException(str(err))
+        raise cli_exception.CliException(str(err))
     print('Yaml file is valid.')
