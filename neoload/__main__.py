@@ -4,7 +4,6 @@ import os
 import click
 import coloredlogs
 
-
 from neoload_cli_lib import tools, rest_crud, cli_exception
 
 plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
@@ -31,8 +30,7 @@ class NeoLoadCLI(click.MultiCommand):
                 eval(code, ns, ns)
             return ns['cli']
         else:
-            raise cli_exception.CliException(name + " is not a neoload command")
-            return None
+            raise cli_exception.CliException("\"" + name + "\" is not a neoload command")
 
 
 @click.command(cls=NeoLoadCLI, help='', chain=True)
