@@ -10,7 +10,7 @@ from neoload_cli_lib import running_tools, tools, rest_crud, user_data
 @click.argument("name_or_id", type=str, required=False)
 @click.option("--scenario", help="select scenario")
 @click.option("--name", help="name of test results")
-@click.option("-d", "--detached", help="Doesn't wait the end of test")
+@click.option("-d", "--detached", is_flag=True, help="Doesn't wait the end of test")
 def cli(name_or_id, scenario, detached, name):
     """run a test"""
     if not name_or_id or name_or_id == "cur":

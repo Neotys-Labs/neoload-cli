@@ -88,10 +88,7 @@ class TestPut:
 
         mock_api_put(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id,
                      '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "description":"test description ",'
-                     '"scenarioName":"scenario name", "controllerZoneId":"", "lgZoneIds":{} }')
-        mock_api_patch(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id,
-                       '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "description":"test description ",'
-                       '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", "lgZoneIds":{"defaultzone":1} }')
+                     '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", "lgZoneIds":{"defaultzone":1} }')
         result = runner.invoke(settings, ['put', valid_data.test_settings_id, '--description', 'test description ',
                                           '--rename', generate_test_settings_name()])
         assert_success(result)

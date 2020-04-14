@@ -22,8 +22,8 @@ def mock_api_post(monkeypatch, endpoint, json_result):
     __mock_api_with_data(monkeypatch, 'post', endpoint, json_result)
 
 
-def mock_api_post_binary(monkeypatch, endpoint, json_result):
-    __mock_api_with_data(monkeypatch, 'post_binary', endpoint, json_result)
+def mock_api_post_binary(monkeypatch, endpoint, http_code, json_result):
+    __mock_api_raw_with_file(monkeypatch, 'post_binary_files_storage', endpoint, http_code, json_result)
 
 
 def mock_api_put(monkeypatch, endpoint, json_result):
@@ -57,6 +57,13 @@ def __mock_api_with_data(monkeypatch, method, endpoint, json_result):
     if monkeypatch is not None:
         monkeypatch.setattr(rest_crud, method,
                             lambda actual_endpoint, data: __return_json(actual_endpoint, endpoint, json_result))
+        print('Mock %s %s to return %s' % (method.upper(), endpoint, json_result))
+
+
+def __mock_api_raw_with_file(monkeypatch, method, endpoint, http_code, json_result):
+    if monkeypatch is not None:
+        monkeypatch.setattr(rest_crud, method,
+                            lambda actual_endpoint, path, filename: __return_response(actual_endpoint, endpoint, http_code, json_result))
         print('Mock %s %s to return %s' % (method.upper(), endpoint, json_result))
 
 

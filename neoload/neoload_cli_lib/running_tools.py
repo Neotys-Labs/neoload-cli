@@ -7,7 +7,7 @@ from commands import logs_url, test_results
 from neoload_cli_lib import tools, rest_crud
 
 __current_id = None
-__endpoint = "v2/tests-results/"
+__endpoint = "v2/test-results/"
 __count = 0
 
 __last_status = ""
@@ -57,7 +57,7 @@ def display_status(results_id):
 
 
 def display_statistics(results_id, json_summary):
-    res = rest_crud.get('v2/test_result/' + results_id + '/statistics')
+    res = rest_crud.get(__endpoint + results_id + '/statistics')
     time_cur = datetime.datetime.now() - datetime.datetime.utcfromtimestamp((json_summary['startDate']))
     time_cur_format = datetime.datetime.strptime(time_cur, '%Y-%m-%d %H:%M:%S.%f')
     lg_count = json_summary['lgCount']
@@ -74,8 +74,7 @@ def display_statistics(results_id, json_summary):
 
 def stop(results_id, force: bool, quit_option=False):
     policy = 'FORCE' if force else 'GRACEFUL'
-    map_policy = {"stopPolicy": policy}
     if tools.confirm("Do you want stop the test" + results_id + " with " + policy.lower() + " policy ?", quit_option):
-        rest_crud.post(__endpoint + "/" + results_id + "/stop", json.dumps(map_policy))
+        rest_crud.post(__endpoint + results_id + "/stop", {"stopPolicy": policy})
         return True
     return False

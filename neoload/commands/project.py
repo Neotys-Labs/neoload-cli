@@ -19,6 +19,7 @@ def cli(command, name_or_id, path):
         upload(path, name_or_id)
     elif command == "meta":
         meta_data(name_or_id)
+    user_data.set_meta(test_settings.meta_key, name_or_id)
 
 
 def upload(path, settings_id):

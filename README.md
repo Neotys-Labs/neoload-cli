@@ -101,24 +101,21 @@ neoload test-settings use 4a5e7707-75c0-4106-bbd4-68962ac7f2b3
 See basic projects examples on github [tests/neoload_projects folder](https://github.com/Neotys-Labs/neoload-cli/tree/master/tests/neoload_projects)
 To upload a NeoLoad project zip file or a standalone as code file into a test-settings
 ```
-Usage: neoload project [OPTIONS] [FILE]
-neoload --path tests/neoload_projects/example_1/everything.yaml upload NewTest1
-neoload --path tests/neoload_projects/example_1.zip upload
+Usage: neoload project [OPTIONS] [up|upload|meta] NAME_OR_ID
 neoload --path tests/neoload_projects/example_1/ upload
 ```
-?????? Additionally, you can specify multiple files, such as additional SLA, variables, or servers overriding files. This works for both [.nlp] and [.yaml] files.
+To Validate the syntax and schema of the as-code project yaml files
 ```
-neoload validate sample_projects/example_1/everything.yaml      # Validate the project yaml file with the Neoload schema
+neoload validate sample_projects/example_1/everything.yaml
 ```
 
 ## Run a test
 This command runs a test, it produces blocking, unbuffered output about test execution process, including readout of current data points.
 At the end, displays the summary and the SLA passed & failed.
 ```
-Usage: neoload run [OPTIONS]
+Usage: neoload run [OPTIONS] [NAME_OR_ID]
 neoload run \         # Runs the currently used test-settings (see neoload status)
-     --detach \
-     --as-code sample_projects/example_1/everything.yaml,sample_projects/example_1/paths/geosearch_get.yaml \
+     --as-code default.yaml,slas/uat.yaml \
      --name "MyCustomTestName_${JOB_ID}" \
      --description "A custom test description containing hashtags like #latest or #issueNum"
 ```
@@ -137,10 +134,9 @@ neoload stop             # Send the stop signal to the test and wait until it en
 
 ## View results
 ```
-Usage: neoload test-results [OPTIONS] [[ls|put|patch|delete|use]] [NAME]
-neoload logs-url                        # The URL to the test
+Usage: neoload test-results [OPTIONS] [[ls|summary|junitsla|patch|delete|use]] [NAME]
 neoload test-results summary            # The Json result summary, with SLAs
-neoload test-results junitreport path/to/junit.xml          # Output the summary in a JUnit xml file
+neoload test-results junitsla           # Output the summary in a JUnit xml file
 ```
 Metadata on a test can be modified after the test is complete, such as name, description, and status.\
 
@@ -149,6 +145,10 @@ To work with a specific test result and be able to chain commands
 neoload test-result use 4a5e7707-75c0-4106-bbd4-68962ac7f2b3
 ```
 
+To view logs
+```
+neoload logs-url                        # The URL to the test in Neoload Web
+```
 ## Create local docker infrastructure to run a test
 Upcoming
 
