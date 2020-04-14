@@ -16,20 +16,22 @@ def add_or_not(path: str):
 
 
 def zip_dir(path):
-    temp_zip = tempfile.TemporaryFile('wb')
-    ziph = zipfile.ZipFile(temp_zip, 'wx', zipfile.ZIP_DEFLATED)
+    temp_zip = tempfile.TemporaryFile('w+b')
+    ziph = zipfile.ZipFile(temp_zip, 'x', zipfile.ZIP_DEFLATED)
     for root, dirs, files in os.walk(path):
         for file in files:
             file_path = os.path.join(root, file)
             if add_or_not(file_path):
                 ziph.write(file_path)
     ziph.close()
+    temp_zip.seek(0)
     return temp_zip
 
 
 def upload_project(path, endpoint):
+    filename = os.path.basename(path) + '.zip'
     file = zip_dir(path)
-    display_project(rest_crud.post_binary_files_storage(endpoint, file))
+    display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
 
 
 def display_project(res):

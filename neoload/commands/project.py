@@ -22,7 +22,7 @@ def cli(command, name_or_id, path):
 
 
 def upload(path, settings_id):
-    neoLoad_project.upload_project(path, "v2/tests" + settings_id + "/project")
+    neoLoad_project.upload_project(path, "v2/tests/" + settings_id + "/project")
 
 
 def meta_data(setting_id):

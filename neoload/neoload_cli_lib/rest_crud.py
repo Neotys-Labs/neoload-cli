@@ -42,15 +42,13 @@ def get_from_file_storage(endpoint: str):
     return requests.get(__create_url_file_storage(endpoint), headers=__create_additional_headers())
 
 
-def post_binary_files_storage(endpoint: str, path):
-    filename = os.path.basename(path)
-
+def post_binary_files_storage(endpoint: str, path, filename):
     multipart_form_data = {
-        'file': (filename, open(path, 'rb')),
+        'file': (filename, path),
     }
 
-    response = requests.post(__create_url(endpoint), files=multipart_form_data)
-    return response.json()
+    response = requests.post(__create_url_file_storage(endpoint), headers=__create_additional_headers(), files=multipart_form_data)
+    return response
 
 
 def get_file_storage(endpoint: str):
