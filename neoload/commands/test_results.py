@@ -18,7 +18,7 @@ meta_key = 'result id'
 
 
 @click.command()
-@click.argument('command', type=click.Choice(['ls', 'summary', 'patch', 'delete', 'use'], case_sensitive=False),
+@click.argument('command', type=click.Choice(['ls', 'summary', 'junitsla', 'patch', 'delete', 'use'], case_sensitive=False),
                 required=False)
 @click.argument("name", type=str, required=False)
 @click.option('--rename', help="")

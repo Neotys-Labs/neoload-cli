@@ -68,6 +68,7 @@ def print_result_junit(json_result, sla_json_test, sla_json_interval, junit_file
         junit_suites.append(build_test_suite(json_result, __SLA_interval, sla))
     with open(junit_file_path, 'w') as stream:
         TestSuite.to_file(stream, junit_suites, prettyprint=True)
+    print('Report written to file %s' % junit_file_path)
 
 
 def build_test_suite(json_result, kind, sla_json):

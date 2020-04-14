@@ -1,20 +1,19 @@
 import click
-
-from commands import test_results
+from commands import test_settings
 from neoload_cli_lib import user_data, tools, rest_crud, neoLoad_project
 
 
 @click.command()
 @click.argument("command", required=True, type=click.Choice(['up', 'upload', 'meta']))
 @click.option("--path", "-p", type=click.Path(exists=True), default='.', help="path of project. . is default value")
-@click.argument("name_or_id", type=str)
+@click.argument("name_or_id", type=str, required=False)
 def cli(command, name_or_id, path):
     """Upload and list scenario from settings"""
-    if name_or_id == "cur":
-        name_or_id = user_data.get_meta(test_results.meta_key)
+    if not name_or_id or name_or_id == "cur":
+        name_or_id = user_data.get_meta(test_settings.meta_key)
 
     if not tools.is_id(name_or_id):
-        name_or_id = test_results.__resolver.resolve_name(name_or_id)
+        name_or_id = test_settings.__resolver.resolve_name(name_or_id)
 
     if command[:2] == "up":
         upload(path, name_or_id)
