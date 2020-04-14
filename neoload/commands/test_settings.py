@@ -81,11 +81,7 @@ def patch(id_settings, json_data):
 
 def delete(__id):
     rep = tools.delete(__endpoint, __id, "settings")
-    if rep.status_code > 299:
-        print(rep.text)
-        raise cli_exception.CliException('deletion has failed. The server has returned an error: ' + rep.status_code)
     tools.print_json(rep.json())
-
     user_data.set_meta(meta_key, None)
 
 
@@ -109,16 +105,22 @@ def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, na
         data['testResultNamingPattern'] = naming_pattern
 
     if len(data) == 0:
-        if sys.stdin.isatty():
-            for field in ['name', 'description', 'scenarioName', 'controllerZoneId', 'testResultNamingPattern']:
-                data[field] = input(field)
-            data['lgZoneIds'] = parse_zone_ids(input("lgZoneIds"))
-        else:
-            try:
-                return json.loads(sys.stdin.read())
-            except json.JSONDecodeError as err:
-                raise cli_exception.CliException('%s\nThis command requires a valid Json input.\n'
-                                           'Example: neoload test-settings create {"name":"TestName"}' % str(err))
+        data = manual_json(data)
+
+    return data
+
+
+def manual_json(data):
+    if sys.stdin.isatty():
+        for field in ['name', 'description', 'scenarioName', 'controllerZoneId', 'testResultNamingPattern']:
+            data[field] = input(field)
+        data['lgZoneIds'] = parse_zone_ids(input("lgZoneIds"))
+    else:
+        try:
+            data = json.loads(sys.stdin.read())
+        except json.JSONDecodeError as err:
+            raise cli_exception.CliException('%s\nThis command requires a valid Json input.\n'
+                                             'Example: neoload test-settings create {"name":"TestName"}' % str(err))
     return data
 
 
