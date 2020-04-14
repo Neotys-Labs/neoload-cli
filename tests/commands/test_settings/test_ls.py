@@ -45,4 +45,5 @@ class TestLs:
         mock_api_get(monkeypatch, 'v2/tests/%s' % invalid_data.uuid, '{"code":"404", "message": "Test not found."}')
         result = runner.invoke(settings, ['ls', invalid_data.uuid])
         assert 'Test not found' in result.output
-        assert result.exit_code == 1
+        if monkeypatch is None:
+            assert result.exit_code == 1

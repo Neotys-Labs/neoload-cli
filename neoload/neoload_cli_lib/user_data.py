@@ -158,7 +158,7 @@ __yaml_schema_singleton = __load_yaml_schema()
 
 def get_yaml_schema(throw=True):
     if __yaml_schema_singleton is None and throw:
-        raise cli_exception.CliException("No yaml schema found. Please add --schema-url option to download it first")
+        raise cli_exception.CliException("No yaml schema found. Please add --refresh option to download it first")
     return __yaml_schema_singleton
 
 

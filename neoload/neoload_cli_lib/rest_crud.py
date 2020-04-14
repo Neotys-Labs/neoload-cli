@@ -67,11 +67,14 @@ def put(endpoint: str, data):
 
 def patch(endpoint: str, data):
     response = requests.patch(__create_url(endpoint), headers=__create_additional_headers(), json=data)
+    __handle_error(response)
     return response.json()
 
 
 def delete(endpoint: str):
-    return requests.delete(__create_url(endpoint), headers=__create_additional_headers())
+    response = requests.delete(__create_url(endpoint), headers=__create_additional_headers())
+    __handle_error(response)
+    return response
 
 
 def __create_url(endpoint: str):
@@ -83,10 +86,10 @@ def __handle_error(response):
     if status_code > 299:
         request = response.request
         if status_code == 401:
-            cli_exception.CliException("Server has returned 401 Access denied. Please check your token and rights")
+            raise cli_exception.CliException("Server has returned 401 Access denied. Please check your token and rights")
         else:
-            cli_exception.CliException(
-                "Error " + status_code + "during the request :"
+            raise cli_exception.CliException(
+                "Error " + str(status_code) + " during the request: "
                 + request.method + " " + request.url + "\n" + response.text
             )
     return response

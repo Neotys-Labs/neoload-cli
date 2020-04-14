@@ -17,8 +17,8 @@ class TestPut:
 
         mock_api_put(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id,
                      '{"id":"%s", "name":"%s", "description":"",'
-                     '"scenarioName":"", "controllerZoneId":"", '
-                     '"lgZoneIds":{}, "testResultNamingPattern":""}' % (valid_data.test_settings_id, test_name))
+                     '"scenarioName":"", "controllerZoneId":"defaultzone", '
+                     '"lgZoneIds":{"defaultzone":1}, "testResultNamingPattern":""}' % (valid_data.test_settings_id, test_name))
         result = runner.invoke(settings, ['put', valid_data.test_settings_id, '--rename', test_name])
         assert_success(result)
         json_result = json.loads(result.output)
@@ -27,8 +27,8 @@ class TestPut:
         assert json_result['name'] == test_name
         assert json_result['description'] == ''
         assert json_result['scenarioName'] == ''
-        assert json_result['controllerZoneId'] == ''
-        assert json_result['lgZoneIds'] == {}
+        assert json_result['controllerZoneId'] == 'defaultzone'
+        assert json_result['lgZoneIds'] == {"defaultzone":1}
         assert json_result['testResultNamingPattern'] == ''
 
         result_status = runner.invoke(status)

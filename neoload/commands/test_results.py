@@ -64,10 +64,7 @@ def cli(command, name, rename, description, quality_status, junit_file):
 
 def delete(__id):
     rep = tools.delete(__endpoint, __id, "test results")
-    if rep.status_code > 299:
-        print(rep.text)
-        raise cli_exception.CliException('Operation may have failed !')
-    tools.print_json(rep.json())
+    print(rep.text)
 
 
 def patch(__id, description, quality_status, rename):

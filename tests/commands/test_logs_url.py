@@ -17,8 +17,7 @@ class TestLogsUrl:
         if monkeypatch is not None:
             monkeypatch.setattr(user_data, '__compute_version_and_path',
                                 lambda: get_user_data().set_url('http://front', 'http://files', '1.2.3'))
-        login_result = runner.invoke(login, ['--url', 'http://some-onprem-install.fr/',
-                                             '123456789fe70bf4a991ae6d8af62e21c4a00203abcdef'])
+        login_result = runner.invoke(login, ['123456789fe70bf4a991ae6d8af62e21c4a00203abcdef'])
         assert_success(login_result)
 
         result = runner.invoke(logs_url, ['70ed01da-f291-4e29-b75c-1f7977edf252'])
