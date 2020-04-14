@@ -54,4 +54,4 @@ class TestDelete:
                             '{"code":"404", "message": "Test not found."}')
         result = runner.invoke(settings, ['delete', invalid_data.uuid])
         assert 'Test not found' in result.output
-        assert result.exit_code == 1
+        assert result.exit_code == 0

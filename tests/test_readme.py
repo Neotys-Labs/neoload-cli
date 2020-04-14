@@ -120,7 +120,7 @@ class TestReadme:
     def test_validate(self, datafiles):
         file_path = datafiles.listdir()[0]
         runner = CliRunner()
-        result = runner.invoke(validate, [str(file_path)])
+        result = runner.invoke(validate, [str(file_path), '--refresh'])
         assert_success(result)
         assert 'Yaml file is valid' in str(result.output)
 
