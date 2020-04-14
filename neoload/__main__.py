@@ -46,7 +46,7 @@ def cli(debug, batch):
         requests_log = logging.getLogger("requests.packages.urllib3")
         requests_log.setLevel(logging.DEBUG)
         requests_log.propagate = True
-        cli_exception.set_debug(True)
+        cli_exception.CliException.set_debug(True)
 
     tools.set_batch(batch)
     coloredlogs.install(level=logging.getLogger().level)
