@@ -139,7 +139,9 @@ def default_zone(zone: str):
     return 'defaultzone' if zone is None or zone.strip() == '' else zone
 
 
-def default_lgs(lg_zone_ids: str, controller_zone_id: str):
+def default_lgs(lg_zone_ids, controller_zone_id: str):
+    if isinstance(lg_zone_ids, dict):
+        return lg_zone_ids
     lgs = '1' if lg_zone_ids is None or lg_zone_ids == {} else lg_zone_ids
     if tools.is_integer(lgs):
         zone = default_zone(controller_zone_id)
@@ -169,3 +171,4 @@ def patch_default_fields(id_settings, json_data):
         default_fields_to_patch['lgZoneIds'] = json_filled['lgZoneIds']
     if len(default_fields_to_patch) > 0:
         return rest_crud.patch(get_end_point(id_settings), default_fields_to_patch)
+    return json_data

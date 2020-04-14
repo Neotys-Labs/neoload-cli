@@ -1,3 +1,4 @@
+import click
 import neoload_cli_lib.rest_crud as rest_crud
 
 
@@ -23,7 +24,7 @@ class Resolver:
             self.__fill_map(name)
             __id = self.__map.get(name, None)
             if not __id:
-                raise Exception("name not found")
+                raise click.ClickException("name not found")
         return __id
 
     def resolve_name_or_json(self, name):
@@ -33,7 +34,7 @@ class Resolver:
             if __json:
                 return __json
             else:
-                raise Exception("name not found")
+                raise click.ClickException("name not found")
         return __id
 
     def get_map(self):
