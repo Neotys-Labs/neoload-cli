@@ -52,3 +52,25 @@ def test_profile_create_with_nts_credentials():
             '--profile': 'test',
             '--summary': None,
         })
+
+@pytest.mark.profiles
+def test_profile_create_with_filesurl():
+    requireTestSecrets()
+    assertProfileByZone(os.environ['NEOLOAD_CLI_ZONE_STATIC'])
+    verifies = [
+        'NEOLOAD_CLI_ZONE_STATIC',
+        'NEOLOAD_CLI_NLW_URL',
+        'NEOLOAD_CLI_NLW_TOKEN',
+        'NEOLOAD_CLI_NTS_LOGIN',
+        'NEOLOAD_CLI_NTS_URL',
+        'NEOLOAD_CLI_NLW_FILES_URL',
+    ]
+    verifies = list(map(lambda x: os.environ[x],verifies))
+    assertOutput(
+        contains=verifies,
+        printOutput=True,
+        clearConfig=False,
+        args={
+            '--profile': 'test',
+            '--summary': None,
+        })
