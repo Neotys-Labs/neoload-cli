@@ -19,4 +19,5 @@ install:
 # command to run tests
 script:
   - PYTHONPATH="neoload" coverage3 run -m pytest
+  - coverage3 xml
   - sonar-scanner
