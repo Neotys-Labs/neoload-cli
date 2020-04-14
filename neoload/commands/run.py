@@ -35,3 +35,5 @@ def cli(name_or_id, scenario, detached, name):
     user_data.set_meta(test_results.meta_key, post_result['resultId'])
     if not detached:
         running_tools.wait(post_result['resultId'])
+    else:
+        tools.print_json(post_result)
