@@ -17,7 +17,7 @@ def cli(name_or_id, static_dynamic, human):
 
 
 def print_human(resp):
-    print("TYPE\tID\t NAME")
+    print("TYPE\tID\tNAME")
     for element in resp:
         print(f"{element['type']}\t{element['id']}\t{element['name']}")
         display_human_sub(element['controllers'], "Controllers")
