@@ -17,12 +17,19 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture
-def neoload_login(request):
+def neoload_login(request, monkeypatch):
     token = request.config.getoption('--token')
     api_url = request.config.getoption('--url')
     runner = CliRunner()
-    runner.invoke(login, [token, '--url', api_url])
-    print('\n@Before : %s' % str(runner.invoke(status).output))
+    result_status = runner.invoke(status)
+    # do login if not already logged-in with the right credentials
+    if "aren't logged in" in result_status.output \
+            or api_url not in result_status.output \
+            or '*' * (len(token) - 3) + token[-3:] not in result_status.output:
+        runner.invoke(login, [token, '--url', api_url])
+        print('\n@Before : %s' % str(runner.invoke(status).output))
+    else:
+        print('\n@Before : Already logged on %s' % api_url)
 
 
 @pytest.fixture

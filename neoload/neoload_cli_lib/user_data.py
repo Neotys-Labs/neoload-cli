@@ -87,7 +87,8 @@ class UserData:
         token = '*' * (len(self.token) - 3) + self.token[-3:]
         metadata = ""
         for (key, value) in self.metadata.items():
-            metadata += key + ": " + value + "\n"
+            if value is not None:
+                metadata += key + ": " + value + "\n"
         return "You are logged on " + self.url + " with token " + token + "\n\n" + metadata
 
     def get_url(self):

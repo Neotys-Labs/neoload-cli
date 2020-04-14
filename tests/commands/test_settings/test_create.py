@@ -16,7 +16,8 @@ class TestCreate:
 
         test_name = generate_test_settings_name()
         mock_api_post(monkeypatch, 'v2/tests',
-                      '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "nextRunId":1}' % test_name)
+                      '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "nextRunId":1,'
+                      '"controllerZoneId":"defaultzone", "lgZoneIds":{"defaultzone":1}}' % test_name)
         result = runner.invoke(settings, ['create', test_name])
         assert_success(result)
         json_result = json.loads(result.output)
@@ -105,4 +106,4 @@ class TestCreate:
 
         result = runner.invoke(settings, ['create', 'any'])
         assert result.exit_code == 1
-        assert 'You are\'nt logged' in str(result.exception)
+        assert 'You are\'nt logged' in str(result.output)

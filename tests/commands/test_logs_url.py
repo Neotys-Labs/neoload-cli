@@ -6,28 +6,24 @@ from commands.login import cli as login
 from commands.test_results import cli as results
 from commands.logs_url import cli as logs_url
 from helpers.test_utils import assert_success, mock_api_get
+from neoload_cli_lib import user_data
+from neoload_cli_lib.user_data import get_user_data
 
 
 @pytest.mark.authentication
 class TestLogsUrl:
-    def test_logs_saas(self):
+    def test_logs(self, monkeypatch):
         runner = CliRunner()
-        login_result = runner.invoke(login, ['123456789fe70bf4a991ae6d8af62e21c4a00203abcdef'])
-        assert_success(login_result)
-
-        result = runner.invoke(logs_url, ['70ed01da-f291-4e29-b75c-1f7977edf252'])
-        assert result.output == 'https://neoload.saas.neotys.com/#!result/70ed01da-f291-4e29-b75c-1f7977edf252/overview\n'
-        assert_success(result)
-
-    def test_logs_onprem(self):
-        runner = CliRunner()
+        if monkeypatch is not None:
+            monkeypatch.setattr(user_data, '__compute_version_and_path',
+                                lambda: get_user_data().set_url('http://front', 'http://files', '1.2.3'))
         login_result = runner.invoke(login, ['--url', 'http://some-onprem-install.fr/',
                                              '123456789fe70bf4a991ae6d8af62e21c4a00203abcdef'])
         assert_success(login_result)
 
         result = runner.invoke(logs_url, ['70ed01da-f291-4e29-b75c-1f7977edf252'])
-        assert result.output == 'http://some-onprem-install.fr/#!result/70ed01da-f291-4e29-b75c-1f7977edf252/overview\n'
         assert_success(result)
+        assert re.compile('http[s]?://.*/#!result/.*/overview', re.DOTALL).match(result.output) is not None
 
     @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
     def test_logs_with_name(self, monkeypatch):

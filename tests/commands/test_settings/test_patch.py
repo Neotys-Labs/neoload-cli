@@ -106,7 +106,7 @@ class TestPatch:
 
         result = runner.invoke(settings, ['patch', 'any'])
         assert result.exit_code == 1
-        assert 'You are\'nt logged' in str(result.exception)
+        assert 'You are\'nt logged' in str(result.output)
 
     def test_not_found(self, monkeypatch, invalid_data):
         runner = CliRunner()

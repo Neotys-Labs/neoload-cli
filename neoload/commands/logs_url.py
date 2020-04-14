@@ -18,4 +18,4 @@ def get_url(name: str):
 
 def get_endpoint(name: str):
     __id = tools.get_id(name, test_results.__resolver)
-    return '#!result/%s/overview' % __id
+    return '/#!result/%s/overview' % __id
