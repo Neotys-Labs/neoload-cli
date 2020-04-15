@@ -29,7 +29,7 @@ class TestReadme:
         mock_api_post(monkeypatch, 'v2/tests',
                       '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":"",'
                       '"scenarioName":"sanityScenario", "controllerZoneId":"a-zone", '
-                      '"lgZoneIds":{"a-zone":5}, "testResultNamingPattern":"#${runId}"}' % pytest.test_name)
+                      '"lgZoneIds":{"a-zone":5}, "testResultNamingPattern":"#${runID}"}' % pytest.test_name)
         result_create = runner.invoke(settings, ['--zone', 'a-zone', '--lgs', 'a-zone:5', '--scenario',
                                                  'sanityScenario', 'create', pytest.test_name])
         assert_success(result_create)
@@ -39,7 +39,7 @@ class TestReadme:
         assert json_create['name'] == pytest.test_name
         assert json_create['controllerZoneId'] == 'a-zone'
         assert json_create['lgZoneIds']['a-zone'] == 5
-        assert json_create['testResultNamingPattern'] == '#${runId}'
+        assert json_create['testResultNamingPattern'] == '#${runID}'
 
         mock_api_post_binary(monkeypatch, 'v2/tests/%s/project' % pytest.test_id, 200,
                              '{"projectId":"5e5fc0102cc4f82e5d9e18d4", "projectName":"NeoLoad-CLI-example-2_0",'

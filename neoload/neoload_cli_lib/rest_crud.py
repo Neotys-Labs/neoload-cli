@@ -1,3 +1,4 @@
+import logging
 import urllib.parse as urlparse
 
 import requests
@@ -29,6 +30,7 @@ def get_raw(endpoint: str):
 
 
 def post(endpoint: str, data):
+    logging.debug(f'POST {endpoint} body={data}')
     response = requests.post(__create_url(endpoint), headers=__create_additional_headers(), json=data)
     __handle_error(response)
     return response.json()
@@ -43,6 +45,7 @@ def get_from_file_storage(endpoint: str):
 
 
 def post_binary_files_storage(endpoint: str, path, filename):
+    logging.debug(f'POST (files) {endpoint} path={path} filename={filename}')
     multipart_form_data = {
         'file': (filename, path),
     }
@@ -53,19 +56,15 @@ def post_binary_files_storage(endpoint: str, path, filename):
     return response
 
 
-def get_file_storage(endpoint: str):
-    response = requests.get(__create_url_file_storage(endpoint), headers=__create_additional_headers())
-    __handle_error(response)
-    return response.json()
-
-
 def put(endpoint: str, data):
+    logging.debug(f'PUT {endpoint} body={data}')
     response = requests.put(__create_url(endpoint), headers=__create_additional_headers(), json=data)
     __handle_error(response)
     return response.json()
 
 
 def patch(endpoint: str, data):
+    logging.debug(f'PATCH {endpoint} body={data}')
     response = requests.patch(__create_url(endpoint), headers=__create_additional_headers(), json=data)
     __handle_error(response)
     return response.json()

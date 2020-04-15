@@ -1,5 +1,4 @@
 import datetime
-import json
 import time
 from signal import signal, SIGINT
 
@@ -28,7 +27,7 @@ def wait(results_id):
     header_status(results_id)
     time.sleep(5)
     while display_status(results_id):
-        time.sleep(5)
+        time.sleep(20)
 
     __current_id = None
     test_results.summary(results_id)
@@ -58,18 +57,24 @@ def display_status(results_id):
 
 def display_statistics(results_id, json_summary):
     res = rest_crud.get(__endpoint + results_id + '/statistics')
-    time_cur = datetime.datetime.now() - datetime.datetime.utcfromtimestamp((json_summary['startDate']))
-    time_cur_format = datetime.datetime.strptime(time_cur, '%Y-%m-%d %H:%M:%S.%f')
+    time_cur = datetime.datetime.now() - datetime.datetime.fromtimestamp((json_summary['startDate'] + 1) / 1000)
+    time_cur_format = format_delta(time_cur)
     lg_count = json_summary['lgCount']
     duration_raw = json_summary['duration']
-    duration = duration_raw if duration_raw else " - "
-    throutput = res['totalGlobalDownloadedBytesPerSecond']
+    duration = format_delta(datetime.timedelta(seconds=(duration_raw / 1000))) if duration_raw else " - "
+    throughput = res['totalGlobalDownloadedBytesPerSecond']
     error_count = res['totalGlobalCountFailure']
     vu_count = res['lastVirtualUserCount']
     request_sec = res['lastRequestCountPerSecond']
     request_duration = res['totalRequestDurationAverage']
     print(
-        f'    {time_cur_format}/{duration}\t Err[{error_count}], LGs[{lg_count}]\t VUs:{vu_count}\t BPS[{throutput}]\t RPS:{request_sec}\t avg(rql): {request_duration}')
+        f'    {time_cur_format}/{duration}\t Err[{error_count}], LGs[{lg_count}]\t VUs:{vu_count}\t BPS[{throughput}]\t RPS:{request_sec:.3f}\t avg(rql): {request_duration}')
+
+
+def format_delta(delta):
+    hour, remaining_sec = divmod(delta.seconds, 3600)
+    minute, sec = divmod(remaining_sec, 60)
+    return f'{delta.days + "d" if delta.days > 0 else ""}{hour:02d}:{minute:02d}:{sec:02d}'
 
 
 def stop(results_id, force: bool, quit_option=False):
