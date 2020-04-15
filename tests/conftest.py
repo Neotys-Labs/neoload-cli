@@ -35,9 +35,9 @@ def neoload_login(request, monkeypatch):
 @pytest.fixture
 def valid_data():
     return SimpleNamespace(
-        test_settings_id='1d4e9fe5-3daf-4ac9-8283-d04e2a97ed5e',
-        test_result_id='2f70e200-d11b-4e6b-96b2-e396cc18e3e3',
-        test_result_id_to_delete = '843418dd-c24d-468a-a885-cab2c039f12a'
+        test_settings_id='2e4fb86c-ac70-459d-a452-8fa2e9101d16',
+        test_result_id='184e0b68-eb4e-4368-9f6e-a56fd9c177cf',
+        test_result_id_to_delete = '07040512-23ca-4d9c-bdb7-a64450ea5949'
     )
 
 

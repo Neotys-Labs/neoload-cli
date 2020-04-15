@@ -24,7 +24,7 @@ class Resolver:
             self.__fill_map(name)
             __id = self.__map.get(name, None)
             if not __id:
-                raise cli_exception.CliException("name not found")
+                raise cli_exception.CliException(f"No id associated to the name '{name}'")
         return __id
 
     def resolve_name_or_json(self, name):
@@ -34,7 +34,7 @@ class Resolver:
             if __json:
                 return __json
             else:
-                raise cli_exception.CliException("name not found")
+                raise cli_exception.CliException(f"No object associated to the name '{name}'")
         return __id
 
     def get_map(self):

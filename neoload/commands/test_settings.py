@@ -50,7 +50,7 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
         return
 
     if not __id:
-        __id = user_data.get_meta(meta_key)
+        __id = user_data.get_meta_required(meta_key)
 
     if command == "put":
         put(__id, create_json(rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))

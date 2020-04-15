@@ -6,7 +6,7 @@ import neoload_cli_lib.schema_validation as schema_validation
 @pytest.mark.validation
 class TestSchemaValidation:
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/everything.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_success(self, datafiles):
         yaml_file_path = datafiles.listdir()[0]
         schema_validation.validate_yaml(yaml_file_path, __schema_url__)

@@ -17,7 +17,7 @@ neoload --help
 # TL;DR: login to the platform and run a test
 neoload login --apiurl $NLW_URL $NLW_TOKEN \
         test-settings --zone $NLW_ZONE --scenario sanityScenario create NewTest1 \
-        upload tests/neoload_projects/example_1/everything.yaml \
+        upload tests/neoload_projects/example_1/default.yaml \
   # stores the configuration of the test in Neoload Web (store the current test-settings id in the CLI for one-liner simplicity)
 neoload run
   # produces blocking, unbuffered output about test execution process, including readout of current data points
@@ -36,10 +36,10 @@ neoload test-settings ls NewTest1 # shows stored YAML for stored 'NewTest1'
 neoload test-settings --zone $NLW_ZONE_DYNAMIC --lgs 5 patch NewTest1  # sets zone and number of lgs for stored 'NewTest1'
 neoload test-settings --zone $NLW_CONTROLLER_ZONE --lgs $NLW_LG_ZONE_DYNAMIC:1,zone2:5 patch NewTest1 # sets advanced controls on controller zones and lg zones
   #(any assets provided should be validated internally as above before being uploaded if at all possible)
-neoload test-settings upload tests/neoload_projects/example_1/everything.yaml
+neoload test-settings upload tests/neoload_projects/example_1/default.yaml
 
 #validate
-neoload validate tests/neoload_projects/example_1/everything.yaml
+neoload validate tests/neoload_projects/example_1/default.yaml
   # is this valid YAML, and is it valid to our DSL based on JSON-schema? If not, provide detailed reasons why
 # TODO neoload validate --zone $NLW_ZONE_DYNAMIC --available-lgs 5
   # is this a valid zone, and does it have at least 5 available load generators? if not, throw exit code > 1 with detailed printout of why not

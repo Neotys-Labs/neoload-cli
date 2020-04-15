@@ -7,7 +7,7 @@ from commands.validate import cli as validate
 @pytest.mark.validation
 class TestValidate:
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/everything.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_success(self, datafiles):
         file_path = datafiles.listdir()[0]
         runner = CliRunner()
@@ -15,7 +15,7 @@ class TestValidate:
         assert 'Yaml file is valid' in str(result.output)
         assert result.exit_code == 0
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/everything.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_no_refresh(self, datafiles):
         file_path = datafiles.listdir()[0]
         runner = CliRunner()
@@ -34,7 +34,7 @@ class TestValidate:
         assert 'On instance:\n{\'name\': \'NeoLoad-CLI-example-2_0' in str(result.output)
         assert result.exit_code == 1
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/everything.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_bad_schema(self, datafiles):
         file_path = datafiles.listdir()[0]
         runner = CliRunner()
@@ -50,7 +50,7 @@ class TestValidate:
         assert result.exit_code == 2
 
     @pytest.mark.slow
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/everything.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_bad_schema_url(self, datafiles):
         file_path = datafiles.listdir()[0]
         runner = CliRunner()

@@ -41,8 +41,8 @@ jobs:
       script: |
         pip install neoload
         neoload login $(nlw_token) \
-                test-settings create MyAzureTest --zone $(zone_code) --lgs 2 --scenario smokeScenario \
-                project --path tests/neoload_projects/example_1/ upload
+                test-settings --zone $(zone_code) --lgs 2 --scenario smokeScenario create MyAzureTest \
+                project --path tests/neoload_projects/example_1/ upload MyAzureTest
 
   - task: Bash@3
     displayName: Run NeoLoad Test
@@ -52,11 +52,11 @@ jobs:
       script: |
         cd $(Build.SourcesDirectory)
 
-        neoload run \
-                --as-code tests/neoload_projects/example_1/everything.yaml,tests/neoload_projects/example_1/slas/uat.yaml \
-                --testname "Azure_sidecars_$(Build.BuildNumber)" \
-                --testdesc "Azure example load test with sidecars; $(Build.BuildUri)" \
-                --junitsla $(Common.TestResultsDirectory)/neoload-slas.xml
+        neoload run MyAzureTest \
+                --as-code tests/neoload_projects/example_1/default.yaml,tests/neoload_projects/example_1/slas/uat.yaml \
+                --name "Azure_sidecars_$(Build.BuildNumber)" \
+                --description "Azure example load test with sidecars; $(Build.BuildUri)" \
+                test-results --junit-file $(Common.TestResultsDirectory)/neoload-slas.xml junitsla
 
   - task: PublishTestResults@2
     inputs:

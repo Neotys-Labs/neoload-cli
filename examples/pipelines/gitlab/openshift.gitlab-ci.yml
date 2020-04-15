@@ -11,8 +11,9 @@ loadtest:
     git clone https://github.com/Neotys-Labs/neoload-cli.git && cd neoload-cli
     pip install -q neoload
         neoload login $(nlw_secret_token) \
-                test-settings create MyOpenshiftTest --zone pimnV --scenario sanityScenario \
-                project --path tests/neoload_projects/example_1/ upload \
-                run \
-                    --as-code tests/neoload_projects/example_1/everything.yaml,tests/neoload_projects/example_1/slas/uat.yaml
-                    --junitsla neoload-slas.xml
+                test-settings --zone pimnV --scenario sanityScenario create MyOpenshiftTest \
+                project --path tests/neoload_projects/example_1/ upload MyOpenshiftTest \
+                run MyOpenshiftTest \
+                    --name MyOpenshiftRun#1 \
+                    --as-code tests/neoload_projects/example_1/default.yaml,tests/neoload_projects/example_1/slas/uat.yaml \
+                test-results junitsla

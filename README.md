@@ -7,7 +7,7 @@ This command-line interface helps you launch and observe performance tests on th
 
 | Property | Value |
 | ----------------    | ----------------   |
-| Maturity | Stable |
+| Maturity | Experimental |
 | Author | Neotys |
 | License           | [BSD 2-Clause "Simplified"](https://github.com/Neotys-Labs/neoload-cli/blob/master/LICENSE) |
 | NeoLoad Licensing | License FREE edition, or Enterprise edition, or Professional |
@@ -106,7 +106,7 @@ neoload --path tests/neoload_projects/example_1/ upload
 ```
 To Validate the syntax and schema of the as-code project yaml files
 ```
-neoload validate sample_projects/example_1/everything.yaml
+neoload validate sample_projects/example_1/default.yaml
 ```
 
 ## Run a test

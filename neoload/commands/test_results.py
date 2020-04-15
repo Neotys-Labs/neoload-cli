@@ -46,7 +46,7 @@ def cli(command, name, rename, description, quality_status, junit_file):
         return
 
     if not __id:
-        __id = user_data.get_meta(meta_key)
+        __id = user_data.get_meta_required(meta_key)
 
     if command == "summary":
         summary(__id)

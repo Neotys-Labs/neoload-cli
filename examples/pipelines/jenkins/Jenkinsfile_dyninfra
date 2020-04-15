@@ -33,23 +33,23 @@ pipeline {
           steps {
             sh """neoload \
                    login $NLW_TOKEN \
-                   test-settings create MyJenkinsTest --zone $NLW_ZONE --scenario sanityScenario \
-                   project --path tests/neoload_projects/example_1/ upload
+                   test-settings --zone $NLW_ZONE --scenario sanityScenario create MyJenkinsTest \
+                   project --path tests/neoload_projects/example_1/ upload MyJenkinsTest
               """
           }
         }
         stage('Run Test') {
           steps {
               script {
-                  sh """neoload run \
-                     -as-code tests/neoload_projects/example_1/everything.yaml,tests/neoload_projects/example_1/slas/uat.yaml \
-                     --junitsla neoload-slas.xml \
+                  sh """neoload run MyJenkinsTest \
+                     -as-code tests/neoload_projects/example_1/default.yaml,tests/neoload_projects/example_1/slas/uat.yaml \
+                     test-results junitsla \
                     """
               }
           }
           post {
               always {
-                  junit 'neoload-slas.xml'
+                  junit 'junit-sla.xml'
               }
           }
         }

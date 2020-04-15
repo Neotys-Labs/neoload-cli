@@ -146,6 +146,12 @@ def get_meta(key):
     return get_user_data().metadata.get(key, None)
 
 
+def get_meta_required(key):
+    if key not in get_user_data().metadata:
+        raise cli_exception.CliException('No name or id provided. Please specify the object name or id.')
+    return get_user_data().metadata.get(key)
+
+
 def __load_yaml_schema():
     if os.path.exists(__yaml_schema_file):
         with open(__yaml_schema_file, "r") as stream:
