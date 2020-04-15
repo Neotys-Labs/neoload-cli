@@ -48,8 +48,9 @@ def cli(command, name, rename, description, quality_status, junit_file):
     if not __id:
         __id = user_data.get_meta_required(meta_key)
 
+    system_exit = {'message': '', 'code': 0}
     if command == "summary":
-        summary(__id)
+        system_exit = summary(__id)
     elif command == "junitsla":
         junit(__id, junit_file)
     elif command == "patch":
@@ -61,6 +62,7 @@ def cli(command, name, rename, description, quality_status, junit_file):
     if command != "delete":
         user_data.set_meta(meta_key, __id)
 
+    tools.system_exit(system_exit)
 
 def delete(__id):
     rep = tools.delete(__endpoint, __id, "test results")
@@ -87,6 +89,7 @@ def summary(__id):
     json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
     json_stats = rest_crud.get(get_end_point(__id, __operation_statistics))
     displayer.print_result_summary(json_result, json_sla_global, json_sla_test, json_sla_interval, json_stats)
+    return exit_process(json_result, json_sla_global, json_sla_test, json_sla_interval)
 
 
 def get_id(name, is_id):
@@ -120,3 +123,31 @@ def create_json(name, description, quality_status):
                 raise cli_exception.CliException('%s\nThis command requires a valid Json input.\n'
                                            'Example: neoload test-results put {"name":"TestResultName"}' % str(err))
     return data
+
+
+def exit_process(json_data, json_sla_global, json_sla_test, json_sla_interval):
+    sla_failure_count = len(list(filter(lambda sla: sla['status'] == "FAILED", json_sla_global)))
+    sla_failure_count += len(list(filter(lambda sla: sla['status'] == "FAILED", json_sla_test)))
+    sla_failure_count += len(list(filter(lambda sla: sla['status'] == "FAILED", json_sla_interval)))
+    term_reason = json_data['terminationReason']
+
+    if term_reason == "FAILED_TO_START":
+        return {'message': "Test failed to start.", 'code': 2}
+    elif term_reason == "CANCELLED":
+        return {'message': "Test cancelled.", 'code': 2}
+    elif term_reason == "MANUAL":
+        return {'message': "Test was stopped manually.", 'code': 2}
+    elif term_reason == "LG_AVAILABILITY":
+        return {'message': "Test failed due to load generator availability.", 'code': 2}
+    elif term_reason == "LICENSE":
+        return {'message': "Test failed because of license.", 'code': 2}
+    elif term_reason == "UNKNOWN":
+        return {'message': "Test failed for an unknown reason. Check logs.", 'code': 2}
+    elif sla_failure_count > 0:
+        return {'message': f'Test completed with {sla_failure_count} SLAs failures.', 'code': 1}
+    elif term_reason == "POLICY":
+        return {'message': "Test completed.", 'code': 0}
+    elif term_reason == "VARIABLE":
+        return {'message': "Test completed variably.", 'code': 0}
+    else:
+        return {'message': f'Unknown terminationReason: {term_reason}', 'code': 2}

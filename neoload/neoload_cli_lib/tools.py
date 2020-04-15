@@ -4,6 +4,7 @@ import sys
 
 import click
 from click import ClickException
+from termcolor import cprint
 
 from neoload_cli_lib import rest_crud, user_data
 
@@ -98,3 +99,9 @@ def get_id(name, resolver, is_an_id=None):
         return name
     else:
         return resolver.resolve_name(name)
+
+
+def system_exit(exit_process):
+    if exit_process['message'] != '':
+        cprint(exit_process['message'], 'green' if exit_process['code'] == 0 else 'red')
+    sys.exit(exit_process['code'])

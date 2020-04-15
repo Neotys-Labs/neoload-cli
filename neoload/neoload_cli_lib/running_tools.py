@@ -30,7 +30,7 @@ def wait(results_id):
         time.sleep(20)
 
     __current_id = None
-    test_results.summary(results_id)
+    tools.system_exit(test_results.summary(results_id))
 
 
 def header_status(results_id):
