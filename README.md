@@ -111,7 +111,7 @@ neoload --profile nts --token [NLW_TOKEN] --zone [NLW_ZONE_ID] --ntsurl [TEAM_SE
 You can also use an instance of NeoLoad Web that is deployed in your own infrastructure with the CLI, however you
 must override the defaults which are typically pointed to SaaS:
 ```
-neoload --profile onprem --token [NLW_TOKEN] --zone [NLW_ZONE_ID] --url [NLW_API_URL] --filesurl [NLW_FILES_URL] --ntsurl [TEAM_SERVER_URL] --ntslogin [TEAM_SERVER_USERNAME_COLON_ENC_PASS]
+neoload --profile onprem --token [NLW_TOKEN] --zone [NLW_ZONE_ID] --url [NLW_API_URL] --filesurl [NLW_FILES_URL] --ntsurl [TEAM_SERVER_URL] --ntslogin [TEAM_SERVER_USERNAME_COLON_ENC_PASS] --baseurl [NLW_URL_/#!result/]
 ```
 
 ### Viewing saved profiles

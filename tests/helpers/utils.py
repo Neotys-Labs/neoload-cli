@@ -73,6 +73,7 @@ NEOLOAD_CLI_NLW_URL = 'NEOLOAD_CLI_NLW_URL'
 NEOLOAD_CLI_ZONE_DYNAMIC = 'NEOLOAD_CLI_ZONE_DYNAMIC'
 NEOLOAD_CLI_ZONE_STATIC = 'NEOLOAD_CLI_ZONE_STATIC'
 NEOLOAD_CLI_NLW_FILES_URL = 'NEOLOAD_CLI_NLW_FILES_URL'
+NEOLOAD_CLI_NLW_BASE_URL = 'NEOLOAD_CLI_NLW_BASE_URL'
 
 def requireTestSecrets():
 
@@ -84,6 +85,7 @@ def requireTestSecrets():
         NEOLOAD_CLI_ZONE_DYNAMIC,
         NEOLOAD_CLI_ZONE_STATIC,
         NEOLOAD_CLI_NLW_FILES_URL,
+        NEOLOAD_CLI_NLW_BASE_URL,
     ]
 
     for key in required:
@@ -105,7 +107,8 @@ def assertProfileByZone(zone):
             '--token': '$NEOLOAD_CLI_NLW_TOKEN',
             '--ntslogin': '$NEOLOAD_CLI_NTS_LOGIN',
             '--ntsurl': '$NEOLOAD_CLI_NTS_URL',
-            '--filesurl': '$NEOLOAD_CLI_NLW_FILES_URL'
+            '--filesurl': '$NEOLOAD_CLI_NLW_FILES_URL',
+            '--baseurl': '$NEOLOAD_CLI_NLW_BASE_URL'
         })
 
 def assertNoDockerContainersRunning():

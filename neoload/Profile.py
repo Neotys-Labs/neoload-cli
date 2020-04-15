@@ -189,6 +189,9 @@ def setToken(token):
 def setFilesUrl(filesUrl):
     return setProfileProperty('filesurl',filesUrl)
 
+def setBaseUrl(baseUrl):
+    return setProfileProperty('baseurl',baseUrl)
+
 def setNTSURL(url):
     return setProfileProperty('ntsurl',url)
 

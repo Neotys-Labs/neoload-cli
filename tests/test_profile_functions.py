@@ -64,6 +64,7 @@ def test_profile_create_with_filesurl():
         'NEOLOAD_CLI_NTS_LOGIN',
         'NEOLOAD_CLI_NTS_URL',
         'NEOLOAD_CLI_NLW_FILES_URL',
+        'NEOLOAD_CLI_NLW_BASE_URL',
     ]
     verifies = list(map(lambda x: os.environ[x],verifies))
     assertOutput(

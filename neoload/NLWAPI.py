@@ -68,9 +68,12 @@ def getTestStatus(client,testId):
     return resp
 
 def getTestBaseUri(profile,testId):
-    baseUrl="https://neoload.saas.neotys.com/#!result/"
+    baseUrl="https://neoload.saas.neotys.com/"
     if 'baseurl' in profile:
         baseUrl=profile['baseurl']
+    if not baseUrl.lower().endswith('/#!result/'):
+        baseUrl = baseUrl + '/#!result/'
+    baseUrl = baseUrl.replace("//","/")
     return baseUrl+testId
 
 def getTestOverviewUrl(profile,testId):
