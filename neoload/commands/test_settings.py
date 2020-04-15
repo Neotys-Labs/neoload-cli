@@ -100,7 +100,7 @@ def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, na
     if controller_zone_id is not None:
         data['controllerZoneId'] = controller_zone_id
     if lg_zone_ids is not None:
-        data['lgZoneIds'] = parse_zone_ids(lg_zone_ids)
+        data['lgZoneIds'] = parse_zone_ids(lg_zone_ids, controller_zone_id)
     if naming_pattern is not None:
         data['testResultNamingPattern'] = naming_pattern
 
@@ -114,7 +114,7 @@ def manual_json(data):
     if sys.stdin.isatty():
         for field in ['name', 'description', 'scenarioName', 'controllerZoneId', 'testResultNamingPattern']:
             data[field] = input(field)
-        data['lgZoneIds'] = parse_zone_ids(input("lgZoneIds"))
+        data['lgZoneIds'] = parse_zone_ids(input("lgZoneIds"), data['controllerZoneId'])
     else:
         try:
             data = json.loads(sys.stdin.read())
@@ -124,9 +124,9 @@ def manual_json(data):
     return data
 
 
-def parse_zone_ids(lg_zone_ids):
+def parse_zone_ids(lg_zone_ids, controller_zone):
     if tools.is_integer(lg_zone_ids):
-        return lg_zone_ids
+        return {default_zone(controller_zone): int(lg_zone_ids)}
     values = {}
     for zone in lg_zone_ids.split(","):
         split = zone.split(":")
@@ -139,13 +139,12 @@ def default_zone(zone: str):
 
 
 def default_lgs(lg_zone_ids, controller_zone_id: str):
-    if isinstance(lg_zone_ids, dict):
+    if isinstance(lg_zone_ids, dict) and len(lg_zone_ids) > 0:
         return lg_zone_ids
     lgs = '1' if lg_zone_ids is None or lg_zone_ids == {} else lg_zone_ids
     if tools.is_integer(lgs):
-        zone = default_zone(controller_zone_id)
-        return parse_zone_ids('%s:%s' % (zone, lgs))
-    return parse_zone_ids(lg_zone_ids)
+        return parse_zone_ids(lgs, controller_zone_id)
+    return parse_zone_ids(lg_zone_ids, controller_zone_id)
 
 
 def fill_default_fields(json_data):
