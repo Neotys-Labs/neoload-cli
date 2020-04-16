@@ -7,11 +7,11 @@ from neoload_cli_lib import rest_crud, tools, cli_exception
 black_list = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/']
 
 
-def add_or_not(path: str):
+def is_black_listed(path: str):
     for refused in black_list:
         if refused in path:
-            return False
-    return True
+            return True
+    return False
 
 
 def zip_dir(path):
@@ -20,8 +20,8 @@ def zip_dir(path):
     for root, dirs, files in os.walk(path):
         for file in files:
             file_path = os.path.join(root, file)
-            if add_or_not(file_path):
-                ziph.write(file_path)
+            if not is_black_listed(file_path):
+                ziph.write(file_path, file_path.replace(path, ''))
     ziph.close()
     temp_zip.seek(0)
     return temp_zip

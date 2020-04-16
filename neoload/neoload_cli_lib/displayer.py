@@ -49,7 +49,7 @@ def __print_one_sla(kind, sla_json):
             sla_json['element']['name']
         )
 
-    if kind == __SLA_interval:
+    if kind == __SLA_interval.replace(' ', ''):
         if status == "WARNING":
             threshold = sla_json['warningThreshold']
             where = ' [%.3f%% %s %s]' % (sla_json['warning'], threshold['operator'], threshold['value'])
