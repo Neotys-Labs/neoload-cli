@@ -28,8 +28,12 @@ def zip_dir(path):
 
 
 def upload_project(path, endpoint):
-    filename = os.path.basename(path) + '.zip'
-    file = zip_dir(path)
+    filename = os.path.basename(path)
+    if str(path).endswith('.zip'):
+        file = open(path, "b+r")
+    else:
+        filename += '.zip'
+        file = zip_dir(path)
     display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
 
 
