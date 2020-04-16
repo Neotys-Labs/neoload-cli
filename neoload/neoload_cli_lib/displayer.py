@@ -8,22 +8,15 @@ __SLA_test = 'Per Run'
 __SLA_interval = 'Per Interval'
 
 
-def get_color_from_status(status: str):
-    return {
-        "FAILED": "red",
-        "PASSED": "green"
-    }.get(status, "yellow")
-
-
 def print_result_summary(json_result, sla_json_global, sla_json_test, sla_json_interval, json_stats):
-    print_sla(sla_json_global, sla_json_test, sla_json_interval)
+    __print_sla(sla_json_global, sla_json_test, sla_json_interval)
     tools.print_json({
         'result': json_result,
         'statistics': json_stats
     })
 
 
-def print_sla(sla_json_global, sla_json_test, sla_json_interval):
+def __print_sla(sla_json_global, sla_json_test, sla_json_interval):
     cprint("SLA summary:")
     for sla in sla_json_global:
         __print_one_sla(__SLA_global.replace(' ', ''), sla)
@@ -38,7 +31,7 @@ def print_sla(sla_json_global, sla_json_test, sla_json_interval):
 
 def __print_one_sla(kind, sla_json):
     status = sla_json['status']
-    color = get_color_from_status(status)
+    color = __get_color_from_status(status)
     element = ''
     where = ''
 
@@ -60,18 +53,25 @@ def __print_one_sla(kind, sla_json):
     return cprint("%sSLA [%s] %s on [%s%s]" % (kind, sla_json['kpi'], status, element, where), color)
 
 
+def __get_color_from_status(status: str):
+    return {
+        "PASSED": "green",
+        "WARNING": "yellow"
+    }.get(status, "red")
+
+
 def print_result_junit(json_result, sla_json_test, sla_json_interval, junit_file_path):
     junit_suites = []
     for sla in sla_json_test:
-        junit_suites.append(build_test_suite(json_result, __SLA_test, sla))
+        junit_suites.append(__build_test_suite(json_result, __SLA_test, sla))
     for sla in sla_json_interval:
-        junit_suites.append(build_test_suite(json_result, __SLA_interval, sla))
+        junit_suites.append(__build_test_suite(json_result, __SLA_interval, sla))
     with open(junit_file_path, 'w') as stream:
         TestSuite.to_file(stream, junit_suites, prettyprint=True)
     print('Report written to file %s' % junit_file_path)
 
 
-def build_test_suite(json_result, kind, sla_json):
+def __build_test_suite(json_result, kind, sla_json):
     status = sla_json['status']
     category = sla_json['element']['category']
     user_path = sla_json['element']['userpath']
@@ -81,13 +81,13 @@ def build_test_suite(json_result, kind, sla_json):
 
     tc = TestCase(test_name, suite_name)
     if status == "FAILED" or status == "WARNING":
-        txt = build_unit_test(json_result, kind, sla_json)
+        txt = __build_unit_test(json_result, kind, sla_json)
         tc.add_failure_info("SLA failed", txt, 'NeoLoad SLA')
 
     return TestSuite(suite_name, [tc])
 
 
-def build_unit_test(json_result, kind, sla_json):
+def __build_unit_test(json_result, kind, sla_json):
     status = sla_json['status']
     element = sla_json['element']
     reported = 0

@@ -21,7 +21,7 @@ def zip_dir(path):
         for file in files:
             file_path = os.path.join(root, file)
             if not is_black_listed(file_path):
-                ziph.write(file_path, file_path.replace(path, ''))
+                ziph.write(file_path, file_path.replace(str(path), ''))
     ziph.close()
     temp_zip.seek(0)
     return temp_zip

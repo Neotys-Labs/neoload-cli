@@ -1,0 +1,36 @@
+SLA summary:[0m
+[0m
+[0m
+[0m
+{
+  "result": {
+    "id": "d30fdcc2-319e-4be5-818e-f1978907a3ce",
+    "name": "SLA test",
+    "description": "",
+    "author": "Anakin Skywalker",
+    "terminationReason": "POLICY",
+    "lgCount": 1,
+    "project": "Sample_Project",
+    "scenario": "WANImpact Local",
+    "status": "TERMINATED",
+    "qualityStatus": "FAILED",
+    "startDate": 1517410739300,
+    "endDate": 1517411040416,
+    "duration": 301116
+  },
+  "statistics": {
+    "totalRequestCountSuccess": 8415,
+    "totalRequestCountFailure": 93,
+    "totalRequestDurationAverage": 85.36695,
+    "totalRequestCountPerSecond": 28.254892,
+    "totalTransactionCountSuccess": 405,
+    "totalTransactionCountFailure": 93,
+    "totalTransactionDurationAverage": 571.5201,
+    "totalTransactionCountPerSecond": 1.6538477,
+    "totalIterationCountSuccess": 77,
+    "totalIterationCountFailure": 77,
+    "totalGlobalDownloadedBytes": 115011235,
+    "totalGlobalDownloadedBytesPerSecond": 381949.94,
+    "totalGlobalCountFailure": 93
+  }
+}

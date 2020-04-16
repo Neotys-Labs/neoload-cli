@@ -1,0 +1,43 @@
+SLA summary:[0m
+[32mGlobalSLA [avg-request-resp-time] PASSED on [][0m
+[0m
+[31mPerRunSLA [error-rate] FAILED on [BrowserUser_Create_report > Try > submit][0m
+[33mPerRunSLA [avg-request-per-sec] WARNING on [BrowserUser_Create_report > / > /media/js/jquery.pngFix.pack.js][0m
+[32mPerRunSLA [error-rate] PASSED on [BrowserUser_Create_report > / > /media/js/ushahidi.js][0m
+[0m
+[31mPerIntervalSLA [avg-resp-time] FAILED on [BrowserUser_Create_report > / > /media/js/OpenLayers.js [23.810% >= 0.5]][0m
+[33mPerIntervalSLA [avg-resp-time] WARNING on [BrowserUser_Create_report > /media/img/icon-calendar.gif > /media/img/colorpicker/colorpicker_rgb_g.png [7.317% >= 0.05]][0m
+[32mPerIntervalSLA [error-rate] PASSED on [BrowserUser_Create_report > / > /media/js/jquery.js][0m
+[0m
+{
+  "result": {
+    "id": "d30fdcc2-319e-4be5-818e-f1978907a3ce",
+    "name": "SLA test",
+    "description": "",
+    "author": "Anakin Skywalker",
+    "terminationReason": "POLICY",
+    "lgCount": 1,
+    "project": "Sample_Project",
+    "scenario": "WANImpact Local",
+    "status": "TERMINATED",
+    "qualityStatus": "FAILED",
+    "startDate": 1517410739300,
+    "endDate": 1517411040416,
+    "duration": 301116
+  },
+  "statistics": {
+    "totalRequestCountSuccess": 8415,
+    "totalRequestCountFailure": 93,
+    "totalRequestDurationAverage": 85.36695,
+    "totalRequestCountPerSecond": 28.254892,
+    "totalTransactionCountSuccess": 405,
+    "totalTransactionCountFailure": 93,
+    "totalTransactionDurationAverage": 571.5201,
+    "totalTransactionCountPerSecond": 1.6538477,
+    "totalIterationCountSuccess": 77,
+    "totalIterationCountFailure": 77,
+    "totalGlobalDownloadedBytes": 115011235,
+    "totalGlobalDownloadedBytesPerSecond": 381949.94,
+    "totalGlobalCountFailure": 93
+  }
+}
