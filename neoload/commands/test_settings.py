@@ -74,8 +74,7 @@ def put(id_settings, json_data):
 
 
 def patch(id_settings, json_data):
-    rep = rest_crud.patch(get_end_point(id_settings), json_data)
-    rep = patch_default_fields(id_settings, rep)
+    rep = rest_crud.patch(get_end_point(id_settings), fill_default_fields(json_data))
     tools.get_id_and_print_json(rep)
 
 
@@ -154,19 +153,3 @@ def fill_default_fields(json_data):
         ('lgZoneIds', default_lgs(json_data.get('lgZoneIds'), json_data.get('controllerZoneId')))
     ])
     return data
-
-
-def patch_default_fields(id_settings, json_data):
-    if 'id' not in json_data:
-        # Display errors if there is some
-        tools.get_id_and_print_json(json_data)
-
-    json_filled = fill_default_fields(json_data)
-    default_fields_to_patch = {}
-    if json_data.get('controllerZoneId') != json_filled['controllerZoneId']:
-        default_fields_to_patch['controllerZoneId'] = json_filled['controllerZoneId']
-    if json_data.get('lgZoneIds') != json_filled['lgZoneIds']:
-        default_fields_to_patch['lgZoneIds'] = json_filled['lgZoneIds']
-    if len(default_fields_to_patch) > 0:
-        return rest_crud.patch(get_end_point(id_settings), default_fields_to_patch)
-    return json_data

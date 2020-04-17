@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='neoload-cli',
-    version='2.0.0',
+    version='1.0.0',
     packages=[''],
     url='https://github.com/Neotys-Labs/neoload-cli',
     license='Apache 2.0',

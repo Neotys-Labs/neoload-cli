@@ -12,8 +12,11 @@ from neoload_cli_lib import running_tools, tools, rest_crud, user_data
 @click.option("--name", help="name of test results")
 @click.option("--description", help="description of test results")
 @click.option("--as-code", 'as_code', help="Comma-separated as-code files to use for the test.")
+@click.option("--web-vu", 'web_vu', help="The number of Web Virtual Users to be reserved for the test.")
+@click.option("--sap-vu", 'sap_vu', help="The number of SAP Virtual Users to be reserved for the test.")
+@click.option("--cirix-vu", 'citrix_vu', help="The number of Citrix Virtual Users to be reserved for the test.")
 @click.option("-d", "--detached", is_flag=True, help="Doesn't wait the end of test")
-def cli(name_or_id, scenario, detached, name, description, as_code):
+def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_vu, citrix_vu):
     """run a test"""
     if not name_or_id or name_or_id == "cur":
         name_or_id = user_data.get_meta(test_settings.meta_key)
@@ -31,7 +34,9 @@ def cli(name_or_id, scenario, detached, name, description, as_code):
     naming_pattern = naming_pattern.replace('${runID}', str(test_settings_json['nextRunId']))
 
     # Sorry for that, post data are in the query string :'( :'(
-    post_result = rest_crud.post('v2/tests/%s/start?%s' % (_id, create_data(naming_pattern, description, as_code)), {})
+    post_result = rest_crud.post(
+        'v2/tests/%s/start?%s' % (_id, create_data(naming_pattern, description, as_code, web_vu, sap_vu, citrix_vu)),
+        {})
     user_data.set_meta(test_settings.meta_key, _id)
     user_data.set_meta(test_results.meta_key, post_result['resultId'])
     if not detached:
@@ -40,10 +45,16 @@ def cli(name_or_id, scenario, detached, name, description, as_code):
         tools.print_json(post_result)
 
 
-def create_data(name, description, as_code):
+def create_data(name, description, as_code, web_vu, sap_vu, citrix_vu):
     query = 'testResultName=' + quote(name)
     if description is not None:
         query += '&testResultDescription=' + quote(description)
     if as_code is not None:
         query += '&asCode=' + quote(as_code)
+    if web_vu is not None:
+        query += '&reservationWebVUs=' + web_vu
+    if sap_vu is not None:
+        query += '&reservationSAPVUs=' + sap_vu
+    if citrix_vu is not None:
+        query += '&reservationCitrixVUs=' + citrix_vu
     return query

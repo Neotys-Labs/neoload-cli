@@ -1,51 +1,71 @@
 pipeline {
   agent none
 
-  environment {
-    // either set these in 'prepare...' or get from a secrets provider
-    //NLW_TOKEN = 'YOUR NLWEB TOKEN'
-    //NLW_ZONE = 'ZONE ID'
+  parameters {
+    string(defaultValue: "specify_token_or_get_it_from_credentials", description: 'Neoload Web Token', name: 'token')
+    string(defaultValue: "defaultzone", description: 'Zone identifier', name: 'zone_id')
+    string(defaultValue: "https://neoload-api.saas.neotys.com/", description: 'NeoLoad Web Api Url', name: 'api_url')
   }
 
   stages {
-    stage('Grab Utility Repo') {
+    /*stage('Grab Utility Repo') {
       agent { label 'master' }
       steps {
         dir('examples') {
             git(branch: "master", url: 'https://github.com/Neotys-Labs/neoload-cli.git')
         }
       }
-    }
+    }*/
     stage('Attach Worker') {
-      agent {
+      /*agent {
         dockerfile { // load python container
           args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
           dir 'examples/docker'
+        }
+      }*/
+      agent {
+        docker {
+          image 'python:3-alpine'
         }
       }
       stages {
         stage('Get NeoLoad CLI') {
           steps {
-            sh "pip install neoload"
+            withEnv(["HOME=${env.WORKSPACE}"]) {
+              sh "pip3 install ."
+              sh "python3 neoload --version"
+            }
           }
         }
         stage('Prepare Neoload test') {
           steps {
-            sh """neoload \
-                   login $NLW_TOKEN \
-                   test-settings --zone $NLW_ZONE --scenario sanityScenario create MyJenkinsTest \
-                   project --path tests/neoload_projects/example_1/ upload MyJenkinsTest
-              """
+            withEnv(["HOME=${env.WORKSPACE}"]) {
+              sh """python3 neoload \
+                     login --url ${params.api_url} ${params.token} \
+                     test-settings --zone ${params.zone_id} --scenario sanityScenario patch "My Jenkins Test With CLI" \
+                     project --path tests/neoload_projects/example_1/ upload "My Jenkins Test With CLI"
+                """
+            }
           }
         }
         stage('Run Test') {
           steps {
-              script {
-                  sh """neoload run MyJenkinsTest \
-                     -as-code tests/neoload_projects/example_1/default.yaml,tests/neoload_projects/example_1/slas/uat.yaml \
-                     test-results junitsla \
-                    """
+            withEnv(["HOME=${env.WORKSPACE}"]) {
+              catchError {
+                sh """python3 neoload run \
+                      --web-vu 5 \
+                      --as-code default.yaml,slas/uat.yaml \
+                      "My Jenkins Test With CLI" \
+                   """
               }
+            }
+          }
+        }
+        stage('Generate Test Report') {
+          steps {
+            withEnv(["HOME=${env.WORKSPACE}"]) {
+                sh "python3 neoload test-results junitsla"
+            }
           }
           post {
               always {
