@@ -1,9 +1,14 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='neoload-cli',
     version='1.0.0',
-    packages=[''],
+    packages=find_packages(exclude=("tests",)),
+    entry_points={
+        'console_scripts': [
+            'neoload=neoload.__main__:cli'
+        ]
+    },
     url='https://github.com/Neotys-Labs/neoload-cli',
     license='Apache 2.0',
     author='Neotys',
