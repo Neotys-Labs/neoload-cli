@@ -15,9 +15,9 @@ neoload --help
 # NOT-GOAL: write commands that simply reflect our API structure, as nice and normalized as it is
 
 # TL;DR: login to the platform and run a test
-neoload login --apiurl $NLW_URL $NLW_TOKEN \
+neoload login --url $NLW_URL $NLW_TOKEN \
         test-settings --zone $NLW_ZONE --scenario sanityScenario create NewTest1 \
-        upload tests/neoload_projects/example_1/default.yaml \
+        project --path tests/neoload_projects/example_1/ upload NewTest1 \
   # stores the configuration of the test in Neoload Web (store the current test-settings id in the CLI for one-liner simplicity)
 neoload run
   # produces blocking, unbuffered output about test execution process, including readout of current data points
@@ -26,7 +26,7 @@ neoload run
 neoload login
   # if no --token provided, asks for it by stdin prompt if in interactive mode
 neoload login $NLW_TOKEN   # defaults to use SaaS, store in 'defaults'
-neoload login --apiurl $NLW_UR $NLW_TOKENL # uses a specific NLW instance for login, store in 'defaults'
+neoload login --url $NLW_UR $NLW_TOKEN # uses a specific NLW instance for login, store in 'defaults'
   # Display the api url and the currently stored data (test-settings-id, test-result-id)
 neoload status
 
@@ -36,7 +36,7 @@ neoload test-settings ls NewTest1 # shows stored YAML for stored 'NewTest1'
 neoload test-settings --zone $NLW_ZONE_DYNAMIC --lgs 5 patch NewTest1  # sets zone and number of lgs for stored 'NewTest1'
 neoload test-settings --zone $NLW_CONTROLLER_ZONE --lgs $NLW_LG_ZONE_DYNAMIC:1,zone2:5 patch NewTest1 # sets advanced controls on controller zones and lg zones
   #(any assets provided should be validated internally as above before being uploaded if at all possible)
-neoload test-settings upload tests/neoload_projects/example_1/default.yaml
+neoload project --path tests/neoload_projects/example_1/ upload
 
 #validate
 neoload validate tests/neoload_projects/example_1/default.yaml
@@ -75,16 +75,18 @@ neoload run
 
   # run OPTIONS
     -d, --detach            (optional) Launch the test and return immediately without waiting until it terminates. Only print the Two first lines of the output
-    --test-settings         (optional) Test-settings name to run
-    --id                    (optional) Use uuid instead of name
-    -n, --name              (optional) Result name. By default, use the test result naming pattern defined in the test-settings (#1, #2...)
+    --name              (optional) Result name. By default, use the test result naming pattern defined in the test-settings (#1, #2...)
     --description           (optional) Result description
-    -f, --as-code           Comma-separated as-code files to use. Those files must be part of the uploaded project
+    --as-code           Comma-separated as-code files to use. Those files must be part of the uploaded project
+    --web-vu
+    --sap-vu
+    --citrix-vu
+  # run Arguments
+    name_or_id                    (optional) Use uuid instead or the name of the test settings to run
+
+  # Options not yet implemented
     --reservation-id        The reservation identifier to use for the test
     --reservation-duration
-    --reservation-web-vu
-    --reservation-sap-vu
-    --reservation-citrix-vu
     --publish-test-result <flag>   Only for collaborative projects: publish the test results onto the server
 
   # Run in interactive mode (a user from a shell)
@@ -93,11 +95,11 @@ neoload run
   # Run in non interactive mode (from a CI script), when aborting the job, do as if Ctrl+C was hit in interactive mode
 
   # if non-blocking (detach)
-neoload --force stop
+neoload stop --force
   # blocking status until complete, with a timeout of 30s
 
   # and also one-liners, at the end of the test: the sla report output to named file and the summary
-neoload run test-result junitreport junit.xml test-result summary
+neoload run NewTest1 test-results --junit-file junit.xml junitsla
 
 
 # wait (BONUS)
@@ -117,11 +119,11 @@ neoload wait
 
 # results
   # Set a specific test result to work with (the result is automatically set when running a test)
-neoload test-result use ee50e3a2-3cf4-4667-8186-9950895e0a04
+neoload test-results use ee50e3a2-3cf4-4667-8186-9950895e0a04
   # the sla report output to named file
-neoload test-result junitreport junit.xml
+neoload test-results --junit-file junit.xml junitsla
   # The current test result summary
-neoload test-result summary
+neoload test-results summary
 
 
 #lists
@@ -141,15 +143,14 @@ neoload tests ls --scenario "scenarioName"
 
 #list results (defaults --limit 50 --sort-by startDate)
 #(if --sort-by is a date, default to --sort-order desc, else --sort-order asc)
-neoload results ls
+neoload test-results ls
   # should list out top 50 results, sorted by startDate descending
-neoload results ls --status RUNNING
-neoload results ls --project "projectName"
-neoload results ls --scenario "scenarioName"
-neoload results ls --qualityStatus FAILED
+neoload test-results ls --status RUNNING
+neoload test-results ls --project "projectName"
+neoload test-results ls --scenario "scenarioName"
+neoload test-results ls --qualityStatus FAILED
 
-neoload projects ls
-  # not yet implemented in v2 API spec
+neoload project meta
 
 neoload zones ls
   # list out all zones

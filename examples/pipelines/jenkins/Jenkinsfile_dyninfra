@@ -8,14 +8,6 @@ pipeline {
   }
 
   stages {
-    /*stage('Grab Utility Repo') {
-      agent { label 'master' }
-      steps {
-        dir('examples') {
-            git(branch: "master", url: 'https://github.com/Neotys-Labs/neoload-cli.git')
-        }
-      }
-    }*/
     stage('Attach Worker') {
       /*agent {
         dockerfile { // load python container
@@ -53,6 +45,7 @@ pipeline {
             withEnv(["HOME=${env.WORKSPACE}"]) {
               catchError {
                 sh """python3 neoload run \
+                      --return-0 \
                       --web-vu 5 \
                       --as-code default.yaml,slas/uat.yaml \
                       "My Jenkins Test With CLI" \
