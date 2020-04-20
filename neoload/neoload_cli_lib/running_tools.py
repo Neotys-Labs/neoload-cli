@@ -20,7 +20,7 @@ def handler(signal_received, frame):
             __count += 1
 
 
-def wait(results_id):
+def wait(results_id, exit_code_sla):
     global __current_id
     __current_id = results_id
     signal(SIGINT, handler)
@@ -30,7 +30,7 @@ def wait(results_id):
         time.sleep(20)
 
     __current_id = None
-    tools.system_exit(test_results.summary(results_id))
+    tools.system_exit(test_results.summary(results_id), exit_code_sla)
 
 
 def header_status(results_id):

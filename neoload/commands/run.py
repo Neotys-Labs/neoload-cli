@@ -16,7 +16,9 @@ from neoload_cli_lib import running_tools, tools, rest_crud, user_data
 @click.option("--sap-vu", 'sap_vu', help="The number of SAP Virtual Users to be reserved for the test.")
 @click.option("--cirix-vu", 'citrix_vu', help="The number of Citrix Virtual Users to be reserved for the test.")
 @click.option("-d", "--detached", is_flag=True, help="Doesn't wait the end of test")
-def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_vu, citrix_vu):
+@click.option('--return-0', 'return_0', is_flag=True, default=False,
+              help="return 0 when test is correctly launched, whatever the result of SLA")
+def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_vu, citrix_vu, return_0):
     """run a test"""
     if not name_or_id or name_or_id == "cur":
         name_or_id = user_data.get_meta(test_settings.meta_key)
@@ -40,7 +42,7 @@ def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_
     user_data.set_meta(test_settings.meta_key, _id)
     user_data.set_meta(test_results.meta_key, post_result['resultId'])
     if not detached:
-        running_tools.wait(post_result['resultId'])
+        running_tools.wait(post_result['resultId'], not return_0)
     else:
         tools.print_json(post_result)
 

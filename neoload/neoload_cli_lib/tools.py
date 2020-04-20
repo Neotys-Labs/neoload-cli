@@ -101,7 +101,8 @@ def get_id(name, resolver, is_an_id=None):
         return resolver.resolve_name(name)
 
 
-def system_exit(exit_process):
+def system_exit(exit_process, exit_code=True):
     if exit_process['message'] != '':
         cprint(exit_process['message'], 'green' if exit_process['code'] == 0 else 'red')
-    sys.exit(exit_process['code'])
+    if exit_code:
+        sys.exit(exit_process['code'])
