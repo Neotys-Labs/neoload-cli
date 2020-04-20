@@ -18,7 +18,8 @@ meta_key = 'result id'
 
 
 @click.command()
-@click.argument('command', type=click.Choice(['ls', 'summary', 'junitsla', 'patch', 'delete', 'use'], case_sensitive=False),
+@click.argument('command',
+                type=click.Choice(['ls', 'summary', 'junitsla', 'put', 'delete', 'use'], case_sensitive=False),
                 required=False)
 @click.argument("name", type=str, required=False)
 @click.option('--rename', help="")
@@ -53,8 +54,8 @@ def cli(command, name, rename, description, quality_status, junit_file):
         system_exit = summary(__id)
     elif command == "junitsla":
         junit(__id, junit_file)
-    elif command == "patch":
-        patch(__id, description, quality_status, rename)
+    elif command == "put":
+        put(__id, description, quality_status, rename)
     elif command == "delete":
         delete(__id)
         user_data.set_meta(meta_key, None)
@@ -64,15 +65,25 @@ def cli(command, name, rename, description, quality_status, junit_file):
 
     tools.system_exit(system_exit)
 
+
 def delete(__id):
     rep = tools.delete(__endpoint, __id, "test results")
     print(rep.text)
 
 
-def patch(__id, description, quality_status, rename):
+def put(__id, description, quality_status, rename):
     json_data = create_json(rename, description, quality_status)
+    json_data = set_empty_fields_with_blank(json_data)
     rep = rest_crud.put(get_end_point(__id), json_data)
     tools.get_id_and_print_json(rep)
+
+
+def set_empty_fields_with_blank(json_data):
+    if 'description' not in json_data:
+        json_data['description'] = ''
+    if 'qualityStatus' not in json_data:
+        json_data['qualityStatus'] = ''
+    return json_data
 
 
 def junit(__id, junit_file):
@@ -121,7 +132,8 @@ def create_json(name, description, quality_status):
                 return json.loads(sys.stdin.read())
             except json.JSONDecodeError as err:
                 raise cli_exception.CliException('%s\nThis command requires a valid Json input.\n'
-                                           'Example: neoload test-results put {"name":"TestResultName"}' % str(err))
+                                                 'Example: neoload test-results put {"name":"TestResultName"}' % str(
+                    err))
     return data
 
 

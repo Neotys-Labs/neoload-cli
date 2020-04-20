@@ -32,8 +32,10 @@ class TestPatch:
         assert json_result['name'] == json_test_before['name']
         assert json_result['description'] == json_test_before['description']
         assert json_result['scenarioName'] == json_test_before['scenarioName']
-        assert json_result['controllerZoneId'] == json_test_before['controllerZoneId']
-        assert json_result['lgZoneIds'] == json_test_before['lgZoneIds']
+        assert json_result['controllerZoneId'] == json_test_before['controllerZoneId'] or (
+                json_test_before['controllerZoneId'] == '' and json_result['controllerZoneId'] == 'defaultzone')
+        assert json_result['lgZoneIds'] == json_test_before['lgZoneIds'] or (
+                json_test_before['lgZoneIds'] == {} and json_result['lgZoneIds'] == {'defaultzone': 1})
         assert json_result['testResultNamingPattern'] == json_test_before['testResultNamingPattern']
 
         result_status = runner.invoke(status)

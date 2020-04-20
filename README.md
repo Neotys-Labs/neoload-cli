@@ -134,7 +134,7 @@ neoload stop             # Send the stop signal to the test and wait until it en
 
 ## View results
 ```
-Usage: neoload test-results [OPTIONS] [[ls|summary|junitsla|patch|delete|use]] [NAME]
+Usage: neoload test-results [OPTIONS] [[ls|summary|junitsla|put|delete|use]] [NAME]
 neoload test-results summary            # The Json result summary, with SLAs
 neoload test-results junitsla           # Output the summary in a JUnit xml file
 ```
