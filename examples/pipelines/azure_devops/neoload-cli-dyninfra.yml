@@ -1,16 +1,22 @@
 trigger: none
 
 pool:
-  vmImage: 'ubuntu-16.04'
+  vmImage: 'ubuntu-18.04'
 
-variables:
-  nlw_token: $(secret_nlw_token)
-  zone_code: pimnV
-  PYTHONUNBUFFERED: 1
+parameters:
+- name: neoloadApiUrl
+  type: string
+  default: 'https://neoload-api.saas.neotys.com/'
+- name: neoloadToken
+  type: string
+  default: 'specify_token_or_get_it_from_credentials'
+- name: zoneId
+  type: string
+  default: 'defaultzone'
 
 jobs:
 - job: RunLoadTest
-  displayName: Run NeoLoad Test
+  displayName: Run NeoLoad Test from Azure Devops
   steps:
   - task: UsePythonVersion@0
     inputs:
@@ -22,25 +28,39 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        pip install neoload
-        neoload login $(nlw_token) \
-                test-settings --zone $(zone_code) --scenario sanityScenario create MyAzureDynInfraTest \
-                project --path tests/neoload_projects/example_1/ upload MyAzureTest
+        pip install .
+        python neoload --version
 
   - task: Bash@3
-    displayName: Run NeoLoad Test
+    displayName: Configure the NeoLoad test
     continueOnError: true
     inputs:
       targetType: 'inline'
       script: |
-        cd $(Build.SourcesDirectory)
+        python neoload login --url ${{parameters.neoloadApiUrl}} ${{parameters.neoloadToken}} \
+                       test-settings --zone ${{parameters.zoneId}} --scenario sanityScenario patch "My Azure Test With CLI" \
+                       project --path tests/neoload_projects/example_1/ upload "My Azure Test With CLI"
 
-        neoload run MyAzureTest \
-                --as-code tests/neoload_projects/example_1/default.yaml,tests/neoload_projects/example_1/slas/uat.yaml \
-                --name "Azure_sidecars_$(Build.BuildNumber)" \
-                --description "Azure example load test with sidecars; $(Build.BuildUri)" \
-                test-results --junit-file $(Common.TestResultsDirectory)/neoload-slas.xml junitsla
+  - task: Bash@3
+    displayName: Run the NeoLoad test
+    continueOnError: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        python neoload run \
+                       --web-vu 5 \
+                       --as-code default.yaml,slas/uat.yaml \
+                       --name "TestLaunchedFromAzureCI_build_$(Build.BuildNumber)" \
+                       --description "Azure example with meta; $(Build.BuildUri)" \
+                       "My Azure Test With CLI"
 
+  - task: Bash@3
+    displayName: Get the junit SLA report
+    continueOnError: true
+    inputs:
+      targetType: 'inline'
+      script: |
+       python neoload test-results --junit-file $(Common.TestResultsDirectory)/neoload-slas.xml junitsla
 
   - task: PublishTestResults@2
     inputs:

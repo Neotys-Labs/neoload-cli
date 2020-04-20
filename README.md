@@ -162,6 +162,8 @@ While the above instructions could be run from a contributor workstation, they c
  - Sorry AWS CodeBuild, haven't seen any F100 clients using the pform
  - CircleCI, TBD when [@punkdata](https://www.linkedin.com/in/punkdata/) gets back to [@paulsbruce](https://www.linkedin.com/in/paulsbruce/) :)
 
+NB: When chaining commands, the return code of the whole command is the return code of the **last command**. That's why you should not chain the two commands "run" and "test-results junitsla".
+
 ## Packaging the CLI with Build Agents
 Many of the above CI examples include a step to explicitly install the NeoLoad CLI as part of the
 build steps. However, if you want the CLI baked into some build agent directly so that it

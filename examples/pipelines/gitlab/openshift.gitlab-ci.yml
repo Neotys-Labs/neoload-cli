@@ -20,7 +20,7 @@ loadtest:
               project --path tests/neoload_projects/example_1/ upload "My Gitlab Test With CLI"
   - |
     python3 neoload run \
-              --name "TestLaunchedFromGitlab_$CI_JOB_ID"
+              --name "TestLaunchedFromGitlab_$CI_JOB_ID" \
               --web-vu 5 \
               --as-code default.yaml,slas/uat.yaml \
               "My Gitlab Test With CLI"
