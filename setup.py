@@ -8,8 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='neoload-cli',
-    version='1.0.0.rc1',
+    name='neoload',
     package_data={'': [
         'LICENSE',
         'README.md'
@@ -19,6 +18,12 @@ setup(
         'console_scripts': [
             'neoload=neoload.__main__:cli'
         ]
+    },
+    setup_requires=['setuptools_scm'],
+    use_scm_version={
+        'write_to': 'neoload/version.py',
+        'write_to_template': '__version__ = "{version}"',
+        'tag_regex': r'^(?P<prefix>v)?(?P<version>[^\+]+)(?P<suffix>.*)?$'
     },
     url='https://github.com/Neotys-Labs/neoload-cli',
     license='Apache 2.0',

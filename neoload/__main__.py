@@ -3,11 +3,20 @@ import os
 
 import click
 import coloredlogs
-
+from version import __version__
 
 from neoload_cli_lib import tools, rest_crud, cli_exception
 
 plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
+
+
+def compute_version():
+    if __version__ is not None:
+        return __version__
+    try:
+        return os.popen('git describe --tags --dirty').read().strip()
+    except (TypeError, ValueError):
+        return "dev"
 
 
 class NeoLoadCLI(click.MultiCommand):
@@ -37,7 +46,7 @@ class NeoLoadCLI(click.MultiCommand):
 @click.command(cls=NeoLoadCLI, help='', chain=True)
 @click.option('--debug', default=False, is_flag=True)
 @click.option('--batch', default=False, is_flag=True, help="Don't ask a confirmation")
-@click.version_option('1.0.0')
+@click.version_option(compute_version())
 def cli(debug, batch):
     if debug:
         logging.basicConfig()

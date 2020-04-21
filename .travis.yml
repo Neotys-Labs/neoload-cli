@@ -9,10 +9,6 @@ addons:
 python:
   - "3.6"
   - "3.8"
-  # PyPy versions
-  #  - "pypy"   # currently Python 2.7.13, PyPy 7.1.1
-  #  - "pypy3"  # currently Python 3.6.1,  PyPy 7.1.1-beta0
-# command to install dependencies
 install:
   - pip install .
   - pip install coverage
@@ -21,3 +17,11 @@ script:
   - PYTHONPATH="neoload" coverage3 run -m pytest
   - coverage3 xml
   - sonar-scanner
+deploy:
+  provider: pypi
+  user: "__token__"
+  password:
+    secure: "K/AxS9FQGbGuTj3yCB4y7unIKEC+SGlCGUMj4/Z8fSYpFchcNzON8P9llJTcjBl66Plimhk6nyHPhr46qi4nboH5DRWHfx/6WXzq6/aDONWJMSsBGZvevDLGRts3InRD2lxiS1UtRGS2ky9zlnxSkkfya7m04bX8M7dgMArO7rJ5BeyN01YVg1gm+BAJWThHvWpqoC7f+fYxHcpv4hMU1HtwVguTqpfyyUGEnUp0jmZ9zY1AGIWkgomxJDulewgRyVBRVMsWUwyLPi/mYnIgvaAa6HeB0QEi3kWoAy6MSeiPJgumnyak2mPpxGeF2efcOSBkBX+27X/o+IKT3Ow9tjsz19O2++yPPGm3oJuEjqcxs9oDkYU0Tut4rmHXHVnLst8tLQwX87V5M5XKDS7m5fiHE3AGKseD5RajP4v9FG194w/C3Wkh4JCI6X7QY8jnrNMMXPRM98V2iyf3qMNGn6enLxSGXi7/sJw06yM6lNcM1tmS4w8iZw+VfF6/XaQtr8js6cyy6yAhrx9zMf3ndgJ0dGGtuNZyqEjU1Hli7VTFnNHzi01oawbwEQ5dCK1lBAkUAMwF3ZOUz6BFPBoNsekOqQ+5gZMsRhnIZHl4BXJWYTmUs/NMnk+Y/lnlpC9GW1wAH3bP3y7BkBgGdJrLtneIzikirW7dlGLf9KpQ6DQ="
+  skip_existing: true
+  on:
+    tags: true
