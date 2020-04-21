@@ -36,11 +36,13 @@ NOTE: For Windows command line, replace the '\\' multi-line separators above wit
  - [Installation](#installation)
  - [Login to Neoload Web](#login-to-neoload-web)
  - [Setup a test](#setup-a-test)
+   - [Setup resources in Neoload Web](#setup-resources-in-neoload-web)
    - [Define a test settings](#define-a-test-settings)
    - [Upload a Neoload project](#upload-a-neoload-project)
  - [Run a test](#run-a-test)
    - [Stop a running test](#stop-a-running-test)
  - [View results](#view-results)
+ - [View zones](#view-zones)
  - [Create local docker infrastructure to run a test](#create-local-docker-infrastructure-to-run-a-test)
  - [Continuous Testing Examples](#continuous-testing-examples)
  - [Packaging the CLI with Build Agents](#packaging-the-cli-with-build-agents)
@@ -76,6 +78,10 @@ neoload status          # Displays stored data
 ```
 
 ## Setup a test
+### Setup resources in Neoload Web
+Run a test requires an infrastructure that is defined in Neoload Web Zones section [(see documentation how to manage zones)](https://www.neotys.com/documents/doc/nlweb/latest/en/html/#27521.htm#o39458)
+You must at least have either a dynamic or a static zone with one controller and one load generator. At First, you could add resources to the "Default zone" since the CLI use it by default.
+
 ### Define a test settings
 Test settings are how to run a test, a sort of template. Tests are stored in Neoload Web.
 ```
@@ -149,6 +155,13 @@ To view logs
 ```
 neoload logs-url                        # The URL to the test in Neoload Web
 ```
+
+## View zones
+```
+python neoload zones --human
+```
+Display in a human readable way the list of all static and dynamic zones registered on Neoload Web, and the resources attached (controllers and load generators).
+
 ## Create local docker infrastructure to run a test
 Upcoming
 
