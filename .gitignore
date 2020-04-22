@@ -2,3 +2,5 @@ __pycache__/
 .DS_Store
 .eggs/
 neoload.egg-info/
+neoload/version.py
+junit-sla.xml
