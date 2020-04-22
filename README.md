@@ -70,7 +70,7 @@ NeoLoad CLI defaults to using the NeoLoad Web APIs for most operations. That's w
 neoload login [TOKEN]
 ```
 The CLI will connect by default to Neoload Web SaaS to lease license. \
-For self-hosted enterprise license, you must specify the Neoload Web Api url with --api-url. \
+For self-hosted enterprise license, you must specify the Neoload Web Api url with --url. \
 \
 The CLI stores data locally like api url, token, and the test ID you are working on. **The commands can be chained !**
 ```
