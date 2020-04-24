@@ -2,7 +2,7 @@ from urllib.parse import quote
 
 import click
 
-from commands import test_settings, test_results
+from commands import test_settings, test_results, docker
 from neoload_cli_lib import running_tools, tools, rest_crud, user_data
 
 
@@ -34,6 +34,9 @@ def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_
     if not naming_pattern:
         naming_pattern = "#${runID}"
     naming_pattern = naming_pattern.replace('${runID}', str(test_settings_json['nextRunId']))
+
+    if docker.has_prior_attach():
+        docker.resume_prior_attach()
 
     # Sorry for that, post data are in the query string :'( :'(
     post_result = rest_crud.post(
