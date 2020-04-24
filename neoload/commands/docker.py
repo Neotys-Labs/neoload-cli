@@ -27,7 +27,7 @@ prior_logging_level = logging.NOTSET
 
 
 @click.command()
-@click.argument("command", required=True, type=click.Choice(['ls', 'attach', 'detach', 'forget']))
+@click.argument("command", required=True, type=click.Choice(['prepare','attach', 'detach', 'forget']))
 @click.option('--tag', default="latest", help="The docker image version to use")
 @click.option('--ctrlimage', default="neotys/neoload-controller", help="The controller image to use")
 @click.option('--lgimage', default="neotys/neoload-loadgenerator", help="The load generator image to use")
@@ -35,13 +35,22 @@ prior_logging_level = logging.NOTSET
 @click.option('--force', is_flag=True, help="Do not prompt/confirm")
 def cli(command, tag, ctrlimage, lgimage, all, force):
 
-    if command == "attach":
+    if command == "prepare":
+        prior = {
+            "tag": tag,
+            "ctrlimage": ctrlimage,
+            "lgimage": lgimage
+        }
+        user_data.set_meta(key_meta_prior_docker, prior)
+    elif command == "attach":
         upgrade_logging()
         attach(explicit=True, tag=tag, ctrlimage=ctrlimage, lgimage=lgimage)
     elif command == "detach":
         detach_infra(explicit=(not force), all=all)
     elif command == "forget":
-        detach_infra(explicit=(not force), all=all)
+        prior = user_data.get_meta(key_meta_prior_docker)
+        if has_prior_attach() and (key_docker_run_id in prior and is_prior_attach_running(prior[key_docker_run_id])):
+            detach_infra(explicit=(not force), all=all)
         user_data.set_meta(key_meta_prior_docker,None)
     else:
         raise ValueError("Command '" + command + "' not yet implemented.")
