@@ -15,6 +15,8 @@ Found during usage:
 * when exiting during init using CTRL+C, "Test is not running", but then exits the Python process
 * change 'neoload status' output from 'settings id' to 'test id'
 * shouldn't "test-settings" command really be "tests"?
+* logs should be colored, and figlet added back in but only to top-level help and login
+* test-settings --scenario ... patch should not overwrite existing lgs and controller config
 
 Docker:
 
@@ -25,6 +27,7 @@ neoload docker --version [default:latest] --ctrlimage [repo] --lgimage [repo] at
   also preserves additional options in local config so that next run, if not running, will re-spin these containers
 neoload docker detach   # stops running local containers that were spun as part of the last test
 neoload docker detach [-a|--all]   # stops all running local containers that are connected to NeoLoad Web
+neoload docker cleanup [-a|--all]   # stops all running local containers and networks spun by this CLI
 neoload docker forget   # clears local config of prior docker attach details
 
 neoload run  # should re-spin containers if local config has prior attach details stored, preserve that re-spin was necessary
