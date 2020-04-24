@@ -192,22 +192,22 @@ def attach(explicit, tag, ctrlimage, lgimage):
 
         logging.info("Waiting for docker containers to be attached and ready.")
 
-        waitingSuccess = False
+        waiting_success = False
 
         for container_id in lg_container_ids:
-            waitingSuccess = wait_for_logs_to_include(container_id,"Agent started|Connection test to Neoload Web successful|LoadGeneratorAgent running")
-            if not waitingSuccess:
+            waiting_success = wait_for_logs_to_include(container_id,"Agent started|Connection test to Neoload Web successful|LoadGeneratorAgent running")
+            if not waiting_success:
                 logging.warning("Couldn't ensure load generator readiness for " + container_id)
                 break
 
         if ctrl_container_id is not None:
-            waitingSuccess = wait_for_logs_to_include(ctrl_container_id,"Successfully connected to URL")
-            if not waitingSuccess:
+            waiting_success = wait_for_logs_to_include(ctrl_container_id,"Successfully connected to URL")
+            if not waiting_success:
                 logging.warning("Couldn't ensure controller readiness for " + container_id)
 
         time.sleep( 5 ) # give a few moments for platform to recognize resources as available
 
-        if waitingSuccess:
+        if waiting_success:
             logging.info("All containers are attached and ready for use.")
 
         prior = {
@@ -255,7 +255,6 @@ def setup_network(core_constructs, subnet_first_three):
 def setup_lg(core_constructs, zone, lg_index, subnet_first_three, base_ipx, port_range_start, lgimage):
 
     lgport = port_range_start+lg_index
-    lgname = key_container_naming_prefix + core_constructs['run_id'] + "_lg" + str(lg_index+1)
     lghost = subnet_first_three+"."+str(base_ipx)
 
     lg2ctrl_port = lgport
@@ -375,13 +374,13 @@ def detach_infra(explicit, all):
     logging.info("Containers:\n\t" + "\n\t".join(map(lambda x: x.name, containers)))
     logging.info("Networks:\n\t" + "\n\t".join(map(lambda x: x.name, networks)))
 
-    doIt = 'n'
+    do_it = 'n'
     if not explicit:
-        doIt = 'y'
+        do_it = 'y'
     elif sys.stdin.isatty():
-        doIt = click.prompt("Are you sure you want to delete all containers and networks with the label '" + filters['label'] + "'? (y/n)", 'n', False)
+        do_it = click.prompt("Are you sure you want to delete all containers and networks with the label '" + filters['label'] + "'? (y/n)", 'n', False)
 
-    if not doIt == 'y':
+    if not do_it == 'y':
         return True # user exited, so bail
 
     for container in containers:
@@ -417,32 +416,33 @@ def detach_infra(explicit, all):
 
 
 
-def remove_container(client,containerId):
+def remove_container(client,container_id):
     try:
-        container = client.containers.get(containerId)
+        container = client.containers.get(container_id)
 
         logging.debug("Container " + container.name + " logs:")
         #TODO preserve logs? # logging.debug(container.logs().decode("utf-8"))
 
-        logging.info("Stopping container " + containerId)
+        logging.info("Stopping container " + container.name)
         container.stop()
         if not auto_remove_containers:
             container.remove()
 
     except Exception:
         if "No such container" in str(sys.exc_info()[0]):
-            logging.warning("Tried to remove non-existent container: " + containerId)
+            logging.warning("Tried to remove non-existent container: " + container_id)
         else:
             logging.error("Unexpected error in 'remove_container':", sys.exc_info()[0])
             traceback.print_exc()
 
 
 
-def remove_network(client,networkId):
-    logging.info("Removing network " + networkId)
+def remove_network(client,network_id):
+    logging.info("Removing network " + network_id)
     try:
-        network = client.networks.get(networkId)
+        network = client.networks.get(network_id)
         network.remove()
+        logging.info("Removed network " + network_id)
     except Exception:
         logging.error("Unexpected error in 'remove_network':", sys.exc_info()[0])
         traceback.print_exc()
