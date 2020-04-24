@@ -38,12 +38,12 @@ def wait(results_id, exit_code_sla):
 
 
 def header_status(results_id):
-    logsUrl = logs_url.get_url(results_id)
+    url = logs_url.get_url(results_id)
     print("Results of  : " + results_id)
-    print("Logs are available at " + logsUrl)
+    print("Logs are available at " + url)
     if sys.stdin.isatty():
         time.sleep( 1 )
-        webbrowser.open_new_tab(logsUrl)
+        webbrowser.open_new_tab(url)
 
 
 # INIT, STARTING, RUNNING, TERMINATED
