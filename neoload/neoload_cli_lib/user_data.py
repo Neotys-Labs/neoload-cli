@@ -143,7 +143,10 @@ def set_meta(key, value):
 
 
 def get_meta(key):
-    return get_user_data().metadata.get(key, None)
+    result = get_user_data().metadata.get(key, None)
+    if result is not None and isinstance(result, str) and result == 'null':
+        result = None
+    return result
 
 
 def get_meta_required(key):
