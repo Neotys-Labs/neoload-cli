@@ -20,7 +20,7 @@ max_container_readiness_wait_sec = 120
 
 key_meta_prior_docker = 'prior_docker'
 key_spun_at_run = 'spun_at_run'
-key_docker_run_id = 'runId'
+key_docker_run_id = 'run_id'
 
 prior_logging_level = logging.NOTSET
 
@@ -39,8 +39,9 @@ def cli(command, tag, ctrlimage, lgimage, all, force):
         upgrade_logging()
         attach(explicit=True, tag=tag, ctrlimage=ctrlimage, lgimage=lgimage)
     elif command == "detach":
-        detach_all_infra(explicit=(not force), all=all)
+        detach_infra(explicit=(not force), all=all)
     elif command == "forget":
+        detach_infra(explicit=(not force), all=all)
         user_data.set_meta(key_meta_prior_docker,None)
     else:
         raise ValueError("Command '" + command + "' not yet implemented.")
@@ -76,25 +77,24 @@ def has_prior_attach():
 
 
 
-def is_prior_attach_running(runId):
+def is_prior_attach_running(run_id):
     try:
         client = docker.from_env()
         filters = {
-            'label': 'neoload-cli=' + runId
+            'label': 'neoload-cli=' + run_id
         }
         networks = client.networks.list(
             filters = filters,
         )
         return len(networks) > 0
-    except Exception as err:
+    except Exception:
         return False
 
 
 
 def resume_prior_attach():
     prior = user_data.get_meta(key_meta_prior_docker)
-    if has_prior_attach():
-        if not (key_docker_run_id in prior and is_prior_attach_running(prior[key_docker_run_id])):
+    if has_prior_attach() and not (key_docker_run_id in prior and is_prior_attach_running(prior[key_docker_run_id])):
             upgrade_logging()
             logging.info("Attaching based on prior Docker attach...")
             prior[key_spun_at_run] = True
@@ -111,17 +111,16 @@ def cleanup_after_test():
     logging.debug("has_prior_attach() = " + str(has_prior_attach()))
     if has_prior_attach() and (prior is not None and key_spun_at_run in prior and prior[key_spun_at_run] == True):
         logging.info("Detatching after spun at run")
-        detach_all_infra(explicit=False, all=False)
+        detach_infra(explicit=False, all=False)
         downgrade_logging()
 
 
 
 def attach(explicit, tag, ctrlimage, lgimage):
-    isReady = False
+    is_ready = False
 
     client = docker.from_env()
 
-    numOfLGs = 1
     json = test_settings.get_current_test_settings_json()
 
     container_ids = []
@@ -129,15 +128,15 @@ def attach(explicit, tag, ctrlimage, lgimage):
     ctrl_container_id = None
     network_id = None
 
-    runId = str(random.randint(1,65535))
-    randPortRange = random.randint(171,471)*100 # between 17100 and 47100
-    randSubnet2 = random.randint(50,250)
+    run_id = str(random.randint(1,65535))
+    port_range_start = random.randint(171,471)*100 # between 17100 and 47100
+    rand_subnet_dot_two = random.randint(50,250)
 
-    networkName = key_container_naming_prefix + runId + "_network"
-    subnet3s = "172."+str(randSubnet2)+".0"
+    network_name = key_container_naming_prefix + run_id + "_network"
+    subnet_first_three = "172."+str(rand_subnet_dot_two)+".0"
 
     labelsall = {
-        'neoload-cli': runId
+        'neoload-cli': run_id
     }
 
     commonenv = {
@@ -145,63 +144,48 @@ def attach(explicit, tag, ctrlimage, lgimage):
         "NEOLOADWEB_TOKEN": user_data.get_user_data().get_token()
     }
 
-    ctrlenv = {
-        "MODE": "Managed",
-        "LEASE_SERVER": "NLWEB",
+    volumes = {}
+    #TODO (if interactive mode and in debub mode at the same time)    volumes[os.getcwd()] = {'bind': '/launch', 'mode': 'ro'}
+
+    core_constructs = {
+        'docker': client,
+        'network_name': network_name,
+        'labelsall': labelsall,
+        'volumes': volumes,
+        'run_id': run_id,
+        'commonenv': commonenv
     }
-    ctrlenv.update(commonenv)
-    ctrlenv["ZONE"] = json['controllerZoneId']
 
     try:
-        network = setup_network(client, networkName, labelsall, subnet3s)
+        network = setup_network(core_constructs, subnet_first_three)
 
         network_id = network.id
 
-        volumes = {}
-        #if isInteractiveMode() and isLoggerInDebug(logger):
-        #    volumes[os.getcwd()] = {'bind': '/launch', 'mode': 'ro'}
-
-        lglinks = {}
-        baseIpX = 2
+        base_ipx = 2
         lgs_spec = json['lgZoneIds']
         lg_index = 0
         for zone in lgs_spec:
-            numOfLGs = lgs_spec[zone]
+            num_of_lgs = lgs_spec[zone]
 
-            for x in range(numOfLGs):
-                creation = setup_lg(client, zone, lg_index, runId, subnet3s, baseIpX, randPortRange, commonenv, lgimage, labelsall, auto_remove_containers, volumes)
+            for x in range(num_of_lgs):
+                lg = setup_lg(core_constructs, zone, lg_index, subnet_first_three, base_ipx, port_range_start, lgimage)
 
-                lg = creation['lg']
-                lgname = creation['derivedName']
-                lghost = creation['hostname']
-                lglinks[lg.id] = lgname
                 container_ids.append(lg.id)
                 lg_container_ids.append(lg.id)
                 logging.info("Created load generator " + str(lg_index+1) + ".")
 
                 network.connect(
                     container=lg.id,
-                    ipv4_address=lghost
+                    ipv4_address=lg.name # always name the container the IP address (resolve cross-platform Docker DNS issues)
                 )
                 logging.info("Attached load generator " + str(x+1) + " to network.")
 
-                baseIpX += 1
+                base_ipx += 1
 
                 lg_index += 1
 
 
-
-        ctrl = client.containers.run(
-            image=ctrlimage,
-            name = key_container_naming_prefix + runId + "_ctrl",
-            network = networkName,
-            labels = labelsall,
-            detach=True,
-            auto_remove=auto_remove_containers,
-            environment=ctrlenv,
-            volumes=volumes,
-            #links=lglinks
-        )
+        ctrl = setup_ctrl(core_constructs, json['controllerZoneId'], ctrlimage)
         container_ids.append(ctrl.id)
         ctrl_container_id = ctrl.id
         logging.info("Attached controller.")
@@ -221,13 +205,13 @@ def attach(explicit, tag, ctrlimage, lgimage):
             if not waitingSuccess:
                 logging.warning("Couldn't ensure controller readiness for " + container_id)
 
+        time.sleep( 5 ) # give a few moments for platform to recognize resources as available
+
         if waitingSuccess:
             logging.info("All containers are attached and ready for use.")
 
-        time.sleep( 5 ) # give a few moments for platform to recognize resources as available
-
         prior = {
-            "runId": runId,
+            "run_id": run_id,
             "tag": tag,
             "ctrlimage": ctrlimage,
             "lgimage": lgimage
@@ -235,46 +219,44 @@ def attach(explicit, tag, ctrlimage, lgimage):
         prior[key_spun_at_run] = not explicit
         user_data.set_meta(key_meta_prior_docker, prior)
 
-        isReady = True
+        is_ready = True
 
-    except Exception as err:
-        logging.error("Unexpected error in 'attach':")
+    except Exception:
+        logging.error("Unexpected error in 'attach':", sys.exc_info()[0])
         traceback.print_exc()
 
+    return {
+        "is_ready": is_ready,
+        "network_id": network_id,
+        "run_id": run_id,
+    }
 
 
-def setup_network(client, networkName, labelsall, subnet3s):
-    network = client.networks.create(
-        name = networkName,
+def setup_network(core_constructs, subnet_first_three):
+    network = core_constructs['docker'].networks.create(
+        name = core_constructs['network_name'],
         driver = "bridge",
         attachable = True,
-        labels = labelsall,
-        #scope="global",
+        labels = core_constructs['labelsall'],
         ipam = docker.types.IPAMConfig(
             driver = 'default',
-            #options={
-            #    'subnet': subnet3s+".0/16",
-            #    'gateway': subnet3s+".1"
-            #}
             pool_configs=[docker.types.IPAMPool(
-                subnet = subnet3s+'.0/16',
-                iprange = subnet3s+'.0/24',
-                gateway = subnet3s+'.254'
+                subnet = subnet_first_three+'.0/16',
+                iprange = subnet_first_three+'.0/24',
+                gateway = subnet_first_three+'.254'
             )]
         )
     )
-    logging.info("Created docker network '" + networkName + "'")
+    logging.info("Created docker network '" + core_constructs['network_name'] + "'")
     logging.debug(network.attrs)
     return network
 
 
+def setup_lg(core_constructs, zone, lg_index, subnet_first_three, base_ipx, port_range_start, lgimage):
 
-def setup_lg(client, zone, lg_index, runId, subnet3s, baseIpX, randPortRange, commonenv, lgimage, labelsall, auto_remove_containers, volumes):
-    spec = {}
-
-    lgport = randPortRange+lg_index
-    lgname = key_container_naming_prefix + runId + "_lg" + str(lg_index+1)
-    lghost = subnet3s+"."+str(baseIpX)
+    lgport = port_range_start+lg_index
+    lgname = key_container_naming_prefix + core_constructs['run_id'] + "_lg" + str(lg_index+1)
+    lghost = subnet_first_three+"."+str(base_ipx)
 
     lg2ctrl_port = lgport
     # some Docker environments (like Windows vs. linux/mac) map ports differently
@@ -284,11 +266,11 @@ def setup_lg(client, zone, lg_index, runId, subnet3s, baseIpX, randPortRange, co
         lg2ctrl_port = 7100
 
     hostandport = {
-        "LG_HOST": lghost,#"10.0.0.111",#lgname,
+        "LG_HOST": lghost,
         "LG_PORT": lg2ctrl_port,
         "AGENT_SERVER_PORT": lg2ctrl_port
     }
-    lgenv = commonenv.copy()
+    lgenv = core_constructs['commonenv'].copy()
     lgenv.update(hostandport)
     lgenv["ZONE"] = zone
 
@@ -296,28 +278,41 @@ def setup_lg(client, zone, lg_index, runId, subnet3s, baseIpX, randPortRange, co
 
     portspec = {}
     portspec[""+str(lgport)+"/tcp"] = lgport
-    lg = client.containers.run(
+
+    return core_constructs['docker'].containers.run(
         image=lgimage,
         name = lghost,
-        labels = labelsall,
+        labels = core_constructs['labelsall'],
         detach=True,
         auto_remove=auto_remove_containers,
         environment=lgenv,
-        volumes=volumes,
+        volumes=core_constructs['volumes'],
         ports=portspec,
     )
 
-    spec['lg'] = lg
-    spec['derivedName'] = lgname
-    spec['hostname'] = lghost
 
-    return spec
+def setup_ctrl(core_constructs, zone, ctrlimage):
 
+    ctrlenv = {
+        "MODE": "Managed",
+        "LEASE_SERVER": "NLWEB",
+    }
+    ctrlenv.update(core_constructs['commonenv'])
+    ctrlenv["ZONE"] = zone
 
+    return core_constructs['docker'].containers.run(
+        image=ctrlimage,
+        name = key_container_naming_prefix + core_constructs['run_id'] + "_ctrl",
+        network = core_constructs['network_name'],
+        labels = core_constructs['labelsall'],
+        detach=True,
+        auto_remove=auto_remove_containers,
+        environment=ctrlenv,
+        volumes=core_constructs['volumes']
+    )
 
 def wait_for_logs_to_include(container_id, str_to_find):
     client = docker.from_env()
-    logs = ""
     wait_sec = 0
     started_at = datetime.now()
     strs_to_find = str_to_find.split("|")
@@ -338,7 +333,7 @@ def wait_for_logs_to_include(container_id, str_to_find):
 
         logging.debug("Timed out while waiting for "+container.name+" readiness.")
 
-    except Exception as err:
+    except Exception:
         logging.error("Unexpected error in 'wait_for_logs_to_include':", sys.exc_info()[0])
         traceback.print_exc()
 
@@ -346,8 +341,11 @@ def wait_for_logs_to_include(container_id, str_to_find):
 
 
 
-def detach_all_infra(explicit, all):
+def detach_infra(explicit, all):
     client = docker.from_env()
+
+    if explicit:
+        upgrade_logging()
 
     filters = {
         'label': 'neoload-cli'
@@ -360,7 +358,7 @@ def detach_all_infra(explicit, all):
             }
         else:
             logging.info('No prior Docker attach info, so nothing to do without --all argument')
-            return
+            return # nothing to do, so bail
 
     containers = client.containers.list(
         all = True,
@@ -369,28 +367,30 @@ def detach_all_infra(explicit, all):
     networks = client.networks.list(
         filters = filters,
     )
-    beforeCount = len(containers) + len(networks)
-    if beforeCount < 1:
+    before_count = len(containers) + len(networks)
+    if before_count < 1:
         logging.info("No containers or networks with 'neoload-cli' label to delete.")
-    else:
-        logging.info("Containers:\n\t" + "\n\t".join(map(lambda x: x.name, containers)))
-        logging.info("Networks:\n\t" + "\n\t".join(map(lambda x: x.name, networks)))
+        return True # nothing to do, so bail
 
-        doIt = 'n'
-        if not explicit:
-            doIt = 'y'
-        elif sys.stdin.isatty():
-            doIt = click.prompt("Are you sure you want to delete all containers and networks with the label '" + filters['label'] + "'? (y/n)", 'n', False)
+    logging.info("Containers:\n\t" + "\n\t".join(map(lambda x: x.name, containers)))
+    logging.info("Networks:\n\t" + "\n\t".join(map(lambda x: x.name, networks)))
 
-        if doIt == 'y':
+    doIt = 'n'
+    if not explicit:
+        doIt = 'y'
+    elif sys.stdin.isatty():
+        doIt = click.prompt("Are you sure you want to delete all containers and networks with the label '" + filters['label'] + "'? (y/n)", 'n', False)
 
-            for container in containers:
-                remove_container(client,container.id)
+    if not doIt == 'y':
+        return True # user exited, so bail
 
-            for network in networks:
-                remove_network(client,network.id)
+    for container in containers:
+        remove_container(client,container.id)
 
-            logging.info("All containers and networks with label [" + filters['label'] + "] removed.")
+    for network in networks:
+        remove_network(client,network.id)
+
+    logging.info("All containers and networks with label [" + filters['label'] + "] removed.")
 
 
     containers = client.containers.list(
@@ -401,16 +401,19 @@ def detach_all_infra(explicit, all):
         filters = filters,
     )
 
-    afterCount = len(containers) + len(networks)
+    after_count = len(containers) + len(networks)
 
-    logging.info(str(afterCount)+" docker artifacts with label=neoload-cli exist.")
+    logging.info(str(after_count)+" docker artifacts with label=neoload-cli exist.")
 
     prior = user_data.get_meta(key_meta_prior_docker)
     if not prior is None:
         prior.pop(key_docker_run_id, None)
         user_data.set_meta(key_meta_prior_docker, prior)
 
-    return beforeCount > 0 and afterCount < 1
+    if explicit:
+        downgrade_logging()
+
+    return before_count > 0 and after_count < 1
 
 
 
@@ -418,20 +421,19 @@ def remove_container(client,containerId):
     try:
         container = client.containers.get(containerId)
 
-        #logging.debug("Container " + container.name + " logs:")
-        #logging.debug(container.logs().decode("utf-8"))
+        logging.debug("Container " + container.name + " logs:")
+        #TODO preserve logs? # logging.debug(container.logs().decode("utf-8"))
 
         logging.info("Stopping container " + containerId)
         container.stop()
         if not auto_remove_containers:
             container.remove()
 
-    except Exception as err:
+    except Exception:
         if "No such container" in str(sys.exc_info()[0]):
-            #logging.info("Tried to remove non-existent container: " + containerId)
             logging.warning("Tried to remove non-existent container: " + containerId)
         else:
-            #logging.error("Unexpected error in 'remove_container':", sys.exc_info()[0])
+            logging.error("Unexpected error in 'remove_container':", sys.exc_info()[0])
             traceback.print_exc()
 
 
@@ -441,6 +443,6 @@ def remove_network(client,networkId):
     try:
         network = client.networks.get(networkId)
         network.remove()
-    except Exception as err:
-        #logging.error("Unexpected error in 'remove_network':", sys.exc_info()[0])
+    except Exception:
+        logging.error("Unexpected error in 'remove_network':", sys.exc_info()[0])
         traceback.print_exc()
