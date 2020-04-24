@@ -4,3 +4,6 @@ __pycache__/
 neoload.egg-info/
 neoload/version.py
 junit-sla.xml
+Pipfile
+Pipfile.lock
+neoload/version.py
