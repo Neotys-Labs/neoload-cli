@@ -324,6 +324,7 @@ def wait_for_logs_to_include(container_id, str_to_find):
     wait_sec = 0
     started_at = datetime.now()
     strs_to_find = str_to_find.split("|")
+    logstr = ""
     try:
         container = client.containers.get(container_id)
         logging.info("Waiting for container " + container.name + " logs to indicate attachment readiness")
@@ -333,10 +334,13 @@ def wait_for_logs_to_include(container_id, str_to_find):
             wait_sec = (datetime.now() - started_at).total_seconds()
 
             logstr = container.logs()
-            if logstr is None: logstr = ""
+            if logstr is None:
+                logstr = ""
+            else:
+                logstr = logstr.decode("utf-8")
 
             for str in strs_to_find:
-                if str.lower() in logstr.decode("utf-8").lower():
+                if str.lower() in logstr.lower():
                     return True
 
         logging.debug("Timed out while waiting for "+container.name+" readiness.")
@@ -344,6 +348,8 @@ def wait_for_logs_to_include(container_id, str_to_find):
     except Exception:
         logging.error("Unexpected error in 'wait_for_logs_to_include':", sys.exc_info()[0])
         traceback.print_exc()
+
+    logging.warning("Container logs:\n"+logstr)
 
     return False
 
