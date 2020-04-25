@@ -5,6 +5,7 @@ from commands.login import cli as login
 from commands.status import cli as status
 
 import sys
+import os
 
 sys.path.append('neoload')
 __default_random_token = '12345678912345678901ae6d8af6abcdefabcdefabcdef'
@@ -12,9 +13,14 @@ __default_api_url = 'https://neoload-api.saas.neotys.com/'
 
 
 def pytest_addoption(parser):
+    parser.addoption('--integration', action='store_true', dest="integration",
+                 default=False, help="enable integration tests that use a live system; $NLW_TOKEN and $NLW_URL")
     parser.addoption('--token', action='store', default=__default_random_token)
     parser.addoption('--url', action='store', default=__default_api_url)
 
+def pytest_configure(config):
+    if not config.option.integration:
+        setattr(config.option, 'markexpr', 'not integration')
 
 @pytest.fixture
 def neoload_login(request, monkeypatch):
@@ -22,6 +28,11 @@ def neoload_login(request, monkeypatch):
     api_url = request.config.getoption('--url')
     runner = CliRunner()
     result_status = runner.invoke(status)
+
+    if request.config.option.integration:
+        if token == __default_random_token or len(("" if token is None else str(token))) < 1: token = os.getenv('NLW_TOKEN')
+        if api_url == __default_api_url or len(("" if api_url is None else str(api_url))) < 1: api_url = os.getenv('NLW_URL')
+
     # do login if not already logged-in with the right credentials
     if "aren't logged in" in result_status.output \
             or api_url not in result_status.output \
