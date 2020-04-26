@@ -1,7 +1,7 @@
 import sys
 import click
 
-from neoload_cli_lib import user_data
+from neoload_cli_lib import user_data, tools
 from commands import test_settings
 
 import docker
@@ -16,7 +16,7 @@ import coloredlogs
 
 key_container_naming_prefix = "neoload_cli"
 auto_remove_containers = True
-max_container_readiness_wait_sec = 120
+max_container_readiness_wait_sec = 60
 
 key_meta_prior_docker = 'prior_docker'
 key_spun_at_run = 'spun_at_run'
@@ -33,7 +33,8 @@ prior_logging_level = logging.NOTSET
 @click.option('--lgimage', default="neotys/neoload-loadgenerator", help="The load generator image to use")
 @click.option('--all', is_flag=True, help="Apply this action to all resources")
 @click.option('--force', is_flag=True, help="Do not prompt/confirm")
-def cli(command, tag, ctrlimage, lgimage, all, force):
+@click.option('--nowait', is_flag=True, help="Do not wait for controller and load generator logs to indicate attach success")
+def cli(command, tag, ctrlimage, lgimage, all, force, nowait):
 
     if command == "prepare":
         prior = {
@@ -42,18 +43,25 @@ def cli(command, tag, ctrlimage, lgimage, all, force):
             "lgimage": lgimage
         }
         user_data.set_meta(key_meta_prior_docker, prior)
+
     elif command == "attach":
-        upgrade_logging()
-        attach(explicit=True, tag=tag, ctrlimage=ctrlimage, lgimage=lgimage)
+        if test_settings.is_current_test_settings_set():
+            upgrade_logging()
+            attach(explicit=True, tag=tag, ctrlimage=ctrlimage, lgimage=lgimage, wait_for_readiness=(not nowait))
+            downgrade_logging()
+        else:
+            tools.system_exit({'message': 'No current test settings set. Please login and select a test before attaching.', 'code': 3})
+
     elif command == "detach":
+        upgrade_logging()
         detach_infra(explicit=(not force), all=all)
+        downgrade_logging()
+
     elif command == "forget":
         prior = user_data.get_meta(key_meta_prior_docker)
-        if has_prior_attach() and (key_docker_run_id in prior and is_prior_attach_running(prior[key_docker_run_id])):
-            detach_infra(explicit=(not force), all=all)
+        if has_prior_attach():
+            detach_infra(explicit=False, all=True)
         user_data.set_meta(key_meta_prior_docker,None)
-    else:
-        raise ValueError("Command '" + command + "' not yet implemented.")
 
 
 
@@ -104,12 +112,13 @@ def is_prior_attach_running(run_id):
 def resume_prior_attach():
     prior = user_data.get_meta(key_meta_prior_docker)
     if has_prior_attach() and not (key_docker_run_id in prior and is_prior_attach_running(prior[key_docker_run_id])):
-            upgrade_logging()
-            logging.info("Attaching based on prior Docker attach...")
-            prior[key_spun_at_run] = True
-            user_data.set_meta(key_meta_prior_docker, prior)
-            attach(explicit=False, tag=prior['tag'], ctrlimage=prior['ctrlimage'], lgimage=prior['lgimage'])
-            return True
+        upgrade_logging()
+        logging.info("Attaching based on prior Docker attach...")
+        prior[key_spun_at_run] = True
+        user_data.set_meta(key_meta_prior_docker, prior)
+        attach(explicit=False, tag=prior['tag'], ctrlimage=prior['ctrlimage'], lgimage=prior['lgimage'], wait_for_readiness=True)
+        downgrade_logging()
+        return True
 
     return False
 
@@ -125,7 +134,7 @@ def cleanup_after_test():
 
 
 
-def attach(explicit, tag, ctrlimage, lgimage):
+def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
     is_ready = False
 
     client = docker.from_env()
@@ -199,32 +208,42 @@ def attach(explicit, tag, ctrlimage, lgimage):
         ctrl_container_id = ctrl.id
         logging.info("Attached controller.")
 
-        logging.info("Waiting for docker containers to be attached and ready.")
-
         waiting_success = False
 
-        for container_id in lg_container_ids:
-            waiting_success = wait_for_logs_to_include(container_id,"Agent started|Connection test to Neoload Web successful|LoadGeneratorAgent running")
-            if not waiting_success:
-                logging.warning("Couldn't ensure load generator readiness for " + container_id)
-                break
+        if wait_for_readiness:
+            logging.info("Waiting for docker containers to be attached and ready.")
 
-        if ctrl_container_id is not None:
-            waiting_success = wait_for_logs_to_include(ctrl_container_id,"Successfully connected to URL")
-            if not waiting_success:
-                logging.warning("Couldn't ensure controller readiness for " + container_id)
+            for container_id in lg_container_ids:
+                waiting_success = wait_for_logs_to_include(container_id,
+                    "Agent started|Connection test to Neoload Web successful|LoadGeneratorAgent running",
+                    "Connection test to NeoLoad Web failed|The provided zone identifier is not valid")
+                if not waiting_success:
+                    logging.warning("Couldn't ensure load generator readiness for " + container_id)
+                    break
 
-        time.sleep( 5 ) # give a few moments for platform to recognize resources as available
+            if ctrl_container_id is not None:
+                waiting_success = wait_for_logs_to_include(ctrl_container_id,
+                    "Successfully connected to URL",
+                    "Connection test to NeoLoad Web failed|The provided zone identifier is not valid")
+                if not waiting_success:
+                    logging.warning("Couldn't ensure controller readiness for " + container_id)
+
+            time.sleep( 1 ) # give a few moments for platform to recognize resources as available
+        else:
+            time.sleep( 1 ) # give a few moments for platform to recognize resources as available
+            waiting_success = True
 
         if waiting_success:
-            logging.info("All containers are attached and ready for use.")
+            logging.info("All containers are attached" + (" and ready for use" if wait_for_readiness else "") + ".")
+        else:
+            tools.system_exit({'message': 'Could not verify that Docker containers were ready and attached.', 'code': 2})
 
         prior = {
-            "run_id": run_id,
             "tag": tag,
             "ctrlimage": ctrlimage,
             "lgimage": lgimage
         }
+        prior[key_docker_run_id] = run_id
         prior[key_spun_at_run] = not explicit
         user_data.set_meta(key_meta_prior_docker, prior)
 
@@ -232,13 +251,12 @@ def attach(explicit, tag, ctrlimage, lgimage):
 
     except Exception:
         logging.error("Unexpected error in 'attach':", sys.exc_info()[0])
-        traceback.print_exc()
 
-    return {
+    prior = {
         "is_ready": is_ready,
-        "network_id": network_id,
-        "run_id": run_id,
+        "network_id": network_id
     }
+    prior[key_docker_run_id] = run_id
 
 
 def setup_network(core_constructs, subnet_first_three):
@@ -319,17 +337,20 @@ def setup_ctrl(core_constructs, zone, ctrlimage):
         volumes=core_constructs['volumes']
     )
 
-def wait_for_logs_to_include(container_id, str_to_find):
+def wait_for_logs_to_include(container_id, str_to_find, str_to_fail):
     client = docker.from_env()
     wait_sec = 0
     started_at = datetime.now()
     strs_to_find = str_to_find.split("|")
+    strs_to_fail = str_to_fail.split("|")
     logstr = ""
+    found_failure = False
+
     try:
         container = client.containers.get(container_id)
         logging.info("Waiting for container " + container.name + " logs to indicate attachment readiness")
 
-        while wait_sec < max_container_readiness_wait_sec:
+        while wait_sec < max_container_readiness_wait_sec and not found_failure:
             time.sleep(1)
             wait_sec = (datetime.now() - started_at).total_seconds()
 
@@ -339,19 +360,27 @@ def wait_for_logs_to_include(container_id, str_to_find):
             else:
                 logstr = logstr.decode("utf-8")
 
-            for str in strs_to_find:
-                if str.lower() in logstr.lower():
+            for s in strs_to_find:
+                if s.lower() in logstr.lower():
                     return True
+
+            for s in strs_to_fail:
+                if s.lower() in logstr.lower():
+                    found_failure = True
+
+        if wait_sec >= max_container_readiness_wait_sec:
+            logging.warning("Waited for container readiness for max time of " + str(max_container_readiness_wait_sec) + " seconds before defaulting.")
+        else:
+            logging.info("Exited waiting after " + str(wait_sec) + " seconds.")
 
         logging.debug("Timed out while waiting for "+container.name+" readiness.")
 
     except Exception:
         logging.error("Unexpected error in 'wait_for_logs_to_include':", sys.exc_info()[0])
-        traceback.print_exc()
 
     logging.warning("Container logs:\n"+logstr)
 
-    return False
+    return not found_failure
 
 
 
@@ -448,7 +477,7 @@ def remove_container(client,container_id):
             logging.warning("Tried to remove non-existent container: " + container_id)
         else:
             logging.error("Unexpected error in 'remove_container':", sys.exc_info()[0])
-            traceback.print_exc()
+
 
 
 
@@ -460,4 +489,3 @@ def remove_network(client,network_id):
         logging.info("Removed network " + network_id)
     except Exception:
         logging.error("Unexpected error in 'remove_network':", sys.exc_info()[0])
-        traceback.print_exc()
