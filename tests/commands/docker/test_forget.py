@@ -18,10 +18,23 @@ class TestForget:
             run_prepare_command(runner, context)
             run_forget_command(runner, context)
 
-
         setup_lifecycle(runner,
             between_create_delete=lambda context: run_prepare_and_forget_commands(runner, context)
         )
+
+    def test_with_prior_attach_and_run_id(self, monkeypatch):
+        runner = CliRunner()
+
+        def run_prepare_attach_forget_commands(runner, context):
+            run_prepare_command(runner, context)
+            attach_result = runner.invoke(docker, ['attach'])
+            assert_success(attach_result)
+            run_forget_command(runner, context)
+
+        setup_lifecycle(runner,
+            between_create_delete=lambda context: run_prepare_attach_forget_commands(runner, context)
+        )
+
 
 def run_forget_command(runner,context):
     # forget deletes the meta used by run, docker.key_meta_prior_docker
