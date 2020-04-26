@@ -9,6 +9,9 @@ def assert_success(result):
         assert 'EXIT_CODE (%s): %s\n%s' % (result.exit_code, str(result.exception), result.output) == 'no error'
     assert result.exit_code == 0
 
+def assert_failure(result): # this should be a failure
+    assert result.exit_code != 0
+
 
 def mock_api_get(monkeypatch, endpoint, json_result):
     __mock_api_without_data(monkeypatch, 'get', endpoint, json_result)
