@@ -17,6 +17,7 @@ Found during usage:
 * shouldn't "test-settings" command really be "tests"?
 * logs should be colored, and figlet added back in but only to top-level help and login
 * test-settings --scenario ... patch should not overwrite existing lgs and controller config
+* travis tokens? https://docs.travis-ci.com/user/deployment-v2/providers/pypi/
 
 Docker:
 
