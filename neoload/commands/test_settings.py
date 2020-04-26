@@ -62,6 +62,10 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
         delete(__id)
         user_data.set_meta(meta_key, None)
 
+def is_current_test_settings_set():
+    current_id = user_data.get_meta(meta_key)
+    return (current_id is not None and len(current_id) > 0)
+
 def get_current_test_settings_json():
     return tools.get_named_or_id(user_data.get_meta(meta_key), True, __resolver)
 
