@@ -7,6 +7,9 @@ from commands.login import cli as login
 from commands.zones import cli as zones
 
 from helpers.test_utils import *
+import logging
+import traceback
+import sys
 
 import json
 
@@ -31,7 +34,7 @@ def setup_lifecycle(runner, before_create=None, after_create=None, between_creat
 
     print("Found zone: " + found['name'] + " [" + found['id'] + "]")
 
-    num_of_lgs = 2
+    num_of_lgs = 1
     test_name = generate_test_settings_name()
     #! create a temp test with unique name
 
@@ -48,6 +51,7 @@ def setup_lifecycle(runner, before_create=None, after_create=None, between_creat
 
     try:
         if before_create is not None: before_create(context)
+
 
         create_result = runner.invoke(settings, [
             'create', test_name,
@@ -87,7 +91,7 @@ def setup_lifecycle(runner, before_create=None, after_create=None, between_creat
             catches.append(err)
 
     if len(catches) > 0:
-        raise Exception("\n".join(map(lambda err: repr(err),catches)))
+        raise catches[0] #Exception("\n".join(map(lambda err: repr(err),catches)))
 
 
 # the reason this is it's own function is because for any attach, there should be a detach; hermetic setup/teardown
@@ -97,17 +101,27 @@ def attach_detach_lifecycle(context, before_attach=None, after_attach=None, betw
     runner = context['runner']
 
     attach_success = False
-
+    attach_result = None
     try:
         if before_attach is not None: before_attach(context)
 
-        attach_result = runner.invoke(docker, ['attach'])
+        args = ['attach']
 
-        if after_attach is not None: after_attach(context, attach_result)
+        if between_attach_detach is None: args.insert(0, "--nowait")
 
+        attach_result = runner.invoke(docker, args)
         attach_success = True
 
     except Exception as err:
+        logging.error("Failed in attach_detach_lifecycle::attach[0]" + str(err))
+        catches.append(err)
+
+    try:
+        if after_attach is not None: after_attach(context, attach_result)
+    except Exception as err:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        ex_str = repr(traceback.format_exception(exc_type, exc_value,exc_traceback))
+        logging.error("Failed in attach_detach_lifecycle::attach[1]" + ex_str)
         catches.append(err)
 
     if between_attach_detach is not None:
@@ -124,11 +138,14 @@ def attach_detach_lifecycle(context, before_attach=None, after_attach=None, betw
 
         try:
             detach_result = runner.invoke(docker, ['--all','--force','detach'])
+            print(detach_result.output)
+            assert_success(detach_result)
 
             if after_detach is not None: after_detach(context, detach_result)
 
         except Exception as err:
+            logging.error("Failed in attach_detach_lifecycle::detach")
             catches.append(err)
 
     if len(catches) > 0:
-        raise Exception("\n".join(map(lambda err: repr(err),catches)))
+        raise catches[0] #Exception("\n".join(map(lambda err: repr(err),catches)))
