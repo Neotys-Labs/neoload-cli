@@ -5,6 +5,12 @@ addons:
     token:
       secure: "HpxoA5oSxy193R40tDKbNPvhW29SYjTq2ZqgSndRqi8sdpqq1sTi5wKNeCFHK3HZnzXZffhbaHKLBut4ng92aWX8V4zKwxuLb+2tl3dL8k6H9ZI/sH61qOK83iDODDfRhic7l/al6O1YJVBXtPEwrlLvfOX0wPH/VbZQ9Vk8mJGAQrKZXeYBRsvIEs8RSajMCL0E/Di8XCCHoAXNrQjJ7k1+RCKX4jdNRYRSgdvUBic18RjffIxEZwPxSrE7L7i3KLMZj+WmaiUgPvLR6SDdtXUVJoBOxvQMmAnIQMUxeSMJ38cqlzQeWjbNoWUnLZtPuEW/Gi/vNBKvmLvS8AcpU0fhsbJ7Z32FWCP3Tdua00NMpvc9gWzl7xR6PTVR5pF2tVWW1RzhpdFYXCGr77mGCzy9/Rcp74+MKOfA8bfQQLmveAXIUk2YR9048UBJReyHuiwot3lRt7eeWxHRyDpORxy8j5siYoNfEwutdVPQqyqRjflpiOg3K3I0dtE75vuYQwdGQWY4Omgu+m+OmKXsv9thdSIEWDVC+QnMFUgnU8W8QHOdwhvg8M3FZPazDeQ569SSbG7L/MCNT6e0Zf3Pw9QUoiuJ3eqib107ZPl9VKTeIcQMJ8VsL8c7OOPY9xaIXyVzmMeLW/RPBTQ4J4dp3/u0BXj+5t6qw6p0BW/GNyE="
 
+services:
+  - docker
+  
+before_install:
+- docker pull neotys/neoload-controller:latest
+- docker pull neotys/neoload-loadgenerator:latest
 
 python:
   - "3.6"
