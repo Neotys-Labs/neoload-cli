@@ -14,7 +14,7 @@ install:
   - pip install coverage
 # command to run tests
 script:
-  - PYTHONPATH="neoload" coverage3 run -m pytest
+  - PYTHONPATH="neoload" coverage3 run -m pytest -x --integration
   - coverage3 xml
   - sonar-scanner
 deploy:
