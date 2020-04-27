@@ -58,7 +58,6 @@ def cli(command, tag, ctrlimage, lgimage, all, force, nowait):
         downgrade_logging()
 
     elif command == "forget":
-        prior = user_data.get_meta(key_meta_prior_docker)
         if has_prior_attach():
             detach_infra(explicit=False, all=True)
         user_data.set_meta(key_meta_prior_docker,None)
@@ -210,23 +209,12 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
 
         waiting_success = False
 
+        logging.info("wait_for_readiness: " + str(wait_for_readiness))
+
         if wait_for_readiness:
             logging.info("Waiting for docker containers to be attached and ready.")
 
-            for container_id in lg_container_ids:
-                waiting_success = wait_for_logs_to_include(container_id,
-                    "Agent started|Connection test to Neoload Web successful|LoadGeneratorAgent running",
-                    "Connection test to NeoLoad Web failed|The provided zone identifier is not valid")
-                if not waiting_success:
-                    logging.warning("Couldn't ensure load generator readiness for " + container_id)
-                    break
-
-            if ctrl_container_id is not None:
-                waiting_success = wait_for_logs_to_include(ctrl_container_id,
-                    "Successfully connected to URL",
-                    "Connection test to NeoLoad Web failed|The provided zone identifier is not valid")
-                if not waiting_success:
-                    logging.warning("Couldn't ensure controller readiness for " + container_id)
+            waiting_success = wait_for_all_containers(ctrl_container_id,lg_container_ids)
 
             time.sleep( 1 ) # give a few moments for platform to recognize resources as available
         else:
@@ -337,6 +325,26 @@ def setup_ctrl(core_constructs, zone, ctrlimage):
         volumes=core_constructs['volumes']
     )
 
+def wait_for_all_containers(ctrl_container_id,lg_container_ids):
+    waiting_success = False
+
+    for container_id in lg_container_ids:
+        waiting_success = wait_for_logs_to_include(container_id,
+            "Agent started|Connection test to Neoload Web successful",
+            "Connection test to NeoLoad Web failed|The provided zone identifier is not valid")
+        if not waiting_success:
+            logging.warning("Couldn't ensure load generator readiness for " + container_id)
+            break
+
+    if ctrl_container_id is not None:
+        waiting_success = wait_for_logs_to_include(ctrl_container_id,
+            "Successfully connected to URL",
+            "Connection test to NeoLoad Web failed|The provided zone identifier is not valid")
+        if not waiting_success:
+            logging.warning("Couldn't ensure controller readiness for " + container_id)
+
+    return waiting_success
+
 def wait_for_logs_to_include(container_id, str_to_find, str_to_fail):
     client = docker.from_env()
     wait_sec = 0
@@ -350,23 +358,19 @@ def wait_for_logs_to_include(container_id, str_to_find, str_to_fail):
         container = client.containers.get(container_id)
         logging.info("Waiting for container " + container.name + " logs to indicate attachment readiness")
 
-        while wait_sec < max_container_readiness_wait_sec and not found_failure:
+        while wait_sec < max_container_readiness_wait_sec:
             time.sleep(1)
             wait_sec = (datetime.now() - started_at).total_seconds()
 
-            logstr = container.logs()
-            if logstr is None:
-                logstr = ""
-            else:
-                logstr = logstr.decode("utf-8")
+            logstr = parse_container_logs_to_string(container)
 
-            for s in strs_to_find:
-                if s.lower() in logstr.lower():
-                    return True
+            if contains_any(logstr, strs_to_find):
+                return True
 
-            for s in strs_to_fail:
-                if s.lower() in logstr.lower():
-                    found_failure = True
+            if contains_any(logstr, strs_to_fail):
+                logging.info("Found failure criteria")
+                found_failure = True
+                break
 
         if wait_sec >= max_container_readiness_wait_sec:
             logging.warning("Waited for container readiness for max time of " + str(max_container_readiness_wait_sec) + " seconds before defaulting.")
@@ -382,7 +386,19 @@ def wait_for_logs_to_include(container_id, str_to_find, str_to_fail):
 
     return not found_failure
 
+def contains_any(str_to_search, phrases):
+    for s in phrases:
+        if s.lower() in str_to_search.lower():
+            return True
+    return False
 
+def parse_container_logs_to_string(container):
+    logstr = container.logs()
+    if logstr is None:
+        logstr = ""
+    else:
+        logstr = logstr.decode("utf-8")
+    return logstr
 
 def detach_infra(explicit, all):
     client = docker.from_env()
