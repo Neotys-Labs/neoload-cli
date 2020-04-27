@@ -62,7 +62,24 @@ def cli(command, tag, ctrlimage, lgimage, all, force, nowait):
             detach_infra(explicit=False, all=True)
         user_data.set_meta(key_meta_prior_docker,None)
 
+def try_docker_system():
+    result = {
+        'success': False,
+        'logs': ""
+    }
+    try:
+        client = docker.from_env()
 
+        client.containers.list()
+
+        result['success'] = True
+    except Exception:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+
+        result['logs'] = "Unexpected error in 'try_docker_system':"  + repr(traceback.format_exception(exc_type, exc_value,
+                                          exc_traceback))
+
+    return result
 
 def upgrade_logging():
     level = logging.getLogger().getEffectiveLevel()
