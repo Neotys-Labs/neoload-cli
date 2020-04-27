@@ -9,12 +9,6 @@ pipeline {
 
   stages {
     stage('Attach Worker') {
-      /*agent {
-        dockerfile { // load python container
-          args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
-          dir 'examples/docker'
-        }
-      }*/
       agent {
         docker {
           image 'python:3-alpine'
@@ -43,7 +37,9 @@ pipeline {
         stage('Run Test') {
           steps {
             withEnv(["HOME=${env.WORKSPACE}"]) {
-              sh """python3 neoload run \
+              sh """python3 neoload \
+                  docker prepare
+                  run \
                   --return-0 \
                   --web-vu 5 \
                   --as-code default.yaml,slas/uat.yaml \
