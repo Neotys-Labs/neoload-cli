@@ -108,7 +108,7 @@ See basic projects examples on github [tests/neoload_projects folder](https://gi
 To upload a NeoLoad project zip file or a standalone as code file into a test-settings
 ```
 Usage: neoload project [OPTIONS] [up|upload|meta] NAME_OR_ID
-neoload --path tests/neoload_projects/example_1/ upload
+neoload project --path tests/neoload_projects/example_1/ upload
 ```
 To Validate the syntax and schema of the as-code project yaml files
 ```
