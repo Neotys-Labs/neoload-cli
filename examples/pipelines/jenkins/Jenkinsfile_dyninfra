@@ -9,12 +9,6 @@ pipeline {
 
   stages {
     stage('Attach Worker') {
-      /*agent {
-        dockerfile { // load python container
-          args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
-          dir 'examples/docker'
-        }
-      }*/
       agent {
         docker {
           image 'python:3-alpine'
@@ -24,15 +18,15 @@ pipeline {
         stage('Get NeoLoad CLI') {
           steps {
             withEnv(["HOME=${env.WORKSPACE}"]) {
-              sh "pip3 install ."
-              sh "python3 neoload --version"
+              sh "pip3 install neoload"
+              sh "neoload --version"
             }
           }
         }
         stage('Prepare Neoload test') {
           steps {
             withEnv(["HOME=${env.WORKSPACE}"]) {
-              sh """python3 neoload \
+              sh """neoload \
                      login --url ${params.api_url} ${params.token} \
                      test-settings --zone ${params.zone_id} --scenario sanityScenario patch "My Jenkins Test With CLI" \
                      project --path tests/neoload_projects/example_1/ upload "My Jenkins Test With CLI"
@@ -43,7 +37,7 @@ pipeline {
         stage('Run Test') {
           steps {
             withEnv(["HOME=${env.WORKSPACE}"]) {
-              sh """python3 neoload run \
+              sh """neoload run \
                   --return-0 \
                   --web-vu 5 \
                   --as-code default.yaml,slas/uat.yaml \
@@ -55,7 +49,7 @@ pipeline {
         stage('Generate Test Report') {
           steps {
             withEnv(["HOME=${env.WORKSPACE}"]) {
-                sh "python3 neoload test-results junitsla"
+                sh "neoload test-results junitsla"
             }
           }
           post {

@@ -1,4 +1,4 @@
-# NeoLoad CLI [![Build Status](https://travis-ci.org/Neotys-Labs/neoload-cli.svg?branch=v1-RC)](https://travis-ci.org/Neotys-Labs/neoload-cli)
+# NeoLoad CLI [![Build Status](https://travis-ci.org/Neotys-Labs/neoload-cli.svg?branch=master)](https://travis-ci.org/Neotys-Labs/neoload-cli)
 
 ## Overview
 

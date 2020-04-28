@@ -28,8 +28,8 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        pip install .
-        python neoload --version
+        pip install neoload
+        neoload --version
 
   - task: Bash@3
     displayName: Configure the NeoLoad test
@@ -37,9 +37,9 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        python neoload login --url ${{parameters.neoloadApiUrl}} ${{parameters.neoloadToken}} \
-                       test-settings --zone ${{parameters.zoneId}} --scenario sanityScenario patch "My Azure Test With CLI" \
-                       project --path tests/neoload_projects/example_1/ upload "My Azure Test With CLI"
+        neoload login --url ${{parameters.neoloadApiUrl}} ${{parameters.neoloadToken}} \
+                test-settings --zone ${{parameters.zoneId}} --scenario sanityScenario patch "My Azure Test With CLI" \
+                project --path tests/neoload_projects/example_1/ upload "My Azure Test With CLI"
 
   - task: Bash@3
     displayName: Run the NeoLoad test
@@ -47,7 +47,7 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        python neoload run \
+        neoload run \
                        --web-vu 5 \
                        --as-code default.yaml,slas/uat.yaml \
                        --name "TestLaunchedFromAzureCI_build_$(Build.BuildNumber)" \
@@ -60,7 +60,7 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-       python neoload test-results --junit-file $(Common.TestResultsDirectory)/neoload-slas.xml junitsla
+       neoload test-results --junit-file $(Common.TestResultsDirectory)/neoload-slas.xml junitsla
 
   - task: PublishTestResults@2
     inputs:
