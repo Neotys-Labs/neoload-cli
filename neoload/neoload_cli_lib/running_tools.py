@@ -78,7 +78,7 @@ def format_delta(delta):
 
 
 def stop(results_id, force: bool, quit_option=False):
-    policy = 'FORCE' if force else 'GRACEFUL'
+    policy = 'TERMINATE' if force else 'GRACEFUL'
     if tools.confirm("Do you want stop the test" + results_id + " with " + policy.lower() + " policy ?", quit_option):
         rest_crud.post(__endpoint + results_id + "/stop", {"stopPolicy": policy})
         return True

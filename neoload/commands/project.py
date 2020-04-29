@@ -6,7 +6,7 @@ from neoload_cli_lib import user_data, tools, rest_crud, neoLoad_project
 @click.command()
 @click.argument("command", required=True, type=click.Choice(['up', 'upload', 'meta']))
 @click.option("--path", "-p", type=click.Path(exists=True), default='.',
-              help="path of project folder or zip file. . is default value")
+              help="path of the project folder, zip file or yaml as-code file. . is default value")
 @click.argument("name_or_id", type=str, required=False)
 def cli(command, name_or_id, path):
     """Upload and list scenario from settings"""

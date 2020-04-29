@@ -29,7 +29,7 @@ def zip_dir(path):
 
 def upload_project(path, endpoint):
     filename = os.path.basename(path)
-    if str(path).endswith('.zip'):
+    if str(path).endswith(('.zip', '.yaml', '.yml')):
         file = open(path, "b+r")
     else:
         filename += '.zip'
