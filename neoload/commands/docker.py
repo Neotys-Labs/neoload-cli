@@ -12,6 +12,7 @@ from datetime import datetime
 import time
 import logging
 import coloredlogs
+import json
 
 
 key_container_naming_prefix = "neoload_cli"
@@ -27,7 +28,7 @@ prior_logging_level = logging.NOTSET
 
 
 @click.command()
-@click.argument("command", required=True, type=click.Choice(['prepare','attach', 'detach', 'forget']))
+@click.argument("command", required=True, type=click.Choice(['prepare','attach', 'detach', 'forget', 'verify']))
 @click.option('--tag', default="latest", help="The docker image version to use")
 @click.option('--ctrlimage', default="neotys/neoload-controller", help="The controller image to use")
 @click.option('--lgimage', default="neotys/neoload-loadgenerator", help="The load generator image to use")
@@ -37,6 +38,8 @@ prior_logging_level = logging.NOTSET
 def cli(command, tag, ctrlimage, lgimage, all, force, nowait):
 
     if command == "prepare":
+        check_docker_system()
+
         prior = {
             "tag": tag,
             "ctrlimage": ctrlimage,
@@ -45,6 +48,8 @@ def cli(command, tag, ctrlimage, lgimage, all, force, nowait):
         user_data.set_meta(key_meta_prior_docker, prior)
 
     elif command == "attach":
+        check_docker_system()
+
         if test_settings.is_current_test_settings_set():
             upgrade_logging()
             attach(explicit=True, tag=tag, ctrlimage=ctrlimage, lgimage=lgimage, wait_for_readiness=(not nowait))
@@ -53,6 +58,7 @@ def cli(command, tag, ctrlimage, lgimage, all, force, nowait):
             tools.system_exit({'message': 'No current test settings set. Please login and select a test before attaching.', 'code': 3})
 
     elif command == "detach":
+        check_docker_system()
         upgrade_logging()
         detach_infra(explicit=(not force), all=all)
         downgrade_logging()
@@ -62,22 +68,61 @@ def cli(command, tag, ctrlimage, lgimage, all, force, nowait):
             detach_infra(explicit=False, all=True)
         user_data.set_meta(key_meta_prior_docker,None)
 
+    elif command == "verify":
+        check_docker_system()
+        print_docker_system_status()
+
+def check_docker_system():
+    result = try_docker_system()
+
+    if not result['success']:
+        msg = 'Could not verify your local Docker system connection.'
+        if 'connection refused' in result['logs'].lower():
+            msg = "Docker installed, but connection to dockerd failed."
+        else:
+            msg = "Docker-specific error: " + result['logs']
+
+        tools.system_exit({'message': msg, 'code': 2})
+
+def print_docker_system_status():
+    upgrade_logging()
+    try:
+        client = docker.from_env()
+        infos = client.info()
+
+        logging.debug(json.dumps(infos, indent=1))
+
+    except Exception:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        logging.error("Unexpected error from 'print_docker_system_status': "  + repr(traceback.format_exception(exc_type, exc_value,
+                                          exc_traceback)))
+    downgrade_logging()
+
 def try_docker_system():
     result = {
         'success': False,
         'logs': ""
     }
+    preempt_msg = "Unexpected error in 'try_docker_system':"
     try:
         client = docker.from_env()
+        preempt_msg = "Could not ping the Docker host."
+        client.ping()
 
+        preempt_msg = "Could not obtain version info from the Docker host."
+        version = client.version()
+
+        preempt_msg = "Could not list containers on the Docker host."
         client.containers.list()
 
         result['success'] = True
+
     except Exception:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-
-        result['logs'] = "Unexpected error in 'try_docker_system':"  + repr(traceback.format_exception(exc_type, exc_value,
+        upgrade_logging()
+        result['logs'] = preempt_msg  + repr(traceback.format_exception(exc_type, exc_value,
                                           exc_traceback))
+        downgrade_logging()
 
     return result
 
@@ -191,6 +236,10 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
     }
 
     try:
+        #TODO: add check if images don't exist locally yet, and pull along with proper logging.info() notifications
+        pull_if_needed(lgimage)
+        pull_if_needed(ctrlimage)
+
         network = setup_network(core_constructs, subnet_first_three)
 
         network_id = network.id
@@ -262,6 +311,9 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
         "network_id": network_id
     }
     prior[key_docker_run_id] = run_id
+
+def pull_if_needed(imageName):
+    client = docker.from_env()
 
 
 def setup_network(core_constructs, subnet_first_three):
