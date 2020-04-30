@@ -36,7 +36,7 @@ setup(
         'appdirs',
         'requests',
         'jsonschema',
-        'PyYAML',
+        'PyYAML==5.3.1',
         'pytest',
         'pytest-datafiles',
         'junit_xml',
