@@ -332,8 +332,12 @@ def create_default_docker_attributes(tag,ctrlimage,lgimage,addhosts):
     return datas
 
 def derive_docker_attributes(tag,ctrlimage,lgimage,addhosts):
-    prior = user_data.get_meta(key_meta_prior_docker)
     datas = create_default_docker_attributes(tag,ctrlimage,lgimage,addhosts)
+
+    prior = user_data.get_meta(key_meta_prior_docker)
+    if prior is None:
+        return datas
+
     for key in datas:
         if key in prior and prior[key] is not None:
             datas[key] = prior[key]
