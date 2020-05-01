@@ -34,8 +34,11 @@ prior_logging_level = logging.NOTSET
 @click.option('--lgimage', default="neotys/neoload-loadgenerator", help="The load generator image to use")
 @click.option('--all', is_flag=True, help="Apply this action to all resources")
 @click.option('--force', is_flag=True, help="Do not prompt/confirm")
-@click.option('--nowait', is_flag=True, help="Do not wait for controller and load generator logs to indicate attach success")
+@click.option('--nowait', is_flag=True, help="Do not wait for controller andxf load generator logs to indicate attach success")
 def cli(command, tag, ctrlimage, lgimage, all, force, nowait):
+    """Use local Docker to BYO infrastructure for a test.
+    This uses the local Docker daemon to spin up containers to be used as infrastucture for the current test.
+    NOTE: this feature is not supported by NeoLoad since your own Docker configuration is out-of-scope for support."""
 
     if command == "prepare":
         check_docker_system()
@@ -251,7 +254,7 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
             num_of_lgs = lgs_spec[zone]
 
             for x in range(num_of_lgs):
-                lg = setup_lg(core_constructs, zone, lg_index, subnet_first_three, base_ipx, port_range_start, lgimage)
+                lg = setup_lg(core_constructs, zone, lg_index, subnet_first_three, base_ipx, port_range_start, lgimage+":"+tag)
 
                 container_ids.append(lg.id)
                 lg_container_ids.append(lg.id)
@@ -268,7 +271,7 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
                 lg_index += 1
 
 
-        ctrl = setup_ctrl(core_constructs, json['controllerZoneId'], ctrlimage)
+        ctrl = setup_ctrl(core_constructs, json['controllerZoneId'], ctrlimage+":"+tag)
         container_ids.append(ctrl.id)
         ctrl_container_id = ctrl.id
         logging.info("Attached controller.")
