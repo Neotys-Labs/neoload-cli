@@ -319,12 +319,12 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
 
 
 def pull_if_needed(image_name, tag):
+    full_spec = image_name + ":" + tag
+
     logging.info("Checking for image [" + full_spec + "]")
     client = docker.from_env()
 
     local_image_id = None
-
-    full_spec = image_name + ":" + tag
 
     try:
         image = client.images.get(full_spec)
@@ -448,7 +448,7 @@ def setup_ctrl(core_constructs, zone, ctrlimage):
     ctrlenv.update(core_constructs['commonenv'])
     ctrlenv["ZONE"] = zone
 
-    logging.info("Attaching controller " + str(lg_index+1) + " '" + lgimage + "'.")
+    logging.info("Attaching controller '" + ctrlimage + "'.")
 
     container = core_constructs['docker'].containers.run(
         image=ctrlimage,
