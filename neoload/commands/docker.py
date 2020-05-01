@@ -104,7 +104,8 @@ def print_docker_system_status():
 def try_docker_system():
     result = {
         'success': False,
-        'logs': ""
+        'logs': "",
+        'nopermission': False
     }
     preempt_msg = "Unexpected error in 'try_docker_system':"
     try:
@@ -125,6 +126,7 @@ def try_docker_system():
         full_msg = preempt_msg  + repr(traceback.format_exception(exc_type, exc_value,
                                           exc_traceback))
         if 'connectionerror' in full_msg.lower() and 'permission denied' in full_msg.lower():
+            result['nopermission'] = True
             result['logs'] = preempt_msg + " Do you have rights (i.e. sudo first)?"
         else:
             result['logs'] = full_msg
@@ -178,6 +180,11 @@ def is_prior_attach_running(run_id):
 def resume_prior_attach():
     prior = user_data.get_meta(key_meta_prior_docker)
     if has_prior_attach() and not (key_docker_run_id in prior and is_prior_attach_running(prior[key_docker_run_id])):
+        # if no permissions to docker, don't bother trying, warn
+        trial = try_docker_system()
+        if trial['nopermission']:
+            return false
+            
         upgrade_logging()
         logging.info("Attaching based on prior Docker attach...")
         prior[key_spun_at_run] = True
