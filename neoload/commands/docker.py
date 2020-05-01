@@ -13,6 +13,9 @@ import time
 import logging
 import coloredlogs
 import json
+import subprocess
+import shlex
+import contextlib
 
 
 key_container_naming_prefix = "neoload_cli"
@@ -240,8 +243,8 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
 
     try:
         #TODO: add check if images don't exist locally yet, and pull along with proper logging.info() notifications
-        pull_if_needed(lgimage)
-        pull_if_needed(ctrlimage)
+        pull_if_needed(lgimage,tag)
+        pull_if_needed(ctrlimage,tag)
 
         network = setup_network(core_constructs, subnet_first_three)
 
@@ -274,7 +277,6 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
         ctrl = setup_ctrl(core_constructs, json['controllerZoneId'], ctrlimage+":"+tag)
         container_ids.append(ctrl.id)
         ctrl_container_id = ctrl.id
-        logging.info("Attached controller.")
 
         waiting_success = False
 
@@ -315,9 +317,63 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
     }
     prior[key_docker_run_id] = run_id
 
-def pull_if_needed(imageName):
+
+def pull_if_needed(image_name, tag):
     client = docker.from_env()
 
+    local_image_id = None
+
+    full_spec = image_name + ":" + tag
+
+    try:
+        image = client.images.get(full_spec)
+        local_image_id = image.short_id
+        logging.info("Using local image [" + full_spec + "]")
+    except docker.errors.ImageNotFound:
+        local_image_id = None
+
+    if local_image_id is None:
+        logging.info("Pulling [" + full_spec + "]")
+        #run_command("docker pull " + full_spec)
+        image = client.images.pull(image_name, tag)
+        image = client.images.get(full_spec)
+        local_image_id = image.short_id
+
+
+# def run_command(command):
+#     cmd = ['ls', '-l', '/']
+#     proc = subprocess.Popen(
+#         shlex.split(command),
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.STDOUT,
+#         # Make all end-of-lines '\n'
+#         universal_newlines=True,
+#     )
+#     for line in unbuffered(proc):
+#         print(line)
+#
+#     rc = proc.poll()
+#     return rc
+#
+# # Unix, Windows and old Macintosh end-of-line
+# newlines = ['\n', '\r\n', '\r']
+# def unbuffered(proc, stream='stdout'):
+#     stream = getattr(proc, stream)
+#     with contextlib.closing(stream):
+#         while True:
+#             out = []
+#             last = stream.read(1)
+#             # Don't loop forever
+#             if last == '' and proc.poll() is not None:
+#                 break
+#             while last not in newlines:
+#                 # Don't loop forever
+#                 if last == '' and proc.poll() is not None:
+#                     break
+#                 out.append(last)
+#                 last = stream.read(1)
+#             out = ''.join(out)
+#             yield out
 
 def setup_network(core_constructs, subnet_first_three):
     network = core_constructs['docker'].networks.create(
@@ -360,12 +416,12 @@ def setup_lg(core_constructs, zone, lg_index, subnet_first_three, base_ipx, port
     lgenv.update(hostandport)
     lgenv["ZONE"] = zone
 
-    logging.info("Attaching load generator " + str(lg_index+1) + ".")
+    logging.info("Attaching load generator " + str(lg_index+1) + " '" + lgimage + "'.")
 
     portspec = {}
     portspec[""+str(lgport)+"/tcp"] = lgport
 
-    return core_constructs['docker'].containers.run(
+    container = core_constructs['docker'].containers.run(
         image=lgimage,
         name = lghost,
         labels = core_constructs['labelsall'],
@@ -375,6 +431,8 @@ def setup_lg(core_constructs, zone, lg_index, subnet_first_three, base_ipx, port
         volumes=core_constructs['volumes'],
         ports=portspec,
     )
+    logging.info("Attaced load generator successfully.")
+    return container
 
 
 def setup_ctrl(core_constructs, zone, ctrlimage):
@@ -386,7 +444,9 @@ def setup_ctrl(core_constructs, zone, ctrlimage):
     ctrlenv.update(core_constructs['commonenv'])
     ctrlenv["ZONE"] = zone
 
-    return core_constructs['docker'].containers.run(
+    logging.info("Attaching controller " + str(lg_index+1) + " '" + lgimage + "'.")
+
+    container = core_constructs['docker'].containers.run(
         image=ctrlimage,
         name = key_container_naming_prefix + core_constructs['run_id'] + "_ctrl",
         network = core_constructs['network_name'],
@@ -396,6 +456,8 @@ def setup_ctrl(core_constructs, zone, ctrlimage):
         environment=ctrlenv,
         volumes=core_constructs['volumes']
     )
+    logging.info("Attaced controller successfully.")
+    return container
 
 def wait_for_all_containers(ctrl_container_id,lg_container_ids):
     waiting_success = False
