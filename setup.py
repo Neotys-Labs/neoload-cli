@@ -31,7 +31,7 @@ setup(
     author_email='',
     description='A command-line native utility for launching and observing NeoLoad performance tests',
     install_requires=[
-        'click',
+        'click>=7.0',
         'pyconfig',
         'appdirs',
         'requests',
