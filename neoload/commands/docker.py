@@ -125,10 +125,12 @@ def try_docker_system():
 
     except Exception:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        upgrade_logging()
-        result['logs'] = preempt_msg  + repr(traceback.format_exception(exc_type, exc_value,
+        full_msg = preempt_msg  + repr(traceback.format_exception(exc_type, exc_value,
                                           exc_traceback))
-        downgrade_logging()
+        if 'ConnectionError' in full_msg.lower() and 'permission denied' in full_msg.lower():
+            result['logs'] = preempt_msg + " Do you have rights (i.e. sudo first)?"
+        else:
+            result['logs'] = full_msg
 
     return result
 
