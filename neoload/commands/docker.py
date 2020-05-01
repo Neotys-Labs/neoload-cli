@@ -183,8 +183,8 @@ def resume_prior_attach():
         # if no permissions to docker, don't bother trying, warn
         trial = try_docker_system()
         if trial['nopermission']:
-            return false
-            
+            return False
+
         upgrade_logging()
         logging.info("Attaching based on prior Docker attach...")
         prior[key_spun_at_run] = True
