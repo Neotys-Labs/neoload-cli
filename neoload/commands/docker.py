@@ -319,6 +319,7 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
 
 
 def pull_if_needed(image_name, tag):
+    logging.info("Checking for image [" + full_spec + "]")
     client = docker.from_env()
 
     local_image_id = None
@@ -338,6 +339,9 @@ def pull_if_needed(image_name, tag):
         image = client.images.pull(image_name, tag)
         image = client.images.get(full_spec)
         local_image_id = image.short_id
+
+    logging.info("Satisfied need for image [" + full_spec + "]")
+
 
 
 # def run_command(command):
