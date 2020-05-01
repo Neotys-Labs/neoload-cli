@@ -491,12 +491,15 @@ def wait_for_logs_to_include(container_id, str_to_find, str_to_fail):
     strs_to_fail = str_to_fail.split("|")
     logstr = ""
     found_failure = False
+    has_exception = False
+    looped_once = False
 
     try:
         container = client.containers.get(container_id)
         logging.info("Waiting for container " + container.name + " logs to indicate attachment readiness")
 
         while wait_sec < max_container_readiness_wait_sec:
+            looped_once = True
             time.sleep(1)
             wait_sec = (datetime.now() - started_at).total_seconds()
 
@@ -517,12 +520,15 @@ def wait_for_logs_to_include(container_id, str_to_find, str_to_fail):
 
         logging.debug("Timed out while waiting for "+container.name+" readiness.")
 
+    except docker.Errors.NotFound:
+        has_exception = not looped_once # This is okay if the container exiting caused a NotFound after being found
     except Exception:
+        has_exception = True
         logging.error("Unexpected error in 'wait_for_logs_to_include':", sys.exc_info()[0])
 
     logging.warning("Container logs:\n"+logstr)
 
-    return not found_failure
+    return not (found_failure or has_exception) # unlike immediate success return True, async returns True if no errors
 
 def contains_any(str_to_search, phrases):
     for s in phrases:
