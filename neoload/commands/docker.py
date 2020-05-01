@@ -14,6 +14,7 @@ import logging
 import coloredlogs
 import json
 import socket
+from urllib.parse import urlparse
 
 
 key_container_naming_prefix = "neoload_cli"
@@ -496,7 +497,9 @@ def setup_ctrl(core_constructs, zone, ctrlimage):
     return container
 
 def parse_extra_hosts(hosts_spec):
-    dict = {}
+    dict = get_default_hosts_dns()
+    logging.info(json.dumps(dict))
+
     if not (hosts_spec is not None and len((hosts_spec+"").strip()) > 0):
         return dict
 
@@ -506,6 +509,9 @@ def parse_extra_hosts(hosts_spec):
         ip = None
         host = host_parts[0]
         if len(host_parts)==1:
+            if host == 'null':
+                continue
+            logging.info("Resolving host [" + host + "]")
             ip = socket.gethostbyname(host)
         else:
             ip = host_parts[1]
@@ -515,6 +521,35 @@ def parse_extra_hosts(hosts_spec):
         logging.info("Added hosts: " + json.dumps(dict, indent=1))
 
     return dict
+
+def get_default_hosts_dns():
+    dict = {}
+    urls = []
+    urls.append(user_data.get_user_data().get_url())
+    urls.append(user_data.get_user_data().get_file_storage_url())
+    urls.append(user_data.get_user_data().get_frontend_url())
+    for url in urls:
+        parsed = urlparse(url)
+        host = parsed.hostname
+        if not validate_ip(host):
+            logging.info("Resolving host [" + host + "] from URL: " + url)
+            dict[host] = socket.gethostbyname(host)
+
+    return dict
+
+
+def validate_ip(s):
+    a = s.split('.')
+    if len(a) != 4:
+        return False
+    for x in a:
+        if not x.isdigit():
+            return False
+        i = int(x)
+        if i < 0 or i > 255:
+            return False
+    return True
+
 
 def wait_for_all_containers(ctrl_container_id,lg_container_ids):
     waiting_success = False
