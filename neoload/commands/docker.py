@@ -13,9 +13,7 @@ import time
 import logging
 import coloredlogs
 import json
-import subprocess
-import shlex
-import contextlib
+import socket
 
 
 key_container_naming_prefix = "neoload_cli"
@@ -38,7 +36,8 @@ prior_logging_level = logging.NOTSET
 @click.option('--all', is_flag=True, help="Apply this action to all resources")
 @click.option('--force', is_flag=True, help="Do not prompt/confirm")
 @click.option('--nowait', is_flag=True, help="Do not wait for controller andxf load generator logs to indicate attach success")
-def cli(command, tag, ctrlimage, lgimage, all, force, nowait):
+@click.option('--addhosts', default=None, help="Hosts to add to the /etc/hosts file of the containers")
+def cli(command, tag, ctrlimage, lgimage, all, force, nowait, addhosts):
     """Use local Docker to BYO infrastructure for a test.
     This uses the local Docker daemon to spin up containers to be used as infrastucture for the current test.
     NOTE: this feature is not supported by NeoLoad since your own Docker configuration is out-of-scope for support."""
@@ -46,19 +45,17 @@ def cli(command, tag, ctrlimage, lgimage, all, force, nowait):
     if command == "prepare":
         check_docker_system()
 
-        prior = {
-            "tag": tag,
-            "ctrlimage": ctrlimage,
-            "lgimage": lgimage
-        }
-        user_data.set_meta(key_meta_prior_docker, prior)
+        set_prior_docker_attributes(tag,ctrlimage,lgimage,addhosts)
 
     elif command == "attach":
         check_docker_system()
 
         if test_settings.is_current_test_settings_set():
             upgrade_logging()
-            attach(explicit=True, tag=tag, ctrlimage=ctrlimage, lgimage=lgimage, wait_for_readiness=(not nowait))
+            derived = derive_docker_attributes(tag,ctrlimage,lgimage,addhosts)
+            attach(explicit=True,
+                tag=derived['tag'], ctrlimage=derived['ctrlimage'], lgimage=derived['lgimage'], addhosts=derived['addhosts'],
+                wait_for_readiness=(not nowait))
             downgrade_logging()
         else:
             tools.system_exit({'message': 'No current test settings set. Please login and select a test before attaching.', 'code': 3})
@@ -127,7 +124,7 @@ def try_docker_system():
         exc_type, exc_value, exc_traceback = sys.exc_info()
         full_msg = preempt_msg  + repr(traceback.format_exception(exc_type, exc_value,
                                           exc_traceback))
-        if 'ConnectionError' in full_msg.lower() and 'permission denied' in full_msg.lower():
+        if 'connectionerror' in full_msg.lower() and 'permission denied' in full_msg.lower():
             result['logs'] = preempt_msg + " Do you have rights (i.e. sudo first)?"
         else:
             result['logs'] = full_msg
@@ -185,12 +182,13 @@ def resume_prior_attach():
         logging.info("Attaching based on prior Docker attach...")
         prior[key_spun_at_run] = True
         user_data.set_meta(key_meta_prior_docker, prior)
-        attach(explicit=False, tag=prior['tag'], ctrlimage=prior['ctrlimage'], lgimage=prior['lgimage'], wait_for_readiness=True)
+        attach(explicit=False,
+            tag=prior['tag'], ctrlimage=prior['ctrlimage'], lgimage=prior['lgimage'], addhosts=prior['addhosts'],
+            wait_for_readiness=True)
         downgrade_logging()
         return True
 
     return False
-
 
 
 def cleanup_after_test():
@@ -203,7 +201,7 @@ def cleanup_after_test():
 
 
 
-def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
+def attach(explicit, tag, ctrlimage, lgimage, addhosts, wait_for_readiness):
     is_ready = False
 
     client = docker.from_env()
@@ -240,7 +238,8 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
         'labelsall': labelsall,
         'volumes': volumes,
         'run_id': run_id,
-        'commonenv': commonenv
+        'commonenv': commonenv,
+        'addhosts': addhosts
     }
 
     try:
@@ -299,11 +298,8 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
         else:
             tools.system_exit({'message': 'Could not verify that Docker containers were ready and attached.', 'code': 2})
 
-        prior = {
-            "tag": tag,
-            "ctrlimage": ctrlimage,
-            "lgimage": lgimage
-        }
+        prior = set_prior_docker_attributes(tag,ctrlimage,lgimage,addhosts)
+
         prior[key_docker_run_id] = run_id
         prior[key_spun_at_run] = not explicit
         user_data.set_meta(key_meta_prior_docker, prior)
@@ -319,6 +315,27 @@ def attach(explicit, tag, ctrlimage, lgimage, wait_for_readiness):
     }
     prior[key_docker_run_id] = run_id
 
+def create_default_docker_attributes(tag,ctrlimage,lgimage,addhosts):
+    datas = {
+        "tag": "latest" if tag is None else tag,
+        "ctrlimage": "neotys/neoload-controller" if ctrlimage is None else ctrlimage,
+        "lgimage": "neotys/neoload-loadgenerator" if lgimage is None else lgimage,
+        "addhosts": addhosts
+    }
+    return datas
+
+def derive_docker_attributes(tag,ctrlimage,lgimage,addhosts):
+    prior = user_data.get_meta(key_meta_prior_docker)
+    datas = create_default_docker_attributes(tag,ctrlimage,lgimage,addhosts)
+    for key in datas:
+        if key in prior and prior[key] is not None:
+            datas[key] = prior[key]
+    return datas
+
+def set_prior_docker_attributes(tag,ctrlimage,lgimage,addhosts):
+    current = create_default_docker_attributes(tag,ctrlimage,lgimage,addhosts)
+    user_data.set_meta(key_meta_prior_docker, current)
+    return current
 
 def pull_if_needed(image_name, tag):
     full_spec = image_name + ":" + tag
@@ -432,6 +449,7 @@ def setup_lg(core_constructs, zone, lg_index, subnet_first_three, base_ipx, port
         name = lghost,
         labels = core_constructs['labelsall'],
         detach=True,
+        extra_hosts=parse_extra_hosts(core_constructs['addhosts']),
         auto_remove=auto_remove_containers,
         environment=lgenv,
         volumes=core_constructs['volumes'],
@@ -458,12 +476,34 @@ def setup_ctrl(core_constructs, zone, ctrlimage):
         network = core_constructs['network_name'],
         labels = core_constructs['labelsall'],
         detach=True,
+        extra_hosts=parse_extra_hosts(core_constructs['addhosts']),
         auto_remove=auto_remove_containers,
         environment=ctrlenv,
         volumes=core_constructs['volumes']
     )
     logging.info("Attaced controller successfully.")
     return container
+
+def parse_extra_hosts(hosts_spec):
+    dict = {}
+    if not (hosts_spec is not None and len((hosts_spec+"").strip()) > 0):
+        return dict
+
+    hosts = hosts_spec.split(';')
+    for host_pair in hosts:
+        host_parts = host_pair.split('=')
+        ip = None
+        host = host_parts[0]
+        if len(host_parts)==1:
+            ip = socket.gethostbyname(host)
+        else:
+            ip = host_parts[1]
+        dict[host] = ip
+
+    if len(dict)>0:
+        logging.info("Added hosts: " + json.dumps(dict, indent=1))
+
+    return dict
 
 def wait_for_all_containers(ctrl_container_id,lg_container_ids):
     waiting_success = False
