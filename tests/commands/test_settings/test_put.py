@@ -40,11 +40,11 @@ class TestPut:
         mock_api_put(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id,
                      '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":"test description ",'
                      '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", '
-                     '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runId}"}' % test_name)
+                     '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runID}"}' % test_name)
         result = runner.invoke(settings,
                                ['put', valid_data.test_settings_id, '--description', 'test description ',
                                 '--scenario', 'scenario name', '--zone', 'defaultzone',
-                                '--lgs', 'defaultzone:5,UdFyn:1', '--naming-pattern', 'test_${runId}',
+                                '--lgs', 'defaultzone:5,UdFyn:1', '--naming-pattern', 'test_${runID}',
                                 '--rename', test_name])
         assert_success(result)
         json_result = json.loads(result.output)
@@ -54,7 +54,7 @@ class TestPut:
         assert json_result['controllerZoneId'] == 'defaultzone'
         assert json_result['lgZoneIds']['defaultzone'] == 5
         assert json_result['lgZoneIds']['UdFyn'] == 1
-        assert json_result['testResultNamingPattern'] == 'test_${runId}'
+        assert json_result['testResultNamingPattern'] == 'test_${runID}'
 
     def test_input_map(self, monkeypatch, valid_data):
         runner = CliRunner()
@@ -65,11 +65,11 @@ class TestPut:
         mock_api_put(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id,
                      '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":"test description ",'
                      '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", '
-                     '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runId}"}' % test_name)
+                     '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runID}"}' % test_name)
         result = runner.invoke(settings, ['put'],
                                input='{"name":"%s", "description":"test description ",'
                                      '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", '
-                                     '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runId}"}' % test_name)
+                                     '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runID}"}' % test_name)
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['name'] == test_name
@@ -78,7 +78,7 @@ class TestPut:
         assert json_result['controllerZoneId'] == 'defaultzone'
         assert json_result['lgZoneIds']['defaultzone'] == 5
         assert json_result['lgZoneIds']['UdFyn'] == 1
-        assert json_result['testResultNamingPattern'] == 'test_${runId}'
+        assert json_result['testResultNamingPattern'] == 'test_${runID}'
 
     def test_default_fields(self, monkeypatch, valid_data):
         runner = CliRunner()
