@@ -5,6 +5,8 @@ import sys
 import click
 from click import ClickException
 from termcolor import cprint
+import logging
+import coloredlogs
 
 from neoload_cli_lib import rest_crud, user_data
 
@@ -107,3 +109,26 @@ def system_exit(exit_process, apply_exit_code=True):
         cprint(exit_process['message'], 'green' if exit_code == 0 else 'red')
     if apply_exit_code or exit_code > 1:
         sys.exit(exit_process['code'])
+
+prior_logging_level = logging.NOTSET
+
+def upgrade_logging():
+    level = logging.getLogger().getEffectiveLevel()
+
+    global prior_logging_level
+
+    if(level > logging.INFO or level == logging.NOTSET):
+        prior_logging_level = level
+        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        logging.getLogger().setLevel(logging.INFO)
+        coloredlogs.install(
+            level=logging.getLogger().level,
+            fmt='%(asctime)s,%(msecs)03d %(name)s[%(process)d] %(levelname)s %(message)s',
+            datefmt='%H:%M:%S'
+        )
+
+
+
+def downgrade_logging():
+    logging.getLogger().setLevel(prior_logging_level)
+    coloredlogs.install(level=logging.getLogger().level)

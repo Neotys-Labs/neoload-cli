@@ -3,6 +3,7 @@ import click
 
 from neoload_cli_lib import user_data, tools
 from commands import test_settings
+from neoload_cli_lib.tools import upgrade_logging,downgrade_logging
 
 import docker
 import random
@@ -11,7 +12,6 @@ import platform
 from datetime import datetime
 import time
 import logging
-import coloredlogs
 import json
 import socket
 from urllib.parse import urlparse
@@ -24,9 +24,6 @@ max_container_readiness_wait_sec = 60
 key_meta_prior_docker = 'prior_docker'
 key_spun_at_run = 'spun_at_run'
 key_docker_run_id = 'run_id'
-
-prior_logging_level = logging.NOTSET
-
 
 
 @click.command()
@@ -133,28 +130,6 @@ def try_docker_system():
             result['logs'] = full_msg
 
     return result
-
-def upgrade_logging():
-    level = logging.getLogger().getEffectiveLevel()
-
-    global prior_logging_level
-
-    if(level > logging.INFO or level == logging.NOTSET):
-        prior_logging_level = level
-        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        logging.getLogger().setLevel(logging.INFO)
-        coloredlogs.install(
-            level=logging.getLogger().level,
-            fmt='%(asctime)s,%(msecs)03d %(name)s[%(process)d] %(levelname)s %(message)s',
-            datefmt='%H:%M:%S'
-        )
-
-
-
-def downgrade_logging():
-    logging.getLogger().setLevel(prior_logging_level)
-    coloredlogs.install(level=logging.getLogger().level)
-
 
 
 def has_prior_attach():

@@ -2,7 +2,10 @@ import click
 
 from commands import test_settings, test_results
 from neoload_cli_lib import user_data
+from neoload_cli_lib.tools import upgrade_logging,downgrade_logging
 import logging
+from urllib3.exceptions import ConnectTimeoutError
+from requests.exceptions import ConnectTimeout
 
 @click.command()
 def cli():
@@ -27,7 +30,14 @@ def augment_with_names(data):
             json = test_results.get_current_test_results_json()
             results_id = data.metadata[test_results.meta_key]
             output = output.replace(results_id,results_id + " ({project}|{scenario}|{name}) {status}|{qualityStatus}".format(**json))
+    except (ConnectTimeoutError,ConnectTimeout) as err:
+        logging.warning('Connection to current NeoLoad Web server failed while collecting current test metadata.')
     except Exception:
-        logging.warning('Could not obtain test and/or result metadata')
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        full_msg = preempt_msg  + repr(traceback.format_exception(exc_type, exc_value,
+                                          exc_traceback))
+        upgrade_logging()
+        logging.warning('Could not obtain test and/or result metadata: ' + full_msg)
+        downgrade_logging()
 
     return output
