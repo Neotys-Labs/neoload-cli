@@ -6,6 +6,8 @@ from neoload_cli_lib.tools import upgrade_logging,downgrade_logging
 import logging
 from urllib3.exceptions import ConnectTimeoutError
 from requests.exceptions import ConnectTimeout
+import sys
+import traceback
 
 @click.command()
 def cli():
