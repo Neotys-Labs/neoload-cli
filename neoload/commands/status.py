@@ -36,7 +36,7 @@ def augment_with_names(data):
         logging.warning('Connection to current NeoLoad Web server failed while collecting current test metadata.')
     except Exception:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        full_msg = preempt_msg  + repr(traceback.format_exception(exc_type, exc_value,
+        full_msg = repr(traceback.format_exception(exc_type, exc_value,
                                           exc_traceback))
         upgrade_logging()
         logging.warning('Could not obtain test and/or result metadata: ' + full_msg)
