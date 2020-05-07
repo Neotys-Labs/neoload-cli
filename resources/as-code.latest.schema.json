@@ -134,7 +134,7 @@
 					{
 						"properties":{
 							"value": { "$ref": "#/definitions/common/text" }
-						  }		  
+						  }
 					}
 				],
 				"x-d7nosupport-additionalProperties": false
@@ -160,7 +160,7 @@
 								"type": "integer",
 								"default": 1
 							},
-							"delimiter": { 
+							"delimiter": {
 								"$ref": "#/definitions/common/text",
 								"default": ","
 							},
@@ -277,7 +277,7 @@
 					{
 						"properties":{
 							"domain": { "$ref": "#/definitions/common/text" }
-						  }		  
+						  }
 					}
 				]
 			},
@@ -290,7 +290,7 @@
 					{
 						"properties":{
 							"realm": { "$ref": "#/definitions/common/text" }
-						  }		  
+						  }
 					}
 				]
 			},
@@ -551,13 +551,13 @@
 								"description": { "$ref": "#/definitions/common/text" }
 							}
 						}
-					]	
+					]
 				},
 				"request": {
 					"$id":"#/definitions/user_paths/actions/request",
 					"title":"Action: HTTP/s Request",
 					"type":"object",
-					"xrequired": ["url"],
+					"required": ["url"],
 					"properties":{
 						"url":{ "$ref": "#/definitions/common/text" },
 						"server": { "$ref": "#/definitions/common/text" },
@@ -628,7 +628,7 @@
 						"else": { "$ref": "#/definitions/user_paths/container" }
 					}
 				}
-		
+
 			},
 			"extractor": {
 				"type": "object",
