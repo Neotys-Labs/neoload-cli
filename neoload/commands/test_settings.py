@@ -9,6 +9,8 @@ from neoload_cli_lib import tools
 from neoload_cli_lib import user_data, cli_exception
 from neoload_cli_lib.name_resolver import Resolver
 
+import logging
+
 __endpoint = "v2/tests"
 __resolver = Resolver(__endpoint)
 
@@ -16,7 +18,7 @@ meta_key = 'settings id'
 
 
 @click.command()
-@click.argument('command', type=click.Choice(['ls', 'create', 'put', 'patch', 'delete', 'use'], case_sensitive=False),
+@click.argument('command', type=click.Choice(['ls', 'create', 'put', 'patch', 'delete', 'use','createoruse'], case_sensitive=False),
                 required=False)
 @click.argument("name", type=str, required=False)
 @click.option('--rename', help="rename test settings")
@@ -41,6 +43,25 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
     elif command == "create":
         id_created = create(create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
         user_data.set_meta(meta_key, id_created)
+        return
+    elif command == "createoruse":
+        __id = None
+        try:
+            __id = tools.get_id(name, __resolver, is_id)
+            logging.info('Found test-setting: ' + __id)
+        except cli_exception.CliException as err:
+            if 'no id associated' not in err.message.lower():
+                raise err
+        if __id is not None:
+            if rename is None:
+                name = tools.get_named_or_id(__id, True, __resolver)['name']
+                rename = name
+            logging.info('Patching test-settings: ' + rename)
+            patch(__id, create_json(rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
+            user_data.set_meta(meta_key, __id)
+        else:
+            id_created = create(create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
+            user_data.set_meta(meta_key, id_created)
         return
 
     __id = tools.get_id(name, __resolver, is_id)
