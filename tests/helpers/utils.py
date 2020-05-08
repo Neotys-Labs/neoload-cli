@@ -40,7 +40,7 @@ def assertOutput(args,exitCode=None,contains=None,printOutput=False,clearConfig=
         conf.clear()
 
 
-    result = subprocess.run([command], shell=True, check=False, capture_output=True, universal_newlines=True, env=my_env)
+    result = subprocess.run([command], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=my_env)
     output = ""
     if result.stdout is not None:
         output += result.stdout
