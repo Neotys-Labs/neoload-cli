@@ -2,7 +2,7 @@ import re
 import pytest
 from click.testing import CliRunner
 from commands.validate import cli as validate
-
+import neoload_cli_lib.schema_validation as schema_validation
 
 @pytest.mark.validation
 class TestValidate:
@@ -28,7 +28,7 @@ class TestValidate:
         file_path = datafiles.listdir()[0]
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path), '--refresh'])
-        assert 'YAML does not confirm to NeoLoad DSL schema' in str(result.output)
+        assert schema_validation.YAML_NOT_CONFIRM_MESSAGE in str(result.output)
         assert result.exit_code == 1
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')

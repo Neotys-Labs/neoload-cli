@@ -8,6 +8,7 @@ from yaml.scanner import ScannerError
 
 from neoload_cli_lib.user_data import update_schema, get_yaml_schema
 
+YAML_NOT_CONFIRM_MESSAGE="YAML does not confirm to NeoLoad DSL schema."
 
 def validate_yaml(yaml_file_path, schema_url):
     try:
@@ -43,7 +44,6 @@ def validate_yaml(yaml_file_path, schema_url):
     v = jsonschema.validators.Draft7Validator(schema_as_object)
     try:
         v.validate(yaml_as_object)
-        #jsonschema.validate(yaml_as_object,schema_as_object)
     except jsonschema.SchemaError as err:
         raise Exception('This is not a valid json schema file :\n%s' % str(err))
     except jsonschema.ValidationError as err:
@@ -51,5 +51,4 @@ def validate_yaml(yaml_file_path, schema_url):
         for error in sorted(v.iter_errors(yaml_as_object), key=str):
             path = "\\".join(list(map(lambda x: str(x), error.path)))
             msgs += "\n" + error.message + "\n\tat: " + path + "\n\tgot: \n" + yaml.dump(error.instance) + "\n"
-        raise Exception('YAML does not confirm to NeoLoad DSL schema.\n' + msgs)
-        #raise Exception('Wrong Yaml structure. Violation of the Neoload schema:\n%s\n\nOn instance:\n%s' % (err.message, str(err.instance)))
+        raise Exception(YAML_NOT_CONFIRM_MESSAGE+'\n' + msgs)
