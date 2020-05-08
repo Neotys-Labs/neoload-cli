@@ -1,0 +1,10 @@
+scenarios:
+- name: sanityScenario
+  populations:
+  - name: popGets
+    rampup_load:
+      min_users: 1
+      max_users: 5
+      increment_users: 1
+      increment_every: 2s
+      durations: 1m

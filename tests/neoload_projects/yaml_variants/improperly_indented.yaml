@@ -1,0 +1,8 @@
+user_paths:
+- name: path
+  actions:
+    steps:
+    - request:
+          url: /search?format=json&q=${cities.City}
+        server: geolookup_host
+        sla_profile: geo_3rdparty_sla

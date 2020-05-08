@@ -1,0 +1,16 @@
+scenarios:
+- name: sanityScenario
+  populations:
+  - name: popGets
+    peaks_load:
+      minimum:
+        users: 100
+        duration: 5 interations
+      maximum:
+        users: 500a
+        duration: 3 iterations
+      start: minimums
+      duration: 80 iterations
+      start_after: MyPopulation1
+      step_rampup: 15s
+      stop_after: current_iterations

@@ -1,0 +1,18 @@
+user_paths:
+- name: ex_2_0_geosearch_get
+  actions:
+    steps:
+    - invalid_step:
+        something: is wrong
+    - transaction:
+        name: External Geo-lookup
+        description: Call Open Street Maps to translate city names to lat/lon
+        steps:
+        - request:
+            url: /search?format=json&q=${cities.City}
+            server: geolookup_host
+            sla_profile: geo_3rdparty_sla
+    - request:
+        url: /search?format=json&q=${cities.City}
+        server: geolookup_host
+        sla_profile: geo_3rdparty_sla
