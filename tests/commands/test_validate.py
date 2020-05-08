@@ -28,10 +28,7 @@ class TestValidate:
         file_path = datafiles.listdir()[0]
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path), '--refresh'])
-        assert 'Wrong Yaml structure' in str(result.output)
-        assert 'Additional properties are not allowed (\'ifyourelookingforcutthroat\' was unexpected)' in str(
-            result.output)
-        assert 'On instance:\n{\'name\': \'NeoLoad-CLI-example-2_0' in str(result.output)
+        assert 'YAML does not confirm to NeoLoad DSL schema' in str(result.output)
         assert result.exit_code == 1
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')

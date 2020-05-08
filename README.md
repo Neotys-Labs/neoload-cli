@@ -282,3 +282,9 @@ PYTHONPATH="neoload;tests/helpers" pytest -v -m "not slow"          # Skip slow 
 # Run on a real Neoload. Mocks are disabled
 PYTHONPATH="neoload;tests/helpers" pytest -v --token <your_personal_token> --url https://neoload-api.saas.neotys.com/
 ```
+
+Additionally, any contributions to the DSL validation functionality, such as on the JSON schema or the validate command, should execute the following tests locally before pushing to this repo:
+```
+./tests/neoload_projects/yaml_variants/validate_all.sh
+```
+This command executes a number of NEGATIVE tests to prove that changes to the JSON schema or validation process produce failures when their input is malformed in very specific ways (common mistakes).
