@@ -40,7 +40,7 @@ def assertOutput(args,exitCode=None,contains=None,printOutput=False,clearConfig=
         conf.clear()
 
 
-    result = subprocess.run([command], shell=True, check=False, capture_output=True, universal_newlines=True, env=my_env)
+    result = subprocess.run([command], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=my_env)
     output = ""
     if result.stdout is not None:
         output += result.stdout
@@ -72,6 +72,8 @@ NEOLOAD_CLI_NLW_TOKEN = 'NEOLOAD_CLI_NLW_TOKEN'
 NEOLOAD_CLI_NLW_URL = 'NEOLOAD_CLI_NLW_URL'
 NEOLOAD_CLI_ZONE_DYNAMIC = 'NEOLOAD_CLI_ZONE_DYNAMIC'
 NEOLOAD_CLI_ZONE_STATIC = 'NEOLOAD_CLI_ZONE_STATIC'
+NEOLOAD_CLI_NLW_FILES_URL = 'NEOLOAD_CLI_NLW_FILES_URL'
+NEOLOAD_CLI_NLW_BASE_URL = 'NEOLOAD_CLI_NLW_BASE_URL'
 
 def requireTestSecrets():
 
@@ -82,6 +84,8 @@ def requireTestSecrets():
         NEOLOAD_CLI_NLW_URL,
         NEOLOAD_CLI_ZONE_DYNAMIC,
         NEOLOAD_CLI_ZONE_STATIC,
+        NEOLOAD_CLI_NLW_FILES_URL,
+        NEOLOAD_CLI_NLW_BASE_URL,
     ]
 
     for key in required:
@@ -90,7 +94,7 @@ def requireTestSecrets():
 
 def getTestProfileName():
     return 'test'
-    
+
 def assertProfileByZone(zone):
     assertOutput(
         contains="Created profile: test",
@@ -103,6 +107,8 @@ def assertProfileByZone(zone):
             '--token': '$NEOLOAD_CLI_NLW_TOKEN',
             '--ntslogin': '$NEOLOAD_CLI_NTS_LOGIN',
             '--ntsurl': '$NEOLOAD_CLI_NTS_URL',
+            '--filesurl': '$NEOLOAD_CLI_NLW_FILES_URL',
+            '--baseurl': '$NEOLOAD_CLI_NLW_BASE_URL'
         })
 
 def assertNoDockerContainersRunning():
