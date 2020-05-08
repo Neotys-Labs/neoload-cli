@@ -67,6 +67,8 @@ def initFeatureFlags(profile):
 @click.option('--zone', default=None, help='Set a zone for selected profile')
 @click.option('--ntslogin', default=None, help='Set the NTS login used for license acquisition')
 @click.option('--ntsurl', default=None, help='Set the NTS URL used for license acquisition')
+@click.option('--filesurl', default=None, help='Set the NLW API files url used for project file upload/download')
+@click.option('--baseurl', default=None, help='Set the NLW front-end URL to be used for links and results references')
 @click.option('files','--project','-f', multiple=True, help='Delimited list of project files, one or more, .nlp or YAML')
 @click.option('--scenario', default=None, help='Run a specific scenario in provided project file(s)')
 @click.option('--attach', default=None, help='Attaches containers for Controller and Load Generator(s)')
@@ -100,7 +102,7 @@ def initFeatureFlags(profile):
 @click.option('--tests', is_flag=True, default=None, help='List tests')
 @click.option('--zones', is_flag=True, default=None, help='List zones')
 def main(   version,
-            profiles,profile,url,token,zone,ntslogin,ntsurl,                        # profile stuff
+            profiles,profile,url,token,zone,ntslogin,ntsurl,filesurl,baseurl,       # profile stuff
             files,scenario,attach,reattach,detatch,detatchall,retainresults,        # runtime inputs
             verbose,debug,nocolor,noninteractive,quiet,validate,offline,            # logging and debugging
             testid,testname,testdesc,query,                                                           # entities (primarily, a test)
@@ -186,7 +188,7 @@ def main(   version,
     if not intentToRun:
         cprint("NeoLoad CLI", color="green", figlet=True)
 
-    if not configureProfiles(profiles,profile,url,token,zone,ntsurl,ntslogin):
+    if not configureProfiles(profiles,profile,url,token,zone,ntsurl,ntslogin,filesurl,baseurl):
         return exitProcess(0)# this is informational listing only, no need to execute anything else
 
     #TODO: implement --profile x --attach blahblah as a profile-update-only operation, no actual attach
@@ -210,7 +212,7 @@ def main(   version,
     attach = attachConfig['attach']
     if attachConfig['alreadyAttached']:
         attach = getProfileAttach(currentProfile)
-    
+
     if attach is not None:
         logger.debug("Attach: " + attach)
     else:
@@ -269,16 +271,12 @@ def main(   version,
 
     try:
         client = None
-        filesUrl = None
 
         if intentToRun and not isProfileInitialized(currentProfile):
             return exitProcess(4,"No profiles are initialized.")
 
         if not noApiNeeded:
             client = getNLWAPI(currentProfile)
-
-            filesUrl = getCurrentFilesUrl()
-            logger.info("filesUrl: "+filesUrl)
 
             # check API connectivity
             if not checkAPIConnectivity(client):
@@ -550,7 +548,7 @@ def configurePythonUnbufferedMode(moreinfo):
 def isProfileInitialized(profile):
     return (profile is not None and 'token' in profile and profile['token'] is not None and len(profile['token'].strip())>0)
 
-def configureProfiles(profiles,profile,url,token,zone,ntsurl,ntslogin):
+def configureProfiles(profiles,profile,url,token,zone,ntsurl,ntslogin,filesurl,baseurl):
     if profiles is not None:
         listProfiles()
         return False
@@ -570,6 +568,10 @@ def configureProfiles(profiles,profile,url,token,zone,ntsurl,ntslogin):
             setNTSURL(ntsurl)
         if ntslogin is not None:
             setNTSLogin(ntslogin)
+        if filesurl is not None:
+            setFilesUrl(filesurl)
+        if baseurl is not None:
+            setBaseUrl(baseurl)
 
     return True
 

@@ -1,0 +1,57 @@
+Linux d576b9728957 4.14.88-88.76.amzn2.x86_64 #1 SMP Mon Jan 7 18:43:26 UTC 2019 x86_64 Linux
+============================= test session starts ==============================
+platform linux -- Python 3.7.6, pytest-5.4.1, py-1.8.1, pluggy-0.13.1 -- /usr/local/bin/python3
+cachedir: .pytest_cache
+rootdir: /var/lib/jenkins/workspace/NL-cli-tests@2/tests, inifile: pytest.ini
+plugins: steps-1.7.2, reorder-0.1.1
+collecting ... collected 25 items
+
+tests/test_basic_functions.py::test_validate_version PASSED              [  4%]
+tests/test_file_functions.py::test_validate_valid_file PASSED            [  8%]
+tests/test_file_functions.py::test_invalidate_broken_yaml PASSED         [ 12%]
+tests/test_file_functions.py::test_nlp_file PASSED                       [ 16%]
+tests/test_filetype_e2e_functions.py::test_verify_zip_file_type PASSED   [ 20%]
+tests/test_query_functions.py::test_query_outfile_for_bench PASSED       [ 24%]
+tests/test_schema_functions.py::test_invalidate_empty_file PASSED        [ 28%]
+tests/test_schema_functions.py::test_invalidate_invalid_to_schema_yaml PASSED [ 32%]
+tests/test_schema_functions.py::test_validate_valid_file PASSED          [ 36%]
+tests/test_profile_functions.py::test_profiles_empty PASSED              [ 40%]
+tests/test_profile_functions.py::test_profile_empty PASSED               [ 44%]
+tests/test_profile_functions.py::test_profile_create_wo_params PASSED    [ 48%]
+tests/test_profile_functions.py::test_profile_create_with_valid_zone_no_url PASSED [ 52%]
+tests/test_profile_functions.py::test_profile_create_with_valid_url_no_zone PASSED [ 56%]
+tests/test_profile_functions.py::test_profile_create_with_nts_credentials PASSED [ 60%]
+tests/test_profile_functions.py::test_profile_create_with_filesurl PASSED [ 64%]
+tests/test_sla_functions.py::test_run_fail_slas PASSED                   [ 68%]
+tests/test_attach_functions.py::test_attach_detatch_simple PASSED        [ 72%]
+tests/test_attach_functions.py::test_attach_run_allinone PASSED          [ 76%]
+tests/test_attach_functions.py::test_attach_run_async[prepare] PASSED    [ 80%]
+tests/test_attach_functions.py::test_attach_run_async[attach] PASSED     [ 84%]
+tests/test_attach_functions.py::test_attach_run_async[kickoff] PASSED    [ 88%]
+tests/test_attach_functions.py::test_attach_run_async[getid] PASSED      [ 92%]
+tests/test_attach_functions.py::test_attach_run_async[spinwait] PASSED   [ 96%]
+tests/test_attach_functions.py::test_attach_run_async[detatch] PASSED    [100%]
+
+- generated xml file: /var/lib/jenkins/workspace/NL-cli-tests@2/pytest_junit.xml -
+========================== slowest 20 test durations ===========================
+135.75s call     test_attach_functions.py::test_attach_run_allinone
+135.09s call     test_sla_functions.py::test_run_fail_slas
+129.99s call     test_filetype_e2e_functions.py::test_verify_zip_file_type
+92.36s call     test_attach_functions.py::test_attach_run_async[spinwait]
+45.32s call     test_attach_functions.py::test_attach_detatch_simple
+19.98s call     test_attach_functions.py::test_attach_run_async[attach]
+8.25s call     test_attach_functions.py::test_attach_run_async[detatch]
+7.31s call     test_attach_functions.py::test_attach_run_async[kickoff]
+2.41s call     test_file_functions.py::test_nlp_file
+2.28s call     test_profile_functions.py::test_profile_create_with_nts_credentials
+2.21s call     test_attach_functions.py::test_attach_run_async[prepare]
+2.19s call     test_profile_functions.py::test_profile_create_with_filesurl
+1.77s call     test_attach_functions.py::test_attach_run_async[getid]
+0.95s call     test_file_functions.py::test_validate_valid_file
+0.69s call     test_schema_functions.py::test_validate_valid_file
+0.66s call     test_schema_functions.py::test_invalidate_empty_file
+0.64s call     test_schema_functions.py::test_invalidate_invalid_to_schema_yaml
+0.60s call     test_file_functions.py::test_invalidate_broken_yaml
+0.59s call     test_profile_functions.py::test_profile_create_with_valid_url_no_zone
+0.58s call     test_profile_functions.py::test_profile_create_wo_params
+======================== 25 passed in 592.68s (0:09:52) ========================

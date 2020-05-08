@@ -186,6 +186,12 @@ def setZone(zoneId):
 def setToken(token):
     return setProfileProperty('token',token)
 
+def setFilesUrl(filesUrl):
+    return setProfileProperty('filesurl',filesUrl)
+
+def setBaseUrl(baseUrl):
+    return setProfileProperty('baseurl',baseUrl)
+
 def setNTSURL(url):
     return setProfileProperty('ntsurl',url)
 
@@ -216,7 +222,7 @@ def getProfileFilesUrl(profile):
         spec = yaml.load(response.text, Loader=yaml.FullLoader)
         fromOpenAPI = spec['paths']['/projects']['servers'][0]['url']
 
-        setProfileProperty('filesurl',fromOpenAPI)
+        setFilesUrl(fromOpenAPI)
 
         return fromOpenAPI
     else:

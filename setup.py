@@ -7,7 +7,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='neoload',
-      version='0.4.4',
+      version='0.4.6',
       description='A command-line native utility for launching and observing NeoLoad performance tests',
       url='https://github.com/Neotys-Labs/neoload-cli',
       author='Paul Bruce',
@@ -40,7 +40,7 @@ setup(name='neoload',
           'pytest-reorder',
           'junit-xml',
           'requests',
-          'pyyaml',
+          'pyyaml==5.3.1',
           'python-dateutil',
           'jsonschema',
           'opentelemetry-api',

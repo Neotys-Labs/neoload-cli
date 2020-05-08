@@ -107,6 +107,13 @@ If you do not have a SaaS-based license, you will need to specify additional lic
 neoload --profile nts --token [NLW_TOKEN] --zone [NLW_ZONE_ID] --ntsurl [TEAM_SERVER_URL] --ntslogin [TEAM_SERVER_USERNAME_COLON_ENC_PASS]
 ```
 
+### Using NeoLoad Web On-Premise
+You can also use an instance of NeoLoad Web that is deployed in your own infrastructure with the CLI, however you
+must override the defaults which are typically pointed to SaaS:
+```
+neoload --profile onprem --token [NLW_TOKEN] --zone [NLW_ZONE_ID] --url [NLW_API_URL] --filesurl [NLW_FILES_URL] --ntsurl [TEAM_SERVER_URL] --ntslogin [TEAM_SERVER_USERNAME_COLON_ENC_PASS] --baseurl [NLW_URL_/#!result/]
+```
+
 ### Viewing saved profiles
 You can always list profiles that have saved using the following command:
 ```
@@ -128,7 +135,7 @@ If you do not already have an enterprise license, such as if you only have NeoLo
 
 Additionally, if you do not have access to a dynamic infrastructure provider (i.e. OpenShift, etc.) and if you do not have Docker installed where the NeoLoad CLI is executed, your local workstation can serve as load testing resources similar to dynamic and containerized resource use cases.
 
-This is planned to be delivered in Dec 2019.
+This is planned to be delivered in June 2020.
 
 ## Running Load Tests
 Once a profile is established, NeoLoad CLI makes it very easy to execute load tests. All you need is to provide an existing test suite or set of as-code file(s), then specify a scenario.

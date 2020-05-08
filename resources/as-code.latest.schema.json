@@ -77,6 +77,54 @@
 	},
 	"definitions":{
 		"common": {
+			"text":{
+				"$id":"#/definitions/common/text",
+				"title":"Text",
+				"type":"string",
+				"pattern":"^.*$"
+			},
+			"positive_number":{
+				"$id":"#/definitions/common/positive_number",
+				"title":"Positive Number",
+				"type":"integer",
+				"minimum": 0
+			},
+			"duration":{
+				"$id":"#/definitions/common/duration",
+				"title":"Duration",
+			  "anyOf": [
+			    { "$ref": "#/definitions/common/time" },
+					{ "$ref": "#/definitions/common/iterations" }
+			  ]
+			},
+			"stop_after_options":{
+				"$id":"#/definitions/common/stop_after_options",
+				"title":"variation_policy.stop_after values",
+			  "anyOf": [
+			    { "$ref": "#/definitions/common/time" },
+					{ "type": "string", "enum": ["current_iteration"] }
+			  ]
+			},
+			"start_after_options":{
+				"$id":"#/definitions/common/start_after",
+				"title":"Start after",
+				"anyOf":[
+					{ "$ref": "#/definitions/common/time" },
+					{ "$ref": "#/definitions/common/text" }
+				]
+			},
+			"time":{
+				"$id":"#/definitions/common/time",
+				"title":"Time",
+				"type": "string",
+				"pattern": "^((\\d{1,2}[hms]{1}){1,3})+$"
+			},
+			"iterations":{
+				"$id":"#/definitions/common/iterations",
+				"title":"Iterations",
+			  "type": "string",
+				"pattern": "^(\\d+ iterations)$"
+			},
 			"name":{
 				"title":"Name",
 				"type":"string",
@@ -134,7 +182,7 @@
 					{
 						"properties":{
 							"value": { "$ref": "#/definitions/common/text" }
-						  }		  
+						  }
 					}
 				],
 				"x-d7nosupport-additionalProperties": false
@@ -160,7 +208,7 @@
 								"type": "integer",
 								"default": 1
 							},
-							"delimiter": { 
+							"delimiter": {
 								"$ref": "#/definitions/common/text",
 								"default": ","
 							},
@@ -277,7 +325,7 @@
 					{
 						"properties":{
 							"domain": { "$ref": "#/definitions/common/text" }
-						  }		  
+						  }
 					}
 				]
 			},
@@ -290,7 +338,7 @@
 					{
 						"properties":{
 							"realm": { "$ref": "#/definitions/common/text" }
-						  }		  
+						  }
 					}
 				]
 			},
@@ -360,105 +408,70 @@
 					}
 				}
 			},
-			"variation_commons": {
-				"$id":"#/definitions/populations/variation_commons",
-				"type":"object",
-				"xrequired": ["duration","start_after","stop_after"],
-				"properties":{
-					"duration":{
-						"title":"Duration",
-						"type":"string",
-						"pattern":"^.*$"
-					},
-					"start_after":{
-						"title":"Start after",
-						"type":"string",
-						"pattern":"^.*$"
-					},
-					"stop_after":{
-						"title":"Stop after",
-						"type":"string",
-						"pattern":"^.*$"
-					}
-				  }
-			},
 			"constant_load":{
 				"$id":"#/definitions/populations/constant_load",
 				"title":"Constant Load",
 				"type":"object",
-				"xrequired": ["users"],
-				"allOf": [
-					{ "$ref": "#/definitions/populations/variation_commons" },
-					{
-						"properties":{
-							"users":{
-								"type":"integer",
-								"default":1
-							},
-							"rampup": { "$ref": "#/definitions/common/text" }
-						}
-					}
-				]
+				"required": ["users"],
+				"properties":{
+					"duration":{ "$ref": "#/definitions/common/duration"},
+					"start_after":{ "$ref": "#/definitions/common/start_after_options" },
+					"stop_after":{ "$ref": "#/definitions/common/stop_after_options" },
+					"users":{
+						"type":"integer",
+						"default":1
+					},
+					"rampup": { "$ref": "#/definitions/common/time" }
+				}
 			},
 			"rampup_load":{
 				"$id":"#/definitions/populations/rampup_load",
 				"title":"Ramp-up Load",
 				"type":"object",
-				"xrequired": ["min_users","increment_users","increment_every"],
-				"allOf": [
-					{ "$ref": "#/definitions/populations/variation_commons" },
-					{
-						"properties":{
-							"min_users":{
-								"type":"integer",
-								"default":1
-							},
-							"max_users":{
-								"type":"integer",
-								"default":1
-							},
-							"increment_users":{
-								"type":"integer",
-								"default":1
-							},
-							"increment_every": { "$ref": "#/definitions/common/text" },
-							"increment_rampup": { "$ref": "#/definitions/common/text" }
-						}
-					}
-				]
-			},
-			"peaks_phase": {
-				"$id":"#/definitions/populations/peaks_phase",
-				"title":"Peaks Load",
-				"type":"object",
-				"xrequired": ["users","duration"],
-				"properties": {
-					"users": {
+				"required": ["min_users","increment_users","increment_every"],
+				"properties":{
+					"duration":{ "$ref": "#/definitions/common/duration" },
+					"start_after":{ "$ref": "#/definitions/common/start_after_options" },
+					"stop_after":{ "$ref": "#/definitions/common/stop_after_options" },
+					"min_users": { "$ref": "#/definitions/common/positive_number" },
+					"max_users": { "$ref": "#/definitions/common/positive_number" },
+					"increment_users":{
 						"type": "integer",
 						"default": 1
 					},
-					"duration": { "$ref": "#/definitions/common/text" }
-				}
+					"increment_every": { "$ref": "#/definitions/common/duration" },
+					"increment_rampup": { "$ref": "#/definitions/common/time" }
+				},
+				"additionalProperties": false
 			},
 			"peaks_load":{
 				"$id":"#/definitions/populations/peaks_load",
 				"title":"Peaks Load",
 				"type":"object",
-				"xrequired": ["minimum","maximum","start"],
-				"allOf": [
-					{ "$ref": "#/definitions/populations/variation_commons" },
-					{
-						"properties":{
-							"minimum":{ "$ref": "#/definitions/populations/peaks_phase" },
-							"maximum":{ "$ref": "#/definitions/populations/peaks_phase" },
-							"start": {
-								"type": "string",
-								"enum": ["minimum","maximum"]
-							},
-							"step_rampup": { "$ref": "#/definitions/common/text" }
-						}
-					}
-				]
+				"required": ["minimum","maximum","start"],
+				"properties":{
+					"minimum":{ "$ref": "#/definitions/populations/peaks_phase" },
+					"maximum":{ "$ref": "#/definitions/populations/peaks_phase" },
+					"start": {
+						"type": "string",
+						"enum": ["minimum","maximum"]
+					},
+					"duration":{ "$ref": "#/definitions/common/duration" },
+					"start_after":{ "$ref": "#/definitions/common/start_after_options" },
+					"step_rampup": { "$ref": "#/definitions/common/text" },
+					"stop_after":{ "$ref": "#/definitions/common/stop_after_options" }
+				},
+				"additionalProperties": false
+			},
+			"peaks_phase":{
+				"$id":"#/definitions/populations/peaks_phase",
+				"title":"Peak Phase",
+				"type":"object",
+				"required": ["users","duration"],
+				"properties":{
+					"users": { "$ref": "#/definitions/common/positive_number" },
+					"duration": { "$ref": "#/definitions/common/duration" }
+				}
 			}
 		},
 		"scenario":{
@@ -469,27 +482,23 @@
 			  "name":{ "$ref": "#/definitions/common/text" },
 			  "description":{ "$ref": "#/definitions/common/text" },
 			  "populations":{
-				"$id":"#/definitions/scenario/populations",
-				"title":"Scenario Populations",
-				"type":"array",
-				"minItems": 1,
-				"additionalItems": false,
-				"additionalProperties": false,
-				"items":{
-				  "$id":"#/definitions/scenario/populations/items",
-				  "type":"object",
-				  "xrequired": ["name"],
-				  "anyOf": [
-					{ "$ref": "#/definitions/populations/constant_load" },
-					{ "$ref": "#/definitions/populations/rampup_load" },
-					{ "$ref": "#/definitions/populations/peaks_load" },
-					{
+					"$id":"#/definitions/scenario/populations",
+					"title":"Scenario Populations",
+					"type":"array",
+					"minItems": 1,
+					"additionalItems": false,
+					"additionalProperties": false,
+					"items":{
+					  "$id":"#/definitions/scenario/populations/items",
+					  "type":"object",
+					  "required": ["name"],
 						"properties":{
-							"name":{ "$ref": "#/definitions/common/text" }
+							"name":{ "$ref": "#/definitions/common/text" },
+							"constant_load": { "$ref": "#/definitions/populations/constant_load" },
+							"rampup_load": { "$ref": "#/definitions/populations/rampup_load" },
+							"peaks_load": { "$ref": "#/definitions/populations/peaks_load" }
 						}
 					}
-				  ]
-				}
 			  }
 			}
 		},
@@ -498,7 +507,7 @@
 				"$id":"#/definitions/user_paths/user_path",
 				"title":"User Path",
 				"type":"object",
-				"xrequired": ["name","actions"],
+				"required": ["name","actions"],
 				"properties":{
 				  "name":{ "$ref": "#/definitions/common/text" },
 				  "description":{ "$ref": "#/definitions/common/text" },
@@ -515,7 +524,7 @@
 				"$id":"#/definitions/user_paths/container",
 				"title":"Containers",
 				"type":"object",
-				"xrequired": ["steps"],
+				"required": ["steps"],
 				"properties":{
 					"sla_profile": {
 						"type": "string"
@@ -525,14 +534,16 @@
 						"type":"array",
 						"minItems": 1,
 						"items": {
-							"anyOf": [
-								{ "$ref": "#/definitions/user_paths/actions/transaction" },
-								{ "$ref": "#/definitions/user_paths/actions/request" },
-								{ "$ref": "#/definitions/user_paths/actions/delay" },
-								{ "$ref": "#/definitions/user_paths/actions/think_time" },
-								{ "$ref": "#/definitions/user_paths/actions/javascript" },
-								{ "$ref": "#/definitions/user_paths/actions/if" }
-							]
+							"type": "object",
+							"properties": {
+								"transaction": { "$ref": "#/definitions/user_paths/actions/transaction" },
+								"request": { "$ref": "#/definitions/user_paths/actions/request" },
+								"delay": { "$ref": "#/definitions/user_paths/actions/delay" },
+								"think_time": { "$ref": "#/definitions/user_paths/actions/think_time" },
+								"javascript": { "$ref": "#/definitions/user_paths/actions/javascript" },
+								"if": { "$ref": "#/definitions/user_paths/actions/if" }
+							},
+							"additionalProperties": false
 						}
 					}
 				}
@@ -540,26 +551,40 @@
 			"actions": {
 				"transaction":{
 					"$id":"#/definitions/user_paths/actions/transaction",
+					"name": "transaction",
 					"title":"Action: Transaction",
 					"type":"object",
-					"xrequired": ["name"],
-					"allOf": [
-						{ "$ref": "#/definitions/user_paths/container" },
-						{
-							"properties":{
-								"name": { "$ref": "#/definitions/common/text" },
-								"description": { "$ref": "#/definitions/common/text" }
+					"required": ["name","steps"],
+					"properties":{
+						"name": { "$ref": "#/definitions/common/text" },
+						"description": { "$ref": "#/definitions/common/text" },
+						"steps":{
+							"title":"Steps",
+							"type":"array",
+							"minItems": 1,
+							"items": {
+								"type": "object",
+								"properties": {
+									"transaction": { "$ref": "#/definitions/user_paths/actions/transaction" },
+									"request": { "$ref": "#/definitions/user_paths/actions/request" },
+									"delay": { "$ref": "#/definitions/user_paths/actions/delay" },
+									"think_time": { "$ref": "#/definitions/user_paths/actions/think_time" },
+									"javascript": { "$ref": "#/definitions/user_paths/actions/javascript" },
+									"if": { "$ref": "#/definitions/user_paths/actions/if" }
+								},
+								"additionalProperties": false
 							}
 						}
-					]	
+					},
+					"additionalProperties": false
 				},
 				"request": {
 					"$id":"#/definitions/user_paths/actions/request",
 					"title":"Action: HTTP/s Request",
 					"type":"object",
-					"xrequired": ["url"],
+					"required": ["url"],
 					"properties":{
-						"url":{ "$ref": "#/definitions/common/text" },
+						"url": { "$ref": "#/definitions/common/text" },
 						"server": { "$ref": "#/definitions/common/text" },
 						"method": {
 							"type": "string",
@@ -628,7 +653,7 @@
 						"else": { "$ref": "#/definitions/user_paths/container" }
 					}
 				}
-		
+
 			},
 			"extractor": {
 				"type": "object",
@@ -672,4 +697,4 @@
 			}
 		}
 	}
-  }
+}
