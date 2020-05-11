@@ -3,6 +3,7 @@ import urllib.parse as urlparse
 
 import requests
 
+from version import __version__
 from neoload_cli_lib import user_data, cli_exception
 
 __current_command = ""
@@ -95,8 +96,9 @@ def __handle_error(response):
 
 
 def __create_additional_headers():
+    cli_version = 'dev' if __version__ is None else __version__
     return {
         'accountToken': user_data.get_user_data().get_token(),
         'accept': 'application/json',
-        'User-Agent': 'NeoloadCli/' + __current_command + '/' + __current_sub_command
+        'User-Agent': 'NeoloadCli/' + cli_version + '/' + __current_command + '/' + __current_sub_command
     }
