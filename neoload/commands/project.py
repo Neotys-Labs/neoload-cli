@@ -24,6 +24,8 @@ def cli(command, name_or_id, path):
 
 
 def upload(path, settings_id):
+    #TODO: pre-validate with 'neoload validate' functionality, but..
+    #TODO: provide a --skip-validation option
     neoLoad_project.upload_project(path, "v2/tests/" + settings_id + "/project")
 
 

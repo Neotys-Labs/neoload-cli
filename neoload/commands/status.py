@@ -32,7 +32,7 @@ def augment_with_names(data):
             json = test_results.get_current_test_results_json()
             results_id = data.metadata[test_results.meta_key]
             output = output.replace(results_id,results_id + " ({project}|{scenario}|{name}) {status}|{qualityStatus}".format(**json))
-    except (ConnectTimeoutError,ConnectTimeout) as err:
+    except (ConnectTimeoutError,ConnectTimeout):
         logging.warning('Connection to current NeoLoad Web server failed while collecting current test metadata.')
     except Exception:
         exc_type, exc_value, exc_traceback = sys.exc_info()
