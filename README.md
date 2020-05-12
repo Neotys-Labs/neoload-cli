@@ -166,6 +166,17 @@ Display in a human readable way the list of all static and dynamic zones registe
 
 ***WARNING: Docker features are not officially supported by Neotys as they rely heavily on your own Docker setup and environment. This command is only for local/dev test scenarios to simplify infrastructure requirements.***
 
+NOTE: this functionality is not in the 1.0.0 version (May 2020 on Pypi), but is scheduled for inclusion by June 16th 2020. If you want to obtain this version before that time, please pull this Git repo, checkout the
+ topic-docker-command branch and install locally. You may need to uninstall your existing version of this CLI first:
+
+```
+python3 -m pip uninstall neoload
+git clone https://github.com/Neotys-Labs/neoload-cli.git
+cd neoload-cli
+git checkout topic-docker-command
+python3 -m pip install -e .
+```
+
 In certain environments, such as on a local dev workstation or in a Docker-in-Docker CI build node, it is useful
  to "bring your own infrastructure". In other words, when you don't already have a controller and load generators
  available in a zone, you can spin some up using Docker before the test starts. An example of an all-on-one approach:
