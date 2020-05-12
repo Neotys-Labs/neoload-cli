@@ -51,4 +51,4 @@ def validate_yaml(yaml_file_path, schema_url):
         for error in sorted(v.iter_errors(yaml_as_object), key=str):
             path = "\\".join(list(map(lambda x: str(x), error.path)))
             msgs += "\n" + error.message + "\n\tat: " + path + "\n\tgot: \n" + yaml.dump(error.instance) + "\n"
-        raise Exception(YAML_NOT_CONFIRM_MESSAGE+'\n' + msgs)
+        raise ValueError(YAML_NOT_CONFIRM_MESSAGE+'\n' + msgs)

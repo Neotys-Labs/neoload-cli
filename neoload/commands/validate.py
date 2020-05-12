@@ -5,7 +5,7 @@ import neoload_cli_lib.schema_validation as schema_validation
 
 @click.command()
 @click.option('--schema-url', help="The URL of the as-code schema. By default, use the one on Github", metavar="URL",
-              default="https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json")
+              default="https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3/neoload-project/src/main/resources/as-code.latest.schema.json")
 @click.option('--refresh', is_flag=True, help="this options update schema from the web")
 @click.argument('file')
 def cli(file, refresh, schema_url):
