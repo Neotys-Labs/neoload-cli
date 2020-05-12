@@ -162,7 +162,10 @@ python neoload zones --human
 ```
 Display in a human readable way the list of all static and dynamic zones registered on Neoload Web, and the resources attached (controllers and load generators).
 
-## Create local docker infrastructure to run a test
+## Create local docker infrastructure to run a test [EXPERIMENTAL]
+
+***WARNING: Docker features are not officially supported by Neotys as they rely heavily on your own Docker setup and environment. This command is only for local/dev test scenarios to simplify infrastructure requirements.***
+
 In certain environments, such as on a local dev workstation or in a Docker-in-Docker CI build node, it is useful
  to "bring your own infrastructure". In other words, when you don't already have a controller and load generators
  available in a zone, you can spin some up using Docker before the test starts. An example of an all-on-one approach:
@@ -192,7 +195,8 @@ Options:
 --ctrlImage                  # the Docker image to use for the controller
 --ctrlImage                  # the Docker image to use for the load generator(s)
 --all                        # used in conjunction with 'detach' command; remove containers with label 'neoload-cli'
---force                      # when in interactive mode, do not prompt before removing Docker resources created by the CLI
+--add-hosts                  # add hosts overrides to containers; format is hostA=IP;hostB=IP
+CLI
 ```
 
 NOTE: Docker CLI must be installed on the system using these commands. This will use
@@ -204,6 +208,9 @@ NOTE: If the 'prepare' or 'attach' actions are used before the 'run' command, th
 
 NOTE: The 'forget' action undos the above note, in cases where static zones were in use by test-settings
  at first, but then were changed to use dynamic zones where Docker attaches make no sense.
+
+NOTE: When using the 'detach' or 'forget' actions and containers are running, they will be stopped.
+ There will be a prompt/check if stdin is attached to this process (typically not the case in CI)
 
 ### Pre-connecting Docker in Preparation for Consecutive Test Runs
 
@@ -228,7 +235,7 @@ neoload test-settings --scenario fullTest use NewTest1 \
         run
 
 # put this in an 'always' or 'finally' closure (in pipelines) to ensure Docker containers are spun down
-neoload docker --all --force detach
+neoload docker --all detach
 
 ```
 
