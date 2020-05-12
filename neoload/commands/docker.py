@@ -32,10 +32,9 @@ key_docker_run_id = 'run_id'
 @click.option('--ctrlimage', default="neotys/neoload-controller", help="The controller image to use")
 @click.option('--lgimage', default="neotys/neoload-loadgenerator", help="The load generator image to use")
 @click.option('--all', is_flag=True, help="Apply this action to all resources")
-@click.option('--force', is_flag=True, help="Do not prompt/confirm")
 @click.option('--nowait', is_flag=True, help="Do not wait for controller andxf load generator logs to indicate attach success")
 @click.option('--addhosts', default=None, help="Hosts to add to the /etc/hosts file of the containers")
-def cli(command, tag, ctrlimage, lgimage, all, force, nowait, addhosts):
+def cli(command, tag, ctrlimage, lgimage, all, nowait, addhosts):
     """Use local Docker to BYO infrastructure for a test.
     This uses the local Docker daemon to spin up containers to be used as infrastucture for the current test.
     NOTE: this feature is not supported by NeoLoad since your own Docker configuration is out-of-scope for support."""
@@ -61,7 +60,8 @@ def cli(command, tag, ctrlimage, lgimage, all, force, nowait, addhosts):
     elif command == "detach":
         check_docker_system()
         upgrade_logging()
-        detach_infra(explicit=(not force), all=all)
+        askmode = sys.stdin.isatty()
+        detach_infra(explicit=askmode, all=all)
         downgrade_logging()
 
     elif command == "forget":
@@ -77,7 +77,6 @@ def check_docker_system():
     result = try_docker_system()
 
     if not result['success']:
-        msg = 'Could not verify your local Docker system connection.'
         if 'connection refused' in result['logs'].lower():
             msg = "Docker installed, but connection to dockerd failed."
         else:
@@ -112,7 +111,7 @@ def try_docker_system():
         client.ping()
 
         preempt_msg = "Could not obtain version info from the Docker host."
-        version = client.version()
+        client.version()
 
         preempt_msg = "Could not list containers on the Docker host."
         client.containers.list()
@@ -473,7 +472,7 @@ def setup_ctrl(core_constructs, zone, ctrlimage):
 
 def parse_extra_hosts(hosts_spec):
     dict = get_default_hosts_dns()
-    logging.info(json.dumps(dict))
+    logging.debug(json.dumps(dict))
 
     if not (hosts_spec is not None and len((hosts_spec+"").strip()) > 0):
         return dict

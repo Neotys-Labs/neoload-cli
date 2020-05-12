@@ -42,7 +42,7 @@ class TestMisc:
             mock = json.loads(result.output)
             purposeful_error = "BORK"
 
-            # append purposeful_error to the end of the zone codes, to force containers to error on attach
+            # append purposeful_error to the end of the zone codes, to cause containers to error on attach
             lgs = mock['lgZoneIds']
             first_key = list(lgs.keys())[0]
             first_value = lgs[first_key]
@@ -66,6 +66,6 @@ class TestMisc:
             after_create=mock_test_settings_bork_zone,
             between_create_delete=lambda context: attach_detach_lifecycle(context,
                 after_attach=validate_borked_attach,
-                between_attach_detach=lambda context: True # force waiting
+                between_attach_detach=lambda context: True # cause waiting
             )
         )

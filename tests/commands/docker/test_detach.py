@@ -27,8 +27,8 @@ class TestDetach:
             )
         )
 
-    def test_force_all_detach(self, monkeypatch):
+    def test_all_detach(self, monkeypatch):
         runner = CliRunner()
 
-        detach_result = runner.invoke(docker, ['--force', '--all', 'detach'])
+        detach_result = runner.invoke(docker, ['--all', 'detach'])
         assert_success(detach_result)

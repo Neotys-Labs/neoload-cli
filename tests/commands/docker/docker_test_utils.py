@@ -137,7 +137,7 @@ def attach_detach_lifecycle(context, before_attach=None, after_attach=None, betw
             catches.append(err)
 
         try:
-            detach_result = runner.invoke(docker, ['--all','--force','detach'])
+            detach_result = runner.invoke(docker, ['--all','detach'])
             print(detach_result.output)
             assert_success(detach_result)
 
