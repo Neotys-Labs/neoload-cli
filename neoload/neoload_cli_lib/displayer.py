@@ -2,11 +2,17 @@ from junit_xml import TestSuite, TestCase
 from termcolor import cprint
 
 from neoload_cli_lib import tools
+import sys
 
 __SLA_global = 'Global'
 __SLA_test = 'Per Run'
 __SLA_interval = 'Per Interval'
 
+def printc(text,color=None):
+    if sys.stdin.isatty():
+        cprint(text,color)
+    else:
+        print(text)
 
 def print_result_summary(json_result, sla_json_global, sla_json_test, sla_json_interval, json_stats):
     __print_sla(sla_json_global, sla_json_test, sla_json_interval)
@@ -17,16 +23,16 @@ def print_result_summary(json_result, sla_json_global, sla_json_test, sla_json_i
 
 
 def __print_sla(sla_json_global, sla_json_test, sla_json_interval):
-    cprint("SLA summary:")
+    printc("SLA summary:")
     for sla in sla_json_global:
         __print_one_sla(__SLA_global.replace(' ', ''), sla)
-    cprint('')
+    printc('')
     for sla in sla_json_test:
         __print_one_sla(__SLA_test.replace(' ', ''), sla)
-    cprint('')
+    printc('')
     for sla in sla_json_interval:
         __print_one_sla(__SLA_interval.replace(' ', ''), sla)
-    cprint('')
+    printc('')
 
 
 def __print_one_sla(kind, sla_json):
@@ -50,7 +56,7 @@ def __print_one_sla(kind, sla_json):
             threshold = sla_json['failedThreshold']
             where = ' [%.3f%% %s %s]' % (sla_json['failed'], threshold['operator'], threshold['value'])
 
-    return cprint("%sSLA [%s] %s on [%s%s]" % (kind, sla_json['kpi'], status, element, where), color)
+    return printc("%sSLA [%s] %s on [%s%s]" % (kind, sla_json['kpi'], status, element, where), color)
 
 
 def __get_color_from_status(status: str):

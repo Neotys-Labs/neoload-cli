@@ -4,7 +4,7 @@ import os
 import click
 import coloredlogs
 from version import __version__
-
+import sys
 from neoload_cli_lib import tools, rest_crud, cli_exception
 
 plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
