@@ -71,7 +71,7 @@ USER jenkins
                 withEnv(["HOME=${env.WORKSPACE}"]) {
                   sh """neoload run \
                       --detached \
-                      --web-vu 5 \
+                      --web-vu 25 \
                       --as-code default.yaml,slas/prod.yaml
                      """
                 }
