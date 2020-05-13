@@ -99,6 +99,37 @@ def junit(__id, junit_file):
     json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
     displayer.print_result_junit(json_result, json_sla_test, json_sla_interval, junit_file)
 
+def get_current_sla_data():
+    if is_current_test_results_set():
+        __id = user_data.get_meta(meta_key)
+        return get_sla_data_by_name_or_id(__id)
+    else:
+        return None
+
+def get_sla_data_by_name_or_id(name):
+    if name == "cur":
+        name = user_data.get_meta(meta_key)
+    is_id = tools.is_id(name)
+
+    __id = tools.get_id(name, __resolver, is_id)
+
+    if not __id:
+        __id = user_data.get_meta_required(meta_key)
+
+    json_result = rest_crud.get(get_end_point(__id))
+    status = json_result['status']
+    json_sla_global = [] if status!='TERMINATED' else rest_crud.get(get_end_point(__id, __operation_sla_global))
+    json_sla_test = [] if status!='TERMINATED' else rest_crud.get(get_end_point(__id, __operation_sla_test))
+    json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
+    json_stats = rest_crud.get(get_end_point(__id, __operation_statistics))
+    return {
+        'id': __id,
+        'result': json_result,
+        'stats': json_stats,
+        'sla_global': json_sla_global,
+        'sla_test': json_sla_test,
+        'sla_interval': json_sla_interval
+    }
 
 def summary(__id):
     json_result = rest_crud.get(get_end_point(__id))
