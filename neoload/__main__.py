@@ -57,7 +57,8 @@ def cli(debug, batch):
         cli_exception.CliException.set_debug(True)
 
     tools.set_batch(batch)
-    coloredlogs.install(level=logging.getLogger().level)
+    if not sys.stdin.isatty():
+        coloredlogs.install(level=logging.getLogger().level)
 
 
 if __name__ == '__main__':
