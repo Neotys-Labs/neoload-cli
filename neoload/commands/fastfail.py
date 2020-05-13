@@ -41,7 +41,7 @@ def monitor_loop(name, stop, force, max_failure):
 
     if sys.stdin.isatty():
         sys.stdout = Unbuffered(sys.stdout)
-        
+
     is_initializing = False
     is_running = False
     while (abs(dt_current-dt_started).seconds / 60) < 10:
@@ -87,7 +87,8 @@ def monitor_loop(name, stop, force, max_failure):
                 print('Running', end = '')
             is_running = True
 
-        print('.', end = '')
+        if sys.stdin.isatty():
+            print('.', end = '')
         time.sleep(5)
 
         dt_current = datetime.now()
