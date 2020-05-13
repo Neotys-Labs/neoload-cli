@@ -21,6 +21,7 @@ def cli(command, name_or_id, path):
     elif command == "meta":
         meta_data(name_or_id)
     user_data.set_meta(test_settings.meta_key, name_or_id)
+    rest_crud.set_current_sub_command(command)
 
 
 def upload(path, settings_id):

@@ -26,7 +26,15 @@ meta_key = 'settings id'
 @click.option('--lgs', 'lg_zone_ids', help="precise how many lg and other zone if needed. by default we use one lg.")
 @click.option('--naming-pattern', 'naming_pattern', help="")
 def cli(command, name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern):
-    """create/read/update/delete test settings"""
+    """
+    ls     # Lists test settings                                             .
+    create # Create a new test settings                                      .
+    put    # Update all fields of a test settings                            .
+    patch  # Update only the selected fields of a test settings              .
+    delete # Remove a test settings and all associated test results          .
+    use    # Remember the test settings you want to work on. Example : neoload
+    |        test-settings use MyTest ; neoload test-settings delete         .
+    """
     if not command:
         print("command is mandatory. Please see neoload tests-settings --help")
         return
