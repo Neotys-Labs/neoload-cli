@@ -27,9 +27,17 @@ meta_key = 'result id'
 @click.option('--quality-status', 'quality_status', type=click.Choice(['PASSED', 'FAILED']), help="")
 @click.option('--junit-file', 'junit_file', default="junit-sla.xml", help="Output the junit sla report to this path")
 def cli(command, name, rename, description, quality_status, junit_file):
-    """create/read/update/delete test settings"""
+    """
+    ls       # Lists test results                                            .
+    summary  # Display a summary of the result : SLAs and statistics         .
+    junitsla # Output SLA results to a file with junit format                .
+    put      # Update the name, description or quality-status of the result  .
+    delete   # Remove a result                                               .
+    use      # Remember the test result you want to work on. Example : neoload
+    |          test-results use MyTest#1 ; neoload test-results summary      .
+    """
     if not command:
-        print("command is mandatory. Please see neoload tests-settings --help")
+        print("command is mandatory. Please see neoload tests-results --help")
         return
     rest_crud.set_current_sub_command(command)
     if name == "cur":

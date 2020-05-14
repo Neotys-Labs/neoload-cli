@@ -1,4 +1,4 @@
-# NeoLoad CLI
+# NeoLoad CLI [![Build Status](https://travis-ci.org/Neotys-Labs/neoload-cli.svg?branch=master)](https://travis-ci.org/Neotys-Labs/neoload-cli)
 
 ## Overview
 
@@ -7,7 +7,7 @@ This command-line interface helps you launch and observe performance tests on th
 
 | Property | Value |
 | ----------------    | ----------------   |
-| Maturity | Experimental |
+| Maturity | Stable |
 | Author | Neotys |
 | License           | [BSD 2-Clause "Simplified"](https://github.com/Neotys-Labs/neoload-cli/blob/master/LICENSE) |
 | NeoLoad Licensing | License FREE edition, or Enterprise edition, or Professional |
@@ -68,6 +68,7 @@ neoload --help
 NeoLoad CLI defaults to using the NeoLoad Web APIs for most operations. That's why you need to login.
 ```
 neoload login [TOKEN]
+neoload login --url http://your-onpremise-neoload-api.com/ your-token
 ```
 The CLI will connect by default to Neoload Web SaaS to lease license. \
 For self-hosted enterprise license, you must specify the Neoload Web Api url with --url. \
@@ -108,7 +109,7 @@ See basic projects examples on github [tests/neoload_projects folder](https://gi
 To upload a NeoLoad project zip file or a standalone as code file into a test-settings
 ```
 Usage: neoload project [OPTIONS] [up|upload|meta] NAME_OR_ID
-neoload --path tests/neoload_projects/example_1/ upload
+neoload project --path tests/neoload_projects/example_1/ upload
 ```
 To Validate the syntax and schema of the as-code project yaml files
 ```
@@ -148,17 +149,17 @@ Metadata on a test can be modified after the test is complete, such as name, des
 
 To work with a specific test result and be able to chain commands
 ```
-neoload test-result use 4a5e7707-75c0-4106-bbd4-68962ac7f2b3
+neoload test-results use 4a5e7707-75c0-4106-bbd4-68962ac7f2b3
 ```
 
-To view logs
+Detailed logs and results are available on Neoload Web. To get the url of the current result :
 ```
 neoload logs-url                        # The URL to the test in Neoload Web
 ```
 
 ## View zones
 ```
-python neoload zones --human
+neoload zones --human
 ```
 Display in a human readable way the list of all static and dynamic zones registered on Neoload Web, and the resources attached (controllers and load generators).
 
