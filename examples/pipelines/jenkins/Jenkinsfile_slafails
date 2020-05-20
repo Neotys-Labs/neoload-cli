@@ -72,7 +72,7 @@ USER jenkins
                   sh """neoload run \
                       --detached \
                       --web-vu 25 \
-                      --as-code default.yaml,slas/prod.yaml
+                      --as-code default.yaml,slas/uat.yaml
                      """
                 }
               }
