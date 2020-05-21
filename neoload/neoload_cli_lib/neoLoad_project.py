@@ -4,7 +4,7 @@ import zipfile
 
 from neoload_cli_lib import rest_crud, tools, cli_exception
 
-black_list = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/']
+black_list = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/','results','comparative-summary','reports']
 
 
 def is_black_listed(path: str):
