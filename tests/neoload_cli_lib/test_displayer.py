@@ -5,6 +5,7 @@ from helpers.test_utils import *
 from neoload_cli_lib import displayer
 import difflib
 import unicodedata
+import re
 
 @pytest.mark.results
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
@@ -65,7 +66,9 @@ def compare_texts(a,b):
         "equivalent": True,
         "details": ""
     }
-    for i,s in enumerate(difflib.ndiff(a, b)):
+    a_re = remove_color_indicators(a)
+    b_re = remove_color_indicators(b)
+    for i,s in enumerate(difflib.ndiff(a_re, b_re)):
         w = remove_control_characters(s[-1]).strip()
         if s[0]==' ': continue
         elif s[0]=='-':
@@ -80,3 +83,6 @@ def compare_texts(a,b):
 
 def remove_control_characters(s):
     return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
+
+def remove_color_indicators(s):
+    return re.sub(r'(\[[0123456789]{1,2}m)','',s)
