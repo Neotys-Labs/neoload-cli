@@ -40,4 +40,4 @@ class TestSchemaValidation:
         print(context.value)
 
 
-__schema_url__ = "https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json"
+__schema_url__ = "https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/bug-add-schema-for-compatibility/resources/as-code.latest.schema.json"

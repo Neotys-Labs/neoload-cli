@@ -3,7 +3,8 @@ import sys
 import pytest
 from helpers.test_utils import *
 from neoload_cli_lib import displayer
-
+import difflib
+import unicodedata
 
 @pytest.mark.results
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
@@ -21,11 +22,15 @@ class TestDisplayer:
             '{"totalRequestCountSuccess": 8415,"totalRequestCountFailure": 93,"totalRequestDurationAverage": 85.36695,"totalRequestCountPerSecond": 28.254892,"totalTransactionCountSuccess": 405,"totalTransactionCountFailure": 93,"totalTransactionDurationAverage": 571.5201,"totalTransactionCountPerSecond": 1.6538477,"totalIterationCountSuccess": 77,"totalIterationCountFailure": 77,"totalGlobalDownloadedBytes": 115011235,"totalGlobalDownloadedBytesPerSecond": 381949.94,"totalGlobalCountFailure": 93}')
 
         displayer.print_result_summary(json_result, sla_json_global, sla_json_test, sla_json_interval, json_stats)
+        ## when storing output to file ## with open("tests/resources/expected_summary_text_no_sla.txt", mode='w') as f: print(captured_output.getvalue(), file=f)
+        comp = compare_texts("","") # initialize default for scoping
         with open("tests/resources/expected_summary_text_no_sla.txt", "r") as expected:
-            assert expected.read() == captured_output.getvalue()
+            comp = compare_texts(expected.read(),captured_output.getvalue())
 
         sys.stdout = sys.__stdout__  # Reset redirect.
         captured_output.close()
+
+        assert comp["equivalent"], comp["details"]
 
     def test_print_result_summary_with_sla(self, monkeypatch):
         captured_output = io.StringIO()  # Create StringIO object
@@ -43,8 +48,35 @@ class TestDisplayer:
             '{"totalRequestCountSuccess": 8415,"totalRequestCountFailure": 93,"totalRequestDurationAverage": 85.36695,"totalRequestCountPerSecond": 28.254892,"totalTransactionCountSuccess": 405,"totalTransactionCountFailure": 93,"totalTransactionDurationAverage": 571.5201,"totalTransactionCountPerSecond": 1.6538477,"totalIterationCountSuccess": 77,"totalIterationCountFailure": 77,"totalGlobalDownloadedBytes": 115011235,"totalGlobalDownloadedBytesPerSecond": 381949.94,"totalGlobalCountFailure": 93}')
 
         displayer.print_result_summary(json_result, sla_json_global, sla_json_test, sla_json_interval, json_stats)
+        ## when storing output to file ## with open("tests/resources/expected_summary_text_with_sla.txt", mode='w') as f: print(captured_output.getvalue(), file=f)
+
+        comp = compare_texts("","") # initialize default for scoping
         with open("tests/resources/expected_summary_text_with_sla.txt", "r") as expected:
-            assert expected.read() == captured_output.getvalue()
+            comp = compare_texts(expected.read(),captured_output.getvalue())
 
         sys.stdout = sys.__stdout__  # Reset redirect.
         captured_output.close()
+
+        assert comp["equivalent"], comp["details"]
+
+# created to handle color control characters; == equivalency is too strict
+def compare_texts(a,b):
+    ret = {
+        "equivalent": True,
+        "details": ""
+    }
+    for i,s in enumerate(difflib.ndiff(a, b)):
+        w = remove_control_characters(s[-1]).strip()
+        if s[0]==' ': continue
+        elif s[0]=='-':
+            ret["details"] += u'Delete "{}" from position {}'.format(s[-1],i)
+        elif s[0]=='+':
+            ret["details"] += u'Add "{}" to position {}'.format(s[-1],i)
+        if s[0] in ['-','+'] and len(w)>0:
+            ret["equivalent"] = False
+            ret["details"] += w + ":"
+            break
+    return ret
+
+def remove_control_characters(s):
+    return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
