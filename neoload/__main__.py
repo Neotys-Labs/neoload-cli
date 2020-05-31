@@ -4,7 +4,7 @@ import os
 import click
 import coloredlogs
 from version import __version__
-
+import sys
 from neoload_cli_lib import tools, rest_crud, cli_exception
 
 plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
@@ -57,7 +57,8 @@ def cli(debug, batch):
         cli_exception.CliException.set_debug(True)
 
     tools.set_batch(batch)
-    coloredlogs.install(level=logging.getLogger().level)
+    if not sys.stdin.isatty():
+        coloredlogs.install(level=logging.getLogger().level)
 
 
 if __name__ == '__main__':
