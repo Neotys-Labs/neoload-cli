@@ -2,7 +2,7 @@ import click
 
 from commands import test_settings, test_results
 from neoload_cli_lib import user_data, tools, displayer, running_tools
-from neoload_cli_lib.tools import upgrade_logging,downgrade_logging
+from neoload_cli_lib import tools
 import logging
 import yaml
 from datetime import datetime, date
@@ -19,20 +19,19 @@ import traceback
 def cli(command, name, stop, force, max_failure): #, max_occurs):
     """Fails if certain conditions are met, such as per-run SLAs failed % of time"""
     if not command:
-        print("command is mandatory. Please see neoload fastfail --help")
+        tools.system_exit({'message': "command is mandatory. Please see neoload fastfail --help", 'code': 2})
         return
 
     if max_failure < 0 or max_failure > 100:
-        print("--max-failure percentage tolerance must be between 0 and 100")
+        tools.system_exit({'message': "--max-failure percentage tolerance must be between 0 and 100", 'code': 2})
         return
 
 
     if command == "slas":
         monitor_loop(name, stop, force, max_failure)
-        return
 
     else:
-        print("Invalid command. Please see neoload fastfail --help")
+        tools.system_exit({'message': "Invalid command. Please see neoload fastfail --help", 'code': 2})
         return
 
 def monitor_loop(name, stop, force, max_failure):
@@ -93,14 +92,14 @@ def monitor_loop(name, stop, force, max_failure):
 
         dt_current = datetime.now()
 
-def get_id(name, is_id):
-    if is_id or not name:
-        return name
-    else:
-        return __resolver.resolve_name(name)
-
-def get_end_point(id_test: str, operation=''):
-    return __endpoint + "/" + id_test + operation
+# def get_id(name, is_id):
+#     if is_id or not name:
+#         return name
+#     else:
+#         return __resolver.resolve_name(name)
+#
+# def get_end_point(id_test: str, operation=''):
+#     return __endpoint + "/" + id_test + operation
 
 class Unbuffered(object):
    def __init__(self, stream):

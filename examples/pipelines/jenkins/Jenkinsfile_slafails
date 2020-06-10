@@ -82,7 +82,7 @@ USER jenkins
                 stage('Monitor SLAs') {
                   steps {
                     withEnv(["HOME=${env.WORKSPACE}"]) {
-                    sh "neoload fastfail --max-failure ${env.MAX_SLA_FAILURE_PERCENT} slas cur"
+                      sh "neoload fastfail --max-failure ${env.MAX_SLA_FAILURE_PERCENT} slas cur"
                     }
                   }
                 }
