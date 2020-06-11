@@ -1,0 +1,63 @@
+version: 0.2
+
+env:
+  variables:
+    NLW_URL: "$ENV_NLW_URL"
+    NLW_ZONE: "$ENV_NLW_DYNAMIC_ZONE" # or "$ENV_NLW_STATIC_ZONE"
+  secrets-manager: # as an example from CodeBuild, private token in environment from Secrets Manager
+    NLW_TOKEN: ENV_NLW_TOKEN:ENV_NLW_TOKEN
+
+phases:
+  install:
+    runtime-versions:
+      #docker: 18
+      python: 3.8
+  pre_build:
+    commands:
+      ## Option 1 - Install the NeoLoad CLI python tool from Pypi
+      ## without samples, and from standard distro, use below
+      #- python3 -m pip install neoload
+
+      ## Option 2 - Install a custom version of the NeoLoad CLI python tool from source on Github
+      # get samples and specific branch of CLI for sla fastfail functionality
+      - git clone https://github.com/Neotys-Labs/neoload-cli.git && cd neoload-cli && git checkout topic-docker-command && git pull
+      # install the NeoLoad CLI Python client from above source pull
+      - python3 -m pip install -q .
+      # when installing from git source
+      - neoload_bin=$(find $(pyenv root) -type f -perm -100 -name neoload)
+      - export PATH=$(pyenv root)/shims:${neoload_bin/neoload/}:$PATH
+
+  build:
+    commands:
+      # create a profile and connect to the platform
+      - neoload login --url ${NLW_URL} ${NLW_TOKEN}
+      # configure the test
+      - |
+        neoload test-settings --zone ${NLW_ZONE} --scenario fullTest createoruse "example-AWScodebuild-SLAfail" \
+                project --path tests/neoload_projects/example_1/ upload \
+                run --detached --name "Build $CODEBUILD_BUILD_NUMBER" --web-vu 25 \
+                    --as-code default.yaml,slas/uat.yaml
+
+      - sleep 5
+
+      ## Option 1: simply wait for test finalization
+      #- neoload wait cur
+
+      ## Option 2: wait for early failure signals, stop test if any SLA over 30% failed
+      - neoload fastfail --max-failure 30 slas cur
+
+  post_build:
+    commands:
+      # produce junit report on SLAs
+      - pwd
+      - neoload test-results --junit-file $CODEBUILD_SRC_DIR/neoload_slas.junit.xml junitsla cur
+      - ls -latr
+      # if a prior step failed or err'd, don't bother waiting
+      - bash -c "if [ /"$CODEBUILD_BUILD_SUCCEEDING/" == /"0/" ]; then exit 1; fi"
+
+reports:
+  report-name-or-arn:
+    files:
+      - $CODEBUILD_SRC_DIR/neoload_slas.junit.xml
+    discard-paths: yes
+    file-format: JunitXml

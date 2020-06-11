@@ -7,7 +7,7 @@ pipeline {
     string(defaultValue: "${NEOLOAD_CLI_NLW_URL}", description: 'NeoLoad Web Api Url', name: 'api_url')
   }
   environment {
-    CLI_BRANCH="topic-fastfail-command"
+    CLI_BRANCH="topic-docker-command"
 
     MAX_SLA_FAILURE_PERCENT=25 // if more than x% of the time a per-run interval failed, stop test immediately
   }
