@@ -18,15 +18,17 @@ pipeline {
         stage('Get NeoLoad CLI') {
           steps {
             withEnv(["HOME=${env.WORKSPACE}"]) {
-              sh "pip3 install neoload"
-              sh "neoload --version"
+              sh """export PATH=$PATH:.local/bin
+                    pip3 install neoload
+                    neoload --version"""
             }
           }
         }
         stage('Prepare Neoload test') {
           steps {
             withEnv(["HOME=${env.WORKSPACE}"]) {
-              sh """neoload \
+              sh """export PATH=$PATH:.local/bin
+                    neoload \
                      login --url ${params.api_url} ${params.token} \
                      test-settings --zone ${params.zone_id} --scenario sanityScenario patch "My Jenkins Test With CLI" \
                      project --path tests/neoload_projects/example_1/ upload "My Jenkins Test With CLI"
@@ -37,7 +39,8 @@ pipeline {
         stage('Run Test') {
           steps {
             withEnv(["HOME=${env.WORKSPACE}"]) {
-              sh """neoload run \
+              sh """export PATH=$PATH:.local/bin
+                    neoload run \
                   --return-0 \
                   --web-vu 5 \
                   --as-code default.yaml,slas/uat.yaml \
@@ -49,7 +52,8 @@ pipeline {
         stage('Generate Test Report') {
           steps {
             withEnv(["HOME=${env.WORKSPACE}"]) {
-                sh "neoload test-results junitsla"
+                sh """export PATH=$PATH:.local/bin
+                    neoload test-results junitsla"""
             }
           }
           post {
