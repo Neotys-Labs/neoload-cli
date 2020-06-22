@@ -18,7 +18,7 @@ pipeline {
       steps {
         cleanWs()
         // write a custom Docker image for python + CLI with socket permissions
-        writeFile file: 'Dockerfile', text: """
+        writeFile file: "${env.WORKSPACE}/Dockerfile", text: """
 FROM python:3.7-alpine
 # add the Jenkins user to container for file permissions and Docker socket chmod
 RUN apk add -q git shadow sudo
@@ -35,6 +35,7 @@ USER jenkins
     stage('Attach Worker') {
       agent {
         dockerfile {
+          dir "${env.WORKSPACE}"
           args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
       }

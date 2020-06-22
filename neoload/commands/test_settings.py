@@ -9,6 +9,8 @@ from neoload_cli_lib import tools
 from neoload_cli_lib import user_data, cli_exception
 from neoload_cli_lib.name_resolver import Resolver
 
+import logging
+
 __endpoint = "v2/tests"
 __resolver = Resolver(__endpoint)
 
