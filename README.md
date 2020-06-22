@@ -45,6 +45,7 @@ NOTE: For Windows command line, replace the '\\' multi-line separators above wit
  - [View zones](#view-zones)
  - [Create local docker infrastructure to run a test](#create-local-docker-infrastructure-to-run-a-test)
  - [Continuous Testing Examples](#continuous-testing-examples)
+   - [Support for fast-fail based on SLAs](#support-for-fast-fail-based-on-slas)
  - [Packaging the CLI with Build Agents](#packaging-the-cli-with-build-agents)
  - [IDE Integrations](#ide-integrations)
  - [Contributing](#contributing)
@@ -268,6 +269,52 @@ While the above instructions could be run from a contributor workstation, they c
  - CircleCI, TBD when [@punkdata](https://www.linkedin.com/in/punkdata/) gets back to [@paulsbruce](https://www.linkedin.com/in/paulsbruce/) :)
 
 NB: When chaining commands, the return code of the whole command is the return code of the **last command**. That's why you should not chain the two commands "run" and "test-results junitsla".
+
+### Support for fast-fail based on SLAs ###
+
+Not all tests succeed. Sometimes environments are down. Sometimes 3rd parties are surprisingly slow. You don't
+want to wait for your build pipelines to conduct the whole test duration if it's possible to identify these
+issues early. Applying proper SLAs to your tests allows you to monitor for errors and latency during the test.
+
+Consider the following SLA:
+
+```
+sla_profiles:
+- name: geo_3rdparty_sla
+  description: Avg Resp Time >=100ms >= 250ms for cached queries
+  thresholds:
+  - avg-resp-time warn >= 100ms fail >= 250ms per interval
+  - error-rate warn >= 5% fail >= 10% per test
+```
+
+If you want to fail the pipeline if either of these thresholds are exceeded over a certain percent of their times,
+you must:
+
+- run the test in 'detached' mode to allow for non-blocking execution of a test
+- use the fastfail command to monitor for early signals to stop the test if SLAs are violated
+- finally wait for the test results
+
+To run the test in detached mode:
+
+```
+neoload run \
+    --detached
+```
+
+Then immediately afterwards, use the fastfail command:
+```
+neoload fastfail --max-failure 25 slas cur
+```
+
+In the above example, '25' represents the percent of times where the SLA was violated, such as 'on a particular
+request with an SLA applied, 10 out of 50 times it was executed, the SLA failed'.
+
+Finally, because the test was executed in non-blocking mode, you should wait for the final test result.
+```
+neoload wait cur
+```
+
+[An example for Jenkins pipeline is found here.](examples/pipelines/jenkins/Jenkinsfile_slafails)
 
 ## Packaging the CLI with Build Agents
 Many of the above CI examples include a step to explicitly install the NeoLoad CLI as part of the
