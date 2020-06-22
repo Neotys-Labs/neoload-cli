@@ -17,8 +17,12 @@ pipeline {
       agent any
       steps {
         cleanWs()
+        script {
+          try { sh "docker rmi \$(docker images -a --filter=\"label=${env.CLI_BRANCH}\" --format=\"{{.ID}}\") --force" }
+          catch(error) {}
+        }
         // write a custom Docker image for python + CLI with socket permissions
-        writeFile file: "${env.WORKSPACE}/Dockerfile", text: """
+        writeFile file: "Dockerfile", text: """
 FROM python:3.7-alpine
 # add the Jenkins user to container for file permissions and Docker socket chmod
 RUN apk add -q git shadow sudo
@@ -35,14 +39,15 @@ USER jenkins
     stage('Attach Worker') {
       agent {
         dockerfile {
-          dir "${env.WORKSPACE}"
-          args '-v /var/run/docker.sock:/var/run/docker.sock'
+          additionalBuildArgs "--rm --label \"${env.CLI_BRANCH}\""
+          args "-v /var/run/docker.sock:/var/run/docker.sock"
         }
       }
       stages {
         stage('Prepare docker') {
           steps {
             sh 'sudo chmod 666 /var/run/docker.sock'
+            sh 'neoload --version'
           }
         }
         stage('Get NeoLoad Project') {
@@ -61,7 +66,7 @@ USER jenkins
                      test-settings --zone ${params.zone_id} --scenario fullTest createoruse "example-Jenkins-SLAfail" \
                      project --path tests/neoload_projects/example_1/ upload
                 """
-              sh 'neoload docker attach' // starts additional containers for load infrastructure on Docker host
+              //sh 'neoload docker attach' // starts additional containers for load infrastructure on Docker host
             }
           }
         }
@@ -100,7 +105,8 @@ USER jenkins
           post {
             always {
               withEnv(["HOME=${env.WORKSPACE}"]) {
-                sh 'neoload docker --all detach'
+                sh 'neoload --version'
+                //sh 'neoload docker --all detach'
               }
             }
           }
