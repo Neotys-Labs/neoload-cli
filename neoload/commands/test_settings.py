@@ -16,7 +16,7 @@ meta_key = 'settings id'
 
 
 @click.command()
-@click.argument('command', type=click.Choice(['ls', 'create', 'put', 'patch', 'delete', 'use'], case_sensitive=False),
+@click.argument('command', type=click.Choice(['ls', 'create', 'put', 'patch', 'delete', 'use','createoruse'], case_sensitive=False),
                 required=False)
 @click.argument("name", type=str, required=False)
 @click.option('--rename', help="rename test settings")
@@ -49,6 +49,10 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
     elif command == "create":
         id_created = create(create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
         user_data.set_meta(meta_key, id_created)
+        return
+    elif command == "createoruse":
+        __id = createoruse(name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern)
+        user_data.set_meta(meta_key, __id)
         return
 
     __id = tools.get_id(name, __resolver, is_id)
@@ -161,3 +165,27 @@ def fill_default_fields(json_data):
         ('lgZoneIds', default_lgs(json_data.get('lgZoneIds'), json_data.get('controllerZoneId')))
     ])
     return data
+
+def createoruse(name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern):
+    __id = None
+
+    is_id = tools.is_id(name)
+
+    try:
+        __id = tools.get_id(name, __resolver, is_id)
+        logging.info('Found test-setting: ' + __id)
+    except cli_exception.CliException as err:
+        if 'no id associated' not in err.message.lower():
+            raise err
+
+    if __id is not None:
+        if rename is None:
+            name = tools.get_named_or_id(__id, True, __resolver)['name']
+            rename = name
+
+        logging.info('Patching test-settings: ' + rename)
+        patch(__id, create_json(rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
+    else:
+        __id = create(create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
+
+    return __id
