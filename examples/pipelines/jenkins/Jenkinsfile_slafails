@@ -63,7 +63,7 @@ USER jenkins
             withEnv(["HOME=${env.WORKSPACE}"]) {
               sh """neoload \
                      login --url ${params.api_url} ${params.token} \
-                     test-settings --zone ${params.zone_id} --scenario fullTest createoruse "example-Jenkins-SLAfail" \
+                     test-settings --zone ${params.zone_id} --scenario fullTest createorpatch "example-Jenkins-SLAfail" \
                      project --path tests/neoload_projects/example_1/ upload
                 """
               //sh 'neoload docker attach' // starts additional containers for load infrastructure on Docker host

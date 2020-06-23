@@ -18,7 +18,7 @@ meta_key = 'settings id'
 
 
 @click.command()
-@click.argument('command', type=click.Choice(['ls', 'create', 'put', 'patch', 'delete', 'use','createoruse'], case_sensitive=False),
+@click.argument('command', type=click.Choice(['ls', 'create', 'put', 'patch', 'delete', 'use','createorpatch'], case_sensitive=False),
                 required=False)
 @click.argument("name", type=str, required=False)
 @click.option('--rename', help="rename test settings")
@@ -36,6 +36,7 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
     delete # Remove a test settings and all associated test results          .
     use    # Remember the test settings you want to work on. Example : neoload
     |        test-settings use MyTest ; neoload test-settings delete         .
+    createorpatch # Create a new test or patch an existing one; useful in CI .
     """
     if not command:
         print("command is mandatory. Please see neoload tests-settings --help")
@@ -52,8 +53,8 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
         id_created = create(create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
         user_data.set_meta(meta_key, id_created)
         return
-    elif command == "createoruse":
-        __id = createoruse(name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern)
+    elif command == "createorpatch":
+        __id = createorpatch(name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern)
         user_data.set_meta(meta_key, __id)
         return
 
@@ -168,7 +169,7 @@ def fill_default_fields(json_data):
     ])
     return data
 
-def createoruse(name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern):
+def createorpatch(name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern):
     __id = None
 
     is_id = tools.is_id(name)
