@@ -109,7 +109,7 @@ def get_id_by_name_or_id(name):
 
     if not __id:
         __id = user_data.get_meta_required(meta_key)
-        
+
     return __id
 
 def get_sla_data_by_name_or_id(name):
