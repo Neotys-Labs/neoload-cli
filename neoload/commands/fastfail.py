@@ -9,6 +9,7 @@ from datetime import datetime, date
 import time
 import sys
 import traceback
+from dateutil.relativedelta import relativedelta
 
 @click.command()
 @click.argument('command', type=click.Choice(['slas'], case_sensitive=False))
@@ -44,6 +45,10 @@ def monitor_loop(name, stop, force, max_failure):
     is_initializing = False
     is_running = False
     has_exited = False
+    #duration = None
+    fails = []
+    msg = ""
+    exit_code = 0
     while (abs(dt_current-dt_started).seconds / 60) < 10:
         datas = test_results.get_sla_data_by_name_or_id(name)
 
@@ -55,6 +60,7 @@ def monitor_loop(name, stop, force, max_failure):
         fails.extend(list(filter(lambda x: x['status']=='FAILED',datas['sla_test'])))
         fails.extend(failed_intervals)
 
+        #duration = datas['result']['duration'] if 'duration' in datas['result'] else None
         status = datas['result']['status']
         quality_status = datas['result']['qualityStatus']
 
@@ -69,19 +75,27 @@ def monitor_loop(name, stop, force, max_failure):
         is_initializing = outcomes["is_initializing"]
         is_running = outcomes["is_running"]
 
-        if not final_run and len(fails) > 0 or len(partial_intervals) > 0:
+        if not final_run and (len(fails) > 0 or len(partial_intervals) > 0):
             displayer.__print_sla(datas['sla_global'], datas['sla_test'], datas['sla_interval'])
 
         if final_run:
+            exit_code = 0 if datas['result']['qualityStatus']=="PASSED" else 1
             break
 
         printif(sys.stdin.isatty() and not has_exited, '.', end = '')
 
-        time.sleep(5)
+        if not has_exited:
+            time.sleep(5)
 
         dt_current = datetime.now()
 
+    #TODO: need estimated project duration from project upload and scenario JSON
+    #if not duration is None and len(fails) > 0:
+    #    print_time_savings(duration,dt_started,dt_current)
+
     print('fastfail ended: ' + str(dt_current))
+
+    tools.system_exit({'message': msg, 'code': exit_code})
 
 def process_state(datas,fails,stop,force,is_initializing,is_running,msg):
     ret = {
@@ -92,16 +106,12 @@ def process_state(datas,fails,stop,force,is_initializing,is_running,msg):
     status = datas['result']['status']
 
     if len(fails) > 0:
-        if status != 'TERMINATED':
-            if stop:
+        if status != 'TERMINATED' and stop:
                 print("\nStopping test, force={0}".format(force))
                 tools.set_batch(True)
                 running_tools.stop(datas["id"], force)
-        else:
-            tools.system_exit({'message': msg, 'code': 1})
         ret["has_exited"] = True
     elif status == 'TERMINATED':
-        tools.system_exit({'message': msg, 'code': 0 if datas['result']['qualityStatus']=="PASSED" else 1})
         ret["has_exited"] = True
     elif status == 'INIT':
         printif(not is_initializing, 'Initializing', end = '')
@@ -118,6 +128,23 @@ def process_state(datas,fails,stop,force,is_initializing,is_running,msg):
 def printif(should_print, msg, end='\n'):
     if should_print:
         print(msg,end=end)
+
+def print_time_savings(expected_duration,dt_started,dt_final):
+    startSec = int(dt_started.strftime("%s"))
+    endSec = int(dt_final.strftime("%s"))
+    strDid = ", ".join(get_human_readable_time(relativedelta(seconds=(endSec-startSec))))
+    strWouldHave = ", ".join(get_human_readable_time(relativedelta(seconds=(expected_duration/1000))))
+    deltaSec = (expected_duration/1000) - (endSec-startSec)
+    strSavings = ", ".join(get_human_readable_time(relativedelta(seconds=deltaSec)))
+    print("Ran for: " + strDid)
+    print("Would have run for: " + strDid)
+    print("Fastfail time savings: " + strSavings)
+
+def get_human_readable_time(reldel):
+    attrs = ['years', 'months', 'days', 'hours', 'minutes', 'seconds']
+    human_readable = lambda delta: ['%d %s' % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1])
+        for attr in attrs if getattr(delta, attr)]
+    return human_readable(reldel)
 
 class Unbuffered(object):
    def __init__(self, stream):
