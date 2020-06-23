@@ -40,7 +40,6 @@ def monitor_loop(name, stop, force, max_failure):
     is_initializing = False
     is_running = False
     has_exited = False
-    fails = []
     msg = ""
     exit_code = 0
     while (abs(dt_current-dt_started).seconds / 60) < 10:
@@ -75,7 +74,7 @@ def monitor_loop(name, stop, force, max_failure):
             displayer.__print_sla(datas['sla_global'], datas['sla_test'], datas['sla_interval'])
         else:
             printif(sys.stdin.isatty() and not has_exited, '.', end = '')
-            time.sleep(5)
+            time.sleep(15)
 
         dt_current = datetime.now()
 
