@@ -100,8 +100,7 @@ def junit(__id, junit_file):
     json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
     displayer.print_result_junit(json_result, json_sla_test, json_sla_interval, junit_file)
 
-
-def get_sla_data_by_name_or_id(name):
+def get_id_by_name_or_id(name):
     if name == "cur":
         name = user_data.get_meta(meta_key)
     is_id = tools.is_id(name)
@@ -110,6 +109,11 @@ def get_sla_data_by_name_or_id(name):
 
     if not __id:
         __id = user_data.get_meta_required(meta_key)
+        
+    return __id
+
+def get_sla_data_by_name_or_id(name):
+    __id = get_id_by_name_or_id(name)
 
     json_result = rest_crud.get(get_end_point(__id))
     status = json_result['status']

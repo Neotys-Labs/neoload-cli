@@ -22,14 +22,19 @@ def cli(command, name, stop, force, max_failure): #, max_occurs):
         tools.system_exit({'message': "--max-failure percentage tolerance must be between 0 and 100", 'code': 2})
         return
 
+    __id = test_results.get_id_by_name_or_id(name)
+
+    if __id is None:
+        tools.system_exit({'message': "Could not resolve '" + name + "' to test ID.", 'code': 2})
+        return
 
     if command == "slas":
-        monitor_loop(name, stop, force, max_failure)
+        monitor_loop(__id, stop, force, max_failure)
 
     else:
         tools.system_exit({'message': "Invalid command. Please see neoload fastfail --help", 'code': 2})
 
-def monitor_loop(name, stop, force, max_failure):
+def monitor_loop(__id, stop, force, max_failure):
     dt_started = datetime.now()
     print('fastfail started: ' + str(dt_started))
     dt_current = dt_started
@@ -43,7 +48,7 @@ def monitor_loop(name, stop, force, max_failure):
     msg = ""
     exit_code = 0
     while (abs(dt_current-dt_started).seconds / 60) < 10:
-        datas = test_results.get_sla_data_by_name_or_id(name)
+        datas = test_results.get_sla_data_by_name_or_id(__id)
 
         partial_intervals = list(filter(lambda x: x['status']=='FAILED',datas['sla_interval']))
         failed_intervals = list(filter(lambda x: x['failed']>=max_failure,partial_intervals))
