@@ -62,7 +62,7 @@ def monitor_loop(name, stop, force, max_failure):
         if len(partial_intervals) > 0 and len(failed_intervals) < 1:
             msg += "\nSome SLAs failed, but were not above max-failure of {0}% so did not count as error.".format(max_failure)
 
-        outcomes = process_state(datas,fails,stop,force,status,is_initializing,is_running,msg)
+        outcomes = process_state(datas,fails,stop,force,is_initializing,is_running,msg)
 
         final_run = has_exited and outcomes["has_exited"]
         has_exited = outcomes["has_exited"]
@@ -83,12 +83,13 @@ def monitor_loop(name, stop, force, max_failure):
 
     print('fastfail ended: ' + str(dt_current))
 
-def process_state(datas,fails,stop,force,status,is_initializing,is_running,msg):
+def process_state(datas,fails,stop,force,is_initializing,is_running,msg):
     ret = {
         "has_exited": False,
         "is_initializing": is_initializing,
         "is_running": is_running
     }
+    status = datas['result']['status']
 
     if len(fails) > 0:
         if status != 'TERMINATED':
