@@ -1,15 +1,10 @@
 import click
 
-from commands import test_settings, test_results
-from neoload_cli_lib import user_data, tools, displayer, running_tools
-from neoload_cli_lib import tools
-import logging
-import yaml
+from commands import test_results
+from neoload_cli_lib import displayer, running_tools, tools
 from datetime import datetime, date
 import time
 import sys
-import traceback
-from dateutil.relativedelta import relativedelta
 
 @click.command()
 @click.argument('command', type=click.Choice(['slas'], case_sensitive=False))
