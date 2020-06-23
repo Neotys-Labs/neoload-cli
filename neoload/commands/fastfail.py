@@ -45,7 +45,6 @@ def monitor_loop(name, stop, force, max_failure):
     is_initializing = False
     is_running = False
     has_exited = False
-    #duration = None
     fails = []
     msg = ""
     exit_code = 0
@@ -60,7 +59,6 @@ def monitor_loop(name, stop, force, max_failure):
         fails.extend(list(filter(lambda x: x['status']=='FAILED',datas['sla_test'])))
         fails.extend(failed_intervals)
 
-        #duration = datas['result']['duration'] if 'duration' in datas['result'] else None
         status = datas['result']['status']
         quality_status = datas['result']['qualityStatus']
 
@@ -74,17 +72,14 @@ def monitor_loop(name, stop, force, max_failure):
         has_exited = outcomes["has_exited"]
         is_initializing = outcomes["is_initializing"]
         is_running = outcomes["is_running"]
-
-        if not final_run and (len(fails) > 0 or len(partial_intervals) > 0):
-            displayer.__print_sla(datas['sla_global'], datas['sla_test'], datas['sla_interval'])
+        exit_code = 0 if datas['result']['qualityStatus']=="PASSED" else 1
 
         if final_run:
-            exit_code = 0 if datas['result']['qualityStatus']=="PASSED" else 1
             break
-
-        printif(sys.stdin.isatty() and not has_exited, '.', end = '')
-
-        if not has_exited:
+        elif (len(fails) > 0 or len(partial_intervals) > 0):
+            displayer.__print_sla(datas['sla_global'], datas['sla_test'], datas['sla_interval'])
+        else:
+            printif(sys.stdin.isatty() and not has_exited, '.', end = '')
             time.sleep(5)
 
         dt_current = datetime.now()
@@ -129,22 +124,23 @@ def printif(should_print, msg, end='\n'):
     if should_print:
         print(msg,end=end)
 
-def print_time_savings(expected_duration,dt_started,dt_final):
-    startSec = int(dt_started.strftime("%s"))
-    endSec = int(dt_final.strftime("%s"))
-    strDid = ", ".join(get_human_readable_time(relativedelta(seconds=(endSec-startSec))))
-    strWouldHave = ", ".join(get_human_readable_time(relativedelta(seconds=(expected_duration/1000))))
-    deltaSec = (expected_duration/1000) - (endSec-startSec)
-    strSavings = ", ".join(get_human_readable_time(relativedelta(seconds=deltaSec)))
-    print("Ran for: " + strDid)
-    print("Would have run for: " + strDid)
-    print("Fastfail time savings: " + strSavings)
-
-def get_human_readable_time(reldel):
-    attrs = ['years', 'months', 'days', 'hours', 'minutes', 'seconds']
-    human_readable = lambda delta: ['%d %s' % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1])
-        for attr in attrs if getattr(delta, attr)]
-    return human_readable(reldel)
+#TODO: need estimated project duration from project upload and scenario JSON
+# def print_time_savings(expected_duration,dt_started,dt_final):
+#     start_sec = int(dt_started.strftime("%s"))
+#     end_sec = int(dt_final.strftime("%s"))
+#     str_did = ", ".join(get_human_readable_time(relativedelta(seconds=(end_sec-start_sec))))
+#     str_would_have = ", ".join(get_human_readable_time(relativedelta(seconds=(expected_duration/1000))))
+#     delta_sec = (expected_duration/1000) - (end_sec-start_sec)
+#     str_savings = ", ".join(get_human_readable_time(relativedelta(seconds=delta_sec)))
+#     print("Ran for: " + str_did)
+#     print("Would have run for: " + str_would_have)
+#     print("Fastfail time savings: " + str_savings)
+#
+# def get_human_readable_time(reldel):
+#     attrs = ['years', 'months', 'days', 'hours', 'minutes', 'seconds']
+#     human_readable = lambda delta: ['%d %s' % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1])
+#         for attr in attrs if getattr(delta, attr)]
+#     return human_readable(reldel)
 
 class Unbuffered(object):
    def __init__(self, stream):
