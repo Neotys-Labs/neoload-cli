@@ -101,13 +101,6 @@ def junit(__id, junit_file):
     displayer.print_result_junit(json_result, json_sla_test, json_sla_interval, junit_file)
 
 
-def get_current_sla_data():
-    if is_current_test_results_set():
-        __id = user_data.get_meta(meta_key)
-        return get_sla_data_by_name_or_id(__id)
-    else:
-        return None
-
 def get_sla_data_by_name_or_id(name):
     if name == "cur":
         name = user_data.get_meta(meta_key)
