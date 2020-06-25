@@ -42,7 +42,7 @@ def header_status(results_id):
 def display_status(results_id):
     global __last_status
     res = rest_crud.get('v2/test-results/' + results_id)
-    status = res['status']
+    status = res.get('status')
 
     if __last_status != status:
         print("Status: " + status)
@@ -59,16 +59,17 @@ def display_statistics(results_id, json_summary):
     res = rest_crud.get(__endpoint + results_id + '/statistics')
     time_cur = datetime.datetime.now() - datetime.datetime.fromtimestamp((json_summary['startDate'] + 1) / 1000)
     time_cur_format = format_delta(time_cur)
-    lg_count = json_summary['lgCount']
-    duration_raw = json_summary['duration']
+    lg_count = json_summary.get('lgCount') or '--'
+    duration_raw = json_summary.get('duration')
     duration = format_delta(datetime.timedelta(seconds=(duration_raw / 1000))) if duration_raw else " - "
-    throughput = res['totalGlobalDownloadedBytesPerSecond']
-    error_count = res['totalGlobalCountFailure']
-    vu_count = res['lastVirtualUserCount']
-    request_sec = res['lastRequestCountPerSecond']
-    request_duration = res['totalRequestDurationAverage']
+    throughput = res.get('totalGlobalDownloadedBytesPerSecond') or '--'
+    error_count = res.get('totalGlobalCountFailure') or '--'
+    vu_count = res.get('lastVirtualUserCount') or '--'
+    request_sec_raw = res.get('lastRequestCountPerSecond')
+    request_sec = f'{request_sec_raw:.3f}' if request_sec_raw else '--'
+    request_duration = res.get('totalRequestDurationAverage') or '--'
     print(
-        f'    {time_cur_format}/{duration}\t Err[{error_count}], LGs[{lg_count}]\t VUs:{vu_count}\t BPS[{throughput}]\t RPS:{request_sec:.3f}\t avg(rql): {request_duration}')
+        f'    {time_cur_format}/{duration}\t Err[{error_count}], LGs[{lg_count}]\t VUs:{vu_count}\t BPS[{throughput}]\t RPS:{request_sec}\t avg(rql): {request_duration}')
 
 
 def format_delta(delta):
