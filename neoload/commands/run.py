@@ -28,7 +28,7 @@ def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_
     _id = test_settings_json['id']
 
     if scenario:
-        rest_crud.patch('v2/test_result/' + _id, {'scenarioName': scenario})
+        rest_crud.patch(test_settings.get_end_point(_id), {'scenarioName': scenario})
 
     naming_pattern = name if name else test_settings_json['testResultNamingPattern']
     if not naming_pattern:
