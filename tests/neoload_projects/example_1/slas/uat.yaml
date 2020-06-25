@@ -4,3 +4,4 @@ sla_profiles:
   thresholds:
   - avg-resp-time warn >= 100ms fail >= 250ms per interval
   - error-rate warn >= 5% fail >= 10% per test
+  - error-rate warn >= 5% fail >= 10% per interval
