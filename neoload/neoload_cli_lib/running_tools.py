@@ -65,10 +65,11 @@ def display_statistics(results_id, json_summary):
     throughput = res.get('totalGlobalDownloadedBytesPerSecond') or '--'
     error_count = res.get('totalGlobalCountFailure') or '--'
     vu_count = res.get('lastVirtualUserCount') or '--'
-    request_sec = res.get('lastRequestCountPerSecond') or '--'
+    request_sec_raw = res.get('lastRequestCountPerSecond')
+    request_sec = f'{request_sec_raw:.3f}' if request_sec_raw else '--'
     request_duration = res.get('totalRequestDurationAverage') or '--'
     print(
-        f'    {time_cur_format}/{duration}\t Err[{error_count}], LGs[{lg_count}]\t VUs:{vu_count}\t BPS[{throughput}]\t RPS:{request_sec:.3f}\t avg(rql): {request_duration}')
+        f'    {time_cur_format}/{duration}\t Err[{error_count}], LGs[{lg_count}]\t VUs:{vu_count}\t BPS[{throughput}]\t RPS:{request_sec}\t avg(rql): {request_duration}')
 
 
 def format_delta(delta):
