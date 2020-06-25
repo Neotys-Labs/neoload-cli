@@ -14,43 +14,44 @@ pipeline {
           image 'python:3-alpine'
         }
       }
+      environment {
+        NEOLOAD="${WORKSPACE}/.local/bin/neoload"
+        HOME="${WORKSPACE}"
+      }
       stages {
         stage('Get NeoLoad CLI') {
           steps {
-            withEnv(["HOME=${env.WORKSPACE}"]) {
               sh "pip3 install neoload"
-              sh "neoload --version"
-            }
+              sh "$NEOLOAD --version"
           }
         }
-        stage('Prepare Neoload test') {
+        stage('Get NeoLoad project'){
+            steps {
+                sh 'test -f example_1.zip || wget https://github.com/Neotys-Labs/neoload-cli/raw/master/tests/neoload_projects/example_1.zip'
+            }
+        }
+        stage('Prepare NeoLoad test') {
           steps {
-            withEnv(["HOME=${env.WORKSPACE}"]) {
-              sh """neoload \
+              sh """$NEOLOAD \
                      login --url ${params.api_url} ${params.token} \
                      test-settings --zone ${params.zone_id} --scenario sanityScenario patch "My Jenkins Test With CLI" \
-                     project --path tests/neoload_projects/example_1/ upload "My Jenkins Test With CLI"
+                     project --path example_1.zip upload
                 """
-            }
           }
         }
         stage('Run Test') {
           steps {
-            withEnv(["HOME=${env.WORKSPACE}"]) {
-              sh """neoload run \
+              sh """$NEOLOAD run \
                   --return-0 \
                   --web-vu 5 \
                   --as-code default.yaml,slas/uat.yaml \
                   "My Jenkins Test With CLI" \
                  """
-            }
           }
         }
         stage('Generate Test Report') {
           steps {
-            withEnv(["HOME=${env.WORKSPACE}"]) {
-                sh "neoload test-results junitsla"
-            }
+             sh "$NEOLOAD test-results junitsla"
           }
           post {
               always {
