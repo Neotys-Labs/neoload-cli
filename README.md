@@ -65,6 +65,11 @@ pip3 install neoload
 neoload --help
 ```
 
+NOTE: if you receive SSL download errors when running the above command, you may also need to install sources using the following command:
+```
+pip3 install certifi
+```
+
 ## Login to Neoload Web
 NeoLoad CLI defaults to using the NeoLoad Web APIs for most operations. That's why you need to login.
 ```
