@@ -16,17 +16,24 @@ __resolver = Resolver(__endpoint)
 
 meta_key = 'result id'
 
+def load_from_file(file):
+    try:
+        return json.load(file)
+    except json.JSONDecodeError as err:
+        raise cli_exception.CliException('%s\nThis command requires a valid Json input.\n'
+                                         'Example: neoload test-settings create {"name":"TestName"}' % str(err))
 
 @click.command()
 @click.argument('command',
-                type=click.Choice(['ls', 'summary', 'junitsla', 'put', 'delete', 'use'], case_sensitive=False),
+                type=click.Choice(['ls', 'summary', 'junitsla', 'put', 'patch', 'delete', 'use'], case_sensitive=False),
                 required=False)
 @click.argument("name", type=str, required=False)
 @click.option('--rename', help="")
 @click.option('--description', help="")
 @click.option('--quality-status', 'quality_status', type=click.Choice(['PASSED', 'FAILED']), help="")
 @click.option('--junit-file', 'junit_file', default="junit-sla.xml", help="Output the junit sla report to this path")
-def cli(command, name, rename, description, quality_status, junit_file):
+@click.option('--file', type=click.File('r'), help="Json file with the data to be sent to the API.")
+def cli(command, name, rename, description, quality_status, junit_file, file):
     """
     ls       # Lists test results                                            .
     summary  # Display a summary of the result : SLAs and statistics         .
@@ -62,12 +69,15 @@ def cli(command, name, rename, description, quality_status, junit_file):
         system_exit = summary(__id)
     elif command == "junitsla":
         junit(__id, junit_file)
-    elif command == "put":
-        put(__id, description, quality_status, rename)
     elif command == "delete":
         delete(__id)
         user_data.set_meta(meta_key, None)
-
+    else:
+        json_data = load_from_file(file) if file else create_json(rename, description, quality_status)
+        if command == "put":
+            put(__id, json_data)
+        elif command == "patch":
+            patch(__id, json_data)
     if command != "delete":
         user_data.set_meta(meta_key, __id)
 
@@ -79,10 +89,14 @@ def delete(__id):
     print(rep.text)
 
 
-def put(__id, description, quality_status, rename):
-    json_data = create_json(rename, description, quality_status)
+def put(__id, json_data):
     json_data = set_empty_fields_with_blank(json_data)
     rep = rest_crud.put(get_end_point(__id), json_data)
+    tools.get_id_and_print_json(rep)
+
+
+def patch(__id, json_data):
+    rep = rest_crud.patch(get_end_point(__id), json_data)
     tools.get_id_and_print_json(rep)
 
 
@@ -100,6 +114,7 @@ def junit(__id, junit_file):
     json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
     displayer.print_result_junit(json_result, json_sla_test, json_sla_interval, junit_file)
 
+
 def get_id_by_name_or_id(name):
     if name == "cur":
         name = user_data.get_meta(meta_key)
@@ -112,13 +127,14 @@ def get_id_by_name_or_id(name):
 
     return __id
 
+
 def get_sla_data_by_name_or_id(name):
     __id = get_id_by_name_or_id(name)
 
     json_result = rest_crud.get(get_end_point(__id))
     status = json_result['status']
-    json_sla_global = [] if status!='TERMINATED' else rest_crud.get(get_end_point(__id, __operation_sla_global))
-    json_sla_test = [] if status!='TERMINATED' else rest_crud.get(get_end_point(__id, __operation_sla_test))
+    json_sla_global = [] if status != 'TERMINATED' else rest_crud.get(get_end_point(__id, __operation_sla_global))
+    json_sla_test = [] if status != 'TERMINATED' else rest_crud.get(get_end_point(__id, __operation_sla_test))
     json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
     json_stats = rest_crud.get(get_end_point(__id, __operation_statistics))
     return {
@@ -160,18 +176,9 @@ def create_json(name, description, quality_status):
         data['description'] = description
     if quality_status is not None:
         data['qualityStatus'] = quality_status
-
-    if len(data) == 0:
-        if sys.stdin.isatty():
-            for field in ['name', 'description', 'qualityStatus']:
-                data[field] = input(field)
-        else:
-            try:
-                return json.loads(sys.stdin.read())
-            except json.JSONDecodeError as err:
-                raise cli_exception.CliException('%s\nThis command requires a valid Json input.\n'
-                                                 'Example: neoload test-results put {"name":"TestResultName"}' % str(
-                    err))
+    if len(data) == 0 and sys.stdin.isatty():
+        for field in ['name', 'description', 'qualityStatus']:
+            data[field] = input(field)
     return data
 
 
