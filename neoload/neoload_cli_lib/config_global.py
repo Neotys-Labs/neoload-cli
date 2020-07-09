@@ -45,3 +45,9 @@ def __load():
 
 
 __config_global = __load()
+
+
+def reset():
+    global __config_global
+    __config_global = {}
+    _save()
