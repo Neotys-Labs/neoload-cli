@@ -1,0 +1,7 @@
+user_paths:
+- name: path
+  actions:
+    steps:
+    - request:
+        server: geolookup_host
+        sla_profile: geo_3rdparty_sla

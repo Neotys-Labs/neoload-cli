@@ -1,0 +1,66 @@
+pipeline {
+  agent none
+
+  parameters {
+    string(defaultValue: "specify_token_or_get_it_from_credentials", description: 'Neoload Web Token', name: 'token')
+    string(defaultValue: "defaultzone", description: 'Zone identifier', name: 'zone_id')
+    string(defaultValue: "https://neoload-api.saas.neotys.com/", description: 'NeoLoad Web Api Url', name: 'api_url')
+  }
+
+  stages {
+    stage('Attach Worker') {
+      agent {
+        docker {
+          image 'python:3-alpine'
+        }
+      }
+      stages {
+        stage('Get NeoLoad CLI') {
+          steps {
+            withEnv(["HOME=${env.WORKSPACE}"]) {
+              sh "pip3 install ."
+              sh "python3 neoload --version"
+            }
+          }
+        }
+        stage('Prepare Neoload test') {
+          steps {
+            withEnv(["HOME=${env.WORKSPACE}"]) {
+              sh """python3 neoload \
+                     login --url ${params.api_url} ${params.token} \
+                     test-settings --zone ${params.zone_id} --scenario sanityScenario patch "My Jenkins Test With CLI" \
+                     project --path tests/neoload_projects/example_1/ upload "My Jenkins Test With CLI"
+                """
+            }
+          }
+        }
+        stage('Run Test') {
+          steps {
+            withEnv(["HOME=${env.WORKSPACE}"]) {
+              sh """python3 neoload \
+                  docker prepare
+                  run \
+                  --return-0 \
+                  --web-vu 5 \
+                  --as-code default.yaml,slas/uat.yaml \
+                  "My Jenkins Test With CLI" \
+                 """
+            }
+          }
+        }
+        stage('Generate Test Report') {
+          steps {
+            withEnv(["HOME=${env.WORKSPACE}"]) {
+                sh "python3 neoload test-results junitsla"
+            }
+          }
+          post {
+              always {
+                  junit 'junit-sla.xml'
+              }
+          }
+        }
+      }
+    }
+  }
+}
