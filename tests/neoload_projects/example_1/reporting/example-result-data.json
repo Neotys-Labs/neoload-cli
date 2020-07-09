@@ -1,0 +1,604 @@
+{
+  "summary": {
+    "id": "37ea3484-d79b-405d-bbeb-202b3f732c3b",
+    "name": "Paul_18:30 - 10 Jun 2020",
+    "description": "",
+    "author": "Paul Bruce",
+    "terminationReason": "POLICY",
+    "lgCount": 1,
+    "project": "NewSeleniumFirefox",
+    "scenario": "scenario1",
+    "status": "TERMINATED",
+    "qualityStatus": "PASSED",
+    "startDate": 1591794104682,
+    "endDate": 1591794737498,
+    "duration": 632816
+  },
+  "statistics": {
+    "totalRequestCountSuccess": 15354,
+    "totalRequestCountFailure": 0,
+    "totalRequestDurationAverage": 36.756153,
+    "totalRequestCountPerSecond": 24.262978,
+    "totalTransactionCountSuccess": 363,
+    "totalTransactionCountFailure": 0,
+    "totalTransactionDurationAverage": 2398.9202,
+    "totalTransactionCountPerSecond": 0.57362646,
+    "totalIterationCountSuccess": 103,
+    "totalIterationCountFailure": 0,
+    "totalGlobalDownloadedBytes": 268731618,
+    "totalGlobalDownloadedBytesPerSecond": 424659.97,
+    "totalGlobalCountFailure": 0
+  },
+  "events": [
+    {
+      "id": "1",
+      "code": "1",
+      "elementid": "3ac47643-35ac-44ec-9d10-f3420643c1f0",
+      "fullname": "command_line",
+      "offset": 632429,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "Tableau_Selenium_3#1 - Actions#17"
+    },
+    {
+      "id": "210-2-210-605934",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 605934,
+      "type": "ALERT",
+      "duration": 26658,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-2-234-605743",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 605743,
+      "type": "ALERT",
+      "duration": 26849,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-594786",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 594786,
+      "type": "ALERT",
+      "duration": 8146,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-594665",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 594665,
+      "type": "ALERT",
+      "duration": 8053,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-2-210-570676",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 570676,
+      "type": "ALERT",
+      "duration": 24110,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-2-234-570444",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 570444,
+      "type": "ALERT",
+      "duration": 24221,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-555602",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 555602,
+      "type": "ALERT",
+      "duration": 15074,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-555316",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 555316,
+      "type": "ALERT",
+      "duration": 15128,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "234-2-234-539109",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 539109,
+      "type": "ALERT",
+      "duration": 16207,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-2-210-538376",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 538376,
+      "type": "ALERT",
+      "duration": 17226,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-532105",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 532105,
+      "type": "ALERT",
+      "duration": 3002,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-531335",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 531335,
+      "type": "ALERT",
+      "duration": 3011,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-2-234-515021",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 515021,
+      "type": "ALERT",
+      "duration": 17084,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-2-210-514286",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 514286,
+      "type": "ALERT",
+      "duration": 17049,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-504977",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 504977,
+      "type": "ALERT",
+      "duration": 1001,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-504246",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 504246,
+      "type": "ALERT",
+      "duration": 1001,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "210-2-210-467972",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 467972,
+      "type": "ALERT",
+      "duration": 36274,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-2-234-467550",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 467550,
+      "type": "ALERT",
+      "duration": 37427,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-465919",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 465919,
+      "type": "ALERT",
+      "duration": 2053,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-465512",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 465512,
+      "type": "ALERT",
+      "duration": 2038,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-2-210-333072",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 333072,
+      "type": "ALERT",
+      "duration": 132847,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-2-234-332599",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 332599,
+      "type": "ALERT",
+      "duration": 132913,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-332066",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 332066,
+      "type": "ALERT",
+      "duration": 1006,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-331592",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 331592,
+      "type": "ALERT",
+      "duration": 1007,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "234-2-234-294157",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 294157,
+      "type": "ALERT",
+      "duration": 37435,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-2-210-293613",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 293613,
+      "type": "ALERT",
+      "duration": 38453,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-292141",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 292141,
+      "type": "ALERT",
+      "duration": 2016,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-291594",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 291594,
+      "type": "ALERT",
+      "duration": 2019,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "210-2-210-260102",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 260102,
+      "type": "ALERT",
+      "duration": 31492,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-2-234-259896",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 259896,
+      "type": "ALERT",
+      "duration": 32245,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-257100",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 257100,
+      "type": "ALERT",
+      "duration": 3002,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-256894",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 256894,
+      "type": "ALERT",
+      "duration": 3002,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-2-210-226082",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 226082,
+      "type": "ALERT",
+      "duration": 31018,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-2-234-225877",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 225877,
+      "type": "ALERT",
+      "duration": 31017,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-221079",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 221079,
+      "type": "ALERT",
+      "duration": 1001,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-220872",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 220872,
+      "type": "ALERT",
+      "duration": 1001,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-2-210-186831",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 186831,
+      "type": "ALERT",
+      "duration": 34248,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-2-234-186786",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 186786,
+      "type": "ALERT",
+      "duration": 34086,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-170791",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 170791,
+      "type": "ALERT",
+      "duration": 11038,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-170764",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 170764,
+      "type": "ALERT",
+      "duration": 11020,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "234-2-234-152499",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 152499,
+      "type": "ALERT",
+      "duration": 18265,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-2-210-152491",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 152491,
+      "type": "ALERT",
+      "duration": 18300,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-148494",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 148494,
+      "type": "ALERT",
+      "duration": 2002,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-148488",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 148488,
+      "type": "ALERT",
+      "duration": 2001,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "210-2-210-118218",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 118218,
+      "type": "ALERT",
+      "duration": 30270,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-2-234-117206",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 117206,
+      "type": "ALERT",
+      "duration": 31288,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-113204",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 113204,
+      "type": "ALERT",
+      "duration": 3006,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-113200",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 113200,
+      "type": "ALERT",
+      "duration": 3001,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "234-2-234-83718",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 83718,
+      "type": "ALERT",
+      "duration": 29482,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-2-210-83717",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 83717,
+      "type": "ALERT",
+      "duration": 29487,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "210-1-210-41532",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 41532,
+      "type": "ALERT",
+      "duration": 36160,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-41531",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 41531,
+      "type": "ALERT",
+      "duration": 36165,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-1-210-30442",
+      "code": "Monitoring w",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 80.0",
+      "offset": 30442,
+      "type": "ALERT",
+      "duration": 10068,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-1-234-30439",
+      "code": "Monitoring w",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 80.0",
+      "offset": 30439,
+      "type": "ALERT",
+      "duration": 10069,
+      "source": "LG localhost:7100"
+    },
+    {
+      "id": "210-2-210-10335",
+      "code": "Monitoring c",
+      "elementid": "cpu",
+      "fullname": "Controller/cpu >= 90.0",
+      "offset": 10335,
+      "type": "ALERT",
+      "duration": 20107,
+      "source": "NeoLoad"
+    },
+    {
+      "id": "234-2-234-10333",
+      "code": "Monitoring c",
+      "elementid": "lgcpu.localhost:7100",
+      "fullname": "LG localhost:7100/lgcpu.localhost:7100 >= 90.0",
+      "offset": 10333,
+      "type": "ALERT",
+      "duration": 20106,
+      "source": "LG localhost:7100"
+    }
+  ]
+}

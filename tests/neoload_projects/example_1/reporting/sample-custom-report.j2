@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
+  </head>
+  <body>
+
+<h1>{{summary.name}}</h1>
+
+<h3>General Details</h3>
+Run Date: {{ summary.startDateText }}<br />
+Period: {{ summary.startDateText }} - {{ summary.endDateText }}<br />
+Run Duration: {{ summary.durationText }}<br />
+<br />
+Status: {{summary.qualityStatus}}<br />
+Author: {{summary.author}}<br />
+
+<h3>Description/Conclusion</h3>
+{{summary.description}}<br />
+
+
+<h3>Workload Characteristics</h3>
+  <div class="clearfix">
+    <div style="float:left;width:50%;">
+      Max Running Users: <br />
+      Average Hits per Second: {{ statistics.totalRequestCountPerSecond }} <br />
+      Total Hits: {{ statistics.totalRequestCountSuccess }}<br />
+      Total Passed Transactions per Second: {{ statistics.totalTransactionCountPerSecond }}<br />
+      Total Transactions (Success): {{ statistics.totalTransactionCountSuccess }}<br />
+      Total Transactions (Failed): {{ statistics.totalTransactionCountFailure }}<br />
+    </div>
+    <div style="float:right;width:50%;">
+      <div id="dWorkload" style="background:#eee;height:200px;">
+      </div>
+    </div>
+  </div>
+<script type="text/javascript">
+var data = {{ controller_points | selectattr('name','equalto', 'User Load') | map(attribute='points') | first | tojson }};
+var maxTo = Math.max.apply(null, data.map(x => x.to));
+var maxAVG = Math.max.apply(null, data.map(x => x.AVG));
+var getPlot = function(limit, cur, max) {
+  var r = parseInt((parseFloat(cur) / parseFloat(max)) * limit);
+  console.log(r)
+  return r;
+}
+var startDateEpoch = {{ summary.startDate }}
+var getDateTime = function(relativeToStartMs) {
+  var since = startDateEpoch + relativeToStartMs;
+  return new Date(since);
+}
+var parentBox = {
+  width: parseInt(d3.select("#dWorkload").style("width").replace('px','')),
+  height: parseInt(d3.select("#dWorkload").style("height").replace('px',''))
+}
+
+// set the dimensions and margins of the graph
+var margin = {top: 10, right: 30, bottom: 30, left: 60},
+    width = parentBox.width - margin.left - margin.right,
+    height = parentBox.height - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#dWorkload")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+
+// Add X axis --> it is a date format
+var x = d3.scaleTime()
+  .domain(d3.extent(data, function(d) { return getDateTime(d.to); }))
+  .range([ 0, width ]);
+svg.append("g")
+  .attr("transform", "translate(0," + height + ")")
+  .call(d3.axisBottom(x));
+
+// Add Y axis
+var y = d3.scaleLinear()
+  .domain([0, d3.max(data, function(d) { return +d.AVG; })])
+  .range([ height, 0 ]);
+svg.append("g")
+  .call(d3.axisLeft(y));
+
+svg.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1.5)
+      .attr("d", d3.line()
+        .x(function(d) { return x(getDateTime(d.from)) })
+        .y(function(d) { return y(d.AVG) })
+      )
+/*
+var circles = d3.select("#gWorkload")
+                .selectAll("circle")
+                .data(ctrlValues)
+                .enter()
+                .append("circle")
+var attrs = circles
+          .attr("cx", function(d) { return getPlot(boxWidth, d["from"], maxTo) })
+          .attr("cy", function(d) { return boxHeight - getPlot(boxHeight, d["AVG"], maxAVG) })
+          .attr("r", "2")
+          .style("fill","purple")
+*/
+</script>
+
+<h3>Transactions:</h3>
+<table>
+<thead>
+<tr>
+<td>Name</td>
+<td>Count</td>
+<td>TPS</td>
+<td>Min Dur</td>
+<td>Avg Dur</td>
+<td>Max Dur</td>
+<td>Total</td>
+<td>Success</td>
+<td>Fail</td>
+<td>p50</td>
+<td>p90</td>
+<td>p95</td>
+<td>p99</td>
+</tr>
+</thead>
+<tbody>
+{% for txn in elements.transactions| rejectattr('id', 'equalto', 'all-transactions')|sort(attribute='avgDuration',reverse=true) %}
+<tr>
+<td>{{ txn.display_name|e }}</td>
+<td>{{ txn.aggregate.count }}</td>
+<td>{{ txn.aggregate.elementPerSecond }}</td>
+<td>{{ txn.aggregate.minDuration }}</td>
+<td>{{ txn.aggregate.avgDuration }}</td>
+<td>{{ txn.aggregate.maxDuration }}</td>
+<td>{{ txn.totalCount }}</td>
+<td>{{ txn.aggregate.successCount }}</td>
+<td>{{ txn.aggregate.failureCount }}</td>
+<td>{{ txn.aggregate.percentile50 }}</td>
+<td>{{ txn.aggregate.percentile90 }}</td>
+<td>{{ txn.aggregate.percentile95 }}</td>
+<td>{{ txn.aggregate.percentile99 }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<h3>Ext. Data:</h3>
+<table>
+<thead>
+<tr>
+<td>Name</td>
+<td>p50</td>
+<td>p90</td>
+<td>p95</td>
+<td>p99</td>
+</tr>
+</thead>
+<tbody>
+{% for ext in ext_data|sort(attribute='percentiles.percentile50',reverse=true) %}
+<tr>
+<td>{{ ext.display_name|e }}</td>
+<td>{{ ext.percentiles.percentile50 }}</td>
+<td>{{ ext.percentiles.percentile90 }}</td>
+<td>{{ ext.percentiles.percentile95 }}</td>
+<td>{{ ext.percentiles.percentile99 }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+
+{#
+<h3>Events:</h3>
+<ul>
+{% for event in events %}
+  <li><strong>{{event.type}}</strong> - {{event.source}} - {{event.fullname}}</li>
+{% endfor %}
+</ul>
+#}
+
+<style type="text/css">
+body {
+  font-family: Helvetica, sans-serif;
+  padding: 2em;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2;}
+
+tr:hover {background-color: #ddd;}
+
+th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #4CAF50;
+  color: white;
+}
+
+h1 {
+  margin: 1em auto;
+  text-align: center;
+}
+
+h3 {
+  padding: 0.3em;
+  margin: 1em auto;
+  text-align: center;
+  background-color: #e2e2ff;
+  border-bottom: #444;
+}
+
+.clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+</style>
+  </body>
+</html>
