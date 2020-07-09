@@ -28,7 +28,7 @@ class TestResultPut:
                      '"qualityStatus":"PASSED"}' % valid_data.test_result_id)
         result = runner.invoke(results, ['put', valid_data.test_result_id],
                                input='{"name":"%s", "qualityStatus":"%s"}' % (
-                               json_before['name'], json_before['qualityStatus']))
+                                   json_before['name'], json_before['qualityStatus']))
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['id'] == valid_data.test_result_id
@@ -72,19 +72,15 @@ class TestResultPut:
         assert json_result['description'] == 'test description '
         assert json_result['qualityStatus'] == 'PASSED'
 
-    def test_error_required(self):
+    def test_error_invalid_json(self, valid_data):
         runner = CliRunner()
-        result = runner.invoke(results, ['put'])
-        assert result.exit_code == 1
-        assert 'Error: Expecting value: line 1 column 1' in result.output
-        assert 'This command requires a valid Json input' in result.output
-
-    def test_error_invalid_json(self):
-        runner = CliRunner()
-        result = runner.invoke(results, ['put'], input='{"key": not valid,,,}')
-        assert result.exit_code == 1
-        assert 'Error: Expecting value: line 1 column 9 (char 8)' in result.output
-        assert 'This command requires a valid Json input' in result.output
+        with runner.isolated_filesystem():
+            with open('bad.json', 'w') as f:
+                f.write('{"key": not valid,,,}')
+            result = runner.invoke(results, ['--file', 'bad.json', 'put', valid_data.test_settings_id])
+            assert result.exit_code == 1
+            assert 'Error: Expecting value: line 1 column 9 (char 8)' in result.output
+            assert 'This command requires a valid Json input' in result.output
 
     def test_error_not_logged_in(self):
         runner = CliRunner()

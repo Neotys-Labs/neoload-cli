@@ -18,12 +18,12 @@ class Resolver:
                 json = element
         return json
 
-    def resolve_name(self, name):
+    def resolve_name(self, name, return_none=False):
         __id = self.__map.get(name, None)
         if __id is None:
             self.__fill_map(name)
             __id = self.__map.get(name, None)
-            if not __id:
+            if not __id and not return_none:
                 raise cli_exception.CliException(f"No id associated to the name '{name}'")
         return __id
 

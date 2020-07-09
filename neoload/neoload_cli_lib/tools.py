@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import sys
 
@@ -14,9 +15,39 @@ __regex_mongodb_id = re.compile('[a-f\\d]{24}', re.IGNORECASE)
 __batch = False
 
 
+def __is_color_terminal():
+    if not sys.stdout.isatty():
+        return False
+    if os.getenv('COLORTERM'):
+        return True
+    if os.getenv('TERM_PROGRAM') in {'iTerm.app', 'Hyper', 'Apple_Terminal'}:
+        return True
+    if os.getenv('TERM') in {'screen-256', 'screen-256color', 'xterm-256', 'xterm-256color', 'color', 'cygwin'}:
+        return True
+    return False
+
+
+__is_color_term = __is_color_terminal()
+
+
+def is_color_terminal():
+    return __is_color_term
+
+
+def print_color(text, color=None, on_color=None, attrs=None, **kwargs):
+    if __is_color_term:
+        cprint(text, color, on_color, attrs, **kwargs)
+    else:
+        print(text)
+
+
 def set_batch(batch: bool):
     global __batch
     __batch = batch
+
+
+def is_batch():
+    return __batch
 
 
 def is_mongodb_id(chain: str):
@@ -99,18 +130,19 @@ def is_integer(string):
         return False
 
 
-def get_id(name, resolver, is_an_id=None):
+def get_id(name, resolver, is_an_id=None, return_none=False):
     if is_an_id is None:
         is_an_id = is_id(name)
     if is_an_id or not name:
         return name
     else:
-        return resolver.resolve_name(name)
+        return resolver.resolve_name(name, return_none)
 
 
 def system_exit(exit_process, apply_exit_code=True):
     exit_code = exit_process['code']
     if exit_process['message'] != '':
-        cprint(exit_process['message'], 'green' if exit_code == 0 else 'red')
+        print_color(exit_process['message'], 'green' if exit_code == 0 else 'red')
     if apply_exit_code or exit_code > 1:
         sys.exit(exit_process['code'])
+

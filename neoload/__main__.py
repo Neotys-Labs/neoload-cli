@@ -1,13 +1,17 @@
 import logging
 import os
+import sys
 
 import click
 import coloredlogs
-from version import __version__
 
 from neoload_cli_lib import tools, rest_crud, cli_exception
+from version import __version__
 
 plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
+
+# Disable output buffering.
+sys.stdout = sys.__stdout__
 
 
 def compute_version():
@@ -45,7 +49,7 @@ class NeoLoadCLI(click.MultiCommand):
 
 @click.command(cls=NeoLoadCLI, help='', chain=True)
 @click.option('--debug', default=False, is_flag=True)
-@click.option('--batch', default=False, is_flag=True, help="Don't ask a confirmation")
+@click.option('--batch', default=False, is_flag=True, help="Don't ask a question or read stdin")
 @click.version_option(compute_version())
 def cli(debug, batch):
     if debug:
@@ -57,7 +61,10 @@ def cli(debug, batch):
         cli_exception.CliException.set_debug(True)
 
     tools.set_batch(batch)
-    coloredlogs.install(level=logging.getLogger().level)
+    if batch:
+        sys.stdin = open(os.devnull, 'r')
+    if tools.is_color_terminal():
+        coloredlogs.install(level=logging.getLogger().level)
 
 
 if __name__ == '__main__':

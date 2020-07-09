@@ -1,6 +1,6 @@
 from junit_xml import TestSuite, TestCase
-from termcolor import cprint
 
+from neoload_cli_lib.tools import print_color
 from neoload_cli_lib import tools
 
 __SLA_global = 'Global'
@@ -17,16 +17,16 @@ def print_result_summary(json_result, sla_json_global, sla_json_test, sla_json_i
 
 
 def __print_sla(sla_json_global, sla_json_test, sla_json_interval):
-    cprint("SLA summary:")
+    print_color("SLA summary:")
     for sla in sla_json_global:
         __print_one_sla(__SLA_global.replace(' ', ''), sla)
-    cprint('')
+    print_color('')
     for sla in sla_json_test:
         __print_one_sla(__SLA_test.replace(' ', ''), sla)
-    cprint('')
+    print_color('')
     for sla in sla_json_interval:
         __print_one_sla(__SLA_interval.replace(' ', ''), sla)
-    cprint('')
+    print_color('')
 
 
 def __print_one_sla(kind, sla_json):
@@ -50,7 +50,7 @@ def __print_one_sla(kind, sla_json):
             threshold = sla_json['failedThreshold']
             where = ' [%.3f%% %s %s]' % (sla_json['failed'], threshold['operator'], threshold['value'])
 
-    return cprint("%sSLA [%s] %s on [%s%s]" % (kind, sla_json['kpi'], status, element, where), color)
+    return print_color("%sSLA [%s] %s on [%s%s]" % (kind, sla_json['kpi'], status, element, where), color)
 
 
 def __get_color_from_status(status: str):

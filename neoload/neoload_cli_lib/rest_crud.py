@@ -10,6 +10,17 @@ from neoload_cli_lib import user_data, cli_exception
 __current_command = ""
 __current_sub_command = ""
 
+HTTP_TIMEOUT = 5
+
+
+def request_patch(slf, *args, **kwargs):
+    timeout = kwargs.pop('timeout', HTTP_TIMEOUT)
+    return slf.request_orig(*args, **kwargs, timeout=timeout)
+
+
+setattr(requests.sessions.Session, 'request_orig', requests.sessions.Session.request)
+requests.sessions.Session.request = request_patch
+
 
 def set_current_command(command: str):
     global __current_command
@@ -96,7 +107,8 @@ def __handle_error(response):
     if status_code > 299:
         request = response.request
         if status_code == 401:
-            raise cli_exception.CliException("Server has returned 401 Access denied. Please check your token and rights")
+            raise cli_exception.CliException(
+                "Server has returned 401 Access denied. Please check your token and rights")
         else:
             raise cli_exception.CliException(
                 "Error " + str(status_code) + " during the request: "
