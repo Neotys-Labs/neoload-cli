@@ -41,7 +41,8 @@ setup(
         'pytest-datafiles',
         'junit_xml',
         'termcolor',
-        'coloredlogs'
+        'coloredlogs',
+        'docker'
     ],
     long_description_content_type='text/markdown',
     long_description=long_description

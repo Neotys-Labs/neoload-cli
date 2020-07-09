@@ -73,6 +73,13 @@ def cli(command, name, rename, description, quality_status, junit_file):
 
     tools.system_exit(system_exit)
 
+def is_current_test_results_set():
+    current_id = user_data.get_meta(meta_key)
+    return (current_id is not None and len(current_id) > 0)
+
+def get_current_test_results_json():
+    return tools.get_named_or_id(user_data.get_meta(meta_key), True, __resolver)
+
 
 def delete(__id):
     rep = tools.delete(__endpoint, __id, "test results")
