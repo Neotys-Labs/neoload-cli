@@ -5,6 +5,9 @@ from signal import signal, SIGINT
 from commands import logs_url, test_results
 from neoload_cli_lib import tools, rest_crud
 
+import sys
+import webbrowser
+
 __current_id = None
 __endpoint = "v2/test-results/"
 __count = 0
@@ -34,8 +37,12 @@ def wait(results_id, exit_code_sla):
 
 
 def header_status(results_id):
+    url = logs_url.get_url(results_id)
     print("Results of  : " + results_id)
-    print("Logs are available at " + logs_url.get_url(results_id))
+    print("Logs are available at " + url)
+    if sys.stdin.isatty():
+        time.sleep( 1 )
+        webbrowser.open_new_tab(url)
 
 
 # INIT, STARTING, RUNNING, TERMINATED

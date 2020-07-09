@@ -89,7 +89,7 @@ class UserData:
         metadata = ""
         for (key, value) in self.metadata.items():
             if value is not None:
-                metadata += key + ": " + value + "\n"
+                metadata += key + ": " + str(value) + "\n"
         return "You are logged on " + self.url + " with token " + token + "\n\n" + metadata
 
     def get_url(self):
@@ -138,12 +138,18 @@ def __save_user_data():
 
 
 def set_meta(key, value):
-    get_user_data().metadata[key] = value
+    if value is None:
+        get_user_data().metadata.pop(key,None)
+    else:
+        get_user_data().metadata[key] = value
     __save_user_data()
 
 
 def get_meta(key):
-    return get_user_data().metadata.get(key, None)
+    result = get_user_data().metadata.get(key, None)
+    if result is not None and isinstance(result, str) and result == 'null':
+        result = None
+    return result
 
 
 def get_meta_required(key):
