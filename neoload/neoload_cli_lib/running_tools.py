@@ -2,7 +2,7 @@ import datetime
 import time
 from signal import signal, SIGINT
 
-from commands import logs_url, test_results
+from commands import logs_url, test_results, docker
 from neoload_cli_lib import tools, rest_crud
 
 __current_id = None
@@ -30,6 +30,7 @@ def wait(results_id, exit_code_sla):
         time.sleep(20)
 
     __current_id = None
+    docker.cleanup_after_test()
     tools.system_exit(test_results.summary(results_id), exit_code_sla)
 
 
@@ -82,5 +83,6 @@ def stop(results_id, force: bool, quit_option=False):
     policy = 'TERMINATE' if force else 'GRACEFUL'
     if tools.confirm("Do you want stop the test" + results_id + " with " + policy.lower() + " policy ?", quit_option):
         rest_crud.post(__endpoint + results_id + "/stop", {"stopPolicy": policy})
+        docker.cleanup_after_test()
         return True
     return False
