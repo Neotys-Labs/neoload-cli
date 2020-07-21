@@ -1,4 +1,5 @@
 import os
+import sys
 
 import appdirs
 import yaml
@@ -145,6 +146,24 @@ def set_meta(key, value):
 
 def get_meta(key):
     return get_user_data().metadata.get(key, None)
+
+
+def is_version_lower_than(version: str):
+    return __version_to_int(get_user_data().get_version()) < __version_to_int(version)
+
+
+def __version_to_int(version: str):
+    if version.lower() == 'saas':
+        return sys.maxsize
+    elif version.lower() == 'legacy':
+        return -1
+
+    version_as_int = 0
+    offset = 1
+    for digit in reversed(version.split('.')):
+        version_as_int += int(digit) * offset
+        offset *= 1000
+    return version_as_int
 
 
 def get_meta_required(key):

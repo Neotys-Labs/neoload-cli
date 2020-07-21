@@ -36,3 +36,27 @@ class TestUserData:
         with pytest.raises(click.ClickException) as context:
             user_data.get_user_data()
         assert 'You are\'nt logged. Please use command "neoload login" first' in str(context.value)
+
+    def test_is_version_lower_than(selfself):
+        user_data.set_meta('version', 'SaaS')
+        assert user_data.is_version_lower_than('2.5.1') is False
+        user_data.set_meta('version', '2.5.1')
+        assert user_data.is_version_lower_than('2.5.1') is False
+        user_data.set_meta('version', '2.6.1')
+        assert user_data.is_version_lower_than('2.5.1') is False
+        user_data.set_meta('version', '12.34.56')
+        assert user_data.is_version_lower_than('10.0.0') is False
+        user_data.set_meta('version', '123.456.789')
+        assert user_data.is_version_lower_than('123.0.0') is False
+
+        user_data.set_meta('version', 'legacy')
+        assert user_data.is_version_lower_than('2.5.1') is True
+        user_data.set_meta('version', '2.5.1')
+        assert user_data.is_version_lower_than('2.6.1') is True
+        user_data.set_meta('version', '123.456.789')
+        assert user_data.is_version_lower_than('124.1.1') is True
+
+        user_data.set_meta('version', '2.0.0')
+        assert user_data.is_version_lower_than('legacy') is False
+        user_data.set_meta('version', '2.0.0')
+        assert user_data.is_version_lower_than('SaaS') is True
