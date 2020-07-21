@@ -46,9 +46,10 @@ def get_front_url_by_private_entrypoint():
 
 
 def __compute_version_and_path():
-    file_storage = get_file_storage_from_swagger()
-    front = get_front_url_by_private_entrypoint()
-    __user_data_singleton.set_url(front, file_storage, None)
+    if get_nlweb_information() is False:
+        file_storage = get_file_storage_from_swagger()
+        front = get_front_url_by_private_entrypoint()
+        __user_data_singleton.set_url(front, file_storage, None)
 
 
 def get_file_storage_from_swagger():
@@ -58,10 +59,10 @@ def get_file_storage_from_swagger():
 
 
 def get_nlweb_information():
-    response = rest_crud.get_raw('v2/informations')
+    response = rest_crud.get_raw('v3/information')
     if response.status_code == 200:
         json = response.json()
-        __user_data_singleton.url(json['front_url'], json['filestorage_url'], json['version'])
+        __user_data_singleton.set_url(json['front_url'], json['filestorage_url'], json['version'])
         return True
     else:
         return False
