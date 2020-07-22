@@ -11,7 +11,7 @@ from neoload_cli_lib.name_resolver import Resolver
 
 import logging
 
-__endpoint = "v2/tests"
+__endpoint = rest_crud.base_endpoint_with_workspace() + "/tests"
 __resolver = Resolver(__endpoint)
 
 meta_key = 'settings id'

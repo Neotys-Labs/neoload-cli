@@ -6,7 +6,7 @@ import click
 from neoload_cli_lib import tools, rest_crud, user_data, displayer, cli_exception
 from neoload_cli_lib.name_resolver import Resolver
 
-__endpoint = "v2/test-results"
+__endpoint = rest_crud.base_endpoint_with_workspace() + "/test-results"
 __operation_statistics = "/statistics"
 __operation_sla_global = "/slas/statistics"
 __operation_sla_test = "/slas/per-test"

@@ -25,8 +25,12 @@ def cli(command, name_or_id, path):
 
 
 def upload(path, settings_id):
-    neoLoad_project.upload_project(path, "v2/tests/" + settings_id + "/project")
+    neoLoad_project.upload_project(path, get_endpoint(settings_id))
 
 
 def meta_data(setting_id):
-    neoLoad_project.display_project(rest_crud.get_from_file_storage('v2/tests/' + setting_id + "/project"))
+    neoLoad_project.display_project(rest_crud.get_from_file_storage(get_endpoint(setting_id)))
+
+
+def get_endpoint(settings_id: str):
+    return rest_crud.base_endpoint_with_workspace() + '/tests/' + settings_id + "/project"
