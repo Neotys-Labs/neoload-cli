@@ -1,11 +1,20 @@
 name: NeoLoad-CLI-simpledemo
 
+sla_profiles: # defaults for dev/qa systems; can be overridden by additional slas/uat...
+- name: simpledemo_sla
+  description: Avg Resp Time >=1000ms >= 25000ms for cached queries
+  thresholds:
+  - avg-resp-time warn >= 1000ms fail >= 25000ms per interval
+  - error-rate warn >= 2% fail >= 25% per test
+
+
 user_paths:
 - name: simpledemo
   actions:
     steps:
     - request:
         url: http://sampledemo.neotys.com/
+        sla_profile: simpledemo_sla
     - delay: 1s
 
 populations:
