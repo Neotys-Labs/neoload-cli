@@ -1,9 +1,10 @@
 import click
-from neoload_cli_lib import rest_crud, tools, user_data, cli_exception
+from neoload_cli_lib import rest_crud, tools, user_data
 from neoload_cli_lib.name_resolver import Resolver
 
-__endpoint = "v3/workspaces"
-__resolver = Resolver(__endpoint)
+
+__endpoint = "/workspaces"
+__resolver = Resolver(__endpoint, rest_crud.base_endpoint)
 meta_key = 'workspace id'
 
 

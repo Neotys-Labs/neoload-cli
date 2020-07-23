@@ -1,3 +1,4 @@
+import time
 from urllib.parse import quote
 
 import pytest
@@ -44,7 +45,7 @@ class TestReadme:
         mock_api_post_binary(monkeypatch, 'v2/tests/%s/project' % pytest.test_id, 200,
                              '{"projectId":"5e5fc0102cc4f82e5d9e18d4", "projectName":"NeoLoad-CLI-example-2_0",'
                              '"asCodeFiles": [{"path": "default.yaml", "includes": ["paths/geosearch_get.yaml"]}],'
-                             '"scenarios":[{"scenarioName": "sanityScenario","scenarioDuration": 10,"scenarioVUs": 2,"scenarioSource": "default.yaml"}]}')
+                             '"scenarios":[{"scenarioName": "sanityScenario","scenarioDuration": 60,"scenarioVUs": 5,"scenarioSource": "default.yaml"}]}')
         result_upload = runner.invoke(project, ['--path', folder_path, 'upload'])
         assert_success(result_upload)
         json_upload = json.loads(result_upload.output)
@@ -52,8 +53,8 @@ class TestReadme:
         assert str(json_upload['asCodeFiles'][0]['path']).endswith('default.yaml')
         assert json_upload['asCodeFiles'][0]['includes'][0] == 'paths/geosearch_get.yaml'
         assert json_upload['scenarios'][0]['scenarioName'] == 'sanityScenario'
-        assert json_upload['scenarios'][0]['scenarioDuration'] == 10
-        assert json_upload['scenarios'][0]['scenarioVUs'] == 2
+        assert json_upload['scenarios'][0]['scenarioDuration'] == 60
+        assert json_upload['scenarios'][0]['scenarioVUs'] == 5
         assert str(json_upload['scenarios'][0]['scenarioSource']).endswith('default.yaml')
 
     def test_status(self, monkeypatch):
@@ -101,7 +102,7 @@ class TestReadme:
         mock_api_post_binary(monkeypatch, 'v2/tests/%s/project' % pytest.test_id, 200,
                              '{"projectId":"5e5fc0102cc4f82e5d9e18d4", "projectName":"NeoLoad-CLI-example-2_0",'
                              '"asCodeFiles": [{"path": "default.yaml", "includes": ["paths/geosearch_get.yaml"]}],'
-                             '"scenarios":[{"scenarioName": "sanityScenario","scenarioDuration": 10,"scenarioVUs": 2,"scenarioSource": "default.yaml"}]}')
+                             '"scenarios":[{"scenarioName": "sanityScenario","scenarioDuration": 60,"scenarioVUs": 5,"scenarioSource": "default.yaml"}]}')
         result_upload = runner.invoke(project, ['--path', folder_path, 'upload'])
         assert_success(result_upload)
         json_upload = json.loads(result_upload.output)
@@ -109,8 +110,8 @@ class TestReadme:
         assert str(json_upload['asCodeFiles'][0]['path']).endswith('default.yaml')
         assert json_upload['asCodeFiles'][0]['includes'][0] == 'paths/geosearch_get.yaml'
         assert json_upload['scenarios'][0]['scenarioName'] == 'sanityScenario'
-        assert json_upload['scenarios'][0]['scenarioDuration'] == 10
-        assert json_upload['scenarios'][0]['scenarioVUs'] == 2
+        assert json_upload['scenarios'][0]['scenarioDuration'] == 60
+        assert json_upload['scenarios'][0]['scenarioVUs'] == 5
         assert str(json_upload['scenarios'][0]['scenarioSource']).endswith('default.yaml')
 
         result_status = runner.invoke(status)
@@ -129,6 +130,14 @@ class TestReadme:
         runner = CliRunner()
         if pytest.test_id is None:
             pytest.test_id = '70ed01da-f291-4e29-b75c-1f7977edf252'
+
+        # Prepare the test
+        mock_api_patch(monkeypatch, 'v2/tests/%s' % pytest.test_id,
+                       '{"id":"some id", "name":"some name", "controllerZoneId":"cuPd2", "lgZoneIds":{"cuPd2":1}}')
+        result_patch = runner.invoke(settings, ['patch', '--zone', 'cuPd2', pytest.test_id])
+        assert_success(result_patch)
+
+        # Run the test
         mock_api_get(monkeypatch, 'v2/tests/%s' % pytest.test_id,
                      '{"id":"%s", "name":"test-name", "nextRunId":1}' % pytest.test_id)
         mock_api_post(monkeypatch, 'v2/tests/%s/start?testResultName=%s' % (pytest.test_id, quote(pytest.result_name)),
@@ -141,6 +150,24 @@ class TestReadme:
         assert_success(result_status)
         assert 'result id: %s' % json_run['resultId'] in result_status.output
 
+    def test_stop(self, monkeypatch):
+        runner = CliRunner()
+        if pytest.result_id is None:
+            pytest.result_id = '9f54dacd-e793-4553-9f16-d4cc7adba545'
+        mock_api_post(monkeypatch, 'v2/test-results/%s/stop' % pytest.result_id,
+                      '{"testResultId": "%s"}' % pytest.result_id)
+
+        if monkeypatch is None:
+            # Wait until test is running before try to stop it
+            state = "INIT"
+            while state != "RUNNING" and state != "TERMINATED":
+                time.sleep(10)
+                state = rest_crud.get('v2/test-results/' + pytest.result_id)['status']
+
+        result_stop = runner.invoke(stop)
+        assert_success(result_stop)
+        assert result_stop.output == ''
+
     # This test is disabled when mocks are active
     def test_run_with_wait(self, monkeypatch):
         if monkeypatch is not None:
@@ -148,24 +175,19 @@ class TestReadme:
             # TODO endpoint v2/test-results to return data (that could evolve until a "terminate" status...)
             return
         runner = CliRunner()
+        random_result_name = generate_test_result_name()
         if pytest.test_id is None:
             pytest.test_id = '70ed01da-f291-4e29-b75c-1f7977edf252'
         mock_api_get(monkeypatch, 'v2/tests/%s' % pytest.test_id,
                      '{"id":"%s", "name":"test-name", "nextRunId":1}' % pytest.test_id)
-        mock_api_post(monkeypatch, 'v2/tests/%s/start?testResultName=%s' % (pytest.test_id, quote(pytest.result_name)),
+        mock_api_post(monkeypatch, 'v2/tests/%s/start?testResultName=%s' % (pytest.test_id, quote(random_result_name)),
                       '{"resultId": "9f54dacd-e793-4553-9f16-d4cc7adba545"}')
-        result_run = runner.invoke(run, ['--name', pytest.result_name,
+        result_run = runner.invoke(run, ['--name', random_result_name,
                                          '--as-code', 'default.yaml,slas/uat.yaml', '--description',
                                          'A custom test description containing hashtags like #latest or #issueNum'
                                          ])
-        assert_success(result_run)
-
-    def test_stop(self, monkeypatch):
-        runner = CliRunner()
-        if pytest.result_id is None:
-            pytest.result_id = '9f54dacd-e793-4553-9f16-d4cc7adba545'
-        mock_api_post(monkeypatch, 'v2/test-results/%s/stop' % pytest.result_id,
-                      '{"testResultId": "%s"}' % pytest.result_id)
-        result_stop = runner.invoke(stop)
-        assert_success(result_stop)
-        assert result_stop.output == ''
+        assert result_run.exit_code == 2
+        assert 'Status: INIT' in result_run.output
+        assert 'Status: RUNNING' in result_run.output
+        assert 'Status: TERMINATED' in result_run.output
+        assert 'Test completed with 7 SLAs failures' in result_run.output

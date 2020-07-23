@@ -11,8 +11,8 @@ from neoload_cli_lib.name_resolver import Resolver
 
 import logging
 
-__endpoint = rest_crud.base_endpoint_with_workspace() + "/tests"
-__resolver = Resolver(__endpoint)
+__endpoint = "/tests"
+__resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace)
 
 meta_key = 'settings id'
 
@@ -80,7 +80,7 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
 
 
 def create(json_data):
-    rep = rest_crud.post(__endpoint, fill_default_fields(json_data))
+    rep = rest_crud.post(get_end_point(), fill_default_fields(json_data))
     return tools.get_id_and_print_json(rep)
 
 
@@ -95,13 +95,14 @@ def patch(id_settings, json_data):
 
 
 def delete(__id):
-    rep = tools.delete(__endpoint, __id, "settings")
+    rep = tools.delete(get_end_point(), __id, "settings")
     tools.print_json(rep.json())
     user_data.set_meta(meta_key, None)
 
 
-def get_end_point(id_test: str):
-    return __endpoint + "/" + id_test
+def get_end_point(id_test: str = None):
+    slash_id_test = '' if id_test is None else '/' + id_test
+    return rest_crud.base_endpoint_with_workspace() + '/tests' + slash_id_test
 
 
 def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern, file):
