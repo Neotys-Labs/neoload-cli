@@ -1,7 +1,10 @@
 import os
+import sys
 
 import appdirs
+import requests
 import yaml
+from simplejson import JSONDecodeError
 
 from neoload_cli_lib import rest_crud, cli_exception
 
@@ -46,9 +49,10 @@ def get_front_url_by_private_entrypoint():
 
 
 def __compute_version_and_path():
-    file_storage = get_file_storage_from_swagger()
-    front = get_front_url_by_private_entrypoint()
-    __user_data_singleton.set_url(front, file_storage, None)
+    if get_nlweb_information() is False:
+        file_storage = get_file_storage_from_swagger()
+        front = get_front_url_by_private_entrypoint()
+        __user_data_singleton.set_url(front, file_storage, None)
 
 
 def get_file_storage_from_swagger():
@@ -58,13 +62,24 @@ def get_file_storage_from_swagger():
 
 
 def get_nlweb_information():
-    response = rest_crud.get_raw('v2/informations')
-    if response.status_code == 200:
-        json = response.json()
-        __user_data_singleton.url(json['front_url'], json['filestorage_url'], json['version'])
-        return True
-    else:
-        return False
+    try:
+        response = rest_crud.get_raw('v3/information')
+        if response.status_code == 401:
+            raise cli_exception.CliException(response.text)
+        elif response.status_code == 200:
+            json = response.json()
+            __user_data_singleton.set_url(json['front_url'], json['filestorage_url'], json['version'])
+            return True
+        else:
+            return False
+    except requests.exceptions.MissingSchema as err:
+        raise cli_exception.CliException('Unable to reach Neoload Web API. The URL must start with https:// or http://'
+                                         + '. Details: ' + str(err))
+    except requests.exceptions.ConnectionError as err:
+        raise cli_exception.CliException('Unable to reach Neoload Web API. Bad URL. Details: ' + str(err))
+    except JSONDecodeError as err:
+        raise cli_exception.CliException('Unable to parse the response of the server. Did you set the frontend URL'
+                                         + ' instead of the API url ? Details: ' + str(err))
 
 
 class UserData:
@@ -144,6 +159,24 @@ def set_meta(key, value):
 
 def get_meta(key):
     return get_user_data().metadata.get(key, None)
+
+
+def is_version_lower_than(version: str):
+    return __version_to_int(get_user_data().get_version()) < __version_to_int(version)
+
+
+def __version_to_int(version: str):
+    if version.lower() == 'saas':
+        return sys.maxsize
+    elif version.lower() == 'legacy':
+        return -1
+
+    version_as_int = 0
+    offset = 1
+    for digit in reversed(version.split('.')):
+        version_as_int += int(digit) * offset
+        offset *= 1000
+    return version_as_int
 
 
 def get_meta_required(key):

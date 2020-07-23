@@ -3,6 +3,7 @@ import urllib.parse as urlparse
 
 import requests
 
+from commands import workspaces
 from version import __version__
 from neoload_cli_lib import user_data, cli_exception
 
@@ -20,6 +21,15 @@ def set_current_command(command: str):
 def set_current_sub_command(command: str):
     global __current_sub_command
     __current_sub_command = command
+
+
+def base_endpoint_with_workspace():
+    workspace_id = user_data.get_meta(workspaces.meta_key)
+    return "v2" if workspace_id is None else "v3/workspaces/" + workspace_id
+
+
+def base_endpoint():
+    return "v2" if user_data.is_version_lower_than('2.5.0') else "v3"
 
 
 def get(endpoint: str):

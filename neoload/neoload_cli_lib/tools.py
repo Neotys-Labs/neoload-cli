@@ -9,6 +9,7 @@ from termcolor import cprint
 from neoload_cli_lib import rest_crud, user_data
 
 __regex_id = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+__regex_mongodb_id = re.compile('[a-f\\d]{24}', re.IGNORECASE)
 
 __batch = False
 
@@ -16,6 +17,12 @@ __batch = False
 def set_batch(batch: bool):
     global __batch
     __batch = batch
+
+
+def is_mongodb_id(chain: str):
+    if chain:
+        return __regex_mongodb_id.match(chain)
+    return False
 
 
 def is_id(chain: str):

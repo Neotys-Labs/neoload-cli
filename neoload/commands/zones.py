@@ -1,6 +1,8 @@
 import click
 from neoload_cli_lib import rest_crud, tools
 
+__endpoint = rest_crud.base_endpoint() + "/resources/zones"
+
 
 @click.command()
 @click.argument("name_or_id", type=str, required=False)
@@ -8,7 +10,7 @@ from neoload_cli_lib import rest_crud, tools
 @click.option("--static/--dynamic", "static_dynamic", default=None, help="filter for dynamic or static zones")
 def cli(name_or_id, static_dynamic, human):
     """read of NeoLoad Web zones"""
-    resp = rest_crud.get("/v2/resources/zones")
+    resp = rest_crud.get(__endpoint)
     resp = [elem for elem in resp if filter_result(elem, name_or_id, static_dynamic)]
     if human:
         print_human(resp)

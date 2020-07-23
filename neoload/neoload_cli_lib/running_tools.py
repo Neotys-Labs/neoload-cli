@@ -6,7 +6,6 @@ from commands import logs_url, test_results
 from neoload_cli_lib import tools, rest_crud
 
 __current_id = None
-__endpoint = "v2/test-results/"
 __count = 0
 
 __last_status = ""
@@ -41,7 +40,7 @@ def header_status(results_id):
 # INIT, STARTING, RUNNING, TERMINATED
 def display_status(results_id):
     global __last_status
-    res = rest_crud.get('v2/test-results/' + results_id)
+    res = rest_crud.get(test_results.get_end_point(results_id))
     status = res.get('status')
 
     if __last_status != status:
@@ -56,7 +55,7 @@ def display_status(results_id):
 
 
 def display_statistics(results_id, json_summary):
-    res = rest_crud.get(__endpoint + results_id + '/statistics')
+    res = rest_crud.get(test_results.get_end_point(results_id, '/statistics'))
     time_cur = datetime.datetime.now() - datetime.datetime.fromtimestamp((json_summary['startDate'] + 1) / 1000)
     time_cur_format = format_delta(time_cur)
     lg_count = json_summary.get('lgCount') or '--'
@@ -81,6 +80,6 @@ def format_delta(delta):
 def stop(results_id, force: bool, quit_option=False):
     policy = 'TERMINATE' if force else 'GRACEFUL'
     if tools.confirm("Do you want stop the test" + results_id + " with " + policy.lower() + " policy ?", quit_option):
-        rest_crud.post(__endpoint + results_id + "/stop", {"stopPolicy": policy})
+        rest_crud.post(test_results.get_end_point(results_id, "/stop"), {"stopPolicy": policy})
         return True
     return False
