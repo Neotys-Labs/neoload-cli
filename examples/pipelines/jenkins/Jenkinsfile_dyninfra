@@ -21,21 +21,21 @@ pipeline {
       stages {
         stage('Get NeoLoad CLI') {
           steps {
-              sh "pip3 install neoload"
+              sh "pip3 install -U --pre neoload"
               sh "$NEOLOAD --version"
           }
         }
         stage('Get NeoLoad project'){
             steps {
-                sh 'test -f example_1.zip || wget https://github.com/Neotys-Labs/neoload-cli/raw/master/tests/neoload_projects/example_1.zip'
+                sh 'rm -f *.yml; wget https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/ad7ab5f07daeff7a0cb0f38bbef3d3e286b97f4c/tests/neoload_projects/simpledemo.yml'
             }
         }
         stage('Prepare NeoLoad test') {
           steps {
               sh """$NEOLOAD \
                      login --url ${params.api_url} ${params.token} \
-                     test-settings --zone ${params.zone_id} --scenario sanityScenario patch "My Jenkins Test With CLI" \
-                     project --path example_1.zip upload
+                     test-settings --zone ${params.zone_id} --scenario 'simpledemo' createorpatch "My Jenkins Test With CLI" \
+                     project --path simpledemo.yml upload
                 """
           }
         }
@@ -43,9 +43,7 @@ pipeline {
           steps {
               sh """$NEOLOAD run \
                   --return-0 \
-                  --web-vu 5 \
-                  --as-code default.yaml,slas/uat.yaml \
-                  "My Jenkins Test With CLI" \
+                  --web-vu 50 \
                  """
           }
         }
