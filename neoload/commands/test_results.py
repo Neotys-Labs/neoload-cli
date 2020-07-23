@@ -6,13 +6,13 @@ import click
 from neoload_cli_lib import tools, rest_crud, user_data, displayer, cli_exception
 from neoload_cli_lib.name_resolver import Resolver
 
-__endpoint = rest_crud.base_endpoint_with_workspace() + "/test-results"
+__endpoint = "/test-results"
 __operation_statistics = "/statistics"
 __operation_sla_global = "/slas/statistics"
 __operation_sla_test = "/slas/per-test"
 __operation_sla_interval = "/slas/per-interval"
 
-__resolver = Resolver(__endpoint)
+__resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace)
 
 meta_key = 'result id'
 
@@ -85,7 +85,7 @@ def cli(command, name, rename, description, quality_status, junit_file, file):
 
 
 def delete(__id):
-    rep = tools.delete(__endpoint, __id, "test results")
+    rep = tools.delete(get_end_point(), __id, "test results")
     print(rep.text)
 
 
@@ -164,8 +164,9 @@ def get_id(name, is_id):
         return __resolver.resolve_name(name)
 
 
-def get_end_point(id_test: str, operation=''):
-    return __endpoint + "/" + id_test + operation
+def get_end_point(id_test: str = None, operation=''):
+    slash_id_test = '' if id_test is None else '/' + id_test
+    return rest_crud.base_endpoint_with_workspace() + __endpoint + slash_id_test + operation
 
 
 def create_json(name, description, quality_status):
@@ -200,6 +201,8 @@ def exit_process(json_data, json_sla_global, json_sla_test, json_sla_interval):
         return {'message': "Test failed because of license.", 'code': 2}
     elif term_reason == "UNKNOWN":
         return {'message': "Test failed for an unknown reason. Check logs.", 'code': 2}
+    elif term_reason == "RESERVATION_ENDED":
+        return {'message': "Test was stopped because the reservation ended.", 'code': 2}
     elif sla_failure_count > 0:
         return {'message': f'Test completed with {sla_failure_count} SLAs failures.', 'code': 1}
     elif term_reason == "POLICY":

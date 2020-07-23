@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 
 import appdirs
@@ -182,7 +183,8 @@ def __version_to_int(version: str):
 
     version_as_int = 0
     offset = 1
-    for digit in reversed(version.split('.')):
+    # Only keep numbers on the version (remove -SNAPSHOT for example)
+    for digit in reversed(re.sub('[^0-9\\.]*', '', version).split('.')):
         version_as_int += int(digit) * offset
         offset *= 1000
     return version_as_int
