@@ -2,7 +2,9 @@ import os
 import sys
 
 import appdirs
+import requests
 import yaml
+from simplejson import JSONDecodeError
 
 from neoload_cli_lib import rest_crud, cli_exception
 
@@ -60,13 +62,24 @@ def get_file_storage_from_swagger():
 
 
 def get_nlweb_information():
-    response = rest_crud.get_raw('v3/information')
-    if response.status_code == 200:
-        json = response.json()
-        __user_data_singleton.set_url(json['front_url'], json['filestorage_url'], json['version'])
-        return True
-    else:
-        return False
+    try:
+        response = rest_crud.get_raw('v3/information')
+        if response.status_code == 401:
+            raise cli_exception.CliException(response.text)
+        elif response.status_code == 200:
+            json = response.json()
+            __user_data_singleton.set_url(json['front_url'], json['filestorage_url'], json['version'])
+            return True
+        else:
+            return False
+    except requests.exceptions.MissingSchema as err:
+        raise cli_exception.CliException('Unable to reach Neoload Web API. The URL must start with https:// or http://'
+                                         + '. Details: ' + str(err))
+    except requests.exceptions.ConnectionError as err:
+        raise cli_exception.CliException('Unable to reach Neoload Web API. Bad URL. Details: ' + str(err))
+    except JSONDecodeError as err:
+        raise cli_exception.CliException('Unable to parse the response of the server. Did you set the frontend URL'
+                                         + ' instead of the API url ? Details: ' + str(err))
 
 
 class UserData:
