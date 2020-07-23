@@ -74,17 +74,27 @@ pip3 install certifi
 NeoLoad CLI defaults to using the NeoLoad Web APIs for most operations. That's why you need to login.
 ```
 neoload login [TOKEN]
-neoload login --url http://your-onpremise-neoload-api.com/ your-token
+neoload login --url http://your-onpremise-neoload-api.com/ --workspace "Default Workspace" your-token
 ```
 The CLI will connect by default to Neoload Web SaaS to lease license. \
-For self-hosted enterprise license, you must specify the Neoload Web Api url with --url. \
+For self-hosted enterprise license, you must specify the Neoload Web **Api url** with --url. \
 \
-The CLI stores data locally like api url, token, and the test ID you are working on. **The commands can be chained !**
+The CLI stores data locally like api url, token, the workspace ID and the test ID you are working on. **The commands can be chained !**
 ```
 neoload status          # Displays stored data
 ```
 
 ## Setup a test
+### Choose a workspace to work with
+```
+Usage: neoload workspaces [OPTIONS] [[ls|use]] [NAME_OR_ID]
+neoload workspaces use "Default Workspace"
+```
+Since Neoload Web 2.5 (August 2020), assets are scoped to workspaces.
+The CLI allows you to choose your workspace at login or with the "use" sub-command, otherwise the "Default Workspace" is used.\
+**/!\\** The zones are shared between workspaces.
+
+
 ### Setup resources in Neoload Web
 Run a test requires an infrastructure that is defined in Neoload Web Zones section [(see documentation how to manage zones)](https://www.neotys.com/documents/doc/nlweb/latest/en/html/#27521.htm#o39458)
 You must at least have either a dynamic or a static zone with one controller and one load generator. At First, you could add resources to the "Default zone" since the CLI use it by default.
