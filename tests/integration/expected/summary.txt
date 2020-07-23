@@ -1,0 +1,42 @@
+SLA summary:
+GlobalSLA [error-rate] PASSED on []
+
+PerRunSLA [error-rate] PASSED on [simpledemo > Actions > /]
+
+PerIntervalSLA [avg-elt-per-sec] WARNING on [simpledemo > Actions > / [100.000% >= ]]
+PerIntervalSLA [avg-resp-time] PASSED on [simpledemo > Actions > /]
+
+{
+  "result": {
+    "id": "6683db1e-a7ff-491e-847b-f263a8460892",
+    "name": "SLA test renamed2",
+    "description": "",
+    "author": "Luke Skywalker",
+    "terminationReason": "POLICY",
+    "lgCount": 1,
+    "project": "NeoLoad-CLI-simpledemo",
+    "scenario": "simpledemo",
+    "status": "TERMINATED",
+    "qualityStatus": "PASSED",
+    "startDate": 1595933846905,
+    "endDate": 1595933907195,
+    "duration": 60290,
+    "testId": "c31fb9b6-046f-4176-87c8-1bc9bbac9b60"
+  },
+  "statistics": {
+    "totalRequestCountSuccess": 740,
+    "totalRequestCountFailure": 0,
+    "totalRequestDurationAverage": 116.58784,
+    "totalRequestCountPerSecond": 12.274009,
+    "totalTransactionCountSuccess": 0,
+    "totalTransactionCountFailure": 0,
+    "totalTransactionDurationAverage": 0,
+    "totalTransactionCountPerSecond": 0.0,
+    "totalIterationCountSuccess": 720,
+    "totalIterationCountFailure": 0,
+    "totalGlobalDownloadedBytes": 20024444,
+    "totalGlobalDownloadedBytesPerSecond": 332135.4,
+    "totalGlobalCountFailure": 0
+  }
+}
+Test completed.
