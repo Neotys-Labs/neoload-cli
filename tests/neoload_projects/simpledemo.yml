@@ -1,0 +1,25 @@
+name: NeoLoad-CLI-simpledemo
+
+user_paths:
+- name: simpledemo
+  actions:
+    steps:
+    - request:
+        url: http://sampledemo.neotys.com/
+    - delay: 1s
+
+populations:
+- name: simpledemo
+  user_paths:
+  - name: simpledemo
+
+scenarios:
+- name: simpledemo
+  populations:
+  - name: simpledemo
+    rampup_load:
+      min_users: 1
+      max_users: 20
+      increment_users: 1
+      increment_every: 2s
+      duration: 1m
