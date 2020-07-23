@@ -85,7 +85,7 @@ neoload status          # Displays stored data
 ```
 
 ## Setup a test
-### Choose a workspace to work with
+### Optionally Choose a workspace to work with
 ```
 Usage: neoload workspaces [OPTIONS] [[ls|use]] [NAME_OR_ID]
 neoload workspaces use "Default Workspace"
