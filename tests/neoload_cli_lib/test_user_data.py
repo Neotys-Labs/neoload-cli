@@ -37,6 +37,7 @@ class TestUserData:
             user_data.get_user_data()
         assert 'You are\'nt logged. Please use command "neoload login" first' in str(context.value)
 
+    @pytest.mark.usefixtures('neoload_login')
     def test_is_version_lower_than(selfself):
         user_data.set_meta('version', 'SaaS')
         assert user_data.is_version_lower_than('2.5.1') is False
