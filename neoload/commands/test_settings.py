@@ -89,7 +89,7 @@ def put(id_settings, json_data):
 
 
 def patch(id_settings, json_data):
-    rep = rest_crud.patch(get_end_point(id_settings), fill_default_fields(json_data))
+    rep = rest_crud.patch(get_end_point(id_settings), json_data)
     tools.get_id_and_print_json(rep)
 
 
