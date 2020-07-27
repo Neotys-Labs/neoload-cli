@@ -18,6 +18,9 @@ def cli(token, url, no_write, workspace):
             token = click.prompt("Enter your token", None, True)
         else:
             token = input()
+    url = url.strip()
+    if url[-1] != '/':
+        url += '/'
 
     __user_data = user_data.do_login(token, url, no_write)
 
