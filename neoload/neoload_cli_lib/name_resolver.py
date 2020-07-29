@@ -9,7 +9,7 @@ class Resolver:
         self.__map = {}
 
     def __fill_map(self, ws, name=None):
-        all_element = rest_crud.get(self.__get_base_endpoint() + self.__endpoint)
+        all_element = rest_crud.get(self.get_endpoint())
         json = None
         ws_map = {}
         self.__map[ws] = ws_map
@@ -48,4 +48,4 @@ class Resolver:
         return self.__map[ws]
 
     def get_endpoint(self):
-        return self.__endpoint
+        return self.__get_base_endpoint() + self.__endpoint

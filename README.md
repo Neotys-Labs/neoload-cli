@@ -24,8 +24,8 @@ The goal of this guide is to demonstrate how you can:
 ```
 pip3 install neoload
 neoload login $NLW_TOKEN \
-        test-settings --zone $NLW_ZONE_DYNAMIC --lgs 5 --scenario sanityScenario create NewTest1 \
-        project --path tests/neoload_projects/example_1 upload \
+        test-settings --zone $NLW_ZONE_DYNAMIC --lgs 5 --scenario sanityScenario createorpatch NewTest1 \
+        project --path tests/neoload_projects/example_1 upload NewTest1 \
         run
 ```
 NOTE: For Windows command line, replace the '\\' multi-line separators above with '^'
