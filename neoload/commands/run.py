@@ -1,3 +1,4 @@
+import time
 from urllib.parse import quote
 
 import click
@@ -41,6 +42,8 @@ def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_
         {})
     user_data.set_meta(test_settings.meta_key, _id)
     user_data.set_meta(test_results.meta_key, post_result['resultId'])
+    # Wait 5 seconds until the test result is created.
+    time.sleep(5)
     if not detached:
         running_tools.wait(post_result['resultId'], not return_0)
     else:

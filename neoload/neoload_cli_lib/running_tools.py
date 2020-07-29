@@ -28,7 +28,6 @@ def wait(results_id, exit_code_sla):
     __current_id = results_id
     signal(SIGINT, handler)
     header_status(results_id)
-    time.sleep(5)
     while display_status(results_id):
         time.sleep(20)
 
