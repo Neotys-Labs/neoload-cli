@@ -9,7 +9,7 @@ class Resolver:
         self.__map = {}
 
     def __fill_map(self, ws, name=None):
-        all_element = rest_crud.get(self.get_endpoint())
+        all_element = rest_crud.get_with_pagination(self.get_endpoint())
         json = None
         ws_map = {}
         self.__map[ws] = ws_map

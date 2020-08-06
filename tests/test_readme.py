@@ -67,6 +67,8 @@ class TestReadme:
         assert_success(result_status1)
         assert 'No settings is stored. Please use "neoload login" to start.' in result_status1.output
 
+        mock_api_get_raw(monkeypatch, 'v3/information', 200,
+                         '{"front_url":"https://neoload.saas.neotys.com/", "filestorage_url":"https://neoload-files.saas.neotys.com", "version":"SaaS"}')
         result_login = runner.invoke(login, ['123456789fe70bf4a991ae6d8af62e21c4a00203abcdef'])
         assert_success(result_login)
         assert '' == result_login.output
@@ -74,6 +76,9 @@ class TestReadme:
         result_status2 = runner.invoke(status)
         assert_success(result_status2)
         assert 'You are logged on https://neoload-api.saas.neotys.com/ with token *******************************************def' in result_status2.output
+        assert 'frontend url: https://neoload.saas.neotys.com' in result_status2.output
+        assert 'file storage url: https://neoload-files.saas.neotys.com' in result_status2.output
+        assert 'version: SaaS' in result_status2.output
 
     @pytest.mark.usefixtures('neoload_login')
     def test_use(self, monkeypatch, invalid_data):
@@ -86,7 +91,7 @@ class TestReadme:
         assert_success(result_status1)
         assert 'settings id: %s' % invalid_data.uuid in result_status1.output
 
-        mock_api_get(monkeypatch, 'v2/tests', '[{"id":"%s", "name":"%s"}]' % (pytest.test_id, pytest.test_name))
+        mock_api_get_with_pagination(monkeypatch, 'v2/tests', '[{"id":"%s", "name":"%s"}]' % (pytest.test_id, pytest.test_name))
         result_use2 = runner.invoke(settings, ['use', pytest.test_name])
         assert_success(result_use2)
         result_status2 = runner.invoke(status)

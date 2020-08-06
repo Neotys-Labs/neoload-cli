@@ -10,7 +10,7 @@ from helpers.test_utils import *
 class TestWorkspaceLs:
     def test_list_all(self, monkeypatch):
         runner = CliRunner()
-        mock_api_get(monkeypatch, 'v3/workspaces',
+        mock_api_get_with_pagination(monkeypatch, 'v3/workspaces',
                      '[{"id":"someId", "name":"Default workspace", "description":".... "},'
                      '{"id":"someId", "name":"19377", "description":".... "}]')
         result_ls = runner.invoke(workspaces, ['ls'])

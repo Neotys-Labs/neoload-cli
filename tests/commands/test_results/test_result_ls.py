@@ -10,7 +10,7 @@ from helpers.test_utils import *
 class TestResultLs:
     def test_list_all(self, monkeypatch):
         runner = CliRunner()
-        mock_api_get(monkeypatch, 'v2/test-results',
+        mock_api_get_with_pagination(monkeypatch, 'v2/test-results',
                      '[{"id":"someId", "name":"test-name", "description":".... "},'
                      '{"id":"someId", "name":"test-name", "description":".... "}]')
         result_ls = runner.invoke(results, ['ls'])
