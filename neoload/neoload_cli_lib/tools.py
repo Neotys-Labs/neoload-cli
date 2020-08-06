@@ -91,7 +91,7 @@ def ls(name, is_id_, resolver):
     if name:
         get_id_and_print_json(get_named_or_id(name, is_id_, resolver))
     else:
-        print_json(rest_crud.get(endpoint))
+        print_json(rest_crud.get_with_pagination(endpoint))
 
 
 def delete(endpoint, id_data, kind):

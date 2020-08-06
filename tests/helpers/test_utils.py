@@ -10,6 +10,10 @@ def assert_success(result):
     assert result.exit_code == 0
 
 
+def mock_api_get_with_pagination(monkeypatch, endpoint, json_result):
+    __mock_api_without_data(monkeypatch, 'get_with_pagination', endpoint, json_result)
+
+
 def mock_api_get(monkeypatch, endpoint, json_result):
     __mock_api_without_data(monkeypatch, 'get', endpoint, json_result)
 

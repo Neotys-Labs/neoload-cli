@@ -37,7 +37,7 @@ class TestDelete:
         assert_success(result)
         json_result = json.loads(result.output)
 
-        mock_api_get(monkeypatch, 'v2/tests',
+        mock_api_get_with_pagination(monkeypatch, 'v2/tests',
                      '[{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s"}]' % test_name)
         mock_api_delete_raw(monkeypatch, 'v2/tests/%s' % json_result['id'], 200,
                             '{"id":"%s", "name":"%s"}' % (json_result['id'], test_name))

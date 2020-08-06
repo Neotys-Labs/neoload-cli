@@ -46,12 +46,31 @@ def base_endpoint():
     return "v2" if user_data.is_version_lower_than('2.5.0') else "v3"
 
 
-def get(endpoint: str):
-    return __handle_error(get_raw(endpoint)).json()
+def get_with_pagination(endpoint: str, page_size=200):
+    params = {
+        'limit': page_size,
+        'offset': 0
+    }
+    # Get first page
+    all_entities = get(endpoint, params)
+    params['offset'] += page_size
+    # Get all other pages
+    while len(all_entities) == params['offset']:
+        entities = get(endpoint, params)
+        # Exit the loop when the pagination is not implemented for the endpoint and the number of entities is equal to page_size
+        if len(entities) == 0 or all_entities[0] == entities[0]:
+            break
+        all_entities += entities
+        params['offset'] += page_size
+    return all_entities
 
 
-def get_raw(endpoint: str):
-    return requests.get(__create_url(endpoint), headers=__create_additional_headers())
+def get(endpoint: str, params=None):
+    return __handle_error(get_raw(endpoint, params)).json()
+
+
+def get_raw(endpoint: str, params=None):
+    return requests.get(__create_url(endpoint), params, headers=__create_additional_headers())
 
 
 def post(endpoint: str, data):

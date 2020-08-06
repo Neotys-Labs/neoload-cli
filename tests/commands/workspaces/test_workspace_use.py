@@ -22,7 +22,7 @@ class TestWorkspaceUse:
 
     def test_use_name(self, monkeypatch, valid_data):
         runner = CliRunner()
-        mock_api_get(monkeypatch, 'v3/workspaces',
+        mock_api_get_with_pagination(monkeypatch, 'v3/workspaces',
                      '[{"id":"%s", "name":"Default workspace", "description":".... "},'
                      '{"id":"someId", "name":"19377", "description":".... "}]' % valid_data.default_workspace_id)
         result_use = runner.invoke(workspaces, ['use', 'Default workspace'])
@@ -34,7 +34,7 @@ class TestWorkspaceUse:
 
     def test_use_bad_name(self, monkeypatch, valid_data):
         runner = CliRunner()
-        mock_api_get(monkeypatch, 'v3/workspaces',
+        mock_api_get_with_pagination(monkeypatch, 'v3/workspaces',
                      '[{"id":"%s", "name":"Default workspace", "description":".... "},'
                      '{"id":"someId", "name":"19377", "description":".... "}]' % valid_data.default_workspace_id)
         result_use = runner.invoke(workspaces, ['use', 'Default workspac_WITH_TYPO'])
