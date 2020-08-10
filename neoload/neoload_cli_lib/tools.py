@@ -112,7 +112,7 @@ def use(name, meta_key, resolver):
 
 
 def print_json(json_data):
-    print(json.dumps(json_data, indent=2))
+    print(json.dumps(json_data, indent=2, ensure_ascii=False))
 
 
 def get_id_and_print_json(json_data: json):

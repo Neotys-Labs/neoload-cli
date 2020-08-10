@@ -44,11 +44,9 @@ def __print_one_sla(kind, sla_json):
 
     if kind == __SLA_interval.replace(' ', ''):
         if status == "WARNING":
-            threshold = sla_json['warningThreshold']
-            where = ' [%.3f%% %s %s]' % (sla_json['warning'], threshold['operator'], threshold['value'])
+            where = ' [%.3f%% %s]' % (sla_json['warning'], build_threshold_str(sla_json['warningThreshold']))
         elif status == "FAILED":
-            threshold = sla_json['failedThreshold']
-            where = ' [%.3f%% %s %s]' % (sla_json['failed'], threshold['operator'], threshold['value'])
+            where = ' [%.3f%% %s]' % (sla_json['failed'], build_threshold_str(sla_json['failedThreshold']))
 
     return print_color("%sSLA [%s] %s on [%s%s]" % (kind, sla_json['kpi'], status, element, where), color)
 
@@ -87,6 +85,12 @@ def __build_test_suite(json_result, kind, sla_json):
     return TestSuite(suite_name, [tc])
 
 
+def build_threshold_str(threshold):
+    operation = threshold['operator']
+    value = threshold.get('value') or threshold.get('values') or ''
+    return f'between {value[0]} and {value[1]}' if operation == 'btw' else f'{operation} {value}'
+
+
 def __build_unit_test(json_result, kind, sla_json):
     status = sla_json['status']
     element = sla_json['element']
@@ -98,17 +102,12 @@ def __build_unit_test(json_result, kind, sla_json):
     elif status == "WARNING":
         reported = sla_json['warning']
 
-    operation = ''
-    value = ''
+    threshold_str = ''
     if kind == __SLA_interval:
         if status == "FAILED":
-            threshold = sla_json['failedThreshold']
-            operation = threshold['operator']
-            value = threshold['value']
+            threshold_str = build_threshold_str(sla_json['failedThreshold'])
         if status == "WARNING":
-            threshold = sla_json['warningThreshold']
-            operation = threshold['operator']
-            value = threshold['value']
+            threshold_str = build_threshold_str(sla_json['warningThreshold'])
 
     text = 'Container: %s<br/>' % element['name']
     text += 'Path: User Paths > %s > Init > %s > %s<br/>' % (element['userpath'], element['parent'], element['name'])
@@ -119,7 +118,7 @@ def __build_unit_test(json_result, kind, sla_json):
     text += 'Project: %s<br/>' % json_result['project']
     text += 'Scenario: %s<br/>' % json_result['scenario']
     text += '<br/>'
-    text += '%s<br/>description: if the %s %s %s then fail<br/><br/>' % (status, sla_json['kpi'], operation, value)
+    text += '%s<br/>description: if the %s %s then fail<br/><br/>' % (status, sla_json['kpi'], threshold_str)
     text += 'Results: <br/><br/>'
     text += '%s=%s%%<br/><br/>' % (sla_json['kpi'], str(reported))
     text += 'Created N/A<br/>'
