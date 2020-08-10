@@ -125,6 +125,7 @@ def __create_url(endpoint: str):
 
 
 def __handle_error(response):
+    response.encoding = 'ISO-8859-1'
     status_code = response.status_code
     if status_code > 299:
         request = response.request
