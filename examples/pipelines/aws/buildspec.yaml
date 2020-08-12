@@ -15,6 +15,7 @@ phases:
   pre_build:
     commands:
       - python3 -m pip install -q neoload
+      - git clone https://github.com/Neotys-Labs/neoload-cli.git && cd neoload-cli
   build:
     commands:
       # create a profile and connect to the platform
