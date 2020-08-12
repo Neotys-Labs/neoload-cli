@@ -1,0 +1,49 @@
+version: 0.2
+
+env:
+  variables:
+    NLW_URL: "$ENV_NLW_URL"
+    NLW_ZONE: "$ENV_NLW_DYNAMIC_ZONE" # or "$ENV_NLW_STATIC_ZONE"
+  secrets-manager: # as an example from CodeBuild, private token in environment from Secrets Manager
+    NLW_TOKEN: ENV_NLW_TOKEN:ENV_NLW_TOKEN
+
+phases:
+  install:
+    runtime-versions:
+      #docker: 18
+      python: 3.8
+  pre_build:
+    commands:
+      - python3 -m pip install -q neoload
+      - git clone https://github.com/Neotys-Labs/neoload-cli.git && cd neoload-cli
+  build:
+    commands:
+      # create a profile and connect to the platform
+      - neoload login --url ${NLW_URL} ${NLW_TOKEN}
+      # configure the test
+      - |
+        neoload test-settings --zone ${NLW_ZONE} --scenario fullTest createorpatch "example-AWScodebuild-SLAfail" \
+                project --path tests/neoload_projects/example_1/ upload \
+                run --detached --name "Build $CODEBUILD_BUILD_NUMBER" --web-vu 25 \
+                    --as-code default.yaml,slas/uat.yaml
+
+      ## Option 1: simply wait for test finalization
+      #- neoload wait cur
+
+      ## Option 2: wait for early failure signals, stop test if any SLA over 30% failed
+      - neoload fastfail --max-failure 30 slas cur
+
+  post_build:
+    commands:
+      # produce junit report on SLAs
+      - neoload test-results --junit-file $CODEBUILD_SRC_DIR/neoload_slas.junit.xml junitsla cur
+
+      # if a prior step failed or err'd, don't bother waiting
+      - bash -c "if [ /"$CODEBUILD_BUILD_SUCCEEDING/" == /"0/" ]; then exit 1; fi"
+
+reports:
+  report-name-or-arn:
+    files:
+      - $CODEBUILD_SRC_DIR/neoload_slas.junit.xml
+    discard-paths: yes
+    file-format: JunitXml
