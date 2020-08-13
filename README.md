@@ -39,6 +39,7 @@ NOTE: For Windows command line, replace the '\\' multi-line separators above wit
    - [Setup resources in Neoload Web](#setup-resources-in-neoload-web)
    - [Define a test settings](#define-a-test-settings)
    - [Upload a Neoload project](#upload-a-neoload-project)
+     - [Excluding files from the project upload] (#excluding-files-from-the-project-upload)
  - [Run a test](#run-a-test)
    - [Stop a running test](#stop-a-running-test)
  - [View results](#view-results)
@@ -131,6 +132,11 @@ To Validate the syntax and schema of the as-code project yaml files
 ```
 neoload validate sample_projects/example_1/default.yaml
 ```
+
+### Excluding files from the project upload
+If you are uploading a project directory that contains non NeoLoad as-code YAML files (such as .gitlab-ci.yml) you will need to create a .nlignore file (exactly the same as .gitignore) that excludes these files from the project upload process so that NeoLoad Web does not parse them and fail them as if they should be the NeoLoad DSL.
+
+Please see Gitlab and Azure pipeline examples for more detail.
 
 ## Run a test
 This command runs a test, it produces blocking, unbuffered output about test execution process, including readout of current data points.
@@ -284,6 +290,8 @@ While the above instructions could be run from a contributor workstation, they c
  - CircleCI, TBD when [@punkdata](https://www.linkedin.com/in/punkdata/) gets back to [@paulsbruce](https://www.linkedin.com/in/paulsbruce/) :)
 
 NB: When chaining commands, the return code of the whole command is the return code of the **last command**. That's why you should not chain the two commands "run" and "test-results junitsla".
+
+NOTE: When combining NeoLoad projects and YAML-based pipeline declarations, please see [Excluding files from the project upload] (#excluding-files-from-the-project-upload) to ensure that unecessary artifacts aren't included in the project upload process.
 
 ### Support for fast-fail based on SLAs ###
 

@@ -1,0 +1,3 @@
+# this is just a sample reference to test .nlignore functionality on project upload
+# for complete Gitlab example, see examples/pipelines/gitlab/ directory
+image: "python:3.8"
