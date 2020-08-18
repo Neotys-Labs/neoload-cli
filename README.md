@@ -138,7 +138,7 @@ neoload validate sample_projects/example_1/default.yaml
 ### Excluding files from the project upload
 If you are uploading a project directory that contains non NeoLoad as-code YAML files (such as .gitlab-ci.yml) you will need to create a .nlignore file (exactly the same as .gitignore) that excludes these files from the project upload process so that NeoLoad Web does not parse them and fail them as if they should be the NeoLoad DSL.
 
-Please see Gitlab and Azure pipeline examples for more detail.
+Please see [Gitlab](/examples/pipelines/gitlab) and [Azure](/examples/pipelines/azure_devops) pipeline examples for more detail.
 
 ## Run a test
 This command runs a test, it produces blocking, unbuffered output about test execution process, including readout of current data points.
