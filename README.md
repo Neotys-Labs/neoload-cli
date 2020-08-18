@@ -199,6 +199,8 @@ Usage: neoload report [OPTIONS] [[single|trends]] [NAME]
 neoload report --template builtin:transactions-csv single cur > temp.csv
 ```
 
+### Exporting All Test Data and Using Custom Templates
+
 If you would like to use multiple templates to create separate output files for specific test data,
  you should dump the test result data using the standard JSON scheme first:
 ```
