@@ -39,7 +39,7 @@ NOTE: For Windows command line, replace the '\\' multi-line separators above wit
    - [Setup resources in Neoload Web](#setup-resources-in-neoload-web)
    - [Define a test settings](#define-a-test-settings)
    - [Upload a Neoload project](#upload-a-neoload-project)
-     - [Excluding files from the project upload] (#excluding-files-from-the-project-upload)
+     - [Excluding files from the project upload](#excluding-files-from-the-project-upload)
  - [Run a test](#run-a-test)
    - [Stop a running test](#stop-a-running-test)
  - [Reporting](#reporting)
@@ -337,7 +337,7 @@ While the above instructions could be run from a contributor workstation, they c
 
 NB: When chaining commands, the return code of the whole command is the return code of the **last command**. That's why you should not chain the two commands "run" and "test-results junitsla".
 
-NOTE: When combining NeoLoad projects and YAML-based pipeline declarations, please see [Excluding files from the project upload] (#excluding-files-from-the-project-upload) to ensure that unecessary artifacts aren't included in the project upload process.
+NOTE: When combining NeoLoad projects and YAML-based pipeline declarations, please see [Excluding files from the project upload](#excluding-files-from-the-project-upload) to ensure that unecessary artifacts aren't included in the project upload process.
 
 ### Support for fast-fail based on SLAs ###
 
