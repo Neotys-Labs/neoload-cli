@@ -42,7 +42,9 @@ setup(
         'junit_xml',
         'termcolor',
         'coloredlogs',
-        'gitignore_parser'
+        'gitignore_parser',
+        'jinja2',
+        'python-dateutil' # for 3.6 compatibility
     ],
     long_description_content_type='text/markdown',
     long_description=long_description
