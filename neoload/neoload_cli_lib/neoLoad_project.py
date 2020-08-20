@@ -7,14 +7,14 @@ from gitignore_parser import parse_gitignore
 
 from neoload_cli_lib import rest_crud, tools, cli_exception
 
-black_list = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/', 'results/',
-              'comparative-summary/', 'reports/']
+not_to_be_included = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/', 'results/',
+              'comparative-summary/', 'reports/', '/recorded-artifacts/']
 
 
-def is_black_listed(path: str, nlignore_matcher):
-    for refused in black_list:
+def is_not_to_be_included(path: str, nlignore_matcher):
+    for refused in not_to_be_included:
         if refused in path:
-            logging.debug("blacklisted: '" + path + "'")
+            logging.debug("not_included: '" + path + "'")
             return True
     if nlignore_matcher is not None and nlignore_matcher(path):
         logging.debug(".nlignore'd: '" + path + "'")
@@ -27,12 +27,12 @@ def zip_dir(path):
     ignorefile = os.path.join(path, '.nlignore')
     nlignore_matcher = parse_gitignore(ignorefile) if os.path.exists(ignorefile) else None
 
-    temp_zip = tempfile.TemporaryFile('w+b')
+    temp_zip = tempfile.NamedTemporaryFile('w+b')
     ziph = zipfile.ZipFile(temp_zip, 'x', zipfile.ZIP_DEFLATED)
     for root, dirs, files in os.walk(path):
         for file in files:
             file_path = os.path.join(root, file)
-            if not is_black_listed(file_path, nlignore_matcher):
+            if not is_not_to_be_included(file_path, nlignore_matcher):
                 ziph.write(file_path, file_path.replace(str(path), ''))
 
     ziph.close()
@@ -47,7 +47,9 @@ def upload_project(path, endpoint):
     else:
         filename += '.zip'
         file = zip_dir(path)
-    display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
+    #display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
+    display_project(rest_crud.post_binary_files_storage_with_progress(endpoint, file, filename))
+
 
 
 def display_project(res):
