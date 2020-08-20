@@ -39,12 +39,10 @@ NOTE: For Windows command line, replace the '\\' multi-line separators above wit
    - [Setup resources in Neoload Web](#setup-resources-in-neoload-web)
    - [Define a test settings](#define-a-test-settings)
    - [Upload a Neoload project](#upload-a-neoload-project)
-     - [Excluding files from the project upload](#excluding-files-from-the-project-upload)
+     - [Excluding files from the project upload] (#excluding-files-from-the-project-upload)
  - [Run a test](#run-a-test)
    - [Stop a running test](#stop-a-running-test)
- - [Reporting](#reporting)
-    - [View results](#view-results)
-    - [Exporting Transaction CSV data](#exporting-transaction-CSV-data)
+ - [View results](#view-results)
  - [View zones](#view-zones)
  - [Create local docker infrastructure to run a test](#create-local-docker-infrastructure-to-run-a-test)
  - [Continuous Testing Examples](#continuous-testing-examples)
@@ -138,7 +136,7 @@ neoload validate sample_projects/example_1/default.yaml
 ### Excluding files from the project upload
 If you are uploading a project directory that contains non NeoLoad as-code YAML files (such as .gitlab-ci.yml) you will need to create a .nlignore file (exactly the same as .gitignore) that excludes these files from the project upload process so that NeoLoad Web does not parse them and fail them as if they should be the NeoLoad DSL.
 
-Please see [Gitlab](/examples/pipelines/gitlab) and [Azure](/examples/pipelines/azure_devops) pipeline examples for more detail.
+Please see Gitlab and Azure pipeline examples for more detail.
 
 ## Run a test
 This command runs a test, it produces blocking, unbuffered output about test execution process, including readout of current data points.
@@ -163,11 +161,7 @@ When hitting Ctrl+C, the CLI will try to stop the test gracefully
 neoload stop             # Send the stop signal to the test and wait until it ends.
 ```
 
-## Reporting
-
-There is basic support in the NeoLoad CLI for viewing and exporting results.
-
-### View results
+## View results
 ```
 Usage: neoload test-results [OPTIONS] [[ls|summary|junitsla|put|delete|use]] [NAME]
 neoload test-results summary            # The Json result summary, with SLAs
@@ -184,46 +178,6 @@ Detailed logs and results are available on Neoload Web. To get the url of the cu
 ```
 neoload logs-url                        # The URL to the test in Neoload Web
 ```
-
-### The test-results vs. report subcommands
-
-The 'test-results' subcommand is intended for direct operational queries against high-level API data.
-
-The 'report' subcommand is intended to simplify not only common data exporting needs, but also provide
- templating capabilities over a standard, correlated data model. In contrast to the test-results
- subcommand, 'report' can be used to generate as well as transform test result data.
-
-### Exporting Transaction CSV data
-```
-Usage: neoload report [OPTIONS] [[single|trends]] [NAME]
-neoload report --template builtin:transactions-csv single cur > temp.csv
-```
-
-### Exporting All Test Data and Using Custom Templates
-
-If you would like to use multiple templates to create separate output files for specific test data,
- you should dump the test result data using the standard JSON scheme first:
-```
-neoload report --out-file ~/Downloads/temp.json single cur
-```
-NOTE: by default, this queries all entity data in test results and may cause multiple API calls
- to occur depending on the structure of the user paths and monitoring data in the test result set.
-
-Then you can produce multiple output files from a single data snapshot:
-```
-neoload report --json-in ~/Downloads/temp.json \
-               --template builtin:transactions-csv \
-               --out-file ~/Downloads/temp.csv \
-               single cur
-
-neoload report --json-in ~/Downloads/temp.json \
-               --template /path/to/a/jinja/template.j2 \
-               --out-file ~/Downloads/temp.html \
-               single cur
-```
-
-NOTE: built-in reports produce a reduced-scope JSON data model and are therefore faster
- that exporting all test data for various templates and output specs.
 
 ## View zones
 ```
@@ -337,7 +291,7 @@ While the above instructions could be run from a contributor workstation, they c
 
 NB: When chaining commands, the return code of the whole command is the return code of the **last command**. That's why you should not chain the two commands "run" and "test-results junitsla".
 
-NOTE: When combining NeoLoad projects and YAML-based pipeline declarations, please see [Excluding files from the project upload](#excluding-files-from-the-project-upload) to ensure that unecessary artifacts aren't included in the project upload process.
+NOTE: When combining NeoLoad projects and YAML-based pipeline declarations, please see [Excluding files from the project upload] (#excluding-files-from-the-project-upload) to ensure that unecessary artifacts aren't included in the project upload process.
 
 ### Support for fast-fail based on SLAs ###
 
