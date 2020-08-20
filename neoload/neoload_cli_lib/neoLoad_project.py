@@ -47,8 +47,13 @@ def upload_project(path, endpoint):
     else:
         filename += '.zip'
         file = zip_dir(path)
-    #display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
-    display_project(rest_crud.post_binary_files_storage_with_progress(endpoint, file, filename))
+
+    totalsize = os.stat(file.name).st_size
+
+    if totalsize < (100 * 1000): # if over 100KB, use with progress
+        display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
+    else:
+        display_project(rest_crud.post_binary_files_storage_with_progress(endpoint, file, filename))
 
 
 

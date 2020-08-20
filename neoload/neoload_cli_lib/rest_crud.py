@@ -111,6 +111,7 @@ def post_binary_files_storage_with_progress(endpoint: str, path, filename):
     files = {"file": (filename, path.read())}
 
     (data, ctype) = requests.packages.urllib3.filepost.encode_multipart_formdata(files)
+    #TODO: for some reason, #monkeypatch doesn't patch requests after this call
 
     headers = __create_additional_headers()
     headers["Content-Type"] = ctype
@@ -127,10 +128,9 @@ def post_binary_files_storage_with_progress(endpoint: str, path, filename):
 
 def progress(size=None, progress=None):
     done = int(50 * progress / size)
-    if size > 1000000:
-        sys.stdout.write('\rUploading project {0:<22} {1:>52}'.format(
-            "%s of %s" % (sizeof_fmt(progress), sizeof_fmt(size)), "[%s%s]" % ('=' * done, ' ' * (50-done))) )
-        sys.stdout.flush()
+    sys.stdout.write('\rUploading project {0:<22} {1:>52}'.format(
+        "%s of %s" % (sizeof_fmt(progress), sizeof_fmt(size)), "[%s%s]" % ('=' * done, ' ' * (50-done))) )
+    sys.stdout.flush()
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
