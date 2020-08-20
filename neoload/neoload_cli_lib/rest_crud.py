@@ -154,7 +154,8 @@ class BufferReader(BytesIO):
     def __init__(self, buf=b'',
                  callback=None,
                  cb_args=(),
-                 cb_kwargs={}):
+                 cb_kwargs=None):
+        if cb_kwargs is None: cb_kwargs={}
         self._callback = callback
         self._cb_args = cb_args
         self._cb_kwargs = cb_kwargs
@@ -175,7 +176,7 @@ class BufferReader(BytesIO):
         if self._callback:
             try:
                 self._callback(*self._cb_args, **self._cb_kwargs)
-            except: # catches exception from the callback
+            except Exception: # catches exception from the callback
                 raise CancelledError('The upload was cancelled.')
         return chunk
 
