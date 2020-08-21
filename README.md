@@ -199,6 +199,50 @@ Usage: neoload report [OPTIONS] [[single|trends]] [NAME]
 neoload report --template builtin:transactions-csv single cur > temp.csv
 ```
 
+### Filtering export data by timespan
+In many load tests, ramp-up and spin-down time is considered irrelevant to calculate into aggregate statistics,
+ such as how when warming up, systems may produce higher-than-expected latencies until a steady state is reached.
+
+Therefore, the NeoLoad CLI allows for export of particular time ranges by providing a timespan filter.
+
+```
+neoload report --template builtin:transactions-csv --filter "timespan=5m-95%" single cur
+neoload report --template builtin:transactions-csv --filter "timespan=15%" single cur
+neoload report --template builtin:transactions-csv --filter "timespan=-90%" single cur
+```
+
+Timespan format is [Time], then '-' representing to, then another [Time]. Time format can
+ be either a human readable duration or percentage of overall test duration.
+
+Human readable time duration format is hour|minute|second such as '1h5m30s' or a sub-portion such as '5m'.
+
+Omitting the end [Time] segment will filter results beginning with the time specified to the end of the test.
+
+Similarly, ommiting the start [Time] segment will filter results beginning with the start of the test
+ to the end time specified.
+
+### Filtering export data by element
+It is often useful to narrow analysis and statistics to a particular group of activities, such as
+ Login processes across multiple workflows (user paths) or other common key business transactions.
+
+Therefore, the NeoLoad CLI allows for exports of specific transcations whose name, parent, or User Path name
+ matches specific values or patterns.
+
+```
+neoload report --template builtin:transactions-csv --filter "elements=Login" single cur
+```
+You can filter to specific transactions or requests by specifying 'elements' and then a pipe-delimited list
+ of element GUIDs, full names, or partial name matches. This can also include python-compliant regular expressions.
+
+### Combining timespan and element filters
+```
+neoload report --template builtin:transactions-csv --filter "timespan=50%-95%;elements=AddToCart" single cur
+```
+Both timespan and elements filters can be combined in order to get statistics for specific elements
+ within a precise portion of the test duration. Per the example above, transaction data will be computed
+ for elements that have 'AddToCart' somewhere in their name, user path, or parent element and calculate
+ aggregates based on data starting from halfway through the test up to just about the very end.
+
 ### Exporting All Test Data and Using Custom Templates
 
 If you would like to use multiple templates to create separate output files for specific test data,
