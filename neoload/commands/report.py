@@ -13,6 +13,8 @@ import statistics
 
 import math
 import functools
+import datetime
+import uuid
 
 from neoload_cli_lib import tools, rest_crud, user_data, displayer, cli_exception
 from neoload_cli_lib.name_resolver import Resolver
@@ -198,7 +200,7 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
 
     if components['summary'] or components['slas'] or time_filter is not None:
         gprint("Getting test results...")
-        json_result = rest_crud.get(get_end_point(__id))
+        json_result = rest_crud_get(get_end_point(__id))
         json_result = add_test_result_summary_fields(json_result)
         if time_binding is not None:
             time_binding["summary"] = json_result
@@ -207,19 +209,19 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
     if components['slas']:
         status = json_result['status']
         gprint("Getting global SLAs...")
-        json_sla_global = [] if status!='TERMINATED' else rest_crud.get(get_end_point(__id, __operation_sla_global))
+        json_sla_global = [] if status!='TERMINATED' else rest_crud_get(get_end_point(__id, __operation_sla_global))
         gprint("Getting per-test SLAs...")
-        json_sla_test = [] if status!='TERMINATED' else rest_crud.get(get_end_point(__id, __operation_sla_test))
+        json_sla_test = [] if status!='TERMINATED' else rest_crud_get(get_end_point(__id, __operation_sla_test))
         gprint("Getting per-interval SLAs...")
-        json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
+        json_sla_interval = rest_crud_get(get_end_point(__id, __operation_sla_interval))
 
     if components['statistics']:
         gprint("Getting test statistics...")
-        json_stats = rest_crud.get(get_end_point(__id, __operation_statistics))
+        json_stats = rest_crud_get(get_end_point(__id, __operation_statistics))
 
     if components['events']:
         gprint("Getting events...")
-        json_events = rest_crud.get(get_end_point(__id, __operation_events))
+        json_events = rest_crud_get(get_end_point(__id, __operation_events))
 
     statistics_list = ["AVG_DURATION","MIN_DURATION","MAX_DURATION","COUNT","THROUGHPUT",
                         "ELEMENTS_PER_SECOND","ERRORS","ERRORS_PER_SECOND","ERROR_RATE",
@@ -227,7 +229,7 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
 
     if components['all_requests']:
         gprint("Getting all-request data...")
-        json_elements_requests = rest_crud.get(get_end_point(__id, __operation_elements) + "?category=REQUEST")
+        json_elements_requests = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=REQUEST")
         json_elements_all_requests = list(filter(lambda m: m['id'] == 'all-requests', json_elements_requests))
         if not elements_filter is None:
             json_elements_all_requests = filter_elements(json_elements_all_requests, elements_filter)
@@ -236,7 +238,7 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
 
     if components['transactions']:
         gprint("Getting transactions...")
-        json_elements_transactions = rest_crud.get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
+        json_elements_transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
         if not elements_filter is None:
             json_elements_transactions = filter_elements(json_elements_transactions, elements_filter)
         json_elements_transactions = get_elements_data(__id, json_elements_transactions, time_binding, True, statistics_list)
@@ -244,7 +246,7 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
 
     if components['ext_data'] or components['controller_points']:
         gprint("Getting monitors...")
-        json_monitors = rest_crud.get(get_end_point(__id, __operation_monitors))
+        json_monitors = rest_crud_get(get_end_point(__id, __operation_monitors))
 
     if components['ext_data']:
         ext_datas = get_mon_datas(__id, lambda m: m['path'][0] == 'Ext. Data', json_monitors, True)
@@ -372,13 +374,13 @@ def get_trends_report(time_binding, results_filter, elements_filter):
             gprint("Getting test '" + result["name"] + "' statistics...")
             __id = result["id"]
             result = add_test_result_summary_fields(result)
-            json_stats = rest_crud.get(get_end_point(__id, __operation_statistics))
+            json_stats = rest_crud_get(get_end_point(__id, __operation_statistics))
 
             found_elements = []
             if elements_filter is not None:
                 elements = []
-                # elements.extend(rest_crud.get(get_end_point(__id, __operation_elements) + "?category=REQUEST"))
-                transactions = rest_crud.get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
+                # elements.extend(rest_crud_get(get_end_point(__id, __operation_elements) + "?category=REQUEST"))
+                transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
                 elements.extend(transactions)
                 found_elements = filter_elements(elements, elements_filter)
                 found_elements = get_elements_data(__id, found_elements, time_binding, False, [])
@@ -479,9 +481,9 @@ def get_element_user_path(el):
     return el['path'][0] if 'path' in el and len(el['path'])>0 else ""
 
 def get_results_by_result_id(__id):
-    result = rest_crud.get(get_end_point(__id))
+    result = rest_crud_get(get_end_point(__id))
     project = result["project"]
-    results = rest_crud.get(__endpoint+"?project="+project)
+    results = rest_crud_get(__endpoint+"?project="+project)
     return results
 
 def get_end_point(id_test: str, operation=''):
@@ -543,8 +545,8 @@ def get_element_data(el, result_id, time_binding, include_points, statistics_lis
     parent = get_element_parent(el)
     user_path = get_element_user_path(el)
     gprint("Getting element values for '" + full_name + "'")
-    json_values = rest_crud.get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/values")
-    json_points = [] if not (include_points or time_binding is not None) else rest_crud.get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/points?statistics=" + ",".join(statistics_list))
+    json_values = rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/values")
+    json_points = [] if not (include_points or time_binding is not None) else rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/points?statistics=" + ",".join(statistics_list))
 
     if not time_binding is None:
         json_points = filter_by_time(json_points, time_binding, lambda p: int(p['from'])/1000, lambda p: int(p['to'])/1000)
@@ -652,7 +654,7 @@ def get_mon_datas(result_id, l_selector, base_col, include_points):
     for mon in mons:
         full_name = mon['name'] if not 'path' in mon else " \ ".join(mon['path'])
         gprint("Getting monitor values for '" + full_name + "'")
-        mon_points = rest_crud.get(get_end_point(result_id, __operation_monitors) + "/" + mon['id'] + "/points")
+        mon_points = rest_crud_get(get_end_point(result_id, __operation_monitors) + "/" + mon['id'] + "/points")
         time_points = list(sorted(mon_points, key=lambda x: x['from']))
         perc_points = list(sorted(map(lambda x: x['AVG'], mon_points)))
         mon["display_name"] = full_name
@@ -688,3 +690,48 @@ User Path,Element,Parent,Count,Min,Avg,Max,Perc 50,Perc 90,Perc 95,Perc 99,Succe
     for txn in elements.transactions| rejectattr('id', 'equalto', 'all-transactions')|sort(attribute='avgDuration',reverse=true) %}
 {{ txn.user_path|e }},{{ txn.name|e }},{{ txn.parent|e }},{{ txn.aggregate.count }},{{ txn.aggregate.minDuration }},{{ txn.aggregate.avgDuration }},{{ txn.aggregate.maxDuration }},{{ txn.aggregate.percentile50 }},{{ txn.aggregate.percentile90 }},{{ txn.aggregate.percentile95 }},{{ txn.aggregate.percentile99 }},{{ txn.aggregate.successCount }},{{ txn.aggregate.successRate }},{{ txn.aggregate.failureCount }},{{ txn.aggregate.failureRate }}{%
     endfor %}""".strip()
+
+rest_calls = []
+max_calls_per_second = ((300 - 50) / 60)
+calls_indicator = 0
+
+def cleanup_completed_calls():
+    back_step = get_epoch() - (1000)
+    l = list(filter(lambda a: a["completed"] and a["epoch"]<back_step, rest_calls))
+    if len(l) > 20:
+        logging.getLogger().debug("Cleaning up completed calls")
+        for e in l:
+            rest_calls.remove(e)
+
+def get_incomplete_calls():
+    return list(filter(lambda a: a["sent"] and not a["completed"], rest_calls))
+def get_current_calls_per_second_rate():
+    back_step = get_epoch() - (1000)
+    l = len(list(filter(lambda a: a["sent"] and a["epoch"]>=back_step, rest_calls)))
+    return l
+def get_epoch():
+    return time.time() * 1000
+def rest_crud_get(url):
+    global calls_indicator
+    if calls_indicator > 20:
+        cleanup_completed_calls()
+        calls_indicator = 0
+
+    call = {
+        "uuid": uuid.uuid1(),
+        "url": url,
+        "epoch": get_epoch(),
+        "sent": False,
+        "completed": False,
+    }
+    rest_calls.append(call)
+    call = next(filter(lambda a: a["uuid"] == call["uuid"],rest_calls))
+    while get_current_calls_per_second_rate() >= max_calls_per_second:
+        logging.getLogger().debug("Waiting due to rate: " + str(get_current_calls_per_second_rate()))
+        time.sleep(0.100)
+
+    call["sent"] = True
+    calls_indicator += 1
+    ret = rest_crud.get(url)
+    call["completed"] = True
+    return ret
