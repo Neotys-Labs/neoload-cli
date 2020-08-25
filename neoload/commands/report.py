@@ -564,9 +564,9 @@ def get_element_data(el, result_id, time_binding, include_points, statistics_lis
         json_values['percentile95'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.95)
         json_values['percentile99'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.99)
         json_values['successCount'] = sumOfCount - sumOfErrors
-        json_values['successRate'] = json_values['successCount'] / sumOfCount
+        json_values['successRate'] = 0 if sumOfCount == 0 else json_values['successCount'] / sumOfCount
         json_values['failureCount'] = sumOfErrors
-        json_values['failureRate'] = json_values['failureCount'] / sumOfCount
+        json_values['failureRate'] = 0 if sumOfCount == 0 else json_values['failureCount'] / sumOfCount
 
 # {
 #   "count": 0,
@@ -631,8 +631,8 @@ def get_element_data(el, result_id, time_binding, include_points, statistics_lis
     el["aggregate"] = json_values
     el["points"] = json_points
     el["totalCount"] = el["aggregate"]["successCount"] + el["aggregate"]["failureCount"]
-    el["successRate"] = el["aggregate"]["successCount"] / el["totalCount"]
-    el["failureRate"] = el["aggregate"]["failureCount"] / el["totalCount"]
+    el["successRate"] = 0 if el["totalCount"] == 0 else el["aggregate"]["successCount"] / el["totalCount"]
+    el["failureRate"] = 0 if el["totalCount"] == 0 else el["aggregate"]["failureCount"] / el["totalCount"]
     return el
 
 def filter_by_time(objs, time_binding, from_function, to_function):
@@ -732,7 +732,7 @@ def rest_crud_get(url):
     call = next(filter(lambda a: a["uuid"] == call["uuid"],rest_calls))
     while get_current_calls_per_second_rate() >= max_calls_per_second:
         logging.getLogger().debug("Waiting due to rate: " + str(get_current_calls_per_second_rate()))
-        time.sleep(0.100)
+        time.sleep(0.200)
 
     call["sent"] = True
     calls_indicator += 1
