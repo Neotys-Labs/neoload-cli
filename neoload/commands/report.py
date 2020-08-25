@@ -551,17 +551,18 @@ def get_element_data(el, result_id, time_binding, include_points, statistics_lis
     if not time_binding is None:
         json_points = filter_by_time(json_points, time_binding, lambda p: int(p['from'])/1000, lambda p: int(p['to'])/1000)
 
+        # check if list is empty on all aggregates
         perc_points = list(sorted(map(lambda x: x['AVG_DURATION'], json_points)))
-        sumOfCount = round(sum(list(map(lambda x: x['COUNT'], json_points))),1)
-        sumOfErrors = round(sum(list(map(lambda x: x['ERRORS'], json_points))),1)
-        json_values['minDuration'] = min(list(map(lambda x: x['MIN_DURATION'], json_points)))
-        json_values['maxDuration'] = max(list(map(lambda x: x['MAX_DURATION'], json_points)))
-        json_values['avgDuration'] = statistics.mean(list(map(lambda x: x['AVG_DURATION'], json_points)))
+        sumOfCount = 0 if len(json_points) < 1 else round(sum(list(map(lambda x: x['COUNT'], json_points))),1)
+        sumOfErrors = 0 if len(json_points) < 1 else round(sum(list(map(lambda x: x['ERRORS'], json_points))),1)
+        json_values['minDuration'] = 0 if len(json_points) < 1 else min(list(map(lambda x: x['MIN_DURATION'], json_points)))
+        json_values['maxDuration'] = 0 if len(json_points) < 1 else max(list(map(lambda x: x['MAX_DURATION'], json_points)))
+        json_values['avgDuration'] = 0 if len(json_points) < 1 else statistics.mean(list(map(lambda x: x['AVG_DURATION'], json_points)))
         json_values['count'] = round(sumOfCount, 1)
-        json_values['percentile50'] = percentile(perc_points,0.5)
-        json_values['percentile90'] = percentile(perc_points,0.9)
-        json_values['percentile95'] = percentile(perc_points,0.95)
-        json_values['percentile99'] = percentile(perc_points,0.99)
+        json_values['percentile50'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.5)
+        json_values['percentile90'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.9)
+        json_values['percentile95'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.95)
+        json_values['percentile99'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.99)
         json_values['successCount'] = sumOfCount - sumOfErrors
         json_values['successRate'] = json_values['successCount'] / sumOfCount
         json_values['failureCount'] = sumOfErrors
@@ -701,7 +702,10 @@ def cleanup_completed_calls():
     if len(l) > 20:
         logging.getLogger().debug("Cleaning up completed calls")
         for e in l:
-            rest_calls.remove(e)
+            try:
+                rest_calls.remove(e)
+            except Exception:
+                logging.getLogger().debug("Clean couldn't remove an e")
 
 def get_incomplete_calls():
     return list(filter(lambda a: a["sent"] and not a["completed"], rest_calls))
