@@ -62,19 +62,20 @@ def cli(report_type, template, json_in, out_file, filter, name):
 
     logger = logging.getLogger()
 
-    components = get_default_components(True)
-
     filter_spec = parse_filter_spec(filter)
     time_filter = filter_spec['time_filter']
     results_filter = filter_spec['results_filter']
     elements_filter = filter_spec['elements_filter']
+    exclude_filter = filter_spec['exclude_filter']
+
+    components = get_default_components(True,exclude_filter)
 
     if out_file is None: gprint = lambda msg: logger.info(msg)
 
     if template is not None:
 
         if template.lower().startswith("builtin:transactions"):
-            components = get_default_components(False)
+            components = get_default_components(False,exclude_filter)
             components['transactions'] = True
             if template.lower().endswith("-csv"):
                 template_text = get_builtin_template_transaction_csv()
@@ -95,9 +96,9 @@ def cli(report_type, template, json_in, out_file, filter, name):
         # no in file, so go out to source live
 
         if report_type == "single":
-            data = get_single_report(name,components,time_filter,elements_filter)
+            data = get_single_report(name,components,time_filter,elements_filter,exclude_filter)
         elif report_type == "trends":
-            data = get_trends_report(time_filter,results_filter,elements_filter)
+            data = get_trends_report(time_filter,results_filter,elements_filter,exclude_filter)
         else:
             tools.system_exit({'message': "No report_type named '" + report_type + "'.", 'code': 2})
             return
@@ -136,6 +137,7 @@ def parse_filter_spec(filter_spec):
     ret['time_filter'] = None
     ret['results_filter'] = None
     ret['elements_filter'] = None
+    ret['exclude_filter'] = None
 
     if filter_spec is not None:
         filter_parts = filter_spec.split(";")
@@ -146,16 +148,21 @@ def parse_filter_spec(filter_spec):
                 ret['results_filter'] = s.replace("results=","",1)
             elif s.startswith("elements"):
                 ret['elements_filter'] = s.replace("elements=","",1)
+            elif s.startswith("exclude"):
+                ret['exclude_filter'] = s.replace("exclude=","",1)
 
     return ret
 
 
-def add_component_if_not(components,key,default):
+def add_component_if_not(components,key,default,exclude_list):
     components[key] = default if not key in components else components[key]
+    #logging.getLogger().debug('exclude_list: ' + exclude_list + '; key: ' + key)
+    if exclude_list is not None and key in exclude_list.split(","):
+        components[key] = False
 
-def get_default_components(default_retrieve=True):
+def get_default_components(default_retrieve=True,exclude_list=None):
     components = {}
-    add_if_not = lambda key, default: add_component_if_not(components,key,default)
+    add_if_not = lambda key, default: add_component_if_not(components,key,default,exclude_list)
     add_if_not('summary',default_retrieve)
     add_if_not('statistics',default_retrieve)
     add_if_not('slas',default_retrieve)
@@ -166,9 +173,9 @@ def get_default_components(default_retrieve=True):
     add_if_not('controller_points',default_retrieve)
     return components
 
-def get_single_report(name,components=None,time_filter=None,elements_filter=None):
+def get_single_report(name,components=None,time_filter=None,elements_filter=None,exclude_filter=None):
 
-    if components is None: components = get_default_components(True)
+    if components is None: components = get_default_components(True,exclude_filter)
 
     if name == "cur":
         name = user_data.get_meta(meta_key)
@@ -687,9 +694,9 @@ def unique(seq, idfun=None):
 
 def get_builtin_template_transaction_csv():
     return """
-User Path,Element,Parent,Count,Min,Avg,Max,Perc 50,Perc 90,Perc 95,Perc 99,Success,Success Rate,Failure,Failure Rate{%
-    for txn in elements.transactions| rejectattr('id', 'equalto', 'all-transactions')|sort(attribute='avgDuration',reverse=true) %}
-{{ txn.user_path|e }},{{ txn.name|e }},{{ txn.parent|e }},{{ txn.aggregate.count }},{{ txn.aggregate.minDuration }},{{ txn.aggregate.avgDuration }},{{ txn.aggregate.maxDuration }},{{ txn.aggregate.percentile50 }},{{ txn.aggregate.percentile90 }},{{ txn.aggregate.percentile95 }},{{ txn.aggregate.percentile99 }},{{ txn.aggregate.successCount }},{{ txn.aggregate.successRate }},{{ txn.aggregate.failureCount }},{{ txn.aggregate.failureRate }}{%
+User Path;Element;Parent;Count;Min;Avg;Max;Perc 50;Perc 90;Perc 95;Perc 99;Success;Success Rate;Failure;Failure Rate{%
+    for txn in elements.transactions | rejectattr('id', 'equalto', 'all-transactions') | rejectattr('aggregate.count', 'equalto', '0') | sort(attribute='avgDuration',reverse=true) %}
+{{ txn.user_path|e }};{{ txn.name|e }};{{ txn.parent|e }};{{ txn.aggregate.count }};{{ txn.aggregate.minDuration }};{{ txn.aggregate.avgDuration }};{{ txn.aggregate.maxDuration }};{{ txn.aggregate.percentile50 }};{{ txn.aggregate.percentile90 }};{{ txn.aggregate.percentile95 }};{{ txn.aggregate.percentile99 }};{{ txn.aggregate.successCount }};{{ txn.aggregate.successRate }};{{ txn.aggregate.failureCount }};{{ txn.aggregate.failureRate }}{%
     endfor %}""".strip()
 
 rest_calls = []
