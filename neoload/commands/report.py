@@ -15,6 +15,7 @@ import math
 import functools
 import datetime
 import uuid
+from threading import Lock
 
 from neoload_cli_lib import tools, rest_crud, user_data, displayer, cli_exception
 from neoload_cli_lib.name_resolver import Resolver
@@ -39,28 +40,34 @@ __resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace)
 meta_key = 'result id'
 gprint = print
 
+MAX_CALLS_PER_SECOND = max(1,math.floor(((200 - 50) / 60)))
 
 @click.command()
 @click.option('--template', help="A built-in known report type or the file path to the .j2 template. Built-in types include:    'builtin:transactions-csv'     'builtin:transactions-json'")
 @click.option('--json-in', help="The file path to the .json data if previously stored using --out-file and no template or a json template")
 @click.option('--out-file', help="The file path to the resulting output, or none to print to stdout")
 @click.option('--filter', help="A filter statement to scope to a timespan and/or specify which reports and elements to use for multi-result analysis")
+@click.option('--max-rps', type=int, help="Explicit control over max concurrency of API calls")
 @click.argument('report_type',
                 type=click.Choice(['single','trends'], case_sensitive=False),
                 required=False)
 @click.argument("name", type=str, required=False)
-def cli(report_type, template, json_in, out_file, filter, name):
+def cli(report_type, template, json_in, out_file, filter, max_rps, name):
     """Generate builtin or custom Jinja reports based on test results data
     Example: neoload report --template builtin:transactions-csv single cur
     """
 
     global gprint
+    global MAX_CALLS_PER_SECOND
 
     json_data_text = None
     template_text = None
     final_output = None
 
     logger = logging.getLogger()
+
+    if max_rps is not None:
+        MAX_CALLS_PER_SECOND = max_rps
 
     filter_spec = parse_filter_spec(filter)
     time_filter = filter_spec['time_filter']
@@ -537,10 +544,12 @@ def get_human_readable_time(reldel):
 
 def get_elements_data(result_id, base_col, time_binding, include_points, statistics_list):
 
+    global MAX_CALLS_PER_SECOND
+
     procedure = lambda el: get_element_data(el, result_id, time_binding, include_points, statistics_list)
 
     with concurrent.futures.ThreadPoolExecutor() as executor: #ThreadPoolExecutor
-        for out in executor.map(procedure, base_col, chunksize=3):
+        for out in executor.map(procedure, base_col, chunksize=MAX_CALLS_PER_SECOND):
             logging.getLogger().info('parallel processing get_element_data workers')
 
     #for el in base_col:
@@ -700,19 +709,21 @@ User Path;Element;Parent;Count;Min;Avg;Max;Perc 50;Perc 90;Perc 95;Perc 99;Succe
     endfor %}""".strip()
 
 rest_calls = []
-max_calls_per_second = ((300 - 50) / 60)
-calls_indicator = 0
+calls_cleanup_indicator = 0
+calls_lock = Lock()
 
 def cleanup_completed_calls():
     back_step = get_epoch() - (1000)
     l = list(filter(lambda a: a["completed"] and a["epoch"]<back_step, rest_calls))
     if len(l) > 20:
+        calls_lock.acquire()
         logging.getLogger().debug("Cleaning up completed calls")
         for e in l:
             try:
                 rest_calls.remove(e)
             except Exception:
                 logging.getLogger().debug("Clean couldn't remove an e")
+        calls_lock.release()
 
 def get_incomplete_calls():
     return list(filter(lambda a: a["sent"] and not a["completed"], rest_calls))
@@ -723,10 +734,10 @@ def get_current_calls_per_second_rate():
 def get_epoch():
     return time.time() * 1000
 def rest_crud_get(url):
-    global calls_indicator
-    if calls_indicator > 20:
+    global calls_cleanup_indicator
+    if calls_cleanup_indicator > 20:
         cleanup_completed_calls()
-        calls_indicator = 0
+        calls_cleanup_indicator = 0
 
     call = {
         "uuid": uuid.uuid1(),
@@ -735,14 +746,20 @@ def rest_crud_get(url):
         "sent": False,
         "completed": False,
     }
-    rest_calls.append(call)
-    call = next(filter(lambda a: a["uuid"] == call["uuid"],rest_calls))
-    while get_current_calls_per_second_rate() >= max_calls_per_second:
-        logging.getLogger().debug("Waiting due to rate: " + str(get_current_calls_per_second_rate()))
+
+    while math.ceil(get_current_calls_per_second_rate()) >= MAX_CALLS_PER_SECOND:
+        logging.getLogger().debug("Waiting due to rate: rps=" + str(get_current_calls_per_second_rate()) + ", max=" + str(MAX_CALLS_PER_SECOND))
         time.sleep(0.200)
 
+    calls_lock.acquire()
+    rest_calls.append(call)
+    call = next(filter(lambda a: a["uuid"] == call["uuid"],rest_calls))
+
+    logging.getLogger().debug("Rate allows: rps=" + str(get_current_calls_per_second_rate()) + ", max=" + str(MAX_CALLS_PER_SECOND))
+
     call["sent"] = True
-    calls_indicator += 1
+    calls_cleanup_indicator += 1
+    calls_lock.release()
     ret = rest_crud.get(url)
     call["completed"] = True
     return ret
