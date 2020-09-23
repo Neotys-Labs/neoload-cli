@@ -8,7 +8,7 @@ import yaml
 from pyparsing import basestring
 from simplejson import JSONDecodeError
 
-from neoload_cli_lib import rest_crud, cli_exception
+from neoload_cli_lib import rest_crud, cli_exception, tools
 
 __conf_name = "neoload-cli"
 __version = "1.0"
@@ -33,13 +33,14 @@ def get_user_data(throw=True):
     return __user_data_singleton
 
 
-def do_login(token, url, no_write):
+def do_login(token, url, no_write, ssl_cert=''):
     global __no_write
     __no_write = no_write
     if token is None:
         raise cli_exception.CliException('token is mandatory. please see neoload login --help.')
     global __user_data_singleton
     __user_data_singleton = UserData.from_login(token, url)
+    __user_data_singleton.set_ssl_cert(ssl_cert)
     __compute_version_and_path()
     __save_user_data()
     return __user_data_singleton
@@ -61,7 +62,9 @@ def get_file_storage_from_swagger():
     response = rest_crud.get_raw('explore/v2/swagger.yaml')
     spec = yaml.load(response.text, Loader=yaml.FullLoader)
     if isinstance(spec, basestring) or 'paths' not in spec.keys():
-        raise cli_exception.CliException('Unable to reach Neoload Web API. Bad URL or bad swagger file at /explore/v2/swagger.yaml.')
+        raise cli_exception.CliException(
+            'Unable to reach Neoload Web API. Bad URL or bad swagger file at /explore/v2/swagger.yaml.'
+        )
     return spec['paths']['/tests/{testId}/project']['servers'][0]['url']
 
 
@@ -136,6 +139,10 @@ class UserData:
         else:
             self.metadata['version'] = 'legacy'
 
+    def set_ssl_cert(self, ssl_cert):
+        if ssl_cert:
+            self.metadata['ssl certificate'] = ssl_cert
+
 
 def __load_user_data():
     if os.path.exists(__config_file):
@@ -147,6 +154,10 @@ def __load_user_data():
 
 
 __user_data_singleton = __load_user_data()
+
+
+def get_ssl_cert():
+    return tools.ssl_cert_to_verify(__user_data_singleton.metadata.get('ssl certificate'))
 
 
 def __save_user_data():
