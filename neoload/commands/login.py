@@ -8,9 +8,10 @@ from neoload_cli_lib import user_data, tools
 @click.command()
 @click.option('--url', default="https://neoload-api.saas.neotys.com/", help="The URL of api ", metavar='URL')
 @click.option('--no-write', is_flag=True, help="don't save login on application data")
+@click.option('--ssl-cert', default="", help="Path to SSL certificate or write False to disable certificate checking")
 @click.option('--workspace', help="The Neoload Web workspace name or id. Optional. If not set, use the API v2 bound to the default workspace.")
 @click.argument('token', required=False)
-def cli(token, url, no_write, workspace):
+def cli(token, url, no_write, workspace, ssl_cert):
     """Store your token and API url of NeoLoad Web. The token is read from stdin if none is set.
     The default API url is "https://neoload-api.saas.neotys.com/" """
     if not token:
@@ -22,7 +23,7 @@ def cli(token, url, no_write, workspace):
     if url[-1] != '/':
         url += '/'
 
-    __user_data = user_data.do_login(token, url, no_write)
+    __user_data = user_data.do_login(token, url, no_write, ssl_cert)
 
     if workspace is not None:
         if user_data.is_version_lower_than('2.5.0'):

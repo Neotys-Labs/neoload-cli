@@ -146,3 +146,10 @@ def system_exit(exit_process, apply_exit_code=True):
     if apply_exit_code or exit_code > 1:
         sys.exit(exit_process['code'])
 
+
+def ssl_cert_to_verify(ssl_cert):
+    if not ssl_cert:
+        return True
+    if ssl_cert == 'False':
+        return False
+    return ssl_cert

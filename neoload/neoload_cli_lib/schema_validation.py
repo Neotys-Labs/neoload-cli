@@ -6,11 +6,12 @@ import requests
 import yaml
 from yaml.scanner import ScannerError
 
-from neoload_cli_lib.user_data import update_schema, get_yaml_schema
+from neoload_cli_lib.user_data import update_schema, get_yaml_schema, tools
 
-YAML_NOT_CONFIRM_MESSAGE="YAML does not confirm to NeoLoad DSL schema."
+YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
 
-def validate_yaml(yaml_file_path, schema_url):
+
+def validate_yaml(yaml_file_path, schema_url, ssl_cert=''):
     try:
         yaml_content = open(yaml_file_path)
     except Exception as err:
@@ -28,7 +29,7 @@ def validate_yaml(yaml_file_path, schema_url):
             raise Exception('Error getting the schema from disk : %s' % str(err))
     else:
         try:
-            json_schema = requests.get(schema_url).text
+            json_schema = requests.get(schema_url, verify=tools.ssl_cert_to_verify(ssl_cert)).text
         except Exception as err:
             raise Exception('Error getting the schema from the url: %s\n%s' % (schema_url, str(err)))
         try:
@@ -51,4 +52,4 @@ def validate_yaml(yaml_file_path, schema_url):
         for error in sorted(v.iter_errors(yaml_as_object), key=str):
             path = "\\".join(list(map(lambda x: str(x), error.path)))
             msgs += "\n" + error.message + "\n\tat: " + path + "\n\tgot: \n" + yaml.dump(error.instance) + "\n"
-        raise ValueError(YAML_NOT_CONFIRM_MESSAGE+'\n' + msgs)
+        raise ValueError(YAML_NOT_CONFIRM_MESSAGE + '\n' + msgs)
