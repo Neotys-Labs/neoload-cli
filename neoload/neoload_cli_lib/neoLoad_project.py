@@ -10,6 +10,7 @@ from neoload_cli_lib import rest_crud, tools, cli_exception
 not_to_be_included = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/', 'results/',
               'comparative-summary/', 'reports/', '/recorded-artifacts/']
 
+MAX_FILE_MB_BEFORE_PROGRESS = 5
 
 def is_not_to_be_included(path: str, nlignore_matcher):
     for refused in not_to_be_included:
@@ -40,7 +41,7 @@ def zip_dir(path):
     return temp_zip
 
 
-def upload_project(path, endpoint):
+def upload_project(path, endpoint, suppress_progress):
     filename = os.path.basename(path)
     if str(path).endswith(('.zip', '.yaml', '.yml')):
         file = open(path, "b+r")
@@ -50,7 +51,7 @@ def upload_project(path, endpoint):
 
     totalsize = os.stat(file.name).st_size
 
-    if totalsize < (100 * 1000): # if over 100KB, use with progress
+    if totalsize < (MAX_FILE_MB_BEFORE_PROGRESS * 1024 * 1024) or suppress_progress: # if less than 5MB or explicitly not progress, suppress
         display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
     else:
         display_project(rest_crud.post_binary_files_storage_with_progress(endpoint, file, filename))

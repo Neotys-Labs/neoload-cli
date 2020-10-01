@@ -13,19 +13,6 @@ from neoload_cli_lib import user_data, cli_exception
 __current_command = ""
 __current_sub_command = ""
 
-DEFAULT_HTTP_TIMEOUT = 5
-HTTP_TIMEOUT = DEFAULT_HTTP_TIMEOUT
-
-
-def request_patch(slf, *args, **kwargs):
-    timeout = kwargs.pop('timeout', HTTP_TIMEOUT)
-    return slf.request_orig(*args, **kwargs, timeout=timeout)
-
-
-setattr(requests.sessions.Session, 'request_orig', requests.sessions.Session.request)
-requests.sessions.Session.request = request_patch
-
-
 def set_current_command(command: str):
     global __current_command
     global __current_sub_command
@@ -117,14 +104,37 @@ def post_binary_files_storage_with_progress(endpoint: str, path, filename):
     headers["Content-Type"] = ctype
 
     body = BufferReader(data, progress)
+
     global HTTP_TIMEOUT
     HTTP_TIMEOUT = 30
+    apply_requests_timeout()
+
     response = requests.post(__create_url_file_storage(endpoint), data=body, headers=headers)
+
     HTTP_TIMEOUT = DEFAULT_HTTP_TIMEOUT
-    sys.stdout.write("\r")
+    revert_requests_timeout()
+
+    sys.stdout.write('\r{0:<60}'.format(''))
+    sys.stdout.flush()
 
     __handle_error(response)
     return response
+
+DEFAULT_HTTP_TIMEOUT = (60 * 5) # by default, all REST commands are 5min timeout
+HTTP_TIMEOUT = DEFAULT_HTTP_TIMEOUT # provided if a command overrides temporarily, and needs to reset
+
+def request_patch(slf, *args, **kwargs):
+    timeout = kwargs.pop('timeout', HTTP_TIMEOUT)
+    return slf.request_orig(*args, **kwargs, timeout=timeout)
+
+def apply_requests_timeout():
+    setattr(requests.sessions.Session, 'request_orig', requests.sessions.Session.request)
+    requests.sessions.Session.request = request_patch
+
+def revert_requests_timeout():
+    req = getattr(requests.sessions.Session, 'request_orig', None)
+    requests.sessions.Session.request = req
+
 
 def progress(size=None, progress=None):
     done = int(50 * progress / size)
