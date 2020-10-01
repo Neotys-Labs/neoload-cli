@@ -8,6 +8,7 @@ from click import ClickException
 from termcolor import cprint
 
 from neoload_cli_lib import rest_crud, user_data
+import logging
 
 import subprocess, os
 
@@ -151,7 +152,7 @@ def system_exit(exit_process, apply_exit_code=True):
 def is_env_equal_to(name, compare_to):
     val = os.getenv(name, None)
     actualval = val
-    strval = "" if val is None else '%s'.format(val).lower().strip()
+    strval = "" if val is None else '{}'.format(val).lower().strip()
     if strval in ["true","yes","y","1"]:
         actualval = True
     if strval in ["false","no","n","0"]:
@@ -161,11 +162,10 @@ def is_env_equal_to(name, compare_to):
 def get_user_interactive_value():
     val = os.getenv('INTERACTIVE')
     if val is not None:
-        val = '%s'.format(val).lower().strip()
+        val = '{}'.format(val).lower().strip()
     return val
 
 def is_user_interactive():
-    val = get_user_interactive_value()
     if is_env_equal_to('INTERACTIVE',True):
         return True
     elif is_env_equal_to('INTERACTIVE',False):
@@ -174,8 +174,7 @@ def is_user_interactive():
         return is_user_interactive_implied()
 
 def is_user_interactive_implied():
-    if sys.__stdin__.isatty():
-        if graphics_available():
+    if sys.__stdin__.isatty() and graphics_available():
             return True
     return False
 
@@ -184,14 +183,16 @@ def graphics_available():
         import wmi
         try:
             wmi.WMI().computer.Win32_VideoController()[0] # Tested on Windows 10
-            return 1
-        except:
-            pass
+            return True
+        except Exception:
+            logging.debug("Could not ascertain Win32 VideoController status")
 
     elif os.name == 'posix': # Linux
         out = subprocess.getoutput('lshw -c video | grep configuration') # Tested on CENTOS 7 and Ubuntu
         if out:
-            return 1
+            return True
+
+    return False
 
 def ssl_cert_to_verify(ssl_cert):
     if not ssl_cert:
