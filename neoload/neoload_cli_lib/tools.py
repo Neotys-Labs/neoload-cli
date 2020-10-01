@@ -146,3 +146,49 @@ def system_exit(exit_process, apply_exit_code=True):
     if apply_exit_code or exit_code > 1:
         sys.exit(exit_process['code'])
 
+def is_env_equal_to(name, compare_to):
+    val = os.getenv(name, None)
+    actualval = val
+    strval = "" if val is None else '%s'.format(val).lower().strip()
+    if strval in ["true","yes","y","1"]:
+        actualval = True
+    if strval in ["false","no","n","0"]:
+        actualval = False
+    return actualval == compare_to
+
+def get_user_interactive_value():
+    val = os.getenv('INTERACTIVE')
+    if val is not None:
+        val = '%s'.format(val).lower().strip()
+    return val
+
+def is_user_interactive():
+    val = get_user_interactive_value()
+    if is_env_equal_to('INTERACTIVE',True):
+        return True
+    elif is_env_equal_to('INTERACTIVE',False):
+        return False
+    else:
+        return is_user_interactive_implied()
+
+def is_user_interactive_implied():
+    if sys.__stdin__.isatty():
+        if graphics_available():
+            return True
+    return False
+
+import subprocess, os
+
+def graphics_available():
+    if os.name == 'nt': # Windows
+        import wmi
+        try:
+            wmi.WMI().computer.Win32_VideoController()[0] # Tested on Windows 10
+            return 1
+        except:
+            pass
+
+    elif os.name == 'posix': # Linux
+        out = subprocess.getoutput('lshw -c video | grep configuration') # Tested on CENTOS 7 and Ubuntu
+        if out:
+            return 1
