@@ -39,7 +39,7 @@ def header_status(results_id):
     url = logs_url.get_url(results_id)
     print("Results of  : " + results_id)
     print("Logs are available at " + url)
-    if sys.stdin.isatty() and os.getenv('NL_OPEN_BROWSER'):
+    if (tools.is_user_interactive() or tools.is_env_equal_to('NL_OPEN_BROWSER',True)) and not tools.is_env_equal_to('NL_OPEN_BROWSER',False):
         time.sleep(1)
         webbrowser.open_new_tab(url)
 
