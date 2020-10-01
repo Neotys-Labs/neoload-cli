@@ -5,6 +5,8 @@ import click
 from commands import test_results
 from neoload_cli_lib import user_data, tools
 
+meta_key = 'result id'
+
 
 @click.command()
 @click.argument('name', type=str)
@@ -19,5 +21,13 @@ def get_url(name: str):
 
 
 def get_endpoint(name: str):
-    __id = tools.get_id(name, test_results.__resolver)
+    if name == "cur":
+        name = user_data.get_meta(meta_key)
+    is_id = tools.is_id(name)
+
+    __id = tools.get_id(name, test_results.__resolver, is_id)
+
+    if not __id:
+        __id = user_data.get_meta_required(meta_key)
+
     return '#!result/%s/overview' % __id

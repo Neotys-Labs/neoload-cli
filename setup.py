@@ -42,7 +42,8 @@ setup(
         'junit_xml',
         'termcolor',
         'coloredlogs',
-        'gitignore_parser'
+        'gitignore_parser',
+        'urllib3'
     ],
     long_description_content_type='text/markdown',
     long_description=long_description

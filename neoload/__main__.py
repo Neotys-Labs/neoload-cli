@@ -8,6 +8,10 @@ import coloredlogs
 from neoload_cli_lib import tools, rest_crud, cli_exception
 from version import __version__
 
+import urllib3
+
+urllib3.disable_warnings()
+
 plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
 
 # Disable output buffering.

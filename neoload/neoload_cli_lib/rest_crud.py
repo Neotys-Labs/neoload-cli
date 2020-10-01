@@ -62,12 +62,14 @@ def get(endpoint: str, params=None):
 
 
 def get_raw(endpoint: str, params=None):
-    return requests.get(__create_url(endpoint), params, headers=__create_additional_headers())
+    return requests.get(__create_url(endpoint), params, headers=__create_additional_headers(),
+                        verify=user_data.get_ssl_cert())
 
 
 def post(endpoint: str, data):
     logging.debug(f'POST {endpoint} body={data}')
-    response = requests.post(__create_url(endpoint), headers=__create_additional_headers(), json=data)
+    response = requests.post(__create_url(endpoint), headers=__create_additional_headers(), json=data,
+                             verify=user_data.get_ssl_cert())
     __handle_error(response)
     return response.json()
 
@@ -77,7 +79,8 @@ def __create_url_file_storage(endpoint):
 
 
 def get_from_file_storage(endpoint: str):
-    return __handle_error(requests.get(__create_url_file_storage(endpoint), headers=__create_additional_headers()))
+    return __handle_error(requests.get(__create_url_file_storage(endpoint), headers=__create_additional_headers(),
+                                       verify=user_data.get_ssl_cert()))
 
 
 def post_binary_files_storage(endpoint: str, path, filename):
@@ -87,7 +90,7 @@ def post_binary_files_storage(endpoint: str, path, filename):
     }
 
     response = requests.post(__create_url_file_storage(endpoint), headers=__create_additional_headers(),
-                             files=multipart_form_data)
+                             files=multipart_form_data, verify=user_data.get_ssl_cert())
     __handle_error(response)
     return response
 
@@ -192,20 +195,23 @@ class BufferReader(BytesIO):
 
 def put(endpoint: str, data):
     logging.debug(f'PUT {endpoint} body={data}')
-    response = requests.put(__create_url(endpoint), headers=__create_additional_headers(), json=data)
+    response = requests.put(__create_url(endpoint), headers=__create_additional_headers(), json=data,
+                            verify=user_data.get_ssl_cert())
     __handle_error(response)
     return response.json()
 
 
 def patch(endpoint: str, data):
     logging.debug(f'PATCH {endpoint} body={data}')
-    response = requests.patch(__create_url(endpoint), headers=__create_additional_headers(), json=data)
+    response = requests.patch(__create_url(endpoint), headers=__create_additional_headers(), json=data,
+                              verify=user_data.get_ssl_cert())
     __handle_error(response)
     return response.json()
 
 
 def delete(endpoint: str):
-    response = requests.delete(__create_url(endpoint), headers=__create_additional_headers())
+    response = requests.delete(__create_url(endpoint), headers=__create_additional_headers(),
+                               verify=user_data.get_ssl_cert())
     __handle_error(response)
     return response
 

@@ -9,6 +9,8 @@ from termcolor import cprint
 
 from neoload_cli_lib import rest_crud, user_data
 
+import subprocess, os
+
 __regex_id = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 __regex_mongodb_id = re.compile('[a-f\\d]{24}', re.IGNORECASE)
 
@@ -177,8 +179,6 @@ def is_user_interactive_implied():
             return True
     return False
 
-import subprocess, os
-
 def graphics_available():
     if os.name == 'nt': # Windows
         import wmi
@@ -192,3 +192,10 @@ def graphics_available():
         out = subprocess.getoutput('lshw -c video | grep configuration') # Tested on CENTOS 7 and Ubuntu
         if out:
             return 1
+
+def ssl_cert_to_verify(ssl_cert):
+    if not ssl_cert:
+        return True
+    if ssl_cert == 'False':
+        return False
+    return ssl_cert

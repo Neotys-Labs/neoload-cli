@@ -7,7 +7,7 @@ pipeline {
     string(defaultValue: "${NEOLOAD_CLI_NLW_URL}", description: 'NeoLoad Web Api Url', name: 'api_url')
   }
   environment {
-    CLI_BRANCH="topic-fastfail-command"
+    CLI_BRANCH="master"
 
     MAX_SLA_FAILURE_PERCENT=25 // if more than x% of the time a per-run interval failed, stop test immediately
   }
@@ -63,7 +63,7 @@ USER jenkins
             withEnv(["HOME=${env.WORKSPACE}"]) {
               sh """neoload \
                      login --url ${params.api_url} ${params.token} \
-                     test-settings --zone ${params.zone_id} --scenario fullTest createorpatch "example-Jenkins-SLAfail" \
+                     test-settings --zone ${params.zone_id} --lgs 2 --scenario fullTest createorpatch "example-Jenkins-SLAfail" \
                      project --path tests/neoload_projects/example_1/ upload
                 """
               //sh 'neoload docker attach' // starts additional containers for load infrastructure on Docker host
