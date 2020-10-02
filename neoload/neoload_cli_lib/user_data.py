@@ -1,9 +1,14 @@
 import os
+import re
+import sys
 
 import appdirs
+import requests
 import yaml
+from pyparsing import basestring
+from simplejson import JSONDecodeError
 
-from neoload_cli_lib import rest_crud, cli_exception
+from neoload_cli_lib import rest_crud, cli_exception, tools
 
 __conf_name = "neoload-cli"
 __version = "1.0"
@@ -28,13 +33,14 @@ def get_user_data(throw=True):
     return __user_data_singleton
 
 
-def do_login(token, url, no_write):
+def do_login(token, url, no_write, ssl_cert=''):
     global __no_write
     __no_write = no_write
     if token is None:
         raise cli_exception.CliException('token is mandatory. please see neoload login --help.')
     global __user_data_singleton
     __user_data_singleton = UserData.from_login(token, url)
+    __user_data_singleton.set_ssl_cert(ssl_cert)
     __compute_version_and_path()
     __save_user_data()
     return __user_data_singleton
@@ -46,25 +52,41 @@ def get_front_url_by_private_entrypoint():
 
 
 def __compute_version_and_path():
-    file_storage = get_file_storage_from_swagger()
-    front = get_front_url_by_private_entrypoint()
-    __user_data_singleton.set_url(front, file_storage, None)
+    if get_nlweb_information() is False:
+        file_storage = get_file_storage_from_swagger()
+        front = get_front_url_by_private_entrypoint()
+        __user_data_singleton.set_url(front, file_storage, None)
 
 
 def get_file_storage_from_swagger():
     response = rest_crud.get_raw('explore/v2/swagger.yaml')
     spec = yaml.load(response.text, Loader=yaml.FullLoader)
+    if isinstance(spec, basestring) or 'paths' not in spec.keys():
+        raise cli_exception.CliException(
+            'Unable to reach Neoload Web API. Bad URL or bad swagger file at /explore/v2/swagger.yaml.'
+        )
     return spec['paths']['/tests/{testId}/project']['servers'][0]['url']
 
 
 def get_nlweb_information():
-    response = rest_crud.get_raw('v2/informations')
-    if response.status_code == 200:
-        json = response.json()
-        __user_data_singleton.url(json['front_url'], json['filestorage_url'], json['version'])
-        return True
-    else:
-        return False
+    try:
+        response = rest_crud.get_raw('v3/information')
+        if response.status_code == 401:
+            raise cli_exception.CliException(response.text)
+        elif response.status_code == 200:
+            json = response.json()
+            __user_data_singleton.set_url(json['front_url'], json['filestorage_url'], json['version'])
+            return True
+        else:
+            return False
+    except requests.exceptions.MissingSchema as err:
+        raise cli_exception.CliException('Unable to reach Neoload Web API. The URL must start with https:// or http://'
+                                         + '. Details: ' + str(err))
+    except requests.exceptions.ConnectionError as err:
+        raise cli_exception.CliException('Unable to reach Neoload Web API. Bad URL. Details: ' + str(err))
+    except JSONDecodeError as err:
+        raise cli_exception.CliException('Unable to parse the response of the server. Did you set the frontend URL'
+                                         + ' instead of the API url ? Details: ' + str(err))
 
 
 class UserData:
@@ -89,7 +111,7 @@ class UserData:
         metadata = ""
         for (key, value) in self.metadata.items():
             if value is not None:
-                metadata += key + ": " + value + "\n"
+                metadata += key + ": " + str(value) + "\n"
         return "You are logged on " + self.url + " with token " + token + "\n\n" + metadata
 
     def get_url(self):
@@ -117,6 +139,10 @@ class UserData:
         else:
             self.metadata['version'] = 'legacy'
 
+    def set_ssl_cert(self, ssl_cert):
+        if ssl_cert:
+            self.metadata['ssl certificate'] = ssl_cert
+
 
 def __load_user_data():
     if os.path.exists(__config_file):
@@ -130,6 +156,10 @@ def __load_user_data():
 __user_data_singleton = __load_user_data()
 
 
+def get_ssl_cert():
+    return tools.ssl_cert_to_verify(__user_data_singleton.metadata.get('ssl certificate'))
+
+
 def __save_user_data():
     if not __no_write:
         os.makedirs(__config_dir, exist_ok=True)
@@ -138,12 +168,37 @@ def __save_user_data():
 
 
 def set_meta(key, value):
-    get_user_data().metadata[key] = value
+    if value is None:
+        get_user_data().metadata.pop(key, None)
+    else:
+        get_user_data().metadata[key] = value
     __save_user_data()
 
 
 def get_meta(key):
-    return get_user_data().metadata.get(key, None)
+    result = get_user_data().metadata.get(key, None)
+    if result == 'null':
+        result = None
+    return result
+
+
+def is_version_lower_than(version: str):
+    return __version_to_int(get_user_data().get_version()) < __version_to_int(version)
+
+
+def __version_to_int(version: str):
+    if version.lower() == 'saas':
+        return sys.maxsize
+    elif version.lower() == 'legacy':
+        return -1
+
+    version_as_int = 0
+    offset = 1
+    # Only keep numbers on the version (remove -SNAPSHOT for example)
+    for digit in reversed(re.sub('[^0-9\\.]*', '', version).split('.')):
+        version_as_int += int(digit) * offset
+        offset *= 1000
+    return version_as_int
 
 
 def get_meta_required(key):

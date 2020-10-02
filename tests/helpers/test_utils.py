@@ -10,6 +10,10 @@ def assert_success(result):
     assert result.exit_code == 0
 
 
+def mock_api_get_with_pagination(monkeypatch, endpoint, json_result):
+    __mock_api_without_data(monkeypatch, 'get_with_pagination', endpoint, json_result)
+
+
 def mock_api_get(monkeypatch, endpoint, json_result):
     __mock_api_without_data(monkeypatch, 'get', endpoint, json_result)
 
@@ -90,7 +94,7 @@ def generate_test_result_name():
     return 'Test result CLI %s' % datetime.utcnow().strftime('%b %d %H:%M:%S.%f')[:-3]
 
 
-def mock_login_get_urls(monkeypatch):
+def mock_login_get_urls(monkeypatch, version='2.5.0'):
     if monkeypatch is not None:
         monkeypatch.setattr(user_data, '__compute_version_and_path',
-                            lambda: user_data.get_user_data().set_url('http://front', 'http://files', '1.2.3'))
+                            lambda: user_data.get_user_data().set_url('http://front.com:8081/nlw', 'http://files.com:8082', version))

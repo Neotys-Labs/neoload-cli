@@ -17,28 +17,20 @@ class TestSchemaValidation:
         with pytest.raises(Exception) as context:
             schema_validation.validate_yaml(yaml_file_path, __schema_url__)
         assert 'This is not a valid yaml file' in str(context.value)
-        assert 'while scanning a simple key' in str(context.value)
-        assert 'could not find expected \':\'' in str(context.value)
-        assert 'line 3, column 1' in str(context.value)
 
     @pytest.mark.datafiles('tests/neoload_projects/empty.yaml')
     def test_empty(self, datafiles):
         yaml_file_path = datafiles.listdir()[0]
         with pytest.raises(Exception) as context:
             schema_validation.validate_yaml(yaml_file_path, __schema_url__)
-        assert 'Wrong Yaml structure' in str(context.value)
-        assert 'None is not of type \'object\'' in str(context.value)
-        assert 'On instance:\nNone' in str(context.value)
+        assert schema_validation.YAML_NOT_CONFIRM_MESSAGE in str(context.value)
 
     @pytest.mark.datafiles('tests/neoload_projects/invalid_to_schema.yaml')
     def test_invalid_to_schema(self, datafiles):
         yaml_file_path = datafiles.listdir()[0]
         with pytest.raises(Exception) as context:
             schema_validation.validate_yaml(yaml_file_path, __schema_url__)
-        assert 'Wrong Yaml structure' in str(context.value)
-        assert 'Additional properties are not allowed (\'ifyourelookingforcutthroat\' was unexpected)' in str(
-            context.value)
-        assert 'On instance:\n{\'name\': \'NeoLoad-CLI-example-2_0' in str(context.value)
+        assert schema_validation.YAML_NOT_CONFIRM_MESSAGE in str(context.value)
 
     def test_no_file(self, datafiles):
         with pytest.raises(Exception) as context:

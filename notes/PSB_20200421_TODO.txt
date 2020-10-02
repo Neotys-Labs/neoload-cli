@@ -1,0 +1,37 @@
+Found during usage:
+
+* additional options (like login --url) must precede arguments (such as zone?)
+* why are we emitting JSON to the console?
+* if in interactive mode, launch browser to logs URL
+* when run, Status: INIT just sits there, should be ...s based on polling API
+* to change number of LGs, which is it? PUT or PATCH?
+* and why are we exposing REST/methods to CLI commands?!
+* lack of validation of --as-code files leads to 30mins asking "why failed to start test" (without controller logs)
+* would be good to recapitulate estimated test length/iterations before test runs instead of each line
+* each running line could have percent complete (based on length or iteration)
+* what if we lace the test running status lines with controller & lg CPU/mem metrics?
+* need more whitespace between running line column (jagged after 5min test results)
+* why do we emit JSON in the post-run test results?
+* when exiting during init using CTRL+C, "Test is not running", but then exits the Python process
+* change 'neoload status' output from 'settings id' to 'test id'
+* shouldn't "test-settings" command really be "tests"?
+* logs should be colored, and figlet added back in but only to top-level help and login
+* test-settings --scenario ... patch should not overwrite existing lgs and controller config
+* travis tokens? https://docs.travis-ci.com/user/deployment-v2/providers/pypi/
+
+Docker:
+
+neoload docker ls   # lists local docker containers related to current test-settings
+neoload docker ls [-a|--all]   # lists all local docker containers connected to NeoLoad Web
+neoload docker --version [default:latest] --ctrlimage [repo] --lgimage [repo] attach  # uses test-settings \
+  to spin up controllers and LGs in static zones; \
+  also preserves additional options in local config so that next run, if not running, will re-spin these containers
+neoload docker detach   # stops running local containers that were spun as part of the last test
+neoload docker detach [-a|--all]   # stops all running local containers that are connected to NeoLoad Web
+neoload docker cleanup [-a|--all]   # stops all running local containers and networks spun by this CLI
+neoload docker forget   # clears local config of prior docker attach details
+
+neoload run  # should re-spin containers if local config has prior attach details stored, preserve that re-spin was necessary
+neoload stop  # if re-spin was necessary, confirm if we should detatch too
+neoload test-settings use ...  # if switching and docker currently attached, ask if want to detatch
+neoload logout  # always 'neoload docker detatch --all'

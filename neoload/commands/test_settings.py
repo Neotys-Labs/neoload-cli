@@ -11,14 +11,14 @@ from neoload_cli_lib.name_resolver import Resolver
 
 import logging
 
-__endpoint = "v2/tests"
-__resolver = Resolver(__endpoint)
+__endpoint = "/tests"
+__resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace)
 
 meta_key = 'settings id'
 
 
 @click.command()
-@click.argument('command', type=click.Choice(['ls', 'create', 'put', 'patch', 'delete', 'use','createorpatch'], case_sensitive=False),
+@click.argument('command', type=click.Choice(['ls', 'create', 'put', 'patch', 'delete', 'use', 'createorpatch'], case_sensitive=False),
                 required=False)
 @click.argument("name", type=str, required=False)
 @click.option('--rename', help="rename test settings")
@@ -27,7 +27,8 @@ meta_key = 'settings id'
 @click.option('--zone', 'controller_zone_id', help="controller zone and it default zone for the lg.")
 @click.option('--lgs', 'lg_zone_ids', help="precise how many lg and other zone if needed. by default we use one lg.")
 @click.option('--naming-pattern', 'naming_pattern', help="")
-def cli(command, name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern):
+@click.option('--file', type=click.File('r'), help="Json file with the data to be sent to the API.")
+def cli(command, name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern, file):
     """
     ls     # Lists test settings                                             .
     create # Create a new test settings                                      .
@@ -50,11 +51,11 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
         tools.ls(name, is_id, __resolver)
         return
     elif command == "create":
-        id_created = create(create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
+        id_created = create(create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern, file))
         user_data.set_meta(meta_key, id_created)
         return
     elif command == "createorpatch":
-        __id = createorpatch(name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern)
+        __id = create_or_patch(name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern, file)
         user_data.set_meta(meta_key, __id)
         return
 
@@ -68,10 +69,10 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
         __id = user_data.get_meta_required(meta_key)
 
     if command == "put":
-        put(__id, create_json(rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
+        put(__id, create_json(rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern, file))
         user_data.set_meta(meta_key, __id)
     elif command == "patch":
-        patch(__id, create_json(rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
+        patch(__id, create_json(rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern, file))
         user_data.set_meta(meta_key, __id)
     elif command == "delete":
         delete(__id)
@@ -79,7 +80,7 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
 
 
 def create(json_data):
-    rep = rest_crud.post(__endpoint, fill_default_fields(json_data))
+    rep = rest_crud.post(get_end_point(), fill_default_fields(json_data))
     return tools.get_id_and_print_json(rep)
 
 
@@ -89,21 +90,28 @@ def put(id_settings, json_data):
 
 
 def patch(id_settings, json_data):
-    rep = rest_crud.patch(get_end_point(id_settings), fill_default_fields(json_data))
+    rep = rest_crud.patch(get_end_point(id_settings), json_data)
     tools.get_id_and_print_json(rep)
 
 
 def delete(__id):
-    rep = tools.delete(__endpoint, __id, "settings")
+    rep = tools.delete(get_end_point(), __id, "settings")
     tools.print_json(rep.json())
     user_data.set_meta(meta_key, None)
 
 
-def get_end_point(id_test: str):
-    return __endpoint + "/" + id_test
+def get_end_point(id_test: str = None):
+    slash_id_test = '' if id_test is None else '/' + id_test
+    return rest_crud.base_endpoint_with_workspace() + '/tests' + slash_id_test
 
 
-def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern):
+def create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern, file):
+    if file:
+        try:
+            return json.load(file)
+        except json.JSONDecodeError as err:
+            raise cli_exception.CliException('%s\nThis command requires a valid Json input.\n'
+                                             'Example: neoload test-settings create {"name":"TestName"}' % str(err))
     data = {}
     if name is not None:
         data['name'] = name
@@ -129,12 +137,6 @@ def manual_json(data):
         for field in ['name', 'description', 'scenarioName', 'controllerZoneId', 'testResultNamingPattern']:
             data[field] = input(field)
         data['lgZoneIds'] = parse_zone_ids(input("lgZoneIds"), data['controllerZoneId'])
-    else:
-        try:
-            data = json.loads(sys.stdin.read())
-        except json.JSONDecodeError as err:
-            raise cli_exception.CliException('%s\nThis command requires a valid Json input.\n'
-                                             'Example: neoload test-settings create {"name":"TestName"}' % str(err))
     return data
 
 
@@ -169,26 +171,16 @@ def fill_default_fields(json_data):
     ])
     return data
 
-def createorpatch(name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern):
-    __id = None
 
+def create_or_patch(name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern, file):
     is_id = tools.is_id(name)
 
-    try:
-        __id = tools.get_id(name, __resolver, is_id)
-        logging.info('Found test-setting: ' + __id)
-    except cli_exception.CliException as err:
-        if 'no id associated' not in err.message.lower():
-            raise err
+    __id = tools.get_id(name, __resolver, is_id, True)
 
-    if __id is not None:
-        if rename is None:
-            name = tools.get_named_or_id(__id, True, __resolver)['name']
-            rename = name
-
-        logging.info('Patching test-settings: ' + rename)
-        patch(__id, create_json(rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
+    if __id is None:
+        logging.info('creating test-settings: ' + str(name))
+        __id = create(create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern, file))
     else:
-        __id = create(create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
-
+        logging.info('Patching test-settings: ' + str(__id))
+        patch(__id, create_json(rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern, file))
     return __id

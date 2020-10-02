@@ -1,3 +1,4 @@
+import time
 from urllib.parse import quote
 
 import click
@@ -37,10 +38,12 @@ def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_
 
     # Sorry for that, post data are in the query string :'( :'(
     post_result = rest_crud.post(
-        'v2/tests/%s/start?%s' % (_id, create_data(naming_pattern, description, as_code, web_vu, sap_vu, citrix_vu)),
+        test_settings.get_end_point(_id) + '/start?' + create_data(naming_pattern, description, as_code, web_vu, sap_vu, citrix_vu),
         {})
     user_data.set_meta(test_settings.meta_key, _id)
     user_data.set_meta(test_results.meta_key, post_result['resultId'])
+    # Wait 5 seconds until the test result is created.
+    time.sleep(5)
     if not detached:
         running_tools.wait(post_result['resultId'], not return_0)
     else:

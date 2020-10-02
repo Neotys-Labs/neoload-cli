@@ -11,4 +11,3 @@ def cli():
         print("No settings is stored. Please use \"neoload login\" to start.")
     else:
         print(login)
-    pass

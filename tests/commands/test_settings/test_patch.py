@@ -16,7 +16,7 @@ class TestPatch:
 
         json_mock_before = '{"id":"%s", "name":"test-name before", "description":"test description ",' \
                            '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", ' \
-                           '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runId}"}' % valid_data.test_settings_id
+                           '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runID}"}' % valid_data.test_settings_id
 
         mock_api_get(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id, json_mock_before)
         result_ls = runner.invoke(settings, ['ls', valid_data.test_settings_id])
@@ -47,11 +47,11 @@ class TestPatch:
         mock_api_patch(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id,
                        '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":"test description ",'
                        '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", '
-                       '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runId}"}' % test_name)
+                       '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runID}"}' % test_name)
         result = runner.invoke(settings,
                                ['patch', valid_data.test_settings_id, '--description', 'test description ',
                                 '--scenario', 'scenario name', '--zone', 'defaultzone',
-                                '--lgs', 'defaultzone:5,UdFyn:1', '--naming-pattern', 'test_${runId}',
+                                '--lgs', 'defaultzone:5,UdFyn:1', '--naming-pattern', 'test_${runID}',
                                 '--rename', test_name])
         assert_success(result)
         json_result = json.loads(result.output)
@@ -61,7 +61,7 @@ class TestPatch:
         assert json_result['controllerZoneId'] == 'defaultzone'
         assert json_result['lgZoneIds']['defaultzone'] == 5
         assert json_result['lgZoneIds']['UdFyn'] == 1
-        assert json_result['testResultNamingPattern'] == 'test_${runId}'
+        assert json_result['testResultNamingPattern'] == 'test_${runID}'
 
     def test_default_fields(self, monkeypatch, valid_data):
         runner = CliRunner()
@@ -121,11 +121,11 @@ class TestPatch:
         mock_api_patch(monkeypatch, 'v2/tests/%s' % valid_data.test_settings_id,
                        '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":"test description ",'
                        '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", '
-                       '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runId}"}' % test_name)
+                       '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runID}"}' % test_name)
         result = runner.invoke(settings, ['patch'],
                                input='{"name":"%s", "description":"test description ",'
                                      '"scenarioName":"scenario name", "controllerZoneId":"defaultzone", '
-                                     '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runId}"}' % test_name)
+                                     '"lgZoneIds":{"defaultzone":5,"UdFyn":1}, "testResultNamingPattern":"test_${runID}"}' % test_name)
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['name'] == test_name
@@ -134,21 +134,18 @@ class TestPatch:
         assert json_result['controllerZoneId'] == 'defaultzone'
         assert json_result['lgZoneIds']['defaultzone'] == 5
         assert json_result['lgZoneIds']['UdFyn'] == 1
-        assert json_result['testResultNamingPattern'] == 'test_${runId}'
+        assert json_result['testResultNamingPattern'] == 'test_${runID}'
 
-    def test_error_required(self):
-        runner = CliRunner()
-        result = runner.invoke(settings, ['patch'])
-        assert result.exit_code == 1
-        assert 'Error: Expecting value: line 1 column 1' in result.output
-        assert 'This command requires a valid Json input' in result.output
 
-    def test_error_invalid_json(self):
+    def test_error_invalid_json(self,valid_data):
         runner = CliRunner()
-        result = runner.invoke(settings, ['patch'], input='{"key": not valid,,,}')
-        assert result.exit_code == 1
-        assert 'Error: Expecting value: line 1 column 9 (char 8)' in result.output
-        assert 'This command requires a valid Json input' in result.output
+        with runner.isolated_filesystem():
+            with open('bad.json', 'w') as f:
+                f.write('{"key": not valid,,,}')
+            result = runner.invoke(settings, ['patch', '--file', 'bad.json', valid_data.test_settings_id])
+            assert result.exit_code == 1
+            assert 'Error: Expecting value: line 1 column 9 (char 8)' in result.output
+            assert 'This command requires a valid Json input' in result.output
 
     def test_error_not_logged_in(self):
         runner = CliRunner()

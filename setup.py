@@ -43,6 +43,8 @@ setup(
         'termcolor',
         'coloredlogs',
         'jinja2'
+        'gitignore_parser',
+        'urllib3'
     ],
     long_description_content_type='text/markdown',
     long_description=long_description

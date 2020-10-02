@@ -24,8 +24,8 @@ The goal of this guide is to demonstrate how you can:
 ```
 pip3 install neoload
 neoload login $NLW_TOKEN \
-        test-settings --zone $NLW_ZONE_DYNAMIC --lgs 5 --scenario sanityScenario create NewTest1 \
-        project --path tests/neoload_projects/example_1 upload \
+        test-settings --zone $NLW_ZONE_DYNAMIC --lgs 5 --scenario sanityScenario createorpatch NewTest1 \
+        project --path tests/neoload_projects/example_1 upload NewTest1 \
         run
 ```
 NOTE: For Windows command line, replace the '\\' multi-line separators above with '^'
@@ -39,6 +39,7 @@ NOTE: For Windows command line, replace the '\\' multi-line separators above wit
    - [Setup resources in Neoload Web](#setup-resources-in-neoload-web)
    - [Define a test settings](#define-a-test-settings)
    - [Upload a Neoload project](#upload-a-neoload-project)
+     - [Excluding files from the project upload] (#excluding-files-from-the-project-upload)
  - [Run a test](#run-a-test)
    - [Stop a running test](#stop-a-running-test)
  - [View results](#view-results)
@@ -74,17 +75,27 @@ pip3 install certifi
 NeoLoad CLI defaults to using the NeoLoad Web APIs for most operations. That's why you need to login.
 ```
 neoload login [TOKEN]
-neoload login --url http://your-onpremise-neoload-api.com/ your-token
+neoload login --url http://your-onpremise-neoload-api.com/ --workspace "Default Workspace" your-token
 ```
 The CLI will connect by default to Neoload Web SaaS to lease license. \
-For self-hosted enterprise license, you must specify the Neoload Web Api url with --url. \
+For self-hosted enterprise license, you must specify the Neoload Web **Api url** with --url. \
 \
-The CLI stores data locally like api url, token, and the test ID you are working on. **The commands can be chained !**
+The CLI stores data locally like api url, token, the workspace ID and the test ID you are working on. **The commands can be chained !**
 ```
 neoload status          # Displays stored data
 ```
 
 ## Setup a test
+### Optionally Choose a workspace to work with
+```
+Usage: neoload workspaces [OPTIONS] [[ls|use]] [NAME_OR_ID]
+neoload workspaces use "Default Workspace"
+```
+Since Neoload Web 2.5 (August 2020), assets are scoped to workspaces.
+The CLI allows you to choose your workspace at login or with the "use" sub-command, otherwise the "Default Workspace" is used.\
+**/!\\** The zones are shared between workspaces.
+
+
 ### Setup resources in Neoload Web
 Run a test requires an infrastructure that is defined in Neoload Web Zones section [(see documentation how to manage zones)](https://www.neotys.com/documents/doc/nlweb/latest/en/html/#27521.htm#o39458)
 You must at least have either a dynamic or a static zone with one controller and one load generator. At First, you could add resources to the "Default zone" since the CLI use it by default.
@@ -121,6 +132,11 @@ To Validate the syntax and schema of the as-code project yaml files
 ```
 neoload validate sample_projects/example_1/default.yaml
 ```
+
+### Excluding files from the project upload
+If you are uploading a project directory that contains non NeoLoad as-code YAML files (such as .gitlab-ci.yml) you will need to create a .nlignore file (exactly the same as .gitignore) that excludes these files from the project upload process so that NeoLoad Web does not parse them and fail them as if they should be the NeoLoad DSL.
+
+Please see Gitlab and Azure pipeline examples for more detail.
 
 ## Run a test
 This command runs a test, it produces blocking, unbuffered output about test execution process, including readout of current data points.
@@ -274,6 +290,8 @@ While the above instructions could be run from a contributor workstation, they c
  - CircleCI, TBD when [@punkdata](https://www.linkedin.com/in/punkdata/) gets back to [@paulsbruce](https://www.linkedin.com/in/paulsbruce/) :)
 
 NB: When chaining commands, the return code of the whole command is the return code of the **last command**. That's why you should not chain the two commands "run" and "test-results junitsla".
+
+NOTE: When combining NeoLoad projects and YAML-based pipeline declarations, please see [Excluding files from the project upload] (#excluding-files-from-the-project-upload) to ensure that unecessary artifacts aren't included in the project upload process.
 
 ### Support for fast-fail based on SLAs ###
 
