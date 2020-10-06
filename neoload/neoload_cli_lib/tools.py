@@ -149,6 +149,10 @@ def system_exit(exit_process, apply_exit_code=True):
     if apply_exit_code or exit_code > 1:
         sys.exit(exit_process['code'])
 
+def does_env_var_exist(name):
+    val = os.getenv(name)
+    return val is not None
+
 def is_env_equal_to(name, compare_to):
     val = os.getenv(name, None)
     actualval = val
@@ -173,25 +177,33 @@ def is_user_interactive():
     else:
         return is_user_interactive_implied()
 
-def is_user_interactive_implied():
-    if sys.__stdin__.isatty() and graphics_available():
-            return True
+def get_ci_env_var_signatures():
+    ret = {}
+    ret["jenkins"] = ["JENKINS_URL"] # https://wiki.jenkins.io/display/JENKINS/Building+a+software+project
+    ret["travis"] = ["TRAVIS"] # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+    ret["bamboo"] = ["bamboo_buildNumber"] # https://stackoverflow.com/a/44330836
+    ret["codebuild"] = ["CODEBUILD_BUILD_ARN"] # https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
+    ret["azure"] = ["AGENT_TOOLSDIRECTORY"] # https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
+    ret["gitlab"] = ["CI_PROJECT_ID"] # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+    ret["teamcity"] = ["TEAMCITY_VERSION"] # https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html
+    ret["circleci"] = ["CIRCLECI"] # https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
+    ret["gcloudbuild"] = ["BUILD_ID"] # https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values
+    ret["generic_ci"] = ["CONTINUOUS_INTEGRATION","CI"] # travis, circleci, and others
+    return ret
+
+def are_any_ci_env_vars_active():
+    sigs = get_ci_env_var_signatures()
+    for key in sigs:
+        arr = sigs[key]
+        for var_name in arr:
+            if does_env_var_exist(var_name) and not is_env_equal_to(var_name,False):
+                logging.debug("Environment variable '" + var_name + "' used by '" + key + "' is set to a positive match!")
+                return True
     return False
 
-def graphics_available():
-    if os.name == 'nt': # Windows
-        import wmi
-        try:
-            wmi.WMI().computer.Win32_VideoController()[0] # Tested on Windows 10
-            return True
-        except Exception:
-            logging.debug("Could not ascertain Win32 VideoController status")
-
-    elif os.name == 'posix': # Linux
-        out = subprocess.getoutput('lshw -c video | grep configuration') # Tested on CENTOS 7 and Ubuntu
-        if out:
-            return True
-
+def is_user_interactive_implied():
+    if sys.__stdin__.isatty() and not are_any_ci_env_vars_active():
+        return True
     return False
 
 def ssl_cert_to_verify(ssl_cert):
