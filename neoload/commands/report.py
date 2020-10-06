@@ -204,6 +204,16 @@ def get_default_components(default_retrieve=True,exclude_list=None):
 def can_raw_transactions_data():
     return False if user_data.is_version_lower_than('2.6.0') else True
 
+def should_raw_transactions_data(__id):
+    use_raw = can_raw_transactions_data()
+    logging.debug("use_raw[0]: " + str(use_raw))
+    if use_raw:
+        raw_sum = rest_crud_get(get_end_point(__id, __operation_results_raw) + "?format=JSON")
+        if len(raw_sum) < 1:
+            use_raw = False
+            logging.debug("use_raw[1]: " + str(use_raw))
+    return use_raw
+
 def get_single_report(name,components=None,time_filter=None,elements_filter=None,exclude_filter=None):
 
     if components is None: components = get_default_components(True,exclude_filter)
@@ -241,6 +251,7 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
         if time_binding is not None:
             time_binding["summary"] = json_result
             time_binding = fill_time_binding(time_binding)
+            logging.debug(time_binding)
 
     if components['slas']:
         status = json_result['status']
@@ -263,13 +274,7 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
                         "ELEMENTS_PER_SECOND","ERRORS","ERRORS_PER_SECOND","ERROR_RATE",
                         "AVG_TTFB","MIN_TTFB","MAX_TTFB"]
 
-    use_txn_raw = can_raw_transactions_data()
-    logging.debug("use_txn_raw[0]: " + str(use_txn_raw))
-    if use_txn_raw:
-        raw_sum = rest_crud_get(get_end_point(__id, __operation_results_raw) + "?format=JSON")
-        if len(raw_sum) < 1:
-            use_txn_raw = False
-            logging.debug("use_txn_raw[1]: " + str(use_txn_raw))
+    use_txn_raw = should_raw_transactions_data(__id)
 
     if components['all_requests']:
         gprint("Getting all-request data...")
@@ -277,7 +282,7 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
         json_elements_all_requests = list(filter(lambda m: m['id'] == 'all-requests', json_elements_requests))
         if not elements_filter is None:
             json_elements_all_requests = filter_elements(json_elements_all_requests, elements_filter)
-        json_elements_all_requests = get_elements_data(__id, json_elements_all_requests, time_binding, True, statistics_list)
+        json_elements_all_requests = get_elements_data(__id, json_elements_all_requests, time_binding, True, statistics_list, use_txn_raw)
 
 
     if components['transactions']:
@@ -285,10 +290,8 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
         json_elements_transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
         if not elements_filter is None:
             json_elements_transactions = filter_elements(json_elements_transactions, elements_filter)
-        if use_txn_raw:
-            json_elements_transactions = get_transactions_raw_data(__id, json_elements_transactions, time_binding, True, statistics_list)
-        else:
-            json_elements_transactions = get_elements_data(__id, json_elements_transactions, time_binding, True, statistics_list)
+
+        json_elements_transactions = get_elements_data(__id, json_elements_transactions, time_binding, True, statistics_list, use_txn_raw)
 
         json_elements_transactions = list(sorted(json_elements_transactions, key=lambda x: x['display_name']))
 
@@ -429,7 +432,8 @@ def get_trends_report(time_binding, results_filter, elements_filter, exclude_fil
                 transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
                 elements.extend(transactions)
                 found_elements = filter_elements(elements, elements_filter)
-                found_elements = get_elements_data(__id, found_elements, time_binding, False, [])
+                use_txn_raw = should_raw_transactions_data(__id)
+                found_elements = get_elements_data(__id, found_elements, time_binding, False, [], use_txn_raw)
                 found_elements = sorted(found_elements, key=lambda x: x["aggregate"]["avgDuration"], reverse=True)
                 all_transactions.extend(list(filter(lambda el: el["type"]=="TRANSACTION", found_elements)))
 
@@ -574,23 +578,11 @@ def get_human_readable_time(reldel):
         for attr in attrs if getattr(delta, attr)]
     return human_readable(reldel)
 
-def get_transactions_raw_data(result_id, base_col, time_binding, include_points, statistics_list):
-    global MAX_CALLS_PER_SECOND
-
-    #procedure = lambda el: get_raw_data(el, result_id, time_binding, include_points, statistics_list)
-    procedure = lambda el: get_element_data(el, result_id, time_binding, include_points, statistics_list)
-
-    with concurrent.futures.ThreadPoolExecutor() as executor: #ThreadPoolExecutor
-        for out in executor.map(procedure, base_col, chunksize=MAX_CALLS_PER_SECOND):
-            logging.getLogger().info('parallel processing get_transactions_raw_data workers')
-
-    return base_col
-
-def get_elements_data(result_id, base_col, time_binding, include_points, statistics_list):
+def get_elements_data(result_id, base_col, time_binding, include_points, statistics_list, use_txn_raw):
 
     global MAX_CALLS_PER_SECOND
 
-    procedure = lambda el: get_element_data(el, result_id, time_binding, include_points, statistics_list)
+    procedure = lambda el: get_element_data(el, result_id, time_binding, include_points, statistics_list, use_txn_raw)
 
     with concurrent.futures.ThreadPoolExecutor() as executor: #ThreadPoolExecutor
         for out in executor.map(procedure, base_col, chunksize=MAX_CALLS_PER_SECOND):
@@ -598,33 +590,52 @@ def get_elements_data(result_id, base_col, time_binding, include_points, statist
 
     return base_col
 
-def get_raw_data(el, result_id, time_binding, include_points, statistics_list):
+def get_element_data(el, result_id, time_binding, include_points, statistics_list, use_txn_raw):
     full_name = el['name'] if not 'path' in el else " \ ".join(el['path'])
     parent = get_element_parent(el)
     user_path = get_element_user_path(el)
     gprint("Getting element values for '" + full_name + "'")
     json_values = rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/values")
-    json_points = [] if not (include_points or time_binding is not None) else rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/points?statistics=" + ",".join(statistics_list))
+    viable_raw_element = (use_txn_raw and el['type'] in ["TRANSACTION"])
+    json_raws = []
+    json_points = []
+    if (include_points or time_binding is not None):
+        if viable_raw_element:
+            json_raws = rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/raw?format=JSON")
+        else:
+            json_points = rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/points?statistics=" + ",".join(statistics_list))
 
     if not time_binding is None:
         json_points = filter_by_time(json_points, time_binding, lambda p: int(p['from'])/1000, lambda p: int(p['to'])/1000)
+        json_raws = filter_by_time(json_raws, time_binding, lambda p: p['Elapsed']/1000, lambda p: p['Elapsed']/1000)
 
-        # check if list is empty on all aggregates
+
+    if len(json_raws) > 0:
+        perc_points = list(sorted(map(lambda x: x['Response time'], json_raws)))
+        sumOfCount = len(json_raws)
+        sumOfErrors = 0 if len(json_raws) < 1 else len(list(filter(lambda x: x['Success'] not in ["yes"],json_raws)))
+        json_values['minDuration'] = 0 if len(json_raws) < 1 else min(list(map(lambda x: x['Response time'], json_raws)))
+        json_values['maxDuration'] = 0 if len(json_raws) < 1 else max(list(map(lambda x: x['Response time'], json_raws)))
+        json_values['avgDuration'] = 0 if len(json_raws) < 1 else statistics.mean(list(map(lambda x: x['Response time'], json_raws)))
+    else:
         perc_points = list(sorted(map(lambda x: x['AVG_DURATION'], json_points)))
         sumOfCount = 0 if len(json_points) < 1 else round(sum(list(map(lambda x: x['COUNT'], json_points))),1)
         sumOfErrors = 0 if len(json_points) < 1 else round(sum(list(map(lambda x: x['ERRORS'], json_points))),1)
         json_values['minDuration'] = 0 if len(json_points) < 1 else min(list(map(lambda x: x['MIN_DURATION'], json_points)))
         json_values['maxDuration'] = 0 if len(json_points) < 1 else max(list(map(lambda x: x['MAX_DURATION'], json_points)))
         json_values['avgDuration'] = 0 if len(json_points) < 1 else statistics.mean(list(map(lambda x: x['AVG_DURATION'], json_points)))
-        json_values['count'] = round(sumOfCount, 1)
-        json_values['percentile50'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.5)
-        json_values['percentile90'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.9)
-        json_values['percentile95'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.95)
-        json_values['percentile99'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.99)
-        json_values['successCount'] = sumOfCount - sumOfErrors
-        json_values['successRate'] = 0 if sumOfCount == 0 else json_values['successCount'] / sumOfCount
-        json_values['failureCount'] = sumOfErrors
-        json_values['failureRate'] = 0 if sumOfCount == 0 else json_values['failureCount'] / sumOfCount
+
+
+    # from either data source, calculate common aggregates
+    json_values['count'] = round(sumOfCount, 1)
+    json_values['percentile50'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.5)
+    json_values['percentile90'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.9)
+    json_values['percentile95'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.95)
+    json_values['percentile99'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.99)
+    json_values['successCount'] = sumOfCount - sumOfErrors
+    json_values['successRate'] = 0 if sumOfCount == 0 else json_values['successCount'] / sumOfCount
+    json_values['failureCount'] = sumOfErrors
+    json_values['failureRate'] = 0 if sumOfCount == 0 else json_values['failureCount'] / sumOfCount
 
 # {
 #     "Elapsed": 38736,
@@ -659,101 +670,7 @@ def get_raw_data(el, result_id, time_binding, include_points, statistics_list):
     el["user_path"] = user_path
     el["aggregate"] = json_values
     el["points"] = json_points
-    el["totalCount"] = el["aggregate"]["successCount"] + el["aggregate"]["failureCount"]
-    el["successRate"] = 0 if el["totalCount"] == 0 else el["aggregate"]["successCount"] / el["totalCount"]
-    el["failureRate"] = 0 if el["totalCount"] == 0 else el["aggregate"]["failureCount"] / el["totalCount"]
-    return el
-
-def get_element_data(el, result_id, time_binding, include_points, statistics_list):
-    full_name = el['name'] if not 'path' in el else " \ ".join(el['path'])
-    parent = get_element_parent(el)
-    user_path = get_element_user_path(el)
-    gprint("Getting element values for '" + full_name + "'")
-    json_values = rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/values")
-    json_points = [] if not (include_points or time_binding is not None) else rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/points?statistics=" + ",".join(statistics_list))
-
-    if not time_binding is None:
-        json_points = filter_by_time(json_points, time_binding, lambda p: int(p['from'])/1000, lambda p: int(p['to'])/1000)
-
-        # check if list is empty on all aggregates
-        perc_points = list(sorted(map(lambda x: x['AVG_DURATION'], json_points)))
-        sumOfCount = 0 if len(json_points) < 1 else round(sum(list(map(lambda x: x['COUNT'], json_points))),1)
-        sumOfErrors = 0 if len(json_points) < 1 else round(sum(list(map(lambda x: x['ERRORS'], json_points))),1)
-        json_values['minDuration'] = 0 if len(json_points) < 1 else min(list(map(lambda x: x['MIN_DURATION'], json_points)))
-        json_values['maxDuration'] = 0 if len(json_points) < 1 else max(list(map(lambda x: x['MAX_DURATION'], json_points)))
-        json_values['avgDuration'] = 0 if len(json_points) < 1 else statistics.mean(list(map(lambda x: x['AVG_DURATION'], json_points)))
-        json_values['count'] = round(sumOfCount, 1)
-        json_values['percentile50'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.5)
-        json_values['percentile90'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.9)
-        json_values['percentile95'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.95)
-        json_values['percentile99'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.99)
-        json_values['successCount'] = sumOfCount - sumOfErrors
-        json_values['successRate'] = 0 if sumOfCount == 0 else json_values['successCount'] / sumOfCount
-        json_values['failureCount'] = sumOfErrors
-        json_values['failureRate'] = 0 if sumOfCount == 0 else json_values['failureCount'] / sumOfCount
-
-# {
-#   "count": 0,
-#   "elementPerSecond": 0,
-#   "minDuration": 0,
-#   "maxDuration": 0,
-#   "sumDuration": 0,
-#   "avgDuration": 0,
-#   "minTTFB": 0,
-#   "maxTTFB": 0,
-#   "sumTTFB": 0,
-#   "avgTTFB": 0,
-#   "sumDownloadedBytes": 0,
-#   "downloadedBytesPerSecond": 0,
-#   "successCount": 0,
-#   "successPerSecond": 0,
-#   "successRate": 0,
-#   "failureCount": 0,
-#   "failurePerSecond": 0,
-#   "failureRate": 0,
-#   "percentile50": 0,
-#   "percentile90": 0,
-#   "percentile95": 0,
-#   "percentile99": 0
-# }
-# {
-#     "from": 0,
-#     "to": 0,
-#     "AVG_DURATION": 0,
-#     "MIN_DURATION": 0,
-#     "MAX_DURATION": 0,
-#     "COUNT": 0,
-#     "THROUGHPUT": 0,
-#     "ELEMENTS_PER_SECOND": 0,
-#     "ERRORS": 0,
-#     "ERRORS_PER_SECOND": 0,
-#     "ERROR_RATE": 0,
-#     "AVG_TTFB": 0,
-#     "MIN_TTFB": 0,
-#     "MAX_TTFB": 0,
-#     "AVG": 0
-#   }
-    perc_fields = list(filter(lambda x: x.startswith('percentile'), json_values.keys()))
-    convert_to_seconds = ['minDuration','maxDuration','sumDuration','avgDuration'] \
-                        + perc_fields
-    for field in convert_to_seconds:
-        if field in json_values:
-            if json_values[field] is None:
-                raise ValueError("Field '" + field + "' is None")
-            else:
-                json_values[field] = json_values[field] / 1000.0
-
-    round_fields = convert_to_seconds \
-                    + ['successRate','failureRate']
-    for field in round_fields:
-        if field in json_values:
-            json_values[field] = round(json_values[field],3)
-
-    el["display_name"] = full_name
-    el["parent"] = parent
-    el["user_path"] = user_path
-    el["aggregate"] = json_values
-    el["points"] = json_points
+    el["raw"] = json_raws
     el["totalCount"] = el["aggregate"]["successCount"] + el["aggregate"]["failureCount"]
     el["successRate"] = 0 if el["totalCount"] == 0 else el["aggregate"]["successCount"] / el["totalCount"]
     el["failureRate"] = 0 if el["totalCount"] == 0 else el["aggregate"]["failureCount"] / el["totalCount"]
