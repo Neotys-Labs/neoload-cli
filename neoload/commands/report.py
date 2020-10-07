@@ -170,7 +170,7 @@ def process_final_output(model, template):
     else:
         dirname = os.path.dirname(os.path.abspath(template))
         loader = jinja2.FileSystemLoader(searchpath=dirname)
-        env = jinja2.Environment(loader=loader)
+        env = jinja2.Environment(loader=loader,autoescape=True)
         t = env.from_string(model["template_text"])
 
         data_obj = json.loads(model["json_data_text"])
@@ -404,7 +404,6 @@ def get_trends_report(time_binding, results_filter, elements_filter, exclude_fil
 
     if len(arr_ids) < 1:
         raise ValueError("Trend requires 1 or more results in the filter!")
-        return
 
     (count_back,count_ahead) = get_trend_count_back_ahead(arr_directives)
 
@@ -553,7 +552,7 @@ def filter_elements(elements, elements_filter):
             if fil["type"] == "id":
                 found.extend(list(filter(lambda el,f: el["id"] == f["value"], elements, fil)))
             elif fil["type"] == "regex":
-                found.extend(list(filter(lambda el,f: element_matches_regex(el, f["value"], fil), elements)))
+                found.extend(list(filter(lambda el,f: element_matches_regex(el, f["value"]), elements, fil)))
             else:
                 raise ValueError
     return found
