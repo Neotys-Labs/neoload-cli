@@ -47,20 +47,19 @@ class TestTools:
         mocks = {'TRAVIS': 'True'}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is False
-
-        mocks = {'INTERACTIVE': '1', 'TRAVIS': 'True'}
+        mocks = {'NL_INTERACTIVE': '1', 'TRAVIS': 'True'}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is True
 
-        mocks = {'INTERACTIVE': '0', 'TRAVIS': 'True'}
+        mocks = {'NL_INTERACTIVE': '0', 'TRAVIS': 'True'}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is False
 
-        mocks = {'INTERACTIVE': '1', 'TRAVIS': '0'}
+        mocks = {'NL_INTERACTIVE': '1', 'TRAVIS': '0'}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is True
 
-        mocks = {'INTERACTIVE': '0', 'TRAVIS': '0'}
+        mocks = {'NL_INTERACTIVE': '0', 'TRAVIS': '0'}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is False
 
@@ -74,19 +73,19 @@ class TestTools:
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is False
 
-        mocks = {'INTERACTIVE': '1', 'TRAVIS': 'True'}
+        mocks = {'NL_INTERACTIVE': '1', 'TRAVIS': 'True'}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is True
 
-        mocks = {'INTERACTIVE': '0', 'TRAVIS': 'True'}
+        mocks = {'NL_INTERACTIVE': '0', 'TRAVIS': 'True'}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is False
 
-        mocks = {'INTERACTIVE': '1', 'TRAVIS': '0'}
+        mocks = {'NL_INTERACTIVE': '1', 'TRAVIS': '0'}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is True
 
-        mocks = {'INTERACTIVE': '0', 'TRAVIS': '0'}
+        mocks = {'NL_INTERACTIVE': '0', 'TRAVIS': '0'}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is False
 

@@ -16,7 +16,7 @@ def cli():
 
         logging.debug({
             "interactive_ci": tools.are_any_ci_env_vars_active(),
-            "interactive_environment_variable": os.getenv('INTERACTIVE'),
+            "interactive_environment_variable": os.getenv(tools.__nl_interactive_env_var),
             "interactive_tty": sys.__stdin__.isatty(),
             "interactive_effective": tools.is_user_interactive()
         })
