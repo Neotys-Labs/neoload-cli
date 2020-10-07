@@ -41,7 +41,7 @@ def zip_dir(path):
     return temp_zip
 
 
-def upload_project(path, endpoint, suppress_progress):
+def upload_project(path, endpoint, display_progress):
     filename = os.path.basename(path)
     if str(path).endswith(('.zip', '.yaml', '.yml')):
         file = open(path, "b+r")
@@ -51,7 +51,7 @@ def upload_project(path, endpoint, suppress_progress):
 
     totalsize = os.stat(file.name).st_size
 
-    if totalsize < (MAX_FILE_MB_BEFORE_PROGRESS * 1024 * 1024) or suppress_progress: # if less than 5MB or explicitly not progress, suppress
+    if totalsize < (MAX_FILE_MB_BEFORE_PROGRESS * 1024 * 1024) or not display_progress: # if less than 5MB or explicitly not progress, suppress
         display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
     else:
         display_project(rest_crud.post_binary_files_storage_with_progress(endpoint, file, filename))
