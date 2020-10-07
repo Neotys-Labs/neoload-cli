@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 import sys
@@ -8,12 +9,11 @@ from click import ClickException
 from termcolor import cprint
 
 from neoload_cli_lib import rest_crud, user_data
-import logging
-
-import subprocess, os
 
 __regex_id = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 __regex_mongodb_id = re.compile('[a-f\\d]{24}', re.IGNORECASE)
+__true_values = ["true", "yes", "y", "1"]
+__false_values = ["false", "no", "n", "0"]
 
 __batch = False
 
@@ -149,62 +149,47 @@ def system_exit(exit_process, apply_exit_code=True):
     if apply_exit_code or exit_code > 1:
         sys.exit(exit_process['code'])
 
-def does_env_var_exist(name):
-    val = os.getenv(name)
-    return val is not None
 
-def is_env_equal_to(name, compare_to):
-    val = os.getenv(name, None)
-    actualval = val
-    strval = "" if val is None else '{}'.format(val).lower().strip()
-    if strval in ["true","yes","y","1"]:
-        actualval = True
-    if strval in ["false","no","n","0"]:
-        actualval = False
-    return actualval == compare_to
+def is_environment_var_true(env_var):
+    return os.getenv(env_var, 'false').lower().strip() in __true_values
 
-def get_user_interactive_value():
-    val = os.getenv('INTERACTIVE')
-    if val is not None:
-        val = '{}'.format(val).lower().strip()
-    return val
+
+def is_environment_var_false(env_var):
+    return os.getenv(env_var, 'true').lower().strip() in __false_values
+
 
 def is_user_interactive():
-    if is_env_equal_to('INTERACTIVE',True):
+    if is_environment_var_true('INTERACTIVE'):
         return True
-    elif is_env_equal_to('INTERACTIVE',False):
+    elif is_environment_var_false('INTERACTIVE'):
         return False
     else:
-        return is_user_interactive_implied()
+        return sys.__stdin__.isatty() and not are_any_ci_env_vars_active()
 
-def get_ci_env_var_signatures():
-    ret = {}
-    ret["jenkins"] = ["JENKINS_URL"] # https://wiki.jenkins.io/display/JENKINS/Building+a+software+project
-    ret["travis"] = ["TRAVIS"] # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
-    ret["bamboo"] = ["bamboo_buildNumber"] # https://stackoverflow.com/a/44330836
-    ret["codebuild"] = ["CODEBUILD_BUILD_ARN"] # https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
-    ret["azure"] = ["AGENT_TOOLSDIRECTORY"] # https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
-    ret["gitlab"] = ["CI_PROJECT_ID"] # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
-    ret["teamcity"] = ["TEAMCITY_VERSION"] # https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html
-    ret["circleci"] = ["CIRCLECI"] # https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
-    ret["gcloudbuild"] = ["BUILD_ID"] # https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values
-    ret["generic_ci"] = ["CONTINUOUS_INTEGRATION","CI"] # travis, circleci, and others
-    return ret
 
 def are_any_ci_env_vars_active():
-    sigs = get_ci_env_var_signatures()
-    for key in sigs:
-        arr = sigs[key]
-        for var_name in arr:
-            if does_env_var_exist(var_name) and not is_env_equal_to(var_name,False):
-                logging.debug("Environment variable '" + var_name + "' used by '" + key + "' is set to a positive match!")
+    ci_env_var_signatures = {
+        "jenkins": ["JENKINS_URL"],  # https://wiki.jenkins.io/display/JENKINS/Building+a+software+project
+        "travis": ["TRAVIS"],  # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+        "bamboo": ["bamboo_buildNumber"],  # https://stackoverflow.com/a/44330836
+        # https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
+        "codebuild": ["CODEBUILD_BUILD_ARN"],
+        # https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
+        "azure": ["AGENT_TOOLSDIRECTORY"],
+        "gitlab": ["CI_PROJECT_ID"],  # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+        "teamcity": ["TEAMCITY_VERSION"],  # https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html
+        "circleci": ["CIRCLECI"],  # https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
+        # https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values
+        "gcloudbuild": ["BUILD_ID"],
+        "generic_ci": ["CONTINUOUS_INTEGRATION", "CI"],  # travis, circleci, and others
+    }
+    for ci in ci_env_var_signatures:
+        for env_var in ci_env_var_signatures[ci]:
+            if os.getenv(env_var) and not is_environment_var_false(env_var):
+                logging.debug("Environment variable '" + env_var + "' used by '" + ci + "' is set to a positive match!")
                 return True
     return False
 
-def is_user_interactive_implied():
-    if sys.__stdin__.isatty() and not are_any_ci_env_vars_active():
-        return True
-    return False
 
 def ssl_cert_to_verify(ssl_cert):
     if not ssl_cert:

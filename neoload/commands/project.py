@@ -7,7 +7,7 @@ from neoload_cli_lib import user_data, tools, rest_crud, neoLoad_project
 @click.argument("command", required=True, type=click.Choice(['up', 'upload', 'meta']))
 @click.option("--path", "-p", type=click.Path(exists=True), default='.',
               help="path of project folder, zip or yml file. . is default value")
-@click.option("--display-progress/--just-json", required=False, default=True,
+@click.option("--display-progress/--just-json", is_flag=True, required=False, default=True,
               help=("Suppress the real-time progress when files is above " + str(neoLoad_project.MAX_FILE_MB_BEFORE_PROGRESS) + "MB") )
 @click.argument("name_or_id", type=str, required=False)
 def cli(command, name_or_id, path, display_progress):
@@ -18,13 +18,11 @@ def cli(command, name_or_id, path, display_progress):
     if not tools.is_id(name_or_id):
         name_or_id = test_settings.__resolver.resolve_name(name_or_id)
 
-    suppress_progress = not display_progress
-
-    if display_progress and not tools.is_user_interactive():
-        suppress_progress = True # just JSON, no rewriting of stdin allowed
+    if not tools.is_user_interactive():
+        display_progress = False  # just JSON, no rewriting of stdin allowed in non interactive mode
 
     if command[:2] == "up":
-        upload(path, name_or_id, suppress_progress)
+        upload(path, name_or_id, display_progress)
     elif command == "meta":
         meta_data(name_or_id)
     user_data.set_meta(test_settings.meta_key, name_or_id)
@@ -36,8 +34,8 @@ def cli(command, name_or_id, path, display_progress):
 #TODO: spider through all YAML (as-code files)
 #TODO: fix validate to recurse through all includes; create unique file list map (avoid recursive references)
 
-def upload(path, settings_id, suppress_progress):
-    neoLoad_project.upload_project(path, get_endpoint(settings_id), suppress_progress)
+def upload(path, settings_id, display_progress):
+    neoLoad_project.upload_project(path, get_endpoint(settings_id), display_progress)
 
 
 def meta_data(setting_id):
