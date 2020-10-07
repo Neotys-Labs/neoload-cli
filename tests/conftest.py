@@ -16,7 +16,12 @@ __default_api_url = 'https://preprod-neoload-api.saas.neotys.com/'
 def pytest_addoption(parser):
     parser.addoption('--token', action='store', default=__default_random_token)
     parser.addoption('--url', action='store', default=__default_api_url)
+    parser.addoption('--workspace', action='store', default=None)
+    parser.addoption('--makelivecalls', action='store_true')
 
+def pytest_configure(config):
+    if not config.option.makelivecalls:
+        setattr(config.option, 'markexpr', 'not makelivecalls')
 
 def pytest_sessionstart(session: Session):
     """
@@ -32,14 +37,16 @@ def pytest_sessionstart(session: Session):
 def neoload_login(request, monkeypatch):
     token = request.config.getoption('--token')
     api_url = request.config.getoption('--url')
+    workspace = request.config.getoption('--workspace')
     runner = CliRunner()
     result_status = runner.invoke(status)
     # do login if not already logged-in with the right credentials
-    if "aren't logged in" in result_status.output \
+    if "aren't logged in" in result_status.output or "are'nt logged in" in result_status.output \
             or api_url not in result_status.output \
             or '*' * (len(token) - 3) + token[-3:] not in result_status.output:
         mock_login_get_urls(monkeypatch)
-        runner.invoke(login, [token, '--url', api_url])
+        workspace_args = []# if not (workspace is not None and len(workspace) > 0) else ['--workspace',workspace]
+        runner.invoke(login, [token, '--url', api_url])#.append(workspace_args))
         print('\n@Before : %s' % str(runner.invoke(status).output))
     else:
         print('\n@Before : Already logged on %s' % api_url)
