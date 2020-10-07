@@ -14,6 +14,7 @@ __regex_id = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f
 __regex_mongodb_id = re.compile('[a-f\\d]{24}', re.IGNORECASE)
 __true_values = ["true", "yes", "y", "1"]
 __false_values = ["false", "no", "n", "0"]
+__nl_interactive_env_var = 'NL_INTERACTIVE'
 
 __batch = False
 
@@ -159,9 +160,9 @@ def is_environment_var_false(env_var):
 
 
 def is_user_interactive():
-    if is_environment_var_true('NL_INTERACTIVE'):
+    if is_environment_var_true(__nl_interactive_env_var):
         return True
-    elif is_environment_var_false('NL_INTERACTIVE'):
+    elif is_environment_var_false(__nl_interactive_env_var):
         return False
     else:
         return sys.__stdin__.isatty() and not are_any_ci_env_vars_active()
