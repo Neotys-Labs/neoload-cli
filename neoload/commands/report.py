@@ -73,20 +73,15 @@ def cli(template, json_in, out_file, filter, max_rps, report_type, name):
         MAX_CALLS_PER_SECOND = max_rps
 
     filter_spec = parse_filter_spec(filter)
-    time_filter = filter_spec['time_filter']
-    results_filter = filter_spec['results_filter']
-    elements_filter = filter_spec['elements_filter']
-    exclude_filter = filter_spec['exclude_filter']
 
-    model["components"] = get_default_components(True,exclude_filter)
+    model["components"] = get_default_components(True,filter_spec['exclude_filter'])
 
     # if intent is to produce JSON directly to stdout, hide print statements
     if out_file is None: gprint = lambda msg: logger.info(msg)
 
     # process template, if specified
-    if template is not None:
-        if not parse_template_spec(model,filter_spec,template):
-            return
+    if template is not None and not parse_template_spec(model,filter_spec,template):
+        return
 
     # process source data spec
     if not parse_source_data_spec(json_in, model, report_type, name, filter_spec):
@@ -97,7 +92,7 @@ def cli(template, json_in, out_file, filter, max_rps, report_type, name):
     if out_file is not None:
         set_file_text(out_file, model["final_output"])
 
-        if sys.stdin.isatty() and (out_file.lower().endswith(".html") or out_file.lower().endswith(".htm")):
+        if tools.is_user_interactive() and (out_file.lower().endswith(".html") or out_file.lower().endswith(".htm")):
             webbrowser.open_new_tab("file://" + out_file)
 
     else:
@@ -214,24 +209,42 @@ def should_raw_transactions_data(__id):
             logging.debug("use_raw[1]: " + str(use_raw))
     return use_raw
 
-def get_single_report(name,components=None,time_filter=None,elements_filter=None,exclude_filter=None):
+def parse_to_id(name_or_id):
+    val = name_or_id
+    if val == "cur":
+        val = user_data.get_meta(meta_key)
+    is_id = tools.is_id(val)
 
-    if components is None: components = get_default_components(True,exclude_filter)
-
-    if name == "cur":
-        name = user_data.get_meta(meta_key)
-    is_id = tools.is_id(name)
-
-    __id = tools.get_id(name, __resolver, is_id)
+    __id = tools.get_id(val, __resolver, is_id)
 
     if not __id:
         __id = user_data.get_meta_required(meta_key)
 
-    json_result = {}
-    json_stats = {}
-    json_sla_global = {}
-    json_sla_test = {}
-    json_sla_interval = {}
+    return __id
+
+def get_single_report(name,components=None,time_filter=None,elements_filter=None,exclude_filter=None):
+
+    if components is None: components = get_default_components(True,exclude_filter)
+
+    __id = parse_to_id(name)
+
+    data = {
+        'id': __id,
+        'summary': {},#json_result,
+        'statistics': {},#json_stats,
+        'sla_global': [],#json_sla_global,
+        'sla_test': [],#json_sla_test,
+        'sla_interval': [],#json_sla_interval,
+        'events': [],#json_events,
+        'elements': {
+            'transactions': [],#json_elements_transactions
+        },
+        'all_requests': [],#json_elements_all_requests[0] if json_elements_all_requests is not None else {},
+        'ext_data': [],#ext_datas,
+        'controller_points': [],#ctrl_datas,
+        'monitors': [],
+    }
+
     json_events = {}
     json_elements_transactions = {}
     json_elements_all_requests = None
@@ -244,31 +257,13 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
             "time_filter": time_filter
         }
 
-    if components['summary'] or components['slas'] or time_filter is not None:
-        gprint("Getting test results...")
-        json_result = rest_crud_get(get_end_point(__id))
-        json_result = add_test_result_summary_fields(json_result)
-        if time_binding is not None:
-            time_binding["summary"] = json_result
-            time_binding = fill_time_binding(time_binding)
-            logging.debug(time_binding)
+    time_binding = fill_single_summary(__id, time_binding, time_filter, components, data)
 
-    if components['slas']:
-        status = json_result['status']
-        gprint("Getting global SLAs...")
-        json_sla_global = [] if status!='TERMINATED' else rest_crud_get(get_end_point(__id, __operation_sla_global))
-        gprint("Getting per-test SLAs...")
-        json_sla_test = [] if status!='TERMINATED' else rest_crud_get(get_end_point(__id, __operation_sla_test))
-        gprint("Getting per-interval SLAs...")
-        json_sla_interval = rest_crud_get(get_end_point(__id, __operation_sla_interval))
+    fill_single_slas(__id, components, data)
 
-    if components['statistics']:
-        gprint("Getting test statistics...")
-        json_stats = rest_crud_get(get_end_point(__id, __operation_statistics))
+    fill_single_stats(__id, components, data)
 
-    if components['events']:
-        gprint("Getting events...")
-        json_events = rest_crud_get(get_end_point(__id, __operation_events))
+    fill_single_events(__id, components, data)
 
     statistics_list = ["AVG_DURATION","MIN_DURATION","MAX_DURATION","COUNT","THROUGHPUT",
                         "ELEMENTS_PER_SECOND","ERRORS","ERRORS_PER_SECOND","ERROR_RATE",
@@ -276,52 +271,91 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
 
     use_txn_raw = should_raw_transactions_data(__id)
 
+    fill_single_requests(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data)
+
+    fill_single_transactions(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data)
+
+    fill_single_monitors(__id, components, data)
+
+    fill_single_ext_data(__id, components, data)
+
+    fill_single_controller_points(__id, components, data)
+
+    return data
+
+def fill_single_summary(__id, time_binding, time_filter, components, data):
+    if components['summary'] or components['slas'] or time_filter is not None:
+        gprint("Getting test results...")
+        json_result = rest_crud_get(get_end_point(__id))
+        json_result = add_test_result_summary_fields(json_result)
+        data['summary'] = json_result
+        if time_binding is not None:
+            time_binding["summary"] = json_result
+            time_binding = fill_time_binding(time_binding)
+            logging.debug(time_binding)
+    return time_binding
+
+def fill_single_slas(__id, components, data):
+    if components['slas']:
+        status = data['summary']['status']
+        gprint("Getting global SLAs...")
+        data['sla_global'] = [] if status!='TERMINATED' else rest_crud_get(get_end_point(__id, __operation_sla_global))
+        gprint("Getting per-test SLAs...")
+        data['sla_test'] = [] if status!='TERMINATED' else rest_crud_get(get_end_point(__id, __operation_sla_test))
+        gprint("Getting per-interval SLAs...")
+        data['sla_interval'] = rest_crud_get(get_end_point(__id, __operation_sla_interval))
+
+def fill_single_stats(__id, components, data):
+    if components['statistics']:
+        gprint("Getting test statistics...")
+        data['statistics'] = rest_crud_get(get_end_point(__id, __operation_statistics))
+
+def fill_single_events(__id, components, data):
+    if components['events']:
+        gprint("Getting events...")
+        data['events'] = rest_crud_get(get_end_point(__id, __operation_events))
+
+def fill_single_requests(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data):
     if components['all_requests']:
         gprint("Getting all-request data...")
+
         json_elements_requests = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=REQUEST")
         json_elements_all_requests = list(filter(lambda m: m['id'] == 'all-requests', json_elements_requests))
+
         if not elements_filter is None:
             json_elements_all_requests = filter_elements(json_elements_all_requests, elements_filter)
+
         json_elements_all_requests = get_elements_data(__id, json_elements_all_requests, time_binding, True, statistics_list, use_txn_raw)
 
+        data['all_requests'] = json_elements_all_requests[0] if json_elements_all_requests is not None else {},
 
+def fill_single_transactions(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data):
     if components['transactions']:
         gprint("Getting transactions...")
+
         json_elements_transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
         if not elements_filter is None:
             json_elements_transactions = filter_elements(json_elements_transactions, elements_filter)
 
         json_elements_transactions = get_elements_data(__id, json_elements_transactions, time_binding, True, statistics_list, use_txn_raw)
-
         json_elements_transactions = list(sorted(json_elements_transactions, key=lambda x: x['display_name']))
 
+        data['elements']['transactions'] = json_elements_transactions
+
+def fill_single_monitors(__id, components, data):
     if components['ext_data'] or components['controller_points']:
         gprint("Getting monitors...")
-        json_monitors = rest_crud_get(get_end_point(__id, __operation_monitors))
+        data['monitors'] = rest_crud_get(get_end_point(__id, __operation_monitors))
 
+def fill_single_ext_data(__id, components, data):
     if components['ext_data']:
-        ext_datas = get_mon_datas(__id, lambda m: m['path'][0] == 'Ext. Data', json_monitors, True)
+        ext_datas = get_mon_datas(__id, lambda m: m['path'][0] == 'Ext. Data', data['monitors'], True)
         ext_datas = list(sorted(ext_datas, key=lambda x: x['display_name']))
+        data['ext_data'] = ext_datas
 
+def fill_single_controller_points(__id, components, data):
     if components['controller_points']:
-        ctrl_datas = get_mon_datas(__id, lambda m: m['path'][0] == 'Controller', json_monitors, True)
-
-    data = {
-        'id': __id,
-        'summary': json_result,
-        'statistics': json_stats,
-        'sla_global': json_sla_global,
-        'sla_test': json_sla_test,
-        'sla_interval': json_sla_interval,
-        'events': json_events,
-        'elements': {
-            'transactions': json_elements_transactions
-        },
-        'all_requests': json_elements_all_requests[0] if json_elements_all_requests is not None else {},
-        'ext_data': ext_datas,
-        'controller_points': ctrl_datas,
-    }
-    return data
+        data['controller_points'] = get_mon_datas(__id, lambda m: m['path'][0] == 'Controller', data['monitors'], True)
 
 # examples
 # --filter "timespan=2m-4m"
