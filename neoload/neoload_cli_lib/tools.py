@@ -159,9 +159,9 @@ def is_environment_var_false(env_var):
 
 
 def is_user_interactive():
-    if is_environment_var_true('INTERACTIVE'):
+    if is_environment_var_true('NL_INTERACTIVE'):
         return True
-    elif is_environment_var_false('INTERACTIVE'):
+    elif is_environment_var_false('NL_INTERACTIVE'):
         return False
     else:
         return sys.__stdin__.isatty() and not are_any_ci_env_vars_active()
