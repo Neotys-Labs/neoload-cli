@@ -14,7 +14,9 @@ install:
   - pip install coverage
 # command to run tests
 script:
-  - PYTHONPATH="neoload" coverage3 run -m pytest
+  - PYTHONPATH="neoload" COVERAGE_FILE=.coverage_unit coverage3 run -m pytest
+  - PYTHONPATH="neoload" COVERAGE_FILE=.coverage_live coverage3 run -m pytest -v -x -m "makelivecalls" --makelivecalls --token $NLW_TOKEN --url $NLW_URL
+  - coverage3 combine
   - coverage3 xml
   - sonar-scanner
 deploy:
