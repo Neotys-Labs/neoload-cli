@@ -5,6 +5,7 @@ from commands.login import cli as login
 from commands.test_results import cli as results
 from commands.report import cli as report
 from helpers.test_utils import *
+import tempfile
 
 @pytest.mark.report
 @pytest.mark.slow
