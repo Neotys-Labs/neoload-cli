@@ -150,7 +150,7 @@ def parse_source_data_spec(json_in, model, report_type, name, filter_spec):
         if report_type == "single":
             data = get_single_report(name,model["components"],filter_spec["time_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
         elif report_type == "trends":
-            data = get_trends_report(filter_spec["time_filter"],filter_spec["results_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
+            data = get_trends_report(name,filter_spec["time_filter"],filter_spec["results_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
         else:
             tools.system_exit({'message': "No report_type named '" + report_type + "'.", 'code': 2})
             return False
@@ -259,9 +259,7 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
 
     fill_single_events(__id, components, data)
 
-    statistics_list = ["AVG_DURATION","MIN_DURATION","MAX_DURATION","COUNT","THROUGHPUT",
-                        "ELEMENTS_PER_SECOND","ERRORS","ERRORS_PER_SECOND","ERROR_RATE",
-                        "AVG_TTFB","MIN_TTFB","MAX_TTFB"]
+    statistics_list = get_standard_statistics_list()
 
     use_txn_raw = should_raw_transactions_data(__id)
 
@@ -276,6 +274,12 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
     fill_single_controller_points(__id, components, data)
 
     return data
+
+def get_standard_statistics_list():
+    return ["AVG_DURATION","MIN_DURATION","MAX_DURATION","COUNT","THROUGHPUT",
+                "ELEMENTS_PER_SECOND","ERRORS","ERRORS_PER_SECOND","ERROR_RATE",
+                "AVG_TTFB","MIN_TTFB","MAX_TTFB"]
+
 
 def fill_single_summary(__id, time_binding, time_filter, components, data):
     if components['summary'] or components['slas'] or time_filter is not None:
@@ -399,20 +403,26 @@ def translate_time_part_to_seconds(total_duration_sec, part_spec):
     except Exception:
         raise ValueError("Value of filter timespan part '" + part_spec + "' is invalid.")
 
-def get_trends_report(time_binding, results_filter, elements_filter, exclude_filter):
+def get_trends_report(name, time_binding, results_filter, elements_filter, exclude_filter):
     (arr_ids,arr_directives) = parse_results_filter(results_filter)
+
+    (count_back,count_ahead) = get_trend_count_back_ahead(arr_directives)
+
+    if len(arr_ids) < 1:
+        arr_ids.append({
+            "id": parse_to_id(name),
+            "type": "result"
+        })
 
     if len(arr_ids) < 1:
         raise ValueError("Trend requires 1 or more results in the filter!")
 
-    (count_back,count_ahead) = get_trend_count_back_ahead(arr_directives)
-
-    arr_selected = get_trends_selected_results(arr_ids)
+    arr_selected = get_trends_selected_results(arr_ids,count_back,count_ahead)
 
     all_transactions = []
 
     for result in arr_selected:
-        fill_trend_result(result, all_transactions)
+        fill_trend_result(result, all_transactions, elements_filter, time_binding)
 
     all_transaction_names = list(map(lambda t: t["name"], all_transactions))
     unique_transaction_names = unique(all_transaction_names)
@@ -440,6 +450,11 @@ def parse_results_filter(results_filter):
                 "id": part,
                 "type": "result"
             })
+        elif part == "cur":
+            arr_ids.append({
+                "id": parse_to_id("cur"),
+                "type": "result"
+            })
         else:
             arr_directives.append(part)
 
@@ -456,12 +471,17 @@ def get_trend_count_back_ahead(arr_directives):
 
     return (count_back, count_ahead)
 
-def get_trends_selected_results(arr_ids):
+def get_trends_selected_results(arr_ids,count_back,count_ahead):
     base_id = arr_ids[0]["id"]
-    arr_results = get_results_by_result_id(base_id)
+    logging.debug('base_id: {}'.format(base_id))
+    arr_results = get_results_by_result_id(base_id,count_back,count_ahead)
+    logging.debug('selected results: {}'.format(arr_results))
     arr_sorted_by_time = list(sorted(arr_results, key=lambda x: x["startDate"]))
     base_index = list(map(lambda x: x["id"],arr_sorted_by_time)).index(base_id)
     arr_selected = []
+    logging.debug('base_index: {}'.format(base_index))
+    logging.debug('count_ahead: {}'.format(count_ahead))
+    logging.debug('count_back: {}'.format(count_back))
 
     for i in range(base_index,base_index+1+count_ahead):
         arr_selected.append(arr_sorted_by_time[i])
@@ -474,21 +494,27 @@ def get_trends_selected_results(arr_ids):
 
     return arr_selected
 
-def fill_trend_result(result, all_transactions):
-    gprint("Getting test '" + result["name"] + "' statistics...")
+def fill_trend_result(result, all_transactions, elements_filter, time_binding):
+    gprint("Getting test '" + result["name"] + "' (" + result["id"] + ") statistics...")
     __id = result["id"]
     result = add_test_result_summary_fields(result)
     json_stats = rest_crud_get(get_end_point(__id, __operation_statistics))
 
+    statistics_list = get_standard_statistics_list()
+
     found_elements = []
-    if elements_filter is not None:
+    if elements_filter is not None and not (result['terminationReason'] in ['FAILED_TO_START']):
         elements = []
         # elements.extend(rest_crud_get(get_end_point(__id, __operation_elements) + "?category=REQUEST"))
         transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
         elements.extend(transactions)
+        filters = parse_elements_filter(elements_filter)
+        logging.debug("Using filters: {}".format(filters))
+        logging.debug("Filtering elements: {}".format(len(elements)))
         found_elements = filter_elements(elements, elements_filter)
+        logging.debug("Filtered elements: {}".format(len(found_elements)))
         use_txn_raw = should_raw_transactions_data(__id)
-        found_elements = get_elements_data(__id, found_elements, time_binding, False, [], use_txn_raw)
+        found_elements = get_elements_data(__id, found_elements, time_binding, True, statistics_list, use_txn_raw)
         found_elements = sorted(found_elements, key=lambda x: x["aggregate"]["avgDuration"], reverse=True)
         all_transactions.extend(list(filter(lambda el: el["type"]=="TRANSACTION", found_elements)))
 
@@ -517,7 +543,7 @@ def fill_trend_transaction_group(name,transaction_aggregates,arr_selected,unique
         group["results"].append(simplify)
 
         for agg in transaction_aggregates:
-            aggregates[agg].extend(list(map(lambda el, c: el["aggregate"][c], els, agg)))
+            aggregates[agg].extend(list(map(lambda el: el["aggregate"][agg], els)))
 
     group["aggregate"] = {}
     for agg in transaction_aggregates:
@@ -544,18 +570,22 @@ def is_guid(s):
 def filter_elements(elements, elements_filter):
     found = []
     if elements_filter is not None:
-        filters = list(map(lambda s: {
-            "type": "id" if is_guid(s) else "regex",
-            "value": s if is_guid(s) else re.compile(s),
-        }, elements_filter.split("|")))
+        filters = parse_elements_filter(elements_filter)
         for fil in filters:
             if fil["type"] == "id":
-                found.extend(list(filter(lambda el,f: el["id"] == f["value"], elements, fil)))
+                found.extend(list(filter(lambda el: el["id"] == fil["value"], elements)))
             elif fil["type"] == "regex":
-                found.extend(list(filter(lambda el,f: element_matches_regex(el, f["value"]), elements, fil)))
+                found.extend(list(filter(lambda el: element_matches_regex(el, fil["value"]), elements)))
             else:
                 raise ValueError
     return found
+
+def parse_elements_filter(elements_filter):
+    filters = list(map(lambda s: {
+        "type": "id" if is_guid(s) else "regex",
+        "value": s if is_guid(s) else re.compile(s),
+    }, elements_filter.split("|")))
+    return filters
 
 def element_matches_regex(element, pattern):
     strs = [element["id"], element["name"]]
@@ -570,15 +600,72 @@ def get_element_parent(el):
 def get_element_user_path(el):
     return el['path'][0] if 'path' in el and len(el['path'])>0 else ""
 
-def get_results_by_result_id(__id):
+def get_results_by_result_id(__id,count_back,count_ahead):
     result = rest_crud_get(get_end_point(__id))
     project = result["project"]
-    results = rest_crud_get(__endpoint+"?project="+project)
+    scenario = result["scenario"]
+    logging.debug({'project':project,'scenario':scenario})
+    additional_params = {
+        'project': project
+    }
+    total_expected = -count_back + 1 + count_ahead
+    results = []
+    logging.debug("based_id: {}".format(__id))
+    logging.debug("total_expected: {}".format(total_expected))
+    logging.debug("count_back: {}".format(count_back))
+    logging.debug("count_ahead: {}".format(count_ahead))
+
+    page_size = 200
+    params = {
+        'limit': page_size,
+        'offset': 0,
+        'sort': '-startDate'
+    }
+    if additional_params is not None:
+        params.update(additional_params)
+    # Get first page
+    all_entities = []
+    # Get all other pages
+    while len(results) < total_expected:
+        entities = rest_crud.get(get_versioned_endpoint_base(), params)
+        ret_count = len(entities)
+        # Exit the loop when the pagination is not implemented for the endpoint and the number of entities is equal to page_size
+        if ret_count == 0:
+            break
+
+        entities = list(filter(lambda el: el['scenario'] == scenario, entities))
+
+        all_entities += entities
+        params['offset'] += page_size
+
+        arr_sorted_by_time = list(sorted(all_entities, key=lambda x: x["startDate"]))
+
+        results = compile_results_from_source(__id, arr_sorted_by_time, count_back, count_ahead)
+
+        if ret_count < page_size:
+            break
+
     return results
+
+def compile_results_from_source(base_id, all_entities, count_back, count_ahead):
+    ret = []
+    if len(list(filter(lambda x: x['id'] == base_id, all_entities))) > 0:
+        base_index = list(map(lambda x: x["id"],all_entities)).index(base_id)
+        back_index = base_index+count_back
+        ahead_index = base_index+count_ahead
+        #print({'base_index':base_index,'back_index':back_index,'ahead_index':ahead_index})
+        for i in range(max(back_index,0),base_index+1):
+            ret.append(all_entities[i])
+        for i in range(base_index,min(ahead_index,len(all_entities)-1)):
+            ret.append(all_entities[i])
+    return ret
+
+def get_versioned_endpoint_base():
+    return rest_crud.base_endpoint_with_workspace() + __endpoint
 
 def get_end_point(id_test: str, operation=''):
     slash_id_test = '' if id_test is None else '/' + id_test
-    return rest_crud.base_endpoint_with_workspace() + __endpoint + slash_id_test + operation
+    return get_versioned_endpoint_base() + slash_id_test + operation
 
 
 def get_file_text(path):
@@ -631,7 +718,7 @@ def get_elements_data(result_id, base_col, time_binding, include_points, statist
     return base_col
 
 def get_element_data(el, result_id, time_binding, include_points, statistics_list, use_txn_raw):
-    full_name = el['name'] if not 'path' in el else " \ ".join(el['path'])
+    full_name = get_element_full_name(el)
     parent = get_element_parent(el)
     user_path = get_element_user_path(el)
     gprint("Getting element values for '" + full_name + "'")
@@ -685,6 +772,9 @@ def get_element_data(el, result_id, time_binding, include_points, statistics_lis
         el["failureRate"] = el["aggregate"]["failureCount"] / el["totalCount"]
 
     return el
+
+def get_element_full_name(el):
+    return el['name'] if not 'path' in el else " \\ ".join(el['path'])
 
 def get_element_data_from_sources(include_points, time_binding, use_txn_raw, result_id, el, statistics_list):
     viable_raw_element = (use_txn_raw and el['type'] in ["TRANSACTION"])
@@ -763,7 +853,7 @@ def get_mon_datas(result_id, l_selector, base_col, include_points):
     for mon in list(filter(l_selector, base_col)):
         mons.append(mon)
     for mon in mons:
-        full_name = mon['name'] if not 'path' in mon else " \ ".join(mon['path'])
+        full_name = get_element_full_name(mon)
         gprint("Getting monitor values for '" + full_name + "'")
         mon_points = rest_crud_get(get_end_point(result_id, __operation_monitors) + "/" + mon['id'] + "/points")
         time_points = list(sorted(mon_points, key=lambda x: x['from']))

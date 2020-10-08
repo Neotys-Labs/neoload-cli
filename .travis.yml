@@ -16,7 +16,6 @@ install:
 script:
   - PYTHONPATH="neoload" COVERAGE_FILE=.coverage.unit coverage3 run -m pytest
   - PYTHONPATH="neoload" COVERAGE_FILE=.coverage.live coverage3 run -m pytest -v -x -m "makelivecalls" --makelivecalls --token $NLW_TOKEN --url $NLW_URL
-  - ls -latr
   - coverage3 combine
   - coverage3 xml
   - sonar-scanner

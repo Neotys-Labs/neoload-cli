@@ -1,0 +1,48 @@
+<h3>General Details</h3>
+
+Report Title: {{summary.title}}
+
+<script type="text/javascript">
+var colors = ['#0F948D','#C19B41','#7ABE79','#F57816','#903B97'] // http://colormind.io/
+colors = shuffleArray(colors)
+var results = []
+{% for result in results | sort(attribute='startDate') %}
+  results.push({
+    name: "{{result.name}}",
+    index: {{result.index}},
+    color: colors[{{result.index}}]
+  })
+{% endfor %}
+window.results_colors = results
+</script>
+
+<h4>Test Results in this comparison:</h4>
+<table>
+<thead>
+<tr>
+<td>Index</td>
+<td>Test Name</td>
+<td>Status</td>
+<td>Start Time</td>
+<td>Duration</td>
+<td>Description</td>
+</tr>
+</thead>
+<tbody>
+{% for result in results | sort(attribute='index') %}
+<tr id="tr{{result.id}}">
+<td>{{result.index}}</td>
+<td>{{result.name}}</td>
+<td>{{result.qualityStatus}}</td>
+<td>{{result.startDateText}}</td>
+<td>{{result.durationText}}</td>
+<td>{{result.description}}</td>
+</tr>
+{% endfor %}
+</table>
+<script type="text/javascript">
+{% for result in results | sort(attribute='index') %}
+d3.selectAll("#tr{{result.id}} > td")
+    .style("color",window.results_colors[{{result.index}}].color)
+{% endfor %}
+</script>
