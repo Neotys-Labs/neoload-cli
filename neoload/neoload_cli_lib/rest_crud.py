@@ -2,6 +2,7 @@ import logging
 import urllib.parse as urlparse
 
 import requests
+import sys
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 from tqdm import tqdm
 
@@ -84,11 +85,13 @@ def get_from_file_storage(endpoint: str):
 
 def post_binary_files_storage(endpoint: str, path, filename):
     logging.debug(f'POST (files) {endpoint} path={path} filename={filename}')
-    multipart_form_data = multipart_progress(path, filename)
+    multipart_form_data, bar = multipart_progress(path, filename)
     headers = __create_additional_headers()
     headers['Content-Type'] = multipart_form_data.content_type
     response = requests.post(__create_url_file_storage(endpoint), headers=headers,
                              data=multipart_form_data, verify=user_data.get_ssl_cert())
+    if bar:
+        bar.close()
     __handle_error(response)
     return response
 
@@ -98,14 +101,15 @@ def multipart_progress(path, filename):
     if tools.is_user_interactive():
         bar = tqdm(desc=filename,
                    total=encoder.len,
+                   leave=False,
                    dynamic_ncols=True,
                    unit='B',
                    unit_scale=True,
                    unit_divisor=1024)
         multipart_monitor = MultipartEncoderMonitor(encoder, lambda monitor: bar.update(monitor.bytes_read - bar.n))
-        return multipart_monitor
+        return multipart_monitor, bar
     else:
-        return encoder
+        return encoder, None
 
 
 def put(endpoint: str, data):
