@@ -1,13 +1,10 @@
 import datetime
 import time
-import os
+import webbrowser
 from signal import signal, SIGINT
 
 from commands import logs_url, test_results
 from neoload_cli_lib import tools, rest_crud
-
-import sys
-import webbrowser
 
 __current_id = None
 __count = 0

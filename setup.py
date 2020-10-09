@@ -43,6 +43,8 @@ setup(
         'termcolor',
         'coloredlogs',
         'gitignore_parser',
+        'tqdm',
+        'requests_toolbelt',
         'urllib3'
     ],
     long_description_content_type='text/markdown',
