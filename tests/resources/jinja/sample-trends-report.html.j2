@@ -7,16 +7,30 @@
     <script type="text/javascript">{% include 'trends/trends.js' %}</script>
   </head>
   <body>
-
-<h1>Performance Trend Report</h1>
+{% with title="Performance Trend Report" %}{% include 'common/header.j2' %}{% endwith %}
 
 <script type="text/javascript">
 
 </script>
 
-{% include 'trends/general_details.html.j2' %}
+<script type="text/javascript">
+var colors = ['#0F948D','#C19B41','#7ABE79','#F57816','#903B97'] // http://colormind.io/
+//colors = shuffleArray(colors)
+var results = []
+{% for result in results | sort(attribute='startDate') %}
+  results.push({
+    id: "{{result.id}}",
+    name: "{{result.name}}",
+    index: {{result.index}},
+    color: colors[{{result.index}}]
+  })
+{% endfor %}
+window.results_colors = results
+</script>
 
 {% include 'trends/transaction_trends.html.j2' %}
+
+{% include 'trends/general_details.html.j2' %}
 
 <script type="text/javascript">
 appendOnLoad(function() {

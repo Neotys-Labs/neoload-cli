@@ -2,20 +2,6 @@
 
 Report Title: {{summary.title}}
 
-<script type="text/javascript">
-var colors = ['#0F948D','#C19B41','#7ABE79','#F57816','#903B97'] // http://colormind.io/
-colors = shuffleArray(colors)
-var results = []
-{% for result in results | sort(attribute='startDate') %}
-  results.push({
-    name: "{{result.name}}",
-    index: {{result.index}},
-    color: colors[{{result.index}}]
-  })
-{% endfor %}
-window.results_colors = results
-</script>
-
 <h4>Test Results in this comparison:</h4>
 <table>
 <thead>
