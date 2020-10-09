@@ -543,7 +543,7 @@ def fill_trend_transaction_group(name,transaction_aggregates,arr_selected,unique
         group["results"].append(simplify)
 
         for agg in transaction_aggregates:
-            aggregates[agg].extend(list(map(lambda el: el["aggregate"][agg], els)))
+            aggregates[agg].extend(list(map(lambda el,a=agg: el["aggregate"][a], els)))
 
     group["aggregate"] = {}
     for agg in transaction_aggregates:
@@ -573,9 +573,9 @@ def filter_elements(elements, elements_filter):
         filters = parse_elements_filter(elements_filter)
         for fil in filters:
             if fil["type"] == "id":
-                found.extend(list(filter(lambda el: el["id"] == fil["value"], elements)))
+                found.extend(list(filter(lambda el,f=fil: el["id"] == f["value"], elements)))
             elif fil["type"] == "regex":
-                found.extend(list(filter(lambda el: element_matches_regex(el, fil["value"]), elements)))
+                found.extend(list(filter(lambda el,f=fil: element_matches_regex(el, f["value"]), elements)))
             else:
                 raise ValueError
     return found
@@ -605,9 +605,6 @@ def get_results_by_result_id(__id,count_back,count_ahead):
     project = result["project"]
     scenario = result["scenario"]
     logging.debug({'project':project,'scenario':scenario})
-    additional_params = {
-        'project': project
-    }
     total_expected = -count_back + 1 + count_ahead
     results = []
     logging.debug("based_id: {}".format(__id))
@@ -619,10 +616,10 @@ def get_results_by_result_id(__id,count_back,count_ahead):
     params = {
         'limit': page_size,
         'offset': 0,
-        'sort': '-startDate'
+        'sort': '-startDate',
+        'project': project
     }
-    if additional_params is not None:
-        params.update(additional_params)
+
     # Get first page
     all_entities = []
     # Get all other pages
