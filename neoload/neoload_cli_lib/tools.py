@@ -2,6 +2,7 @@ import json
 import os
 import re
 import sys
+import time
 
 import click
 from click import ClickException
@@ -11,6 +12,9 @@ from neoload_cli_lib import rest_crud, user_data
 
 __regex_id = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 __regex_mongodb_id = re.compile('[a-f\\d]{24}', re.IGNORECASE)
+__true_values = ["true", "yes", "y", "1"]
+__false_values = ["false", "no", "n", "0"]
+__nl_interactive_env_var = 'NL_INTERACTIVE'
 
 __batch = False
 
@@ -145,6 +149,14 @@ def system_exit(exit_process, apply_exit_code=True):
         print_color(exit_process['message'], 'green' if exit_code == 0 else 'red')
     if apply_exit_code or exit_code > 1:
         sys.exit(exit_process['code'])
+
+
+def get_boolean_value_from_env(env_var, default=False):
+    return os.getenv(env_var, str(default)).lower().strip() in __true_values
+
+
+def is_user_interactive():
+    return get_boolean_value_from_env(__nl_interactive_env_var, False)
 
 
 def ssl_cert_to_verify(ssl_cert):

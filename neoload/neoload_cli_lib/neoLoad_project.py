@@ -7,16 +7,17 @@ from gitignore_parser import parse_gitignore
 
 from neoload_cli_lib import rest_crud, tools, cli_exception
 
-black_list = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/', 'results/',
-              'comparative-summary/', 'reports/']
+not_to_be_included = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/',
+                      'results/',
+                      'comparative-summary/', 'reports/', '/recorded-artifacts/']
 
 
-def is_black_listed(path: str, nlignore_matcher):
-    for refused in black_list:
+def is_not_to_be_included(path: str, nl_ignore_matcher):
+    for refused in not_to_be_included:
         if refused in path:
-            logging.debug("blacklisted: '" + path + "'")
+            logging.debug("not_included: '" + path + "'")
             return True
-    if nlignore_matcher is not None and nlignore_matcher(path):
+    if nl_ignore_matcher is not None and nl_ignore_matcher(path):
         logging.debug(".nlignore'd: '" + path + "'")
         return True
     return False
@@ -24,15 +25,15 @@ def is_black_listed(path: str, nlignore_matcher):
 
 def zip_dir(path):
     # find and load .nlignore
-    ignorefile = os.path.join(path, '.nlignore')
-    nlignore_matcher = parse_gitignore(ignorefile) if os.path.exists(ignorefile) else None
+    ignore_file = os.path.join(path, '.nlignore')
+    nl_ignore_matcher = parse_gitignore(ignore_file) if os.path.exists(ignore_file) else None
 
-    temp_zip = tempfile.TemporaryFile('w+b')
+    temp_zip = tempfile.NamedTemporaryFile('w+b')
     ziph = zipfile.ZipFile(temp_zip, 'x', zipfile.ZIP_DEFLATED)
     for root, dirs, files in os.walk(path):
         for file in files:
             file_path = os.path.join(root, file)
-            if not is_black_listed(file_path, nlignore_matcher):
+            if not is_not_to_be_included(file_path, nl_ignore_matcher):
                 ziph.write(file_path, file_path.replace(str(path), ''))
 
     ziph.close()
