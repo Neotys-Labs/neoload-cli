@@ -170,7 +170,7 @@ def process_final_output(model, template):
     else:
         dirname = os.path.dirname(os.path.abspath(template))
         loader = jinja2.FileSystemLoader(searchpath=dirname)
-        env = jinja2.Environment(loader=loader,autoescape=True)
+        env = jinja2.Environment(loader=loader,autoescape=True,extensions=['jinja2.ext.debug'])
         t = env.from_string(model["template_text"])
 
         data_obj = json.loads(model["json_data_text"])
@@ -290,7 +290,6 @@ def fill_single_summary(__id, time_binding, time_filter, components, data):
         if time_binding is not None:
             time_binding["summary"] = json_result
             time_binding = fill_time_binding(time_binding)
-            logging.debug(time_binding)
     return time_binding
 
 def fill_single_slas(__id, components, data):
@@ -403,7 +402,7 @@ def translate_time_part_to_seconds(total_duration_sec, part_spec):
     except Exception:
         raise ValueError("Value of filter timespan part '" + part_spec + "' is invalid.")
 
-def get_trends_report(name, time_binding, results_filter, elements_filter, exclude_filter):
+def get_trends_report(name, time_filter, results_filter, elements_filter, exclude_filter):
     (arr_ids,arr_directives) = parse_results_filter(results_filter)
 
     (count_back,count_ahead) = get_trend_count_back_ahead(arr_directives)
@@ -421,8 +420,7 @@ def get_trends_report(name, time_binding, results_filter, elements_filter, exclu
 
     all_transactions = []
 
-    for result in arr_selected:
-        fill_trend_result(result, all_transactions, elements_filter, time_binding)
+    fill_trend_results(arr_selected, all_transactions, elements_filter, time_filter)
 
     all_transaction_names = list(map(lambda t: t["name"], all_transactions))
     unique_transaction_names = unique(all_transaction_names)
@@ -439,6 +437,20 @@ def get_trends_report(name, time_binding, results_filter, elements_filter, exclu
         "unique_transactions": unique_transactions,
         "results": arr_selected,
     }
+
+def fill_trend_results(arr_selected, all_transactions, elements_filter, time_filter):
+    #for result in arr_selected:
+    #    fill_trend_result(result, all_transactions, elements_filter, time_filter)
+
+    global MAX_CALLS_PER_SECOND
+
+    procedure = lambda result: fill_trend_result(result, all_transactions, elements_filter, time_filter)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor: #ThreadPoolExecutor
+        for out in executor.map(procedure, arr_selected, chunksize=MAX_CALLS_PER_SECOND):
+            logging.getLogger().info("parallel processed fill_trend_results worker for '" + out['name'] + "'")
+
+    return arr_selected
 
 def parse_results_filter(results_filter):
     filter_parts = results_filter.split("|") if results_filter is not None else []
@@ -494,29 +506,44 @@ def get_trends_selected_results(arr_ids,count_back,count_ahead):
 
     return arr_selected
 
-def fill_trend_result(result, all_transactions, elements_filter, time_binding):
-    gprint("Getting test '" + result["name"] + "' (" + result["id"] + ") statistics...")
+def fill_trend_result(result, all_transactions, elements_filter, time_filter):
+    gprint("fill_trend_result: Getting test '" + result["name"] + "' (" + result["id"] + ") statistics...")
     __id = result["id"]
     result = add_test_result_summary_fields(result)
     json_stats = rest_crud_get(get_end_point(__id, __operation_statistics))
 
     statistics_list = get_standard_statistics_list()
 
+    time_binding = None
+    if time_filter is not None:
+        time_binding = {
+            "time_filter": time_filter
+        }
+
+    if time_binding is not None:
+        time_binding["summary"] = result
+        time_binding = fill_time_binding(time_binding)
+
     found_elements = []
+    elements = []
+    # elements.extend(rest_crud_get(get_end_point(__id, __operation_elements) + "?category=REQUEST"))
+    transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
+    elements.extend(transactions)
     if elements_filter is not None and not (result['terminationReason'] in ['FAILED_TO_START']):
-        elements = []
-        # elements.extend(rest_crud_get(get_end_point(__id, __operation_elements) + "?category=REQUEST"))
-        transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
-        elements.extend(transactions)
         filters = parse_elements_filter(elements_filter)
         logging.debug("Using filters: {}".format(filters))
         logging.debug("Filtering elements: {}".format(len(elements)))
         found_elements = filter_elements(elements, elements_filter)
         logging.debug("Filtered elements: {}".format(len(found_elements)))
+    else:
+        found_elements = elements
+
+    if len(elements) > 0:
         use_txn_raw = should_raw_transactions_data(__id)
         found_elements = get_elements_data(__id, found_elements, time_binding, True, statistics_list, use_txn_raw)
         found_elements = sorted(found_elements, key=lambda x: x["aggregate"]["avgDuration"], reverse=True)
-        all_transactions.extend(list(filter(lambda el: el["type"]=="TRANSACTION", found_elements)))
+
+    all_transactions.extend(list(filter(lambda el: el["type"]=="TRANSACTION", found_elements)))
 
     result["elements"] = found_elements
     result["statistics"] = json_stats
