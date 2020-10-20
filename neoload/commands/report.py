@@ -498,7 +498,8 @@ def get_trends_selected_results(arr_ids,count_back,count_ahead):
     for i in range(base_index,base_index+1+count_ahead):
         arr_selected.append(arr_sorted_by_time[i])
     for i in range(base_index+count_back,base_index):
-        arr_selected.append(arr_sorted_by_time[i])
+        if i > 0 and i < len(arr_sorted_by_time):
+            arr_selected.append(arr_sorted_by_time[i])
 
     arr_selected = list(sorted(arr_selected, key=lambda x: x["startDate"]))
     for i in range(0,len(arr_selected)):
