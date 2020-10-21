@@ -283,10 +283,11 @@ neoload docker --all detach
 The main goal of the NeoLoad-CLI is to standardize the semantics of how load tests are executed across development, non-prod, and production environments.
 While the above instructions could be run from a contributor workstation, they can easily be translated to various continuous build and deployment orchestration environments, as exampled:
 
- - [Jenkins](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/jenkins_pipeline)
+ - [Jenkins](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/jenkins)
  - [Azure DevOps](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/azure_devops)
  - [Gitlab](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/gitlab)
- - Sorry AWS CodeBuild, haven't seen any F100 clients using the pform
+ - [Bamboo](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/bamboo-specs)
+ - [AWS](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/aws)
  - CircleCI, TBD when [@punkdata](https://www.linkedin.com/in/punkdata/) gets back to [@paulsbruce](https://www.linkedin.com/in/paulsbruce/) :)
 
 NB: When chaining commands, the return code of the whole command is the return code of the **last command**. That's why you should not chain the two commands "run" and "test-results junitsla".
