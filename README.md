@@ -128,6 +128,12 @@ To upload a NeoLoad project zip file or a standalone as code file into a test-se
 Usage: neoload project [OPTIONS] [up|upload|meta] NAME_OR_ID
 neoload project --path tests/neoload_projects/example_1/ upload
 ```
+You must specify in which test the project will be uploaded:
+* either by doing this command first
+   <pre><code>neoload test-settings use NewTest1</code></pre>
+* or by adding the name or id of the test to the project command
+   <pre><code>neoload project --path tests/neoload_projects/example_1/ upload NewTest1</code></pre>
+
 To Validate the syntax and schema of the as-code project yaml files
 ```
 neoload validate sample_projects/example_1/default.yaml
@@ -143,7 +149,7 @@ This command runs a test, it produces blocking, unbuffered output about test exe
 At the end, displays the summary and the SLA passed & failed.
 ```
 Usage: neoload run [OPTIONS] [NAME_OR_ID]
-neoload run \         # Runs the currently used test-settings (see neoload status)
+neoload run \         # Runs the currently used test-settings (see neoload status and neoload test-settings use)
      --as-code default.yaml,slas/uat.yaml \
      --name "MyCustomTestName_${JOB_ID}" \
      --description "A custom test description containing hashtags like #latest or #issueNum"
