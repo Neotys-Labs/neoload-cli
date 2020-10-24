@@ -38,7 +38,7 @@ def base_endpoint():
     return "v2" if user_data.is_version_lower_than('2.5.0') else "v3"
 
 
-def get_with_pagination(endpoint: str, page_size=200):
+def get_with_pagination(endpoint: str, page_size=200, filter=None):
     params = {
         'limit': page_size,
         'offset': 0
