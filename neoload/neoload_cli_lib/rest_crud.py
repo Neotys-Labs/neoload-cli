@@ -5,6 +5,8 @@ import requests
 import sys
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 from tqdm import tqdm
+import copy
+import re
 
 from neoload_cli_lib import user_data, cli_exception, tools
 from version import __version__
@@ -38,11 +40,23 @@ def base_endpoint():
     return "v2" if user_data.is_version_lower_than('2.5.0') else "v3"
 
 
-def get_with_pagination(endpoint: str, page_size=200, filter=None):
+def get_with_pagination(endpoint: str, page_size=200, filter_spec=None, input_params=None):
+
+    filters = {}
+    if filter_spec is not None and len(filter_spec)>0:
+        filters = parse_filter_spec(filter_spec)
+
     params = {
         'limit': page_size,
         'offset': 0
     }
+
+    if input_params is not None and isinstance(input_params, list):
+        for key in input_params:
+            if key in filters: # move key/value from filter to query params
+                params[key] = filters[key]
+                del filters[key]
+
     # Get first page
     all_entities = get(endpoint, params)
     params['offset'] += page_size
@@ -54,7 +68,33 @@ def get_with_pagination(endpoint: str, page_size=200, filter=None):
             break
         all_entities += entities
         params['offset'] += page_size
+
+    all_entities = list(filter(lambda entity: entity_matches_all_filters(entity, filters), all_entities))
+
     return all_entities
+
+def entity_matches_all_filters(entity, filters):
+    for key in filters.keys():
+        if key in entity:
+            find_re = filters[key].replace("*",".+")
+            in_val = entity[key]
+            if not re.search(find_re, in_val):
+                return False
+        else:
+            return False
+    return True
+
+def parse_filter_spec(filter_spec):
+    ret = {}
+    if filter_spec is not None:
+        filter_parts = filter_spec.split("|" if "|" in filter_spec else ";")
+        for part in filter_parts:
+            subparts = part.split("=")
+            key = subparts[0]
+            value = "=".join(subparts[1:])
+            ret[key] = value
+
+    return ret
 
 
 def get(endpoint: str, params=None):

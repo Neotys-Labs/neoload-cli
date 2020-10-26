@@ -90,12 +90,12 @@ def get_named_or_id(name, is_id_, resolver):
     return rest_crud.get(endpoint + "/" + name)
 
 
-def ls(name, is_id_, resolver, filter):
+def ls(name, is_id_, resolver, filter_spec=None, input_params=None):
     endpoint = resolver.get_endpoint()
     if name:
         get_id_and_print_json(get_named_or_id(name, is_id_, resolver))
     else:
-        print_json(rest_crud.get_with_pagination(endpoint=endpoint, filter=filter))
+        print_json(rest_crud.get_with_pagination(endpoint=endpoint, filter_spec=filter_spec, input_params=input_params))
 
 
 def delete(endpoint, id_data, kind):
