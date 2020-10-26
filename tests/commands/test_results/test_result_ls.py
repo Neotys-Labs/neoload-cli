@@ -31,6 +31,16 @@ class TestResultLs:
         assert json_result['name'] is not None
         assert json_result['description'] is not None
 
+    def test_list_filter(self, monkeypatch, valid_data):
+        runner = CliRunner()
+        mock_api_get_with_pagination(monkeypatch, 'v2/test-results',
+                     '[{"id":"someId", "name":"test-name", "description":".... "},'
+                     '{"id":"someId", "name":"test-name-2", "description":".... "}]')
+        result_ls = runner.invoke(results, ['ls', '--filter','name=test-name-2'])
+        assert_success(result_ls)
+        json_result = json.loads(result_ls.output)
+        assert len(json_result) == 1
+
     def test_error_not_logged_in(self):
         runner = CliRunner()
         result_logout = runner.invoke(logout)

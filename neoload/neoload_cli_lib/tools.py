@@ -8,7 +8,7 @@ import click
 from click import ClickException
 from termcolor import cprint
 
-from neoload_cli_lib import rest_crud, user_data
+from neoload_cli_lib import rest_crud, user_data, filtering
 
 __regex_id = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 __regex_mongodb_id = re.compile('[a-f\\d]{24}', re.IGNORECASE)
@@ -95,7 +95,13 @@ def ls(name, is_id_, resolver, filter_spec=None, input_params=None):
     if name:
         get_id_and_print_json(get_named_or_id(name, is_id_, resolver))
     else:
-        print_json(rest_crud.get_with_pagination(endpoint=endpoint, filter_spec=filter_spec, input_params=input_params))
+        filtering.set_filter(filter_spec, input_params)
+        print_json(
+            filtering.remove_by_last_filter(
+                rest_crud.get_with_pagination(endpoint)
+            )
+        )
+        filtering.clear_filter()
 
 
 def delete(endpoint, id_data, kind):
