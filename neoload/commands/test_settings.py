@@ -18,7 +18,7 @@ meta_key = 'settings id'
 
 
 @click.command()
-@click.argument('command', type=click.Choice(['ls', 'create', 'put', 'patch', 'delete', 'use','createoruse'], case_sensitive=False),
+@click.argument('command', type=click.Choice(['ls', 'create', 'put', 'patch', 'delete', 'use','createorpatch'], case_sensitive=False),
                 required=False)
 @click.argument("name", type=str, required=False)
 @click.option('--rename', help="rename test settings")
@@ -52,7 +52,7 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
         id_created = create(create_json(name, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern))
         user_data.set_meta(meta_key, id_created)
         return
-    elif command == "createoruse":
+    elif command == "createorpatch":
         __id = createoruse(name, rename, description, scenario, controller_zone_id, lg_zone_ids, naming_pattern)
         user_data.set_meta(meta_key, __id)
         return
