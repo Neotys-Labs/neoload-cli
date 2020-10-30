@@ -11,20 +11,14 @@ def clear_filter():
     last_filter_spec = None
     last_allowed_api_query_params = None
 
-def stuff_current_filters(params):
+def parse_filters(params):
     global last_filter_spec, last_allowed_api_query_params
     filter_spec = last_filter_spec
     allowed_api_query_params = last_allowed_api_query_params
 
     filters = parse_filter_spec(filter_spec)
 
-    if allowed_api_query_params is not None and isinstance(allowed_api_query_params, list):
-        for key in allowed_api_query_params:
-            if key in filters: # move key/value from filter to query params
-                params[key] = filters[key]
-                del filters[key]
-
-    return (params, filters)
+    return (allowed_api_query_params, filters)
 
 def parse_filter_spec(filter_spec):
     ret = {}
@@ -40,8 +34,8 @@ def parse_filter_spec(filter_spec):
     return ret
 
 def remove_by_last_filter(all_entities):
-    (params,filters) = stuff_current_filters({})
-    return list(filter(lambda entity: entity_matches_all_filters(entity, filters), all_entities))
+    (allowed_api_query_params,filters) = parse_filters({})
+    return list(filter(lambda entity,fils=filters: entity_matches_all_filters(entity, fils), all_entities))
 
 def entity_matches_all_filters(entity, filters):
     for key in filters.keys():

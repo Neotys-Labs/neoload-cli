@@ -46,7 +46,12 @@ def get_with_pagination(endpoint: str, page_size=200):
         'offset': 0
     }
 
-    (params,filters) = filtering.stuff_current_filters(params)
+    (allowed_api_query_params,filters) = filtering.parse_filters(params)
+    if allowed_api_query_params is not None and isinstance(allowed_api_query_params, list):
+        for key in allowed_api_query_params:
+            if key in filters: # move key/value from filter to query params
+                params[key] = filters[key]
+                del filters[key]
 
     # Get first page
     all_entities = get(endpoint, params)
