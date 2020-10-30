@@ -33,7 +33,7 @@ def load_from_file(file):
 @click.option('--quality-status', 'quality_status', type=click.Choice(['PASSED', 'FAILED']), help="")
 @click.option('--junit-file', 'junit_file', default="junit-sla.xml", help="Output the junit sla report to this path")
 @click.option('--file', type=click.File('r'), help="Json file with the data to be sent to the API.")
-@click.option('--filter', help="Filter test results by project, scenario, and other fields")
+@click.option('--filter', help="Filter test results by fields. Mostly used filters are : name, scenario, project, status.")
 def cli(command, name, rename, description, quality_status, junit_file, file, filter):
     """
     ls       # Lists test results                                            .

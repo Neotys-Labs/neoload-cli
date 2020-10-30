@@ -1,27 +1,25 @@
 import re
 
 last_filter_spec = None
-last_input_params = None
-def set_filter(filter_spec, input_params):
-    global last_filter_spec, last_input_params
+last_allowed_api_query_params = None
+def set_filter(filter_spec, allowed_api_query_params):
+    global last_filter_spec, last_allowed_api_query_params
     last_filter_spec = filter_spec
-    last_input_params = input_params
+    last_allowed_api_query_params = allowed_api_query_params
 def clear_filter():
-    global last_filter_spec, last_input_params
+    global last_filter_spec, last_allowed_api_query_params
     last_filter_spec = None
-    last_input_params = None
+    last_allowed_api_query_params = None
 
 def stuff_current_filters(params):
-    global last_filter_spec, last_input_params
+    global last_filter_spec, last_allowed_api_query_params
     filter_spec = last_filter_spec
-    input_params = last_input_params
+    allowed_api_query_params = last_allowed_api_query_params
 
-    filters = {}
-    if filter_spec is not None and len(filter_spec)>0:
-        filters = parse_filter_spec(filter_spec)
+    filters = parse_filter_spec(filter_spec)
 
-    if input_params is not None and isinstance(input_params, list):
-        for key in input_params:
+    if allowed_api_query_params is not None and isinstance(allowed_api_query_params, list):
+        for key in allowed_api_query_params:
             if key in filters: # move key/value from filter to query params
                 params[key] = filters[key]
                 del filters[key]
@@ -30,7 +28,8 @@ def stuff_current_filters(params):
 
 def parse_filter_spec(filter_spec):
     ret = {}
-    if filter_spec is not None:
+
+    if filter_spec is not None and len(filter_spec)>0:
         filter_parts = filter_spec.split("|" if "|" in filter_spec else ";")
         for part in filter_parts:
             subparts = part.split("=")
@@ -47,7 +46,7 @@ def remove_by_last_filter(all_entities):
 def entity_matches_all_filters(entity, filters):
     for key in filters.keys():
         if key in entity:
-            find_re = filters[key].replace("*",".+")
+            find_re = filters[key]
             in_val = entity[key]
             if not re.search(find_re, in_val):
                 return False
