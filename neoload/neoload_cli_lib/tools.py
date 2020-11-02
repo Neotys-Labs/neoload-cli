@@ -95,13 +95,9 @@ def ls(name, is_id_, resolver, filter_spec=None, allowed_api_query_params=None):
     if name:
         get_id_and_print_json(get_named_or_id(name, is_id_, resolver))
     else:
-        filtering.set_filter(filter_spec, allowed_api_query_params)
-        print_json(
-            filtering.remove_by_last_filter(
-                rest_crud.get_with_pagination(endpoint)
-            )
-        )
-        filtering.clear_filter()
+        (api_query_params, cli_params) = filtering.parse_filters(filter_spec, allowed_api_query_params)
+        all_entities = rest_crud.get_with_pagination(endpoint, api_query_params=api_query_params)
+        print_json(filtering.remove_by_filter(all_entities, cli_params))
 
 
 def delete(endpoint, id_data, kind):

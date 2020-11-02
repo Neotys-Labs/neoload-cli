@@ -39,19 +39,13 @@ def base_endpoint():
     return "v2" if user_data.is_version_lower_than('2.5.0') else "v3"
 
 
-def get_with_pagination(endpoint: str, page_size=200):
+def get_with_pagination(endpoint: str, page_size=200, api_query_params=None):
 
     params = {
         'limit': page_size,
         'offset': 0
     }
-
-    (allowed_api_query_params,filters) = filtering.parse_filters(params)
-    if allowed_api_query_params is not None and isinstance(allowed_api_query_params, list):
-        for key in allowed_api_query_params:
-            if key in filters: # move key/value from filter to query params
-                params[key] = filters[key]
-                del filters[key]
+    params.update(api_query_params or {})   # Add query params for filters
 
     # Get first page
     all_entities = get(endpoint, params)
@@ -64,8 +58,6 @@ def get_with_pagination(endpoint: str, page_size=200):
             break
         all_entities += entities
         params['offset'] += page_size
-
-    all_entities = filtering.remove_by_last_filter(all_entities)
 
     return all_entities
 

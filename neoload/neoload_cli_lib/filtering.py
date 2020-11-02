@@ -1,24 +1,21 @@
 import re
 
-last_filter_spec = None
-last_allowed_api_query_params = None
-def set_filter(filter_spec, allowed_api_query_params):
-    global last_filter_spec, last_allowed_api_query_params
-    last_filter_spec = filter_spec
-    last_allowed_api_query_params = allowed_api_query_params
-def clear_filter():
-    global last_filter_spec, last_allowed_api_query_params
-    last_filter_spec = None
-    last_allowed_api_query_params = None
 
-def parse_filters(params):
-    global last_filter_spec, last_allowed_api_query_params
-    filter_spec = last_filter_spec
-    allowed_api_query_params = last_allowed_api_query_params
+def parse_filters(filter_spec, allowed_api_query_params):
+    """
+    Reads the filter_spec and return the filters that can be applied with public API
+    and filters that must be applied by the CLI on the result list
+    """
+    cli_params = parse_filter_spec(filter_spec)
+    api_query_params = {}
+    if allowed_api_query_params is not None and isinstance(allowed_api_query_params, list):
+        for key in allowed_api_query_params:
+            if key in cli_params:  # move key/value from filter to query params
+                api_query_params[key] = cli_params[key]
+                del cli_params[key]
 
-    filters = parse_filter_spec(filter_spec)
+    return api_query_params, cli_params
 
-    return (allowed_api_query_params, filters)
 
 def parse_filter_spec(filter_spec):
     ret = {}
@@ -33,9 +30,13 @@ def parse_filter_spec(filter_spec):
 
     return ret
 
-def remove_by_last_filter(all_entities):
-    (allowed_api_query_params,filters) = parse_filters({})
-    return list(filter(lambda entity,fils=filters: entity_matches_all_filters(entity, fils), all_entities))
+
+def remove_by_filter(all_entities, cli_params):
+    """
+    Remove all elements from the list 'all_entities' that don't match all the filters 'cli_params'
+    """
+    return list(filter(lambda entity: entity_matches_all_filters(entity, cli_params), all_entities))
+
 
 def entity_matches_all_filters(entity, filters):
     for key in filters.keys():
