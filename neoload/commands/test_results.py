@@ -112,7 +112,8 @@ def junit(__id, junit_file):
     json_result = rest_crud.get(get_end_point(__id))
     json_sla_test = rest_crud.get(get_end_point(__id, __operation_sla_test))
     json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
-    displayer.print_result_junit(json_result, json_sla_test, json_sla_interval, junit_file)
+    json_sla_global = rest_crud.get(get_end_point(__id, __operation_sla_global))
+    displayer.print_result_junit(json_result, json_sla_test, json_sla_interval, json_sla_global, junit_file)
 
 
 def get_id_by_name_or_id(name):

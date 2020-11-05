@@ -58,8 +58,10 @@ def __get_color_from_status(status: str):
     }.get(status, "red")
 
 
-def print_result_junit(json_result, sla_json_test, sla_json_interval, junit_file_path):
+def print_result_junit(json_result, sla_json_test, sla_json_interval, sla_json_global, junit_file_path):
     junit_suites = []
+    for sla in sla_json_global:
+        junit_suites.append(__build_test_suite(json_result, __SLA_global, sla))
     for sla in sla_json_test:
         junit_suites.append(__build_test_suite(json_result, __SLA_test, sla))
     for sla in sla_json_interval:
@@ -71,10 +73,15 @@ def print_result_junit(json_result, sla_json_test, sla_json_interval, junit_file
 
 def __build_test_suite(json_result, kind, sla_json):
     status = sla_json['status']
-    category = sla_json['element']['category']
-    user_path = sla_json['element']['userpath']
-    suite_name = 'com.neotys.%s.%s%s' % (
-        category, kind.replace(' ', ''), ('' if user_path == '' else '.%s' % user_path))
+
+    if 'element' in sla_json.keys():
+        category = sla_json['element']['category']
+        user_path = sla_json['element']['userpath']
+        suite_name = 'com.neotys.%s.%s%s' % (
+            category, kind.replace(' ', ''), ('' if user_path == '' else '.%s' % user_path))
+    else:
+        suite_name = 'com.neotys.%s' % (kind.replace(' ', ''))
+
     test_name = sla_json['kpi']
 
     tc = TestCase(test_name, suite_name)
@@ -93,9 +100,10 @@ def build_threshold_str(threshold):
 
 def __build_unit_test(json_result, kind, sla_json):
     status = sla_json['status']
-    element = sla_json['element']
+
     reported = 0
-    if kind == __SLA_test:
+
+    if kind == __SLA_test or kind == __SLA_global:
         reported = sla_json['value']
     elif status == "FAILED":
         reported = sla_json['failed']
@@ -103,16 +111,21 @@ def __build_unit_test(json_result, kind, sla_json):
         reported = sla_json['warning']
 
     threshold_str = ''
-    if kind == __SLA_interval:
-        if status == "FAILED":
-            threshold_str = build_threshold_str(sla_json['failedThreshold'])
-        if status == "WARNING":
-            threshold_str = build_threshold_str(sla_json['warningThreshold'])
 
-    text = 'Container: %s<br/>' % element['name']
-    text += 'Path: User Paths > %s > Init > %s > %s<br/>' % (element['userpath'], element['parent'], element['name'])
-    text += 'Virtual User: %s<br/>' % element['userpath']
-    text += 'SLA Profile: %s<br/>' % element['category']
+    if status == "FAILED":
+        threshold_str = build_threshold_str(sla_json['failedThreshold'])
+    if status == "WARNING":
+        threshold_str = build_threshold_str(sla_json['warningThreshold'])
+
+    text = ''
+
+    if 'element' in sla_json.keys():
+        element = sla_json['element']
+        text += 'Container: %s<br/>' % element['name']
+        text += 'Path: User Paths > %s > Init > %s > %s<br/>' % (element['userpath'], element['parent'], element['name'])
+        text += 'Virtual User: %s<br/>' % element['userpath']
+        text += 'SLA Profile: %s<br/>' % element['category']
+
     text += 'SLA Type: %s<br/>' % kind
     text += '%s Type: %s<br/>' % (status, sla_json['kpi'])
     text += 'Project: %s<br/>' % json_result['project']
@@ -122,4 +135,5 @@ def __build_unit_test(json_result, kind, sla_json):
     text += 'Results: <br/><br/>'
     text += '%s=%s%%<br/><br/>' % (sla_json['kpi'], str(reported))
     text += 'Created N/A<br/>'
+
     return text
