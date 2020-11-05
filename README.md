@@ -170,10 +170,19 @@ neoload stop             # Send the stop signal to the test and wait until it en
 ## View results
 ```
 Usage: neoload test-results [OPTIONS] [[ls|summary|junitsla|put|delete|use]] [NAME]
+neoload test-results ls                 # Lists test results                                            .
+neoload test-results use                # Remember the test result you want to work on.                           .
 neoload test-results summary            # The Json result summary, with SLAs
 neoload test-results junitsla           # Output the summary in a JUnit xml file
 ```
 Metadata on a test can be modified after the test is complete, such as name, description, and status.\
+
+To filter test results based on project, scenario, or status:
+```
+neoload test-results --filter "project=MyProject;scenario=fullTest" ls
+neoload test-results --filter "status=TERMINATED|qualityStatus=FAILED" ls
+```
+NOTE: you can use either a semicolon OR a pipe, but not both interchangeably in the same filter.
 
 To work with a specific test result and be able to chain commands
 ```

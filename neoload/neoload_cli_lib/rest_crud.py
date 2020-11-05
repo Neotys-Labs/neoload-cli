@@ -5,8 +5,9 @@ import requests
 import sys
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 from tqdm import tqdm
+import copy
 
-from neoload_cli_lib import user_data, cli_exception, tools
+from neoload_cli_lib import user_data, cli_exception, tools, filtering
 from version import __version__
 
 __current_command = ""
@@ -38,11 +39,14 @@ def base_endpoint():
     return "v2" if user_data.is_version_lower_than('2.5.0') else "v3"
 
 
-def get_with_pagination(endpoint: str, page_size=200):
+def get_with_pagination(endpoint: str, page_size=200, api_query_params=None):
+
     params = {
         'limit': page_size,
         'offset': 0
     }
+    params.update(api_query_params or {})   # Add query params for filters
+
     # Get first page
     all_entities = get(endpoint, params)
     params['offset'] += page_size
@@ -54,7 +58,11 @@ def get_with_pagination(endpoint: str, page_size=200):
             break
         all_entities += entities
         params['offset'] += page_size
+
     return all_entities
+
+
+
 
 
 def get(endpoint: str, params=None):
