@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<testsuites disabled="0" errors="0" failures="4" tests="7" time="0.0">
+	<testsuite disabled="0" errors="0" failures="0" name="com.neotys.Global" skipped="0" tests="1" time="0">
+		<testcase name="avg-request-resp-time" classname="com.neotys.Global"/>
+	</testsuite>
+	<testsuite disabled="0" errors="0" failures="1" name="com.neotys.TRANSACTION.PerRun.BrowserUser_Create_report" skipped="0" tests="1" time="0">
+		<testcase name="error-rate" classname="com.neotys.TRANSACTION.PerRun.BrowserUser_Create_report">
+			<failure type="NeoLoad SLA" message="SLA failed">Container: submit&lt;br/&gt;Path: User Paths &gt; BrowserUser_Create_report &gt; Init &gt; Try &gt; submit&lt;br/&gt;Virtual User: BrowserUser_Create_report&lt;br/&gt;SLA Profile: TRANSACTION&lt;br/&gt;SLA Type: Per Run&lt;br/&gt;FAILED Type: error-rate&lt;br/&gt;Project: Sample_Project&lt;br/&gt;Scenario: WANImpact Local&lt;br/&gt;&lt;br/&gt;FAILED&lt;br/&gt;description: if the error-rate &gt;= 5 then fail&lt;br/&gt;&lt;br/&gt;Results: &lt;br/&gt;&lt;br/&gt;error-rate=6.097561%&lt;br/&gt;&lt;br/&gt;Created N/A&lt;br/&gt;</failure>
+		</testcase>
+	</testsuite>
+	<testsuite disabled="0" errors="0" failures="1" name="com.neotys.REQUEST.PerRun.BrowserUser_Create_report" skipped="0" tests="1" time="0">
+		<testcase name="avg-request-per-sec" classname="com.neotys.REQUEST.PerRun.BrowserUser_Create_report">
+			<failure type="NeoLoad SLA" message="SLA failed">Container: /media/js/jquery.pngFix.pack.js&lt;br/&gt;Path: User Paths &gt; BrowserUser_Create_report &gt; Init &gt; / &gt; /media/js/jquery.pngFix.pack.js&lt;br/&gt;Virtual User: BrowserUser_Create_report&lt;br/&gt;SLA Profile: REQUEST&lt;br/&gt;SLA Type: Per Run&lt;br/&gt;WARNING Type: avg-request-per-sec&lt;br/&gt;Project: Sample_Project&lt;br/&gt;Scenario: WANImpact Local&lt;br/&gt;&lt;br/&gt;WARNING&lt;br/&gt;description: if the avg-request-per-sec &lt;= 25 then fail&lt;br/&gt;&lt;br/&gt;Results: &lt;br/&gt;&lt;br/&gt;avg-request-per-sec=12.056263%&lt;br/&gt;&lt;br/&gt;Created N/A&lt;br/&gt;</failure>
+		</testcase>
+	</testsuite>
+	<testsuite disabled="0" errors="0" failures="0" name="com.neotys.REQUEST.PerRun.BrowserUser_Create_report" skipped="0" tests="1" time="0">
+		<testcase name="error-rate" classname="com.neotys.REQUEST.PerRun.BrowserUser_Create_report"/>
+	</testsuite>
+	<testsuite disabled="0" errors="0" failures="1" name="com.neotys.REQUEST.PerInterval.BrowserUser_Create_report" skipped="0" tests="1" time="0">
+		<testcase name="avg-resp-time" classname="com.neotys.REQUEST.PerInterval.BrowserUser_Create_report">
+			<failure type="NeoLoad SLA" message="SLA failed">Container: /media/js/OpenLayers.js&lt;br/&gt;Path: User Paths &gt; BrowserUser_Create_report &gt; Init &gt; / &gt; /media/js/OpenLayers.js&lt;br/&gt;Virtual User: BrowserUser_Create_report&lt;br/&gt;SLA Profile: REQUEST&lt;br/&gt;SLA Type: Per Interval&lt;br/&gt;FAILED Type: avg-resp-time&lt;br/&gt;Project: Sample_Project&lt;br/&gt;Scenario: WANImpact Local&lt;br/&gt;&lt;br/&gt;FAILED&lt;br/&gt;description: if the avg-resp-time &gt;= 0.5 then fail&lt;br/&gt;&lt;br/&gt;Results: &lt;br/&gt;&lt;br/&gt;avg-resp-time=23.809525%&lt;br/&gt;&lt;br/&gt;Created N/A&lt;br/&gt;</failure>
+		</testcase>
+	</testsuite>
+	<testsuite disabled="0" errors="0" failures="1" name="com.neotys.REQUEST.PerInterval.BrowserUser_Create_report" skipped="0" tests="1" time="0">
+		<testcase name="avg-resp-time" classname="com.neotys.REQUEST.PerInterval.BrowserUser_Create_report">
+			<failure type="NeoLoad SLA" message="SLA failed">Container: /media/img/colorpicker/colorpicker_rgb_g.png&lt;br/&gt;Path: User Paths &gt; BrowserUser_Create_report &gt; Init &gt; /media/img/icon-calendar.gif &gt; /media/img/colorpicker/colorpicker_rgb_g.png&lt;br/&gt;Virtual User: BrowserUser_Create_report&lt;br/&gt;SLA Profile: REQUEST&lt;br/&gt;SLA Type: Per Interval&lt;br/&gt;WARNING Type: avg-resp-time&lt;br/&gt;Project: Sample_Project&lt;br/&gt;Scenario: WANImpact Local&lt;br/&gt;&lt;br/&gt;WARNING&lt;br/&gt;description: if the avg-resp-time &gt;= 0.05 then fail&lt;br/&gt;&lt;br/&gt;Results: &lt;br/&gt;&lt;br/&gt;avg-resp-time=7.3170733%&lt;br/&gt;&lt;br/&gt;Created N/A&lt;br/&gt;</failure>
+		</testcase>
+	</testsuite>
+	<testsuite disabled="0" errors="0" failures="0" name="com.neotys.REQUEST.PerInterval.BrowserUser_Create_report" skipped="0" tests="1" time="0">
+		<testcase name="error-rate" classname="com.neotys.REQUEST.PerInterval.BrowserUser_Create_report"/>
+	</testsuite>
+</testsuites>
