@@ -381,8 +381,10 @@ Status of IDE / editor integrations
  | PyCharm |      [x]      |      [x]      | Mark 'neoload' directory as "Sources Root" |
 
 ## Contributing
-Feel free to fork this repo, make changes, *test locally*, and create a pull request. As part of your testing, you should run the built-in test suite with the following command:
+Feel free to fork this repo, make changes, *test locally*, and create a pull request.
 
+#### Tests
+As part of your testing, you should run the built-in test suite with the following command: \
 NOTE: for testing from Mac, please change the PYTHONPATH separators below to colons (:) instead of semicolons (;).
 
 ```
@@ -398,3 +400,18 @@ Additionally, any contributions to the DSL validation functionality, such as on 
 ./tests/neoload_projects/yaml_variants/validate_all.sh
 ```
 This command executes a number of NEGATIVE tests to prove that changes to the JSON schema or validation process produce failures when their input is malformed in very specific ways (common mistakes).
+
+#### Version management on pypi
+Suppose X, Y, Z and N are integers, versions will be named as following on pypi: \
+**Final release version = X.Y.Z** Example *1.4.0* Install it with ```pip install neoload``` \
+**Release candidate version = X.Y.ZrcN** Example *1.5.0rc1* for the next candidate version. Install it with ```pip install neoload --pre``` \
+**Development versions = X.Y.Z.devN** Example *1.4.0.dev1* for a development version based on the final release 1.4.0. Install it with ```pip install neoload==1.4.0.dev1```
+
+Release candidate version contains all features planned and in testing by Quality Assurance team.
+
+Development versions may contains work not planned by R&D and not tested by Quality Assurance team. They should always be based on an official release, not on the next release.
+
+**Increment policy:**
+ - Minor version increment when major feature, for example new top-level command
+ - Fix version increment when executable changes, for example fixing an existing feature, or update a subcommand to an existing top-level command or update options to an existing command
+ - No release needed when the executable is not modified, for example when updating the following: automated CI tests, unit tests, README, Pipeline examples, report templates...
