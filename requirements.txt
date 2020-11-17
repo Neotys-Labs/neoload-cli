@@ -1,4 +1,2 @@
 pytest
 pytest-datafiles
-lxml
-xmldiff
