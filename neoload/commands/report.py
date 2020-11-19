@@ -131,6 +131,21 @@ def parse_template_spec(model,filter_spec,template):
             model["template_text"] = ""
         return True
 
+    elif template.lower().startswith("builtin:console-summary"):
+        model["components"] = get_default_components(False,filter_spec["exclude_filter"])
+        model["components"]["transactions"] = True
+        model["components"]["summary"] = True
+        model["components"]["statistics"] = True
+        model["components"]["slas"] = True
+
+        # add_if_not('events',default_retrieve)
+        # add_if_not('all_requests',default_retrieve)
+        # add_if_not('ext_data',default_retrieve)
+        # add_if_not('controller_points',default_retrieve)
+
+        model["template_text"] = get_builtin_console_summary()
+        return True
+
     elif os.path.isfile(template):
         model["template_text"] = get_file_text(template)
         return True
@@ -292,7 +307,11 @@ def fill_single_summary(__id, time_binding, time_filter, components, data):
             time_binding = fill_time_binding(time_binding)
     return time_binding
 
+def summary_precludes_details_fetch(data):
+    return data['summary']['terminationReason'] in ['LG_AVAILABILITY', 'LICENSE', 'FAILED_TO_START','UNKNOWN']
+
 def fill_single_slas(__id, components, data):
+    if summary_precludes_details_fetch(data): return
     if components['slas']:
         status = data['summary']['status']
         gprint("Getting global SLAs...")
@@ -303,30 +322,38 @@ def fill_single_slas(__id, components, data):
         data['sla_interval'] = rest_crud_get(get_end_point(__id, __operation_sla_interval))
 
 def fill_single_stats(__id, components, data):
+    if summary_precludes_details_fetch(data): return
     if components['statistics']:
         gprint("Getting test statistics...")
         data['statistics'] = rest_crud_get(get_end_point(__id, __operation_statistics))
 
 def fill_single_events(__id, components, data):
+    if summary_precludes_details_fetch(data): return
     if components['events']:
         gprint("Getting events...")
         data['events'] = rest_crud_get(get_end_point(__id, __operation_events))
 
 def fill_single_requests(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data):
+    if summary_precludes_details_fetch(data): return
     if components['all_requests']:
         gprint("Getting all-request data...")
 
         json_elements_requests = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=REQUEST")
         json_elements_all_requests = list(filter(lambda m: m['id'] == 'all-requests', json_elements_requests))
+        json_elements_all_requests_preserve = json_elements_all_requests
 
         if not elements_filter is None:
             json_elements_all_requests = filter_elements(json_elements_all_requests, elements_filter)
 
+        if not any(filter(lambda m: m['id'] == 'all-requests', json_elements_all_requests)):
+            json_elements_all_requests = json_elements_all_requests + json_elements_all_requests_preserve
+
         json_elements_all_requests = get_elements_data(__id, json_elements_all_requests, time_binding, True, statistics_list, use_txn_raw)
 
-        data['all_requests'] = json_elements_all_requests[0] if json_elements_all_requests is not None else {},
+        data['all_requests'] = json_elements_all_requests[0] if json_elements_all_requests is not None and len(json_elements_all_requests) > 0 else {},
 
 def fill_single_transactions(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data):
+    if summary_precludes_details_fetch(data): return
     if components['transactions']:
         gprint("Getting transactions...")
 
@@ -340,17 +367,20 @@ def fill_single_transactions(__id, elements_filter, time_binding, statistics_lis
         data['elements']['transactions'] = json_elements_transactions
 
 def fill_single_monitors(__id, components, data):
+    if summary_precludes_details_fetch(data): return
     if components['ext_data'] or components['controller_points']:
         gprint("Getting monitors...")
         data['monitors'] = rest_crud_get(get_end_point(__id, __operation_monitors))
 
 def fill_single_ext_data(__id, components, data):
+    if summary_precludes_details_fetch(data): return
     if components['ext_data']:
         ext_datas = get_mon_datas(__id, lambda m: m['path'][0] == 'Ext. Data', data['monitors'], True)
         ext_datas = list(sorted(ext_datas, key=lambda x: x['display_name']))
         data['ext_data'] = ext_datas
 
 def fill_single_controller_points(__id, components, data):
+    if summary_precludes_details_fetch(data): return
     if components['controller_points']:
         data['controller_points'] = get_mon_datas(__id, lambda m: m['path'][0] == 'Controller', data['monitors'], True)
 
@@ -915,6 +945,27 @@ User Path;Element;Parent;Count;Min;Avg;Max;Perc 50;Perc 90;Perc 95;Perc 99;Succe
     for txn in elements.transactions | rejectattr('id', 'equalto', 'all-transactions') | rejectattr('aggregate.count', 'equalto', 0) | sort(attribute='avgDuration',reverse=true) %}
 {{ txn.user_path|e }};{{ txn.name|e }};{{ txn.parent|e }};{{ txn.aggregate.count }};{{ txn.aggregate.minDuration }};{{ txn.aggregate.avgDuration }};{{ txn.aggregate.maxDuration }};{{ txn.aggregate.percentile50 }};{{ txn.aggregate.percentile90 }};{{ txn.aggregate.percentile95 }};{{ txn.aggregate.percentile99 }};{{ txn.aggregate.successCount }};{{ txn.aggregate.successRate }};{{ txn.aggregate.failureCount }};{{ txn.aggregate.failureRate }}{%
     endfor %}""".strip()
+
+def get_builtin_console_summary():
+    return """
+
+Test Name: {{summary.name}}
+Start: {{summary.startDateText}}\tDuration: {{summary.durationText}}
+End: {{summary.endDateText}}\tExecution Status: {{summary.status}} by {{summary.terminationReason}}
+Description: {{summary.description}}
+Project: {{summary.project}}
+Scenario: {{summary.scenario}}
+Quality Status: {{summary.qualityStatus}}
+
+Transactions summary:
+User Path\tElement\tCount\tMin\tAvg\tMax\tPerc 50\tPerc 90\tPerc 95\tPerc 99\tSuccess\tS.Rate\tFailure\tF.Rate
+{% for txn in elements.transactions | rejectattr('id', 'equalto', 'all-transactions') | rejectattr('aggregate.count', 'equalto', '0') | sort(attribute='avgDuration',reverse=true)
+%}{{ txn.user_path|e }}\t{{ txn.name|e }}\t{{ txn.aggregate.count }}\t""" \
+"""{{ txn.aggregate.minDuration }}\t{{ txn.aggregate.avgDuration }}\t{{ txn.aggregate.maxDuration }}\t""" \
+"""{{ txn.aggregate.percentile50 }}\t{{ txn.aggregate.percentile90 }}\t{{ txn.aggregate.percentile95 }}\t{{ txn.aggregate.percentile99 }}\t""" \
+"""{{ txn.aggregate.successCount }}\t{{ txn.aggregate.successRate }}\t""" \
+"""{{ txn.aggregate.failureCount }}\t{{ txn.aggregate.failureRate }}
+{% endfor %}""".strip()
 
 rest_calls = []
 calls_cleanup_indicator = 0
