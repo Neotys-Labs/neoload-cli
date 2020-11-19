@@ -11,7 +11,7 @@ def assert_success(result):
 
 
 def mock_api_get_with_pagination(monkeypatch, endpoint, json_result):
-    __mock_api_without_data(monkeypatch, 'get_with_pagination', endpoint, json_result)
+    __mock_api_without_data_two_args(monkeypatch, 'get_with_pagination', endpoint, json_result)
 
 
 def mock_api_get(monkeypatch, endpoint, json_result):
@@ -46,6 +46,13 @@ def __mock_api_without_data(monkeypatch, method, endpoint, json_result):
     if monkeypatch is not None:
         monkeypatch.setattr(rest_crud, method,
                             lambda actual_endpoint: __return_json(actual_endpoint, endpoint, json_result))
+        print('Mock %s %s to return %s' % (method.upper(), endpoint, json_result))
+
+
+def __mock_api_without_data_two_args(monkeypatch, method, endpoint, json_result):
+    if monkeypatch is not None:
+        monkeypatch.setattr(rest_crud, method,
+                            lambda actual_endpoint, api_query_params: __return_json(actual_endpoint, endpoint, json_result))
         print('Mock %s %s to return %s' % (method.upper(), endpoint, json_result))
 
 

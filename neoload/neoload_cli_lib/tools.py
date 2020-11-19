@@ -3,12 +3,13 @@ import logging
 import os
 import re
 import sys
+import time
 
 import click
 from click import ClickException
 from termcolor import cprint
 
-from neoload_cli_lib import rest_crud, user_data
+from neoload_cli_lib import rest_crud, user_data, filtering
 
 __regex_id = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 __regex_mongodb_id = re.compile('[a-f\\d]{24}', re.IGNORECASE)
@@ -90,12 +91,14 @@ def get_named_or_id(name, is_id_, resolver):
     return rest_crud.get(endpoint + "/" + name)
 
 
-def ls(name, is_id_, resolver):
+def ls(name, is_id_, resolver, filter_spec=None, allowed_api_query_params=None):
     endpoint = resolver.get_endpoint()
     if name:
         get_id_and_print_json(get_named_or_id(name, is_id_, resolver))
     else:
-        print_json(rest_crud.get_with_pagination(endpoint))
+        (api_query_params, cli_params) = filtering.parse_filters(filter_spec, allowed_api_query_params)
+        all_entities = rest_crud.get_with_pagination(endpoint, api_query_params=api_query_params)
+        print_json(filtering.remove_by_filter(all_entities, cli_params))
 
 
 def delete(endpoint, id_data, kind):
@@ -151,45 +154,12 @@ def system_exit(exit_process, apply_exit_code=True):
         sys.exit(exit_process['code'])
 
 
-def is_environment_var_true(env_var):
-    return os.getenv(env_var, 'false').lower().strip() in __true_values
-
-
-def is_environment_var_false(env_var):
-    return os.getenv(env_var, 'true').lower().strip() in __false_values
+def get_boolean_value_from_env(env_var, default=False):
+    return os.getenv(env_var, str(default)).lower().strip() in __true_values
 
 
 def is_user_interactive():
-    if is_environment_var_true(__nl_interactive_env_var):
-        return True
-    elif is_environment_var_false(__nl_interactive_env_var):
-        return False
-    else:
-        return sys.__stdin__.isatty() and not are_any_ci_env_vars_active()
-
-
-def are_any_ci_env_vars_active():
-    ci_env_var_signatures = {
-        "jenkins": ["JENKINS_URL"],  # https://wiki.jenkins.io/display/JENKINS/Building+a+software+project
-        "travis": ["TRAVIS"],  # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
-        "bamboo": ["bamboo_buildNumber"],  # https://stackoverflow.com/a/44330836
-        # https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
-        "codebuild": ["CODEBUILD_BUILD_ARN"],
-        # https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
-        "azure": ["AGENT_TOOLSDIRECTORY"],
-        "gitlab": ["CI_PROJECT_ID"],  # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
-        "teamcity": ["TEAMCITY_VERSION"],  # https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html
-        "circleci": ["CIRCLECI"],  # https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
-        # https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values
-        "gcloudbuild": ["BUILD_ID"],
-        "generic_ci": ["CONTINUOUS_INTEGRATION", "CI"],  # travis, circleci, and others
-    }
-    for ci in ci_env_var_signatures:
-        for env_var in ci_env_var_signatures[ci]:
-            if os.getenv(env_var) and not is_environment_var_false(env_var):
-                logging.debug("Environment variable '" + env_var + "' used by '" + ci + "' is set to a positive match!")
-                return True
-    return False
+    return get_boolean_value_from_env(__nl_interactive_env_var, False)
 
 
 def ssl_cert_to_verify(ssl_cert):

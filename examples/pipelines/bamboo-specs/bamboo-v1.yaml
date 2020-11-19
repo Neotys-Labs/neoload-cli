@@ -1,0 +1,32 @@
+project:
+  key: PT
+  plan:
+    key: RT
+    name: Run Neoload test
+stages:
+  - jobs:
+    - scripts:
+      # Install Neoload CLI
+      - pip3 install -U neoload
+      - neoload --version
+
+      # Get NeoLoad project for simple demo example. In production, you can use an already exiting test settings on your NLWeb server.
+      - wget https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/78a1366743b041088f357f0f702babfce5e55187/tests/neoload_projects/simpledemo.yml
+
+      # Prepare NeoLoad test
+      #- neoload login --url <api_url> <token_secret>
+      - neoload login --url <api_url> <token_secret>
+      - neoload test-settings --zone <zone_id> --scenario simpledemo createorpatch "My Bamboo Test With CLI"
+      - neoload project --path simpledemo.yml upload
+
+      # Run test
+      - neoload run --name Bamboo-${bamboo.buildNumber}
+
+      # Generate test report
+      - neoload test-results junitsla
+      testParsers:
+        - type: junit
+          testResults:
+           - 'junit-sla.xml'
+      requirements:
+        - python

@@ -2,13 +2,13 @@ import logging
 import urllib.parse as urlparse
 
 import requests
-
-import os
 import sys
-from io import BytesIO
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
+from tqdm import tqdm
+import copy
 
+from neoload_cli_lib import user_data, cli_exception, tools, filtering
 from version import __version__
-from neoload_cli_lib import user_data, cli_exception
 
 __current_command = ""
 __current_sub_command = ""
@@ -38,11 +38,14 @@ def base_endpoint():
     return "v2" if user_data.is_version_lower_than('2.5.0') else "v3"
 
 
-def get_with_pagination(endpoint: str, page_size=200):
+def get_with_pagination(endpoint: str, page_size=200, api_query_params=None):
+
     params = {
         'limit': page_size,
         'offset': 0
     }
+    params.update(api_query_params or {})   # Add query params for filters
+
     # Get first page
     all_entities = get(endpoint, params)
     params['offset'] += page_size
@@ -54,7 +57,11 @@ def get_with_pagination(endpoint: str, page_size=200):
             break
         all_entities += entities
         params['offset'] += page_size
+
     return all_entities
+
+
+
 
 
 def get(endpoint: str, params=None):
@@ -85,12 +92,13 @@ def get_from_file_storage(endpoint: str):
 
 def post_binary_files_storage(endpoint: str, path, filename):
     logging.debug(f'POST (files) {endpoint} path={path} filename={filename}')
-    multipart_form_data = {
-        'file': (filename, path),
-    }
-
-    response = requests.post(__create_url_file_storage(endpoint), headers=__create_additional_headers(),
-                             files=multipart_form_data, verify=user_data.get_ssl_cert())
+    multipart_form_data, bar = multipart_progress(path, filename)
+    headers = __create_additional_headers()
+    headers['Content-Type'] = multipart_form_data.content_type
+    response = requests.post(__create_url_file_storage(endpoint), headers=headers,
+                             data=multipart_form_data, verify=user_data.get_ssl_cert())
+    if bar:
+        bar.close()
     __handle_error(response)
     return response
 
@@ -192,6 +200,22 @@ class BufferReader(BytesIO):
             except Exception: # catches exception from the callback
                 raise CancelledError('The upload was cancelled.')
         return chunk
+
+def multipart_progress(path, filename):
+    encoder = MultipartEncoder({'file': (filename, path, 'application/octet-stream')})
+    if tools.is_user_interactive():
+        bar = tqdm(desc=filename,
+                   total=encoder.len,
+                   leave=False,
+                   dynamic_ncols=True,
+                   unit='B',
+                   unit_scale=True,
+                   unit_divisor=1024)
+        multipart_monitor = MultipartEncoderMonitor(encoder, lambda monitor: bar.update(monitor.bytes_read - bar.n))
+        return multipart_monitor, bar
+    else:
+        return encoder, None
+
 
 def put(endpoint: str, data):
     logging.debug(f'PUT {endpoint} body={data}')

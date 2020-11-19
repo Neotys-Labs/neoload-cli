@@ -33,7 +33,8 @@ def load_from_file(file):
 @click.option('--quality-status', 'quality_status', type=click.Choice(['PASSED', 'FAILED']), help="")
 @click.option('--junit-file', 'junit_file', default="junit-sla.xml", help="Output the junit sla report to this path")
 @click.option('--file', type=click.File('r'), help="Json file with the data to be sent to the API.")
-def cli(command, name, rename, description, quality_status, junit_file, file):
+@click.option('--filter', help="Filter test results by fields. Mostly used filters are : name, scenario, project, status.")
+def cli(command, name, rename, description, quality_status, junit_file, file, filter):
     """
     ls       # Lists test results                                            .
     summary  # Display a summary of the result : SLAs and statistics         .
@@ -52,7 +53,7 @@ def cli(command, name, rename, description, quality_status, junit_file, file):
     is_id = tools.is_id(name)
     # avoid to make two requests if we have not id.
     if command == "ls":
-        tools.ls(name, is_id, __resolver)
+        tools.ls(name, is_id, __resolver, filter, ['project','status','author'])
         return
 
     __id = tools.get_id(name, __resolver, is_id)
@@ -112,7 +113,8 @@ def junit(__id, junit_file):
     json_result = rest_crud.get(get_end_point(__id))
     json_sla_test = rest_crud.get(get_end_point(__id, __operation_sla_test))
     json_sla_interval = rest_crud.get(get_end_point(__id, __operation_sla_interval))
-    displayer.print_result_junit(json_result, json_sla_test, json_sla_interval, junit_file)
+    json_sla_global = rest_crud.get(get_end_point(__id, __operation_sla_global))
+    displayer.print_result_junit(json_result, json_sla_test, json_sla_interval, json_sla_global, junit_file)
 
 
 def get_id_by_name_or_id(name):

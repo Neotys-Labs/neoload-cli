@@ -130,6 +130,12 @@ To upload a NeoLoad project zip file or a standalone as code file into a test-se
 Usage: neoload project [OPTIONS] [up|upload|meta] NAME_OR_ID
 neoload project --path tests/neoload_projects/example_1/ upload
 ```
+You must specify in which test the project will be uploaded:
+* either by doing this command first
+   <pre><code>neoload test-settings use NewTest1</code></pre>
+* or by adding the name or id of the test to the project command
+   <pre><code>neoload project --path tests/neoload_projects/example_1/ upload NewTest1</code></pre>
+
 To Validate the syntax and schema of the as-code project yaml files
 ```
 neoload validate sample_projects/example_1/default.yaml
@@ -145,7 +151,7 @@ This command runs a test, it produces blocking, unbuffered output about test exe
 At the end, displays the summary and the SLA passed & failed.
 ```
 Usage: neoload run [OPTIONS] [NAME_OR_ID]
-neoload run \         # Runs the currently used test-settings (see neoload status)
+neoload run \         # Runs the currently used test-settings (see neoload status and neoload test-settings use)
      --as-code default.yaml,slas/uat.yaml \
      --name "MyCustomTestName_${JOB_ID}" \
      --description "A custom test description containing hashtags like #latest or #issueNum"
@@ -170,10 +176,19 @@ There is basic support in the NeoLoad CLI for viewing and exporting results.
 ### View results
 ```
 Usage: neoload test-results [OPTIONS] [[ls|summary|junitsla|put|delete|use]] [NAME]
+neoload test-results ls                 # Lists test results                                            .
+neoload test-results use                # Remember the test result you want to work on.                           .
 neoload test-results summary            # The Json result summary, with SLAs
 neoload test-results junitsla           # Output the summary in a JUnit xml file
 ```
 Metadata on a test can be modified after the test is complete, such as name, description, and status.\
+
+To filter test results based on project, scenario, or status:
+```
+neoload test-results --filter "project=MyProject;scenario=fullTest" ls
+neoload test-results --filter "status=TERMINATED|qualityStatus=FAILED" ls
+```
+NOTE: you can use either a semicolon OR a pipe, but not both interchangeably in the same filter.
 
 To work with a specific test result and be able to chain commands
 ```
@@ -373,10 +388,11 @@ neoload docker --all detach
 The main goal of the NeoLoad-CLI is to standardize the semantics of how load tests are executed across development, non-prod, and production environments.
 While the above instructions could be run from a contributor workstation, they can easily be translated to various continuous build and deployment orchestration environments, as exampled:
 
- - [Jenkins](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/jenkins_pipeline)
+ - [Jenkins](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/jenkins)
  - [Azure DevOps](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/azure_devops)
  - [Gitlab](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/gitlab)
- - Sorry AWS CodeBuild, haven't seen any F100 clients using the pform
+ - [Bamboo](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/bamboo-specs)
+ - [AWS](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/aws)
  - CircleCI, TBD when [@punkdata](https://www.linkedin.com/in/punkdata/) gets back to [@paulsbruce](https://www.linkedin.com/in/paulsbruce/) :)
 
 NB: When chaining commands, the return code of the whole command is the return code of the **last command**. That's why you should not chain the two commands "run" and "test-results junitsla".

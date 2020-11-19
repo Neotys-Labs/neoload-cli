@@ -43,9 +43,12 @@ setup(
         'termcolor',
         'coloredlogs',
         'gitignore_parser',
-        'urllib3',
         'jinja2',
         'python-dateutil' # for 3.6 compatibility
+        'tqdm',
+        'requests_toolbelt',
+        'urllib3',
+        'xmldiff'
     ],
     long_description_content_type='text/markdown',
     long_description=long_description
