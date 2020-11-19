@@ -201,7 +201,7 @@ def add_component_if_not(components,key,default,exclude_list):
 def get_default_components(default_retrieve=True,exclude_list=None):
     components = {}
     add_if_not = lambda key, default: add_component_if_not(components,key,default,exclude_list)
-    add_if_not('summary',default_retrieve)
+    add_if_not('summary',True) # always get summary, because many other components depend on summary elements
     add_if_not('statistics',default_retrieve)
     add_if_not('slas',default_retrieve)
     add_if_not('events',default_retrieve)
