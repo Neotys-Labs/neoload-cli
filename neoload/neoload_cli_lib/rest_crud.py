@@ -9,6 +9,7 @@ import copy
 
 from neoload_cli_lib import user_data, cli_exception, tools, filtering
 from version import __version__
+from io import BytesIO
 
 __current_command = ""
 __current_sub_command = ""
