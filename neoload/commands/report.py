@@ -138,11 +138,6 @@ def parse_template_spec(model,filter_spec,template):
         model["components"]["statistics"] = True
         model["components"]["slas"] = True
 
-        # add_if_not('events',default_retrieve)
-        # add_if_not('all_requests',default_retrieve)
-        # add_if_not('ext_data',default_retrieve)
-        # add_if_not('controller_points',default_retrieve)
-
         model["template_text"] = get_builtin_console_summary()
         return True
 
@@ -469,8 +464,6 @@ def get_trends_report(name, time_filter, results_filter, elements_filter, exclud
     }
 
 def fill_trend_results(arr_selected, all_transactions, elements_filter, time_filter):
-    #for result in arr_selected:
-    #    fill_trend_result(result, all_transactions, elements_filter, time_filter)
 
     global MAX_CALLS_PER_SECOND
 
