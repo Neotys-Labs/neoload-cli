@@ -44,7 +44,7 @@ setup(
         'coloredlogs',
         'gitignore_parser',
         'jinja2',
-        'python-dateutil' # for 3.6 compatibility
+        'python-dateutil', # for 3.6 compatibility
         'tqdm',
         'requests_toolbelt',
         'urllib3',
