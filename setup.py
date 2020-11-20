@@ -48,8 +48,6 @@ setup(
         'tqdm',
         'requests_toolbelt',
         'urllib3',
-        'libxml2',
-        'libxslt',
         'xmldiff'
     ],
     long_description_content_type='text/markdown',
