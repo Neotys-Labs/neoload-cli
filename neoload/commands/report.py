@@ -1,5 +1,5 @@
 import click
-from neoload_cli_lib import tools,cli_exception,user_data
+from neoload_cli_lib import tools,cli_exception,user_data,displayer
 import neoload_cli_lib.schema_validation as schema_validation
 import jinja2
 import json
@@ -24,6 +24,9 @@ from dateutil.relativedelta import relativedelta
 
 import logging
 import concurrent.futures
+import requests
+
+requests.adapters.DEFAULT_RETRIES = 5
 
 __endpoint = "/test-results"
 __operation_statistics = "/statistics"
@@ -42,6 +45,7 @@ meta_key = 'result id'
 gprint = print
 
 MAX_CALLS_PER_SECOND = max(1,math.floor(((200 - 50) / 60)))
+REQUEST_COUNT = 0
 
 @click.command()
 @click.option('--template', help="A built-in known report type or the file path to the .j2 template. Built-in types include:    'builtin:transactions-csv'     'builtin:transactions-json'")
@@ -60,6 +64,8 @@ def cli(template, json_in, out_file, filter, max_rps, report_type, name):
 
     global gprint
     global MAX_CALLS_PER_SECOND
+    global REQUEST_COUNT
+    REQUEST_COUNT = 0
 
     model = {}
     model["json_data_text"] = None
@@ -87,7 +93,26 @@ def cli(template, json_in, out_file, filter, max_rps, report_type, name):
     if not parse_source_data_spec(json_in, model, report_type, name, filter_spec):
         return
 
-    process_final_output(model, template)
+    cli_details = {
+        'arguments': {
+            'template': template,
+            'json_in': json_in,
+            'out_file': out_file,
+            'filter': filter,
+            'max_rps': max_rps,
+            'report_type': report_type,
+            'name': name
+        },
+        'internals': {
+            'version': tools.compute_version(),
+            'total_requests': REQUEST_COUNT
+        }
+    }
+    cli_details['debug'] = logging.getLogger().level == logging.DEBUG
+
+    process_final_output(model, template, cli_details)
+
+    model["final_output"] = displayer.colorize_text(model["final_output"]) if tools.__is_color_terminal() else model["final_output"]
 
     if out_file is not None:
         set_file_text(out_file, model["final_output"])
@@ -173,17 +198,20 @@ def parse_source_data_spec(json_in, model, report_type, name, filter_spec):
 
     return True
 
-def process_final_output(model, template):
+def process_final_output(model, template, cli_details):
+
+    data_obj = json.loads(model["json_data_text"])
+
+    data_obj['cli'] = cli_details
 
     if model["template_text"] is None or model["template_text"] == "":
-        model["final_output"] = model["json_data_text"]
+        model["final_output"] = json.dumps(data_obj)
     else:
         dirname = os.path.dirname(os.path.abspath(template))
         loader = jinja2.FileSystemLoader(searchpath=dirname)
         env = jinja2.Environment(loader=loader,autoescape=True,extensions=['jinja2.ext.debug'])
         t = env.from_string(model["template_text"])
 
-        data_obj = json.loads(model["json_data_text"])
         model["final_output"] = t.render(data_obj)
 
 
@@ -252,7 +280,7 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
         'all_requests': [],#json_elements_all_requests[0] if json_elements_all_requests is not None else {},
         'ext_data': [],#ext_datas,
         'controller_points': [],#ctrl_datas,
-        'monitors': [],
+        'monitors': []
     }
 
     time_binding = None
@@ -987,9 +1015,12 @@ def get_epoch():
     return time.time() * 1000
 def rest_crud_get(url):
     global calls_cleanup_indicator
+    global REQUEST_COUNT
     if calls_cleanup_indicator > 20:
         cleanup_completed_calls()
         calls_cleanup_indicator = 0
+
+    REQUEST_COUNT = REQUEST_COUNT + 1
 
     call = {
         "uuid": uuid.uuid1(),
@@ -999,15 +1030,23 @@ def rest_crud_get(url):
         "completed": False,
     }
 
+    calls_lock.acquire()
     while math.ceil(get_current_calls_per_second_rate()) >= MAX_CALLS_PER_SECOND:
-        logging.getLogger().debug("Waiting due to rate: rps=" + str(get_current_calls_per_second_rate()) + ", max=" + str(MAX_CALLS_PER_SECOND))
+        logging.getLogger().debug("Waiting due to rate: rps={}, max={}, total={}".format(
+            str(get_current_calls_per_second_rate()),
+            str(MAX_CALLS_PER_SECOND),
+            REQUEST_COUNT
+        ))
         time.sleep(0.200)
 
-    calls_lock.acquire()
     rest_calls.append(call)
     call = next(filter(lambda a: a["uuid"] == call["uuid"],rest_calls))
 
-    logging.getLogger().debug("Rate allows: rps=" + str(get_current_calls_per_second_rate()) + ", max=" + str(MAX_CALLS_PER_SECOND))
+    logging.getLogger().debug("Rate allows: rps={}, max={}, total={}".format(
+        str(get_current_calls_per_second_rate()),
+        str(MAX_CALLS_PER_SECOND),
+        REQUEST_COUNT
+    ))
 
     call["sent"] = True
     calls_cleanup_indicator += 1

@@ -1,7 +1,9 @@
 from junit_xml import TestSuite, TestCase
 
-from neoload_cli_lib.tools import print_color
+from neoload_cli_lib.tools import print_color,__is_color_terminal
 from neoload_cli_lib import tools
+import colorama
+import html
 
 __SLA_global = 'Global'
 __SLA_test = 'Per Run'
@@ -137,3 +139,27 @@ def __build_unit_test(json_result, kind, sla_json):
     text += 'Created N/A<br/>'
 
     return text
+
+def colorize_text(text):
+    final = text
+
+    is_color_term = __is_color_terminal()
+
+    final = html.unescape(final)
+
+    keys = []
+    keys = keys + list(map(lambda x: 'Fore.'+x,colorama.Fore.__dict__.keys()))
+    keys = keys + list(map(lambda x: 'Back.'+x,colorama.Back.__dict__.keys()))
+
+    #print(keys)
+    vals = {}
+    for key in keys:
+        vals[key] = eval("colorama."+key) if is_color_term else ""
+
+    for val in vals:
+        for chr in ['"',"'",""]:
+            final = final.replace('<text color=' + chr + val + chr + '>', vals[val])
+
+    final = final.replace("</text>", colorama.Style.RESET_ALL if is_color_term else "")
+
+    return final
