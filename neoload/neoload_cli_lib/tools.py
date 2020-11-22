@@ -11,6 +11,8 @@ from termcolor import cprint
 
 from neoload_cli_lib import rest_crud, user_data, filtering
 
+from version import __version__
+
 __regex_id = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 __regex_mongodb_id = re.compile('[a-f\\d]{24}', re.IGNORECASE)
 __true_values = ["true", "yes", "y", "1"]
@@ -18,6 +20,15 @@ __false_values = ["false", "no", "n", "0"]
 __nl_interactive_env_var = 'NL_INTERACTIVE'
 
 __batch = False
+
+
+def compute_version():
+    if __version__ is not None:
+        return __version__
+    try:
+        return os.popen('git describe --tags --dirty').read().strip()
+    except (TypeError, ValueError):
+        return "dev"
 
 
 def __is_color_terminal():
