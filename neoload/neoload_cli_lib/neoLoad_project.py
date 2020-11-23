@@ -11,7 +11,6 @@ not_to_be_included = ['recorded-requests/', 'recorded-responses/', 'recorded-scr
                       'results/',
                       'comparative-summary/', 'reports/', '/recorded-artifacts/']
 
-MAX_FILE_MB_BEFORE_PROGRESS = 5
 
 def is_not_to_be_included(path: str, nl_ignore_matcher):
     for refused in not_to_be_included:
@@ -42,21 +41,14 @@ def zip_dir(path):
     return temp_zip
 
 
-def upload_project(path, endpoint, display_progress):
+def upload_project(path, endpoint):
     filename = os.path.basename(path)
     if str(path).endswith(('.zip', '.yaml', '.yml')):
         file = open(path, "b+r")
     else:
         filename += '.zip'
         file = zip_dir(path)
-
-    totalsize = os.stat(file.name).st_size
-
-    if totalsize < (MAX_FILE_MB_BEFORE_PROGRESS * 1024 * 1024) or not display_progress: # if less than 5MB or explicitly not progress, suppress
-        display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
-    else:
-        display_project(rest_crud.post_binary_files_storage_with_progress(endpoint, file, filename))
-
+    display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
 
 
 def display_project(res):

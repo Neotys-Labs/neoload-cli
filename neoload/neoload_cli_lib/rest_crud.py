@@ -9,10 +9,10 @@ import copy
 
 from neoload_cli_lib import user_data, cli_exception, tools, filtering
 from version import __version__
-from io import BytesIO
 
 __current_command = ""
 __current_sub_command = ""
+
 
 def set_current_command(command: str):
     global __current_command
@@ -103,104 +103,6 @@ def post_binary_files_storage(endpoint: str, path, filename):
     __handle_error(response)
     return response
 
-def post_binary_files_storage_with_progress(endpoint: str, path, filename):
-    filepath = path.name
-    logging.debug(f'POST (files) {endpoint} filepath={filepath} path={path} filename={filename}')
-
-    files = {"file": (filename, path.read())}
-
-    (data, ctype) = requests.packages.urllib3.filepost.encode_multipart_formdata(files)
-    #TODO: for some reason, #monkeypatch doesn't patch requests after this call
-
-    headers = __create_additional_headers()
-    headers["Content-Type"] = ctype
-
-    body = BufferReader(data, progress)
-
-    global HTTP_TIMEOUT
-    HTTP_TIMEOUT = 30
-    apply_requests_timeout()
-
-    response = requests.post(__create_url_file_storage(endpoint), data=body, headers=headers)
-
-    HTTP_TIMEOUT = DEFAULT_HTTP_TIMEOUT
-    revert_requests_timeout()
-
-    sys.stdout.write('\r{0:<60}'.format(''))
-    sys.stdout.flush()
-
-    __handle_error(response)
-    return response
-
-DEFAULT_HTTP_TIMEOUT = (60 * 5) # by default, all REST commands are 5min timeout
-HTTP_TIMEOUT = DEFAULT_HTTP_TIMEOUT # provided if a command overrides temporarily, and needs to reset
-
-def request_patch(slf, *args, **kwargs):
-    timeout = kwargs.pop('timeout', HTTP_TIMEOUT)
-    return slf.request_orig(*args, **kwargs, timeout=timeout)
-
-def apply_requests_timeout():
-    setattr(requests.sessions.Session, 'request_orig', requests.sessions.Session.request)
-    requests.sessions.Session.request = request_patch
-
-def revert_requests_timeout():
-    req = getattr(requests.sessions.Session, 'request_orig', None)
-    requests.sessions.Session.request = req
-
-
-def progress(size=None, progress=None):
-    done = int(50 * progress / size)
-    sys.stdout.write('\rUploading project {0:<22} {1:>52}'.format(
-        "%s of %s" % (sizeof_fmt(progress), sizeof_fmt(size)), "[%s%s]" % ('=' * done, ' ' * (50-done))) )
-    sys.stdout.flush()
-
-def sizeof_fmt(num, suffix='B'):
-    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
-        if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, suffix)
-        num /= 1024.0
-    return "%.1f%s%s" % (num, 'Yi', suffix)
-
-
-class CancelledError(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-        Exception.__init__(self, msg)
-
-    def __str__(self):
-        return self.msg
-
-    __repr__ = __str__
-
-class BufferReader(BytesIO):
-    def __init__(self, buf=b'',
-                 callback=None,
-                 cb_args=(),
-                 cb_kwargs=None):
-        if cb_kwargs is None: cb_kwargs={}
-        self._callback = callback
-        self._cb_args = cb_args
-        self._cb_kwargs = cb_kwargs
-        self._progress = 0
-        self._len = len(buf)
-        BytesIO.__init__(self, buf)
-
-    def __len__(self):
-        return self._len
-
-    def read(self, n=-1):
-        chunk = BytesIO.read(self, n)
-        self._progress += int(len(chunk))
-        self._cb_kwargs.update({
-            'size'    : self._len,
-            'progress': self._progress
-        })
-        if self._callback:
-            try:
-                self._callback(*self._cb_args, **self._cb_kwargs)
-            except Exception: # catches exception from the callback
-                raise CancelledError('The upload was cancelled.')
-        return chunk
 
 def multipart_progress(path, filename):
     encoder = MultipartEncoder({'file': (filename, path, 'application/octet-stream')})
