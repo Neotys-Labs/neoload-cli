@@ -441,12 +441,12 @@ def fill_time_binding(time_binding):
         raise ValueError("Something went wrong while fill_time_binding")
 
 
-time_part_mod_to_sec = {
-    "h": lambda x: x * 60 * 60,
-    "m": lambda x: x * 60,
-    "s": lambda x: x
-}
 def translate_time_part_to_seconds(total_duration_sec, part_spec):
+    time_part_mod_to_sec = {
+        "h": lambda x: x * 60 * 60,
+        "m": lambda x: x * 60,
+        "s": lambda x: x
+    }
     try:
         if part_spec.endswith("%"):
             return (int(part_spec.replace("%","")) / 100.0) * total_duration_sec
