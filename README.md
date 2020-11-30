@@ -210,8 +210,8 @@ The 'report' subcommand is intended to simplify not only common data exporting n
 
 ### Exporting Transaction CSV data
 ```
-Usage: neoload report [OPTIONS] [[single|trends]] [NAME]
-neoload report --template builtin:transactions-csv single cur > temp.csv
+Usage: neoload report [OPTIONS]
+neoload report --template builtin:transactions-csv > temp.csv
 ```
 
 ### Filtering export data by timespan
@@ -221,9 +221,9 @@ In many load tests, ramp-up and spin-down time is considered irrelevant to calcu
 Therefore, the NeoLoad CLI allows for export of particular time ranges by providing a timespan filter.
 
 ```
-neoload report --template builtin:transactions-csv --filter "timespan=5m-95%" single cur
-neoload report --template builtin:transactions-csv --filter "timespan=15%" single cur
-neoload report --template builtin:transactions-csv --filter "timespan=-90%" single cur
+neoload report --template builtin:transactions-csv --filter "timespan=5m-95%"
+neoload report --template builtin:transactions-csv --filter "timespan=15%"
+neoload report --template builtin:transactions-csv --filter "timespan=-90%"
 ```
 
 Timespan format is [Time], then '-' representing to, then another [Time]. Time format can
@@ -244,14 +244,14 @@ Therefore, the NeoLoad CLI allows for exports of specific transcations whose nam
  matches specific values or patterns.
 
 ```
-neoload report --template builtin:transactions-csv --filter "elements=Login" single cur
+neoload report --template builtin:transactions-csv --filter "elements=Login"
 ```
 You can filter to specific transactions or requests by specifying 'elements' and then a pipe-delimited list
  of element GUIDs, full names, or partial name matches. This can also include python-compliant regular expressions.
 
 ### Combining timespan and element filters
 ```
-neoload report --template builtin:transactions-csv --filter "timespan=50%-95%;elements=AddToCart" single cur
+neoload report --template builtin:transactions-csv --filter "timespan=50%-95%;elements=AddToCart"
 ```
 Both timespan and elements filters can be combined in order to get statistics for specific elements
  within a precise portion of the test duration. Per the example above, transaction data will be computed
@@ -263,7 +263,7 @@ Both timespan and elements filters can be combined in order to get statistics fo
 If you would like to use multiple templates to create separate output files for specific test data,
  you should dump the test result data using the standard JSON scheme first:
 ```
-neoload report --out-file ~/Downloads/temp.json single cur
+neoload report --out-file ~/Downloads/temp.json
 ```
 NOTE: by default, this queries all entity data in test results and may cause multiple API calls
  to occur depending on the structure of the user paths and monitoring data in the test result set.
@@ -272,13 +272,11 @@ Then you can produce multiple output files from a single data snapshot:
 ```
 neoload report --json-in ~/Downloads/temp.json \
                --template builtin:transactions-csv \
-               --out-file ~/Downloads/temp.csv \
-               single cur
+               --out-file ~/Downloads/temp.csv
 
 neoload report --json-in ~/Downloads/temp.json \
                --template /path/to/a/jinja/template.j2 \
-               --out-file ~/Downloads/temp.html \
-               single cur
+               --out-file ~/Downloads/temp.html
 ```
 
 NOTE: built-in reports produce a reduced-scope JSON data model and are therefore faster

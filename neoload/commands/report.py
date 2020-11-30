@@ -55,12 +55,18 @@ REQUEST_COUNT = 0
 @click.option('--max-rps', type=int, help="Explicit control over max concurrency of API calls")
 @click.option('--type', 'report_type',
                 type=click.Choice(['single','trends'], case_sensitive=False),
-                required=False, default="single")
+                required=False, default="single",
+                help="Specify which type of JSON data document to compile (default is 'single')")
 @click.argument("name", type=str, required=False)
 def cli(template, json_in, out_file, filter, max_rps, report_type, name):
     """Generate builtin or custom Jinja reports based on test results data
-    Example: neoload report --template builtin:transactions-csv single cur
+    Example: neoload report --template builtin:transactions-csv
     """
+
+    if all(v is None for v in [template,json_in,out_file,filter]):
+        print_extended_help()
+        tools.system_exit({'code':1,'message':''})
+        return
 
     global gprint
     global MAX_CALLS_PER_SECOND
@@ -1054,3 +1060,50 @@ def rest_crud_get(url):
     ret = rest_crud.get(url)
     call["completed"] = True
     return ret
+
+def print_extended_help():
+    ctx = click.get_current_context()
+    cli_help = ctx.get_help()
+
+    print(cli_help + """
+
+
+Built-in Templates:
+
+    * builtin:transactions --> transaction aggregates in JSON format
+    * builtin:transactions-csv --> transaction aggregates in CSV format
+    * builtin:console-summary --> test summary and transaction aggregates in human-readable format
+
+Filtering:
+
+    * timespan: [from]-[to]
+        * Either from or to components are optional, but not both
+        * Values can be 0-100 for percentage of the total duration of test
+        * Human-readable time format including #[h|m|s], such as 10m or 5m30s
+
+    * elements:
+        * a comma or semicolon separated list of element names or IDs
+        * can include regex
+
+    * results:
+        * a comma or semicolon separated list of result set specifiers, such as:
+            * negative (track back N number of results since current test-results)
+            * positive (track forward N number of results since current test-results)
+            * specific test-result IDs (for additional baselines)
+
+
+Examples:
+
+    * Print a simple list of transaction aggregates in CSV format (semicolon delimited)
+        neoload report --template builtin:transactions-csv
+
+    * Compiles and produces transaction aggregate data based on only data from a specific timespan
+        neoload report --template builtin:transactions-csv --filter="timespan:10%-90%"
+
+    * Compiles JSON data and writes to a temp file, no applying templates
+        neoload report --out-file ~/temp.json
+
+    * Uses pre-compiled JSON data file, applies a custom template, and writes output to a file
+        neoload report --json-in ~/temp.json --template tests/resources/jinja/sample-custom-report.html.j2 --out-file ~/temp.html
+
+    """)
