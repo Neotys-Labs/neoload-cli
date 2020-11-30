@@ -44,8 +44,15 @@ __resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace)
 meta_key = 'result id'
 gprint = print
 
-MAX_CALLS_PER_SECOND = max(1,math.floor(((200 - 50) / 60)))
+# in lew of a broader retry mechanism, this is (stated API limit) - (some overhead)
+# can be improved by using response header 'Retry-after' and implemented in rest_crud
+MAX_CALLS_PER_SECOND = max(1,math.floor(((300 - 50) / 60)))
 REQUEST_COUNT = 0
+# variables to handle request limiting queue logic, to be replaced with future retry logic
+rest_calls = []
+calls_cleanup_indicator = 0
+calls_lock = Lock()
+
 
 @click.command()
 @click.option('--template', help="A built-in known report type or the file path to the .j2 template. Built-in types include:    'builtin:transactions-csv'     'builtin:transactions-json'")
@@ -994,10 +1001,6 @@ User Path\tElement\tCount\tMin\tAvg\tMax\tPerc 50\tPerc 90\tPerc 95\tPerc 99\tSu
 """{{ txn.aggregate.failureCount }}\t{{ txn.aggregate.failureRate }}
 {% endfor %}""".strip()
 
-rest_calls = []
-calls_cleanup_indicator = 0
-calls_lock = Lock()
-
 def cleanup_completed_calls():
     back_step = get_epoch() - (1000)
     l = list(filter(lambda a: a["completed"] and a["epoch"]<back_step, rest_calls))
@@ -1011,8 +1014,6 @@ def cleanup_completed_calls():
                 logging.getLogger().debug("Clean couldn't remove an e")
         calls_lock.release()
 
-def get_incomplete_calls():
-    return list(filter(lambda a: a["sent"] and not a["completed"], rest_calls))
 def get_current_calls_per_second_rate():
     back_step = get_epoch() - (1000)
     l = len(list(filter(lambda a: a["sent"] and a["epoch"]>=back_step, rest_calls)))
