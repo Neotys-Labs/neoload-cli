@@ -37,8 +37,6 @@ setup(
         'requests',
         'jsonschema',
         'PyYAML>=5',
-        'pytest',
-        'pytest-datafiles',
         'junit_xml',
         'termcolor',
         'coloredlogs',
@@ -48,8 +46,6 @@ setup(
         'tqdm',
         'requests_toolbelt',
         'urllib3',
-        'lxml',
-        'xmldiff',
         'colorama'
     ],
     long_description_content_type='text/markdown',
