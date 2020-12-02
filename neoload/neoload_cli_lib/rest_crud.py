@@ -10,6 +10,21 @@ import copy
 from neoload_cli_lib import user_data, cli_exception, tools, filtering
 from version import __version__
 
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+
+retry_strategy = Retry(
+    total=10,
+    status_forcelist=[429],
+    method_whitelist=["GET"],
+    backoff_factor=1,
+    respect_retry_after_header=False # comes back with insane values like 14566 (seconds) == 240mins!
+)
+adapter = HTTPAdapter(max_retries=retry_strategy)
+http = requests.Session()
+http.mount("https://", adapter)
+http.mount("http://", adapter)
+
 __current_command = ""
 __current_sub_command = ""
 
@@ -70,8 +85,8 @@ def get(endpoint: str, params=None):
 
 
 def get_raw(endpoint: str, params=None):
-    return requests.get(__create_url(endpoint), params, headers=__create_additional_headers(),
-                        verify=user_data.get_ssl_cert())
+    return http.get(__create_url(endpoint), params=params, headers=__create_additional_headers(),
+                    verify=user_data.get_ssl_cert())
 
 
 def post(endpoint: str, data):

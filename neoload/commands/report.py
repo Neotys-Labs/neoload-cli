@@ -27,6 +27,8 @@ import concurrent.futures
 import requests
 
 requests.adapters.DEFAULT_RETRIES = 5
+MAX_RESULTS_WORKERS = 2
+MAX_ELEMENTS_WORKERS = 10
 
 __endpoint = "/test-results"
 __operation_statistics = "/statistics"
@@ -44,28 +46,17 @@ __resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace)
 meta_key = 'result id'
 gprint = print
 
-# in lew of a broader retry mechanism, this is (stated API limit) - (some overhead)
-# can be improved by using response header 'Retry-after' and implemented in rest_crud
-MAX_CALLS_PER_SECOND = max(1,math.floor(((300 - 50) / 60)))
-REQUEST_COUNT = 0
-# variables to handle request limiting queue logic, to be replaced with future retry logic
-rest_calls = []
-calls_cleanup_indicator = 0
-calls_lock = Lock()
-
-
 @click.command()
 @click.option('--template', help="A built-in known report type or the file path to the .j2 template. Built-in types include:    'builtin:transactions-csv'     'builtin:transactions-json'")
 @click.option('--json-in', help="The file path to the .json data if previously stored using --out-file and no template or a json template")
 @click.option('--out-file', help="The file path to the resulting output, or none to print to stdout")
 @click.option('--filter', help="A filter statement to scope to a timespan and/or specify which reports and elements to use for multi-result analysis")
-@click.option('--max-rps', type=int, help="Explicit control over max concurrency of API calls")
 @click.option('--type', 'report_type',
                 type=click.Choice(['single','trends'], case_sensitive=False),
                 required=False, default="single",
                 help="Specify which type of JSON data document to compile (default is 'single')")
 @click.argument("name", type=str, required=False)
-def cli(template, json_in, out_file, filter, max_rps, report_type, name):
+def cli(template, json_in, out_file, filter, report_type, name):
     """Generate builtin or custom Jinja reports based on test results data
     Example: neoload report --template builtin:transactions-csv
     """
@@ -86,10 +77,6 @@ def cli(template, json_in, out_file, filter, max_rps, report_type, name):
     model["final_output"] = None
 
     logger = logging.getLogger()
-
-    # if explicitly setting maximum requests/sec
-    if max_rps is not None:
-        MAX_CALLS_PER_SECOND = max_rps
 
     filter_spec = parse_filter_spec(filter)
 
@@ -112,7 +99,6 @@ def cli(template, json_in, out_file, filter, max_rps, report_type, name):
             'json_in': json_in,
             'out_file': out_file,
             'filter': filter,
-            'max_rps': max_rps,
             'report_type': report_type,
             'name': name
         },
@@ -510,9 +496,16 @@ def fill_trend_results(arr_selected, all_transactions, elements_filter, time_fil
 
     procedure = lambda result: fill_trend_result(result, all_transactions, elements_filter, time_filter)
 
-    with concurrent.futures.ThreadPoolExecutor() as executor: #ThreadPoolExecutor
-        for out in executor.map(procedure, arr_selected, chunksize=MAX_CALLS_PER_SECOND):
-            logging.getLogger().info("parallel processed fill_trend_results worker for '" + out['name'] + "'")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_RESULTS_WORKERS) as executor:
+        translate = {executor.submit(procedure, result): result for result in arr_selected}
+        for future in concurrent.futures.as_completed(translate):
+            i = translate[future]
+            try:
+                data = future.result()
+            except Exception as exc:
+                logging.error('%r generated an exception: %s' % (i, exc))
+            else:
+                logging.getLogger().info("parallel processed fill_trend_results worker for '" + data['name'] + "'")
 
     return arr_selected
 
@@ -800,9 +793,16 @@ def get_elements_data(result_id, base_col, time_binding, include_points, statist
 
     procedure = lambda el: get_element_data(el, result_id, time_binding, include_points, statistics_list, use_txn_raw)
 
-    with concurrent.futures.ThreadPoolExecutor() as executor: #ThreadPoolExecutor
-        for out in executor.map(procedure, base_col, chunksize=MAX_CALLS_PER_SECOND):
-            logging.getLogger().info("parallel processed get_elements_data worker for '" + out['display_name'] + "'")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_ELEMENTS_WORKERS) as executor:
+        translate = {executor.submit(procedure, el): el for el in base_col}
+        for future in concurrent.futures.as_completed(translate):
+            i = translate[future]
+            try:
+                data = future.result()
+            except Exception as exc:
+                logging.error('%r generated an exception: %s' % (i, exc))
+            else:
+                logging.getLogger().info("parallel processed get_elements_data worker for '" + data['display_name'] + "'")
 
     return base_col
 
@@ -1001,65 +1001,8 @@ User Path\tElement\tCount\tMin\tAvg\tMax\tPerc 50\tPerc 90\tPerc 95\tPerc 99\tSu
 """{{ txn.aggregate.failureCount }}\t{{ txn.aggregate.failureRate }}
 {% endfor %}""".strip()
 
-def cleanup_completed_calls():
-    back_step = get_epoch() - (1000)
-    l = list(filter(lambda a: a["completed"] and a["epoch"]<back_step, rest_calls))
-    if len(l) > 20:
-        calls_lock.acquire()
-        logging.getLogger().debug("Cleaning up completed calls")
-        for e in l:
-            try:
-                rest_calls.remove(e)
-            except Exception:
-                logging.getLogger().debug("Clean couldn't remove an e")
-        calls_lock.release()
-
-def get_current_calls_per_second_rate():
-    back_step = get_epoch() - (1000)
-    l = len(list(filter(lambda a: a["sent"] and a["epoch"]>=back_step, rest_calls)))
-    return l
-def get_epoch():
-    return time.time() * 1000
 def rest_crud_get(url):
-    global calls_cleanup_indicator
-    global REQUEST_COUNT
-    if calls_cleanup_indicator > 20:
-        cleanup_completed_calls()
-        calls_cleanup_indicator = 0
-
-    REQUEST_COUNT = REQUEST_COUNT + 1
-
-    call = {
-        "uuid": uuid.uuid1(),
-        "url": url,
-        "epoch": get_epoch(),
-        "sent": False,
-        "completed": False,
-    }
-
-    calls_lock.acquire()
-    while math.ceil(get_current_calls_per_second_rate()) >= MAX_CALLS_PER_SECOND:
-        logging.getLogger().debug("Waiting due to rate: rps={}, max={}, total={}".format(
-            str(get_current_calls_per_second_rate()),
-            str(MAX_CALLS_PER_SECOND),
-            REQUEST_COUNT
-        ))
-        time.sleep(0.200)
-
-    rest_calls.append(call)
-    call = next(filter(lambda a: a["uuid"] == call["uuid"],rest_calls))
-
-    logging.getLogger().debug("Rate allows: rps={}, max={}, total={}".format(
-        str(get_current_calls_per_second_rate()),
-        str(MAX_CALLS_PER_SECOND),
-        REQUEST_COUNT
-    ))
-
-    call["sent"] = True
-    calls_cleanup_indicator += 1
-    calls_lock.release()
     ret = rest_crud.get(url)
-    call["completed"] = True
     return ret
 
 def print_extended_help():
