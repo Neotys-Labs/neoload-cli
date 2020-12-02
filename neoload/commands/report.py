@@ -67,9 +67,6 @@ def cli(template, json_in, out_file, filter, report_type, name):
         return
 
     global gprint
-    global MAX_CALLS_PER_SECOND
-    global REQUEST_COUNT
-    REQUEST_COUNT = 0
 
     model = {}
     model["json_data_text"] = None
@@ -103,8 +100,7 @@ def cli(template, json_in, out_file, filter, report_type, name):
             'name': name
         },
         'internals': {
-            'version': tools.compute_version(),
-            'total_requests': REQUEST_COUNT
+            'version': tools.compute_version()
         }
     }
     cli_details['debug'] = logging.getLogger().level == logging.DEBUG
@@ -492,8 +488,6 @@ def get_trends_report(name, time_filter, results_filter, elements_filter, exclud
 
 def fill_trend_results(arr_selected, all_transactions, elements_filter, time_filter):
 
-    global MAX_CALLS_PER_SECOND
-
     procedure = lambda result: fill_trend_result(result, all_transactions, elements_filter, time_filter)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_RESULTS_WORKERS) as executor:
@@ -788,8 +782,6 @@ def get_human_readable_time(reldel):
     return human_readable(reldel)
 
 def get_elements_data(result_id, base_col, time_binding, include_points, statistics_list, use_txn_raw):
-
-    global MAX_CALLS_PER_SECOND
 
     procedure = lambda el: get_element_data(el, result_id, time_binding, include_points, statistics_list, use_txn_raw)
 
