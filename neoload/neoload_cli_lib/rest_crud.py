@@ -2,23 +2,21 @@ import logging
 import urllib.parse as urlparse
 
 import requests
-import sys
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 from tqdm import tqdm
-import copy
 
-from neoload_cli_lib import user_data, cli_exception, tools, filtering
+from neoload_cli_lib import user_data, cli_exception, tools
 from version import __version__
 
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
+# Overrides parse_retry_after
+Retry.parse_retry_after = lambda self, retry_after: custom_parse_retry_after(retry_after)
 retry_strategy = Retry(
     total=10,
     status_forcelist=[429],
-    method_whitelist=["GET"],
-    backoff_factor=1,
-    respect_retry_after_header=False # comes back with insane values like 14566 (seconds) == 240mins!
+    method_whitelist=["GET", "POST", "PUT", "PATCH", "DELETE"]
 )
 adapter = HTTPAdapter(max_retries=retry_strategy)
 http = requests.Session()
@@ -41,6 +39,13 @@ def set_current_sub_command(command: str):
     __current_sub_command = command
 
 
+def custom_parse_retry_after(retry_after: str):
+    retry_after_seconds = int(retry_after) / 1000 if int(retry_after) > 0 else 0
+    logging.getLogger().warning(
+        f'WARNING: Too many requests, server rate limit reached. Retry in {retry_after_seconds} seconds.')
+    return retry_after_seconds
+
+
 def base_endpoint_with_workspace(ws=None):
     workspace_id = ws if ws else get_workspace()
     return "v2" if workspace_id is None else "v3/workspaces/" + workspace_id
@@ -55,12 +60,11 @@ def base_endpoint():
 
 
 def get_with_pagination(endpoint: str, page_size=200, api_query_params=None):
-
     params = {
         'limit': page_size,
         'offset': 0
     }
-    params.update(api_query_params or {})   # Add query params for filters
+    params.update(api_query_params or {})  # Add query params for filters
 
     # Get first page
     all_entities = get(endpoint, params)
@@ -77,9 +81,6 @@ def get_with_pagination(endpoint: str, page_size=200, api_query_params=None):
     return all_entities
 
 
-
-
-
 def get(endpoint: str, params=None):
     return __handle_error(get_raw(endpoint, params)).json()
 
@@ -91,8 +92,8 @@ def get_raw(endpoint: str, params=None):
 
 def post(endpoint: str, data):
     logging.debug(f'POST {endpoint} body={data}')
-    response = requests.post(__create_url(endpoint), headers=__create_additional_headers(), json=data,
-                             verify=user_data.get_ssl_cert())
+    response = http.post(__create_url(endpoint), headers=__create_additional_headers(), json=data,
+                         verify=user_data.get_ssl_cert())
     __handle_error(response)
     return response.json()
 
@@ -102,8 +103,8 @@ def __create_url_file_storage(endpoint):
 
 
 def get_from_file_storage(endpoint: str):
-    return __handle_error(requests.get(__create_url_file_storage(endpoint), headers=__create_additional_headers(),
-                                       verify=user_data.get_ssl_cert()))
+    return __handle_error(http.get(__create_url_file_storage(endpoint), headers=__create_additional_headers(),
+                                   verify=user_data.get_ssl_cert()))
 
 
 def post_binary_files_storage(endpoint: str, path, filename):
@@ -111,8 +112,8 @@ def post_binary_files_storage(endpoint: str, path, filename):
     multipart_form_data, bar = multipart_progress(path, filename)
     headers = __create_additional_headers()
     headers['Content-Type'] = multipart_form_data.content_type
-    response = requests.post(__create_url_file_storage(endpoint), headers=headers,
-                             data=multipart_form_data, verify=user_data.get_ssl_cert())
+    response = http.post(__create_url_file_storage(endpoint), headers=headers,
+                         data=multipart_form_data, verify=user_data.get_ssl_cert())
     if bar:
         bar.close()
     __handle_error(response)
@@ -137,23 +138,23 @@ def multipart_progress(path, filename):
 
 def put(endpoint: str, data):
     logging.debug(f'PUT {endpoint} body={data}')
-    response = requests.put(__create_url(endpoint), headers=__create_additional_headers(), json=data,
-                            verify=user_data.get_ssl_cert())
+    response = http.put(__create_url(endpoint), headers=__create_additional_headers(), json=data,
+                        verify=user_data.get_ssl_cert())
     __handle_error(response)
     return response.json()
 
 
 def patch(endpoint: str, data):
     logging.debug(f'PATCH {endpoint} body={data}')
-    response = requests.patch(__create_url(endpoint), headers=__create_additional_headers(), json=data,
-                              verify=user_data.get_ssl_cert())
+    response = http.patch(__create_url(endpoint), headers=__create_additional_headers(), json=data,
+                          verify=user_data.get_ssl_cert())
     __handle_error(response)
     return response.json()
 
 
 def delete(endpoint: str):
-    response = requests.delete(__create_url(endpoint), headers=__create_additional_headers(),
-                               verify=user_data.get_ssl_cert())
+    response = http.delete(__create_url(endpoint), headers=__create_additional_headers(),
+                           verify=user_data.get_ssl_cert())
     __handle_error(response)
     return response
 
