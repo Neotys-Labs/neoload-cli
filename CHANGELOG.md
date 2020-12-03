@@ -1,4 +1,7 @@
 # Changelog
+## 1.1.6 (2020-12-03)
+- [Fix] remove useless dependency
+
 ## 1.1.5 (2020-11-25)
 - [Feature] Filtering for ls-related commands
 - [Feature] Progress bar at project upload
