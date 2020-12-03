@@ -1,25 +1,15 @@
 import click
-from neoload_cli_lib import tools,cli_exception,user_data,displayer
-import neoload_cli_lib.schema_validation as schema_validation
 import jinja2
 import json
-import tempfile
 import os
 import webbrowser
-import sys
 import time
 import re
 import statistics
-
 import math
-import functools
-import datetime
-import uuid
-from threading import Lock
 
-from neoload_cli_lib import tools, rest_crud, user_data, displayer, cli_exception
+from neoload_cli_lib import tools, rest_crud, user_data, displayer
 from neoload_cli_lib.name_resolver import Resolver
-
 from dateutil.relativedelta import relativedelta
 
 import logging
@@ -59,6 +49,7 @@ gprint = print
 def cli(template, json_in, out_file, filter, report_type, name):
     """Generate builtin or custom Jinja reports based on test results data
     Example: neoload report --template builtin:transactions-csv
+    See more templates, examples, filters with "neoload report"
     """
 
     if all(v is None for v in [template,json_in,out_file,filter]):
