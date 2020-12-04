@@ -2,6 +2,17 @@
 
 fails=0
 
+assertJsonEquals () {
+  if [ "$(echo $out | jq $1)" != "$2" ]; then
+    echo "[FAILURE] $cmd"
+	echo "   Expected: $2"
+	echo "   but jq '$1' was: $(echo $out | jq $1)"
+	fails=$(( 1 + $fails ))
+  else
+    echo "[SUCCESS] $cmd"
+  fi
+}
+
 assertEquals () {
   if [ "$1" != "$2" ]; then
     echo "[FAILURE] $cmd"

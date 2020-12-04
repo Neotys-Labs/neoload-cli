@@ -7,6 +7,12 @@ on:
   pull_request:
     branches: [ master ]
 
+inputs:
+  zoneId:
+    description: 'Identifier of a zone with one Controller and one LG available (static or dynamic)'
+    required: true
+    default: 'FGN4h'
+
 jobs:
   test:
 
@@ -25,5 +31,4 @@ jobs:
         python -m pip install jq
     - name: Test with integration script
       run: |
-        echo _${{ secrets.NLWEB_API_URL }}_
-        ./tests/integration/runAllScripts.sh ${{ secrets.NLWEB_API_URL }} ${{ secrets.NLWEB_TOKEN }}
+        ./tests/integration/runAllScripts.sh ${{ secrets.NLWEB_API_URL }} ${{ secrets.NLWEB_TOKEN }} INPUT_ZONEID

@@ -1,23 +1,21 @@
 #!/bin/bash
 
-echo "runALlScripts : parameters count "$#
-echo $1
-if [ "$#" -ne 2 ]; then
-  echo "Need 2 arguments and need to be launched from the root of the repo." >&2
-  echo "Example : ./tests/integration/runAllScripts.sh https://nlwonprem253-wks-onprem.neotys.com/ abcdeftokentokentoken" >&2
-  echo "The URL must point at a NLWeb with a valid license installed, and at least 1 controller and 1 LG on the default zone." >&2
-  echo "The token must be luke on Jedi1" >&2
+if [ "$#" -ne 3 ]; then
+  echo "Need 3 arguments and need to be launched from the root of the repo." >&2
+  echo "Example : ./tests/integration/runAllScripts.sh https://nlwonprem253-wks-onprem.neotys.com/ abcdeftokentokentoken defaultzone" >&2
+  echo "The URL must point at a NLWeb with a valid license installed, and at least 1 controller and 1 LG on the provided zone." >&2
+  echo "The token must be luke on Jedi1 for internal stack" >&2
   exit 1
 fi
 
 fails=0
 
 python neoload login --url $1 $2
-tests/integration/scripts/run.test.sh FGN4h ; fails=$(( $? + $fails ))
-tests/integration/scripts/run.fastfail.test.sh FGN4h ; fails=$(( $? + $fails ))
+tests/integration/scripts/run.test.sh $3 ; fails=$(( $? + $fails ))
+tests/integration/scripts/run.fastfail.test.sh $3 ; fails=$(( $? + $fails ))
 #tests/integration/scripts/run.docker.test.sh cuPd2 ; fails=$(( $? + $fails ))
-tests/integration/scripts/wait.test.sh FGN4h ; fails=$(( $? + $fails ))
-tests/integration/scripts/run.oneliner.test.sh FGN4h ; fails=$(( $? + $fails ))
+tests/integration/scripts/wait.test.sh $3 ; fails=$(( $? + $fails ))
+tests/integration/scripts/run.oneliner.test.sh $3 ; fails=$(( $? + $fails ))
 tests/integration/scripts/results.put.test.sh ; fails=$(( $? + $fails ))
 tests/integration/scripts/results.delete.test.sh ; fails=$(( $? + $fails ))
 tests/integration/scripts/settings.create.delete.test.sh ; fails=$(( $? + $fails ))
@@ -29,10 +27,11 @@ tests/integration/scripts/project.upload.test.sh ; fails=$(( $? + $fails ))
 
 # With another workspace
 python neoload login --workspace CLI --url $1 $2
-tests/integration/scripts/run.test.sh FGN4h ; fails=$(( $? + $fails ))
-tests/integration/scripts/run.fastfail.test.sh FGN4h ; fails=$(( $? + $fails ))
+tests/integration/scripts/run.test.sh $3 ; fails=$(( $? + $fails ))
+tests/integration/scripts/run.fastfail.test.sh $3 ; fails=$(( $? + $fails ))
 #tests/integration/scripts/run.docker.test.sh cuPd2 ; fails=$(( $? + $fails ))
-tests/integration/scripts/wait.test.sh FGN4h ; fails=$(( $? + $fails ))
+tests/integration/scripts/run.oneliner.test.sh $3 ; fails=$(( $? + $fails ))
+tests/integration/scripts/wait.test.sh $3 ; fails=$(( $? + $fails ))
 tests/integration/scripts/results.put.test.sh ; fails=$(( $? + $fails ))
 tests/integration/scripts/results.delete.test.sh ; fails=$(( $? + $fails ))
 tests/integration/scripts/settings.create.delete.test.sh ; fails=$(( $? + $fails ))
