@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<testsuites failures="1" errors="0" tests="4" disabled="0" time="0.0">
+	<testsuite name="com.neotys.Global" disabled="0" failures="0" errors="0" skipped="0" time="0" tests="1">
+		<testcase name="error-rate" classname="com.neotys.Global"/>
+	</testsuite>
+	<testsuite name="com.neotys.REQUEST.PerRun.simpledemo" disabled="0" failures="0" errors="0" skipped="0" time="0" tests="1">
+		<testcase name="error-rate" classname="com.neotys.REQUEST.PerRun.simpledemo"/>
+	</testsuite>
+	<testsuite name="com.neotys.REQUEST.PerInterval.simpledemo" disabled="0" failures="1" errors="0" skipped="0" time="0" tests="1">
+		<testcase name="avg-elt-per-sec" classname="com.neotys.REQUEST.PerInterval.simpledemo">
+			<failure type="NeoLoad SLA" message="SLA failed">Container: /&lt;br/&gt;Path: User Paths &gt; simpledemo &gt; Init &gt; Actions &gt; /&lt;br/&gt;Virtual User: simpledemo&lt;br/&gt;SLA Profile: REQUEST&lt;br/&gt;SLA Type: Per Interval&lt;br/&gt;WARNING Type: avg-elt-per-sec&lt;br/&gt;Project: NeoLoad-CLI-simpledemo&lt;br/&gt;Scenario: simpledemo&lt;br/&gt;&lt;br/&gt;WARNING&lt;br/&gt;description: if the avg-elt-per-sec &gt;=  then fail&lt;br/&gt;&lt;br/&gt;Results: &lt;br/&gt;&lt;br/&gt;avg-elt-per-sec=100.0%&lt;br/&gt;&lt;br/&gt;Created N/A&lt;br/&gt;</failure>
+		</testcase>
+	</testsuite>
+	<testsuite name="com.neotys.REQUEST.PerInterval.simpledemo" disabled="0" failures="0" errors="0" skipped="0" time="0" tests="1">
+		<testcase name="avg-resp-time" classname="com.neotys.REQUEST.PerInterval.simpledemo"/>
+	</testsuite>
+</testsuites>

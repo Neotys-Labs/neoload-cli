@@ -1,0 +1,50 @@
+Results of  : eafdde40-9a12-4a36-9319-f624f72bc245
+Logs are available at http://localhost:8080#!result/eafdde40-9a12-4a36-9319-f624f72bc245/overview
+Status: INIT
+Status: RUNNING
+    00:00:11/00:01:00  Err[--], LGs[1]         VUs:6   BPS[66201.6]    RPS:5.005       avg(rql): 113
+    00:00:31/00:01:00  Err[--], LGs[1]         VUs:16  BPS[186161.1]   RPS:12.024      avg(rql): 107
+    00:00:51/00:01:00  Err[--], LGs[1]         VUs:20  BPS[291785.53]  RPS:17.000      avg(rql): 106
+Status: TERMINATED
+SLA summary:
+GlobalSLA [error-rate] PASSED on []
+
+PerRunSLA [error-rate] PASSED on [simpledemo > Actions > /]
+
+PerIntervalSLA [avg-elt-per-sec] WARNING on [simpledemo > Actions > / [100.000% >= ]]
+PerIntervalSLA [avg-resp-time] PASSED on [simpledemo > Actions > /]
+
+{
+  "result": {
+    "id": "eafdde40-9a12-4a36-9319-f624f72bc245",
+    "name": "CLI-1",
+    "description": "",
+    "author": "Luke Skywalker",
+    "terminationReason": "POLICY",
+    "lgCount": 1,
+    "project": "NeoLoad-CLI-simpledemo",
+    "scenario": "simpledemo",
+    "status": "TERMINATED",
+    "qualityStatus": "PASSED",
+    "startDate": 1590771663205,
+    "endDate": 1590771724404,
+    "duration": 61199,
+    "testId": "b1e7e208-e858-435a-b142-de76b7882b6b"
+  },
+  "statistics": {
+    "totalRequestCountSuccess": 119,
+    "totalRequestCountFailure": 0,
+    "totalRequestDurationAverage": 1373.5798,
+    "totalRequestCountPerSecond": 1.9444762,
+    "totalTransactionCountSuccess": 116,
+    "totalTransactionCountFailure": 0,
+    "totalTransactionDurationAverage": 1370.8362,
+    "totalTransactionCountPerSecond": 1.8954558,
+    "totalIterationCountSuccess": 114,
+    "totalIterationCountFailure": 0,
+    "totalGlobalDownloadedBytes": 536537,
+    "totalGlobalDownloadedBytesPerSecond": 8767.088,
+    "totalGlobalCountFailure": 0
+  }
+}
+Test completed.
