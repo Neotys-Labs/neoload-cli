@@ -43,8 +43,7 @@ setup(
         'gitignore_parser',
         'tqdm',
         'requests_toolbelt',
-        'urllib3',
-        'pyparsing'
+        'urllib3'
     ],
     long_description_content_type='text/markdown',
     long_description=long_description
