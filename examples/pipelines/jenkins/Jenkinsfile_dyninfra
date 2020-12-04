@@ -21,7 +21,7 @@ pipeline {
       stages {
         stage('Get NeoLoad CLI') {
           steps {
-              sh "pip3 install -U --pre neoload"
+              sh "pip3 install -U git+https://github.com/Neotys-Labs/neoload-cli.git@fix-pyparsing-dep"
               sh "$NEOLOAD --version"
           }
         }
