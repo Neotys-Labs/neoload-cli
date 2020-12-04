@@ -27,7 +27,7 @@ pipeline {
         }
         stage('Get NeoLoad project'){
             steps {
-                sh 'rm -f *.yml; https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/78a1366743b041088f357f0f702babfce5e55187/tests/neoload_projects/simpledemo.yml'
+                sh 'rm -f *.yml; wget https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/78a1366743b041088f357f0f702babfce5e55187/tests/neoload_projects/simpledemo.yml'
             }
         }
         stage('Prepare NeoLoad test') {
