@@ -21,6 +21,7 @@ pipeline {
       stages {
         stage('Get NeoLoad CLI') {
           steps {
+              sh "ls -latr $HOME"
               sh "which git"
               sh "PATH=$PATH:$HOME which git "
               sh "PATH=$PATH:$HOME pip3 install -U git+https://github.com/Neotys-Labs/neoload-cli.git@fix-pyparsing-dep"
