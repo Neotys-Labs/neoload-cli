@@ -25,4 +25,8 @@ jobs:
         python -m pip install jq
     - name: Test with integration script
       run: |
+        pwd
+        ls -al
+        ls -al tests/integration
+        ls -al tests/integration/scripts
         ./tests/integration/runAllScripts.sh ${{ secrets.NLWEB_API_URL }} ${{ secrets.NLWEB_TOKEN }}
