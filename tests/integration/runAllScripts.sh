@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "runALlScripts : parameters count "$#
+echo $1
 if [ "$#" -ne 2 ]; then
   echo "Need 2 arguments and need to be launched from the root of the repo." >&2
   echo "Example : ./tests/integration/runAllScripts.sh https://nlwonprem253-wks-onprem.neotys.com/ abcdeftokentokentoken" >&2
