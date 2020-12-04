@@ -1,6 +1,11 @@
 name: Python integration tests
 
-on: workflow_dispatch
+# on: workflow_dispatch
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   test:
