@@ -11,11 +11,11 @@ fi
 fails=0
 
 python neoload login --url $1 $2
-tests/integration/scripts/run.test.sh defaultzone ; fails=$(( $? + $fails ))
-tests/integration/scripts/run.fastfail.test.sh defaultzone ; fails=$(( $? + $fails ))
+tests/integration/scripts/run.test.sh FGN4h ; fails=$(( $? + $fails ))
+tests/integration/scripts/run.fastfail.test.sh FGN4h ; fails=$(( $? + $fails ))
 #tests/integration/scripts/run.docker.test.sh cuPd2 ; fails=$(( $? + $fails ))
-tests/integration/scripts/wait.test.sh defaultzone ; fails=$(( $? + $fails ))
-tests/integration/scripts/run.oneliner.test.sh defaultzone ; fails=$(( $? + $fails ))
+tests/integration/scripts/wait.test.sh FGN4h ; fails=$(( $? + $fails ))
+tests/integration/scripts/run.oneliner.test.sh FGN4h ; fails=$(( $? + $fails ))
 tests/integration/scripts/results.put.test.sh ; fails=$(( $? + $fails ))
 tests/integration/scripts/results.delete.test.sh ; fails=$(( $? + $fails ))
 tests/integration/scripts/settings.create.delete.test.sh ; fails=$(( $? + $fails ))
@@ -26,11 +26,11 @@ tests/integration/scripts/project.upload.test.sh ; fails=$(( $? + $fails ))
 
 
 # With another workspace
-python neoload login --workspace Workspace1 --url $1 $2
-tests/integration/scripts/run.test.sh defaultzone ; fails=$(( $? + $fails ))
-tests/integration/scripts/run.fastfail.test.sh defaultzone ; fails=$(( $? + $fails ))
+python neoload login --workspace CLI --url $1 $2
+tests/integration/scripts/run.test.sh FGN4h ; fails=$(( $? + $fails ))
+tests/integration/scripts/run.fastfail.test.sh FGN4h ; fails=$(( $? + $fails ))
 #tests/integration/scripts/run.docker.test.sh cuPd2 ; fails=$(( $? + $fails ))
-tests/integration/scripts/wait.test.sh defaultzone ; fails=$(( $? + $fails ))
+tests/integration/scripts/wait.test.sh FGN4h ; fails=$(( $? + $fails ))
 tests/integration/scripts/results.put.test.sh ; fails=$(( $? + $fails ))
 tests/integration/scripts/results.delete.test.sh ; fails=$(( $? + $fails ))
 tests/integration/scripts/settings.create.delete.test.sh ; fails=$(( $? + $fails ))
