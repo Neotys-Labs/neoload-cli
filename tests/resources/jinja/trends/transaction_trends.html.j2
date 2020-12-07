@@ -1,4 +1,6 @@
 <h3>Transaction Trends</h3>
+{% if (unique_transactions is defined) and unique_transactions %}
+
 <div class="clearfix" style="margin-bottom:2em;">
   <div id="dTransactionTrends" class="graph" style="height:300px;background:#eee;"></div>
 </div>
@@ -184,3 +186,7 @@ d3.selectAll("#td_pN_{{r.id}}")
 {% endfor %}
 </tbody>
 </table>
+
+{% else %}
+    No transaction data in this test.
+{% endif %}
