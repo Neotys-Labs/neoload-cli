@@ -5,7 +5,6 @@ import sys
 import appdirs
 import requests
 import yaml
-from pyparsing import basestring
 from simplejson import JSONDecodeError
 
 from neoload_cli_lib import rest_crud, cli_exception, tools
@@ -61,7 +60,7 @@ def __compute_version_and_path():
 def get_file_storage_from_swagger():
     response = rest_crud.get_raw('explore/v2/swagger.yaml')
     spec = yaml.load(response.text, Loader=yaml.FullLoader)
-    if isinstance(spec, basestring) or 'paths' not in spec.keys():
+    if isinstance(spec, str) or 'basestring' in "{}".format(type(spec)) or 'paths' not in spec.keys():
         raise cli_exception.CliException(
             'Unable to reach Neoload Web API. Bad URL or bad swagger file at /explore/v2/swagger.yaml.'
         )

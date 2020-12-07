@@ -1,4 +1,15 @@
 # Changelog
+
+## 1.1.8 (2020-12-04)
+- [Fix] removed pyparsing dep altogether; unnecessary
+
+## 1.1.7 (2020-12-04)
+- [Fix] add retry logic to HTTP requesting
+- [Fix] add pyparsing dependency for Jenkins pipelines
+
+## 1.1.6 (2020-12-03)
+- [Fix] remove useless dependency
+
 ## 1.1.5 (2020-11-25)
 - [Feature] Filtering for ls-related commands
 - [Feature] Progress bar at project upload
