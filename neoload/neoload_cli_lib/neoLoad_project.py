@@ -6,6 +6,7 @@ import logging
 from gitignore_parser import parse_gitignore
 
 from neoload_cli_lib import rest_crud, tools, cli_exception
+from shutil import copyfile
 
 not_to_be_included = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/',
                       'results/',
@@ -41,13 +42,16 @@ def zip_dir(path):
     return temp_zip
 
 
-def upload_project(path, endpoint):
+def upload_project(path, endpoint, save=None):
     filename = os.path.basename(path)
     if str(path).endswith(('.zip', '.yaml', '.yml')):
         file = open(path, "b+r")
     else:
         filename += '.zip'
         file = zip_dir(path)
+        if save is not None and save.endswith(".zip") and not os.path.exists(save):
+            copyfile(file.name, save)
+
     display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
 
 
