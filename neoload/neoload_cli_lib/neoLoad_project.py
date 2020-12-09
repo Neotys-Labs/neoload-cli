@@ -49,10 +49,18 @@ def upload_project(path, endpoint, save=None):
     else:
         filename += '.zip'
         file = zip_dir(path)
-        if save is not None and save.endswith(".zip") and not os.path.exists(save):
-            copyfile(file.name, save)
+        save_local(file.name, save)
 
     display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
+
+def save_local(source_path, save):
+    if save is not None:
+        save = os.path.abspath(save)
+        if not save.endswith(".zip"):
+            raise cli_exception.CliException('If you specify a --save file, it must end with .zip')
+        if os.path.exists(save):
+            raise cli_exception.CliException("The --save file '{}' already exists! If you specify a --save file, it must not exist first. We wouldn't want to accidentally overwrite things, would we?".format(save))
+        copyfile(source_path, save)
 
 
 def display_project(res):

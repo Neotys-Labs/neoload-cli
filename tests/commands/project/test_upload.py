@@ -4,6 +4,8 @@ from commands.project import cli as project
 from commands.status import cli as status
 from helpers.test_utils import *
 
+from neoload_cli_lib import neoLoad_project
+import os, tempfile, time
 
 @pytest.mark.project
 class TestUpload:
@@ -17,6 +19,7 @@ class TestUpload:
                              '{"projectId":"5e5fc0102cc4f82e5d9e18d4", "projectName":"NeoLoad-CLI-example-2_0",'
                              '"asCodeFiles": [{"path": "default.yaml", "includes": ["paths/geosearch_get.yaml"]}],'
                              '"scenarios":[{"scenarioName": "sanityScenario","scenarioDuration": 10,"scenarioVUs": 2,"scenarioSource": "default.yaml"}]}')
+
         result_upload = runner.invoke(project, ['--path', zip_path, 'upload', valid_data.test_settings_id])
         assert_success(result_upload)
         json_upload = json.loads(result_upload.output)
@@ -31,3 +34,30 @@ class TestUpload:
         result_status = runner.invoke(status)
         assert_success(result_status)
         assert 'settings id: %s' % valid_data.test_settings_id in result_status.output
+
+
+    @pytest.mark.datafiles('tests/neoload_projects/example_1.zip')
+    def test_upload_with_save(self, monkeypatch, datafiles):
+        source_path = datafiles.listdir()[0]
+
+        file = tempfile.NamedTemporaryFile(delete=False,suffix='.zip')
+        basename = file.name
+
+        try: # negative test case
+            neoLoad_project.save_local(source_path, basename+".bad")
+            assert False, "Bad extension should have been rejected, but wasn't"
+        except:
+            assert True
+
+        try: # negative test case; zip shouldn't exist before save (but does)
+            neoLoad_project.save_local(source_path, basename)
+            assert False, "Doesn't catch an overwrite scenario"
+        except:
+            assert True
+
+        os.remove(basename)
+        neoLoad_project.save_local(source_path, basename)
+        exists = os.path.exists(basename)
+        os.remove(basename) # pre-emptive cleanup
+
+        assert exists, "File does not exist! [{}]".format(basename)

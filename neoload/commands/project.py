@@ -19,14 +19,6 @@ def cli(command, name_or_id, path, save):
         name_or_id = test_settings.__resolver.resolve_name(name_or_id)
 
     if command[:2] == "up":
-        if save is not None:
-            save = os.path.abspath(save)
-            if not save.endswith(".zip"):
-                tools.system_exit({'code':1,'message':'If you specify a --save file, it must end with .zip'})
-                return
-            if os.path.exists(save):
-                tools.system_exit({'code':1,'message':"The --save file '{}' already exists! If you specify a --save file, it must not exist first. We wouldn't want to accidentally overwrite things, would we?".format(save)})
-                return
         upload(path, name_or_id, save)
     elif command == "meta":
         meta_data(name_or_id)
