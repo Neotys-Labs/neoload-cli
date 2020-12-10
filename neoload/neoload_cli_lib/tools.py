@@ -3,13 +3,12 @@ import logging
 import os
 import re
 import sys
-import time
 
 import click
 from click import ClickException
 from termcolor import cprint
 
-from neoload_cli_lib import rest_crud, user_data, filtering
+from neoload_cli_lib import rest_crud, user_data, config_global, filtering
 
 from version import __version__
 
@@ -170,7 +169,7 @@ def get_boolean_value_from_env(env_var, default=False):
 
 
 def is_user_interactive():
-    return get_boolean_value_from_env(__nl_interactive_env_var, False)
+    return get_boolean_value_from_env(__nl_interactive_env_var, False) or config_global.get_attr("interactive", False)
 
 
 def ssl_cert_to_verify(ssl_cert):
