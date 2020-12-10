@@ -43,7 +43,15 @@ setup(
         'gitignore_parser',
         'tqdm',
         'requests_toolbelt',
-        'urllib3'
+        'urllib3',
+        'coloredlogs',
+        'docker',
+        'pyparsing',
+        'simplejson'
+    ],
+    tests_require=[
+        "pytest",
+        "pytest-datafiles",
     ],
     long_description_content_type='text/markdown',
     long_description=long_description
