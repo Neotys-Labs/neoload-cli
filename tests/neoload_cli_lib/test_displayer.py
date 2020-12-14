@@ -1,13 +1,15 @@
+import difflib
 import io
+import os
+import re
 import sys
+import unicodedata
+
 import pytest
 from helpers.test_utils import *
+
 from neoload_cli_lib import displayer
-import difflib
-import unicodedata
-import re
-import os
-from xmldiff import main
+
 
 @pytest.mark.results
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
@@ -75,19 +77,30 @@ class TestDisplayer:
 
         try:
             result_file_path = "tests/resources/tmp_neoload_junit_slas.xml"
-            displayer.print_result_junit(json_result, sla_json_test, sla_json_interval, sla_json_global, result_file_path)
+            displayer.print_result_junit(json_result, sla_json_test, sla_json_interval, sla_json_global,
+                                         result_file_path)
 
             expected_file_path = "tests/resources/expected_neoload_junit_slas.xml"
-            equivalent = main.diff_files(result_file_path, expected_file_path) == []
+            # equivalent = main.diff_files(result_file_path, expected_file_path) == []
+            diff_result = diff_file(result_file_path, expected_file_path)
+
         finally:
             os.unlink(result_file_path)
 
         sys.stdout = sys.__stdout__  # Reset redirect.
 
-        assert equivalent is True
+        print('\n'.join(diff_result))
+        assert list(diff_result) == []
+
+
+def diff_file(file1, file2):
+    text1 = open(file1).readlines()
+    text2 = open(file2).readlines()
+    return difflib.unified_diff(text1, text2)
+
 
 # created to handle color control characters; == equivalency is too strict
-def compare_texts(a,b):
+def compare_texts(a, b):
     ret = {
         "equivalent": True,
         "details": ""
@@ -96,19 +109,22 @@ def compare_texts(a,b):
     b_re = remove_color_indicators(b)
     for i, s in enumerate(difflib.ndiff(a_re, b_re)):
         w = remove_control_characters(s[-1]).strip()
-        if s[0]==' ': continue
-        elif s[0]=='-':
-            ret["details"] += u'Delete "{}" from position {}'.format(s[-1],i)
-        elif s[0]=='+':
-            ret["details"] += u'Add "{}" to position {}'.format(s[-1],i)
-        if s[0] in ['-','+'] and len(w)>0:
+        if s[0] == ' ':
+            continue
+        elif s[0] == '-':
+            ret["details"] += u'Delete "{}" from position {}'.format(s[-1], i)
+        elif s[0] == '+':
+            ret["details"] += u'Add "{}" to position {}'.format(s[-1], i)
+        if s[0] in ['-', '+'] and len(w) > 0:
             ret["equivalent"] = False
             ret["details"] += w + ":"
             break
     return ret
 
+
 def remove_control_characters(s):
-    return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
+    return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
+
 
 def remove_color_indicators(s):
-    return re.sub(r'(\[[0123456789]{1,2}m)','',s)
+    return re.sub(r'(\[[0123456789]{1,2}m)', '', s)
