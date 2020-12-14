@@ -317,7 +317,7 @@ def fill_single_summary(__id, time_binding, time_filter, components, data):
     return time_binding
 
 def summary_precludes_details_fetch(data):
-    return data['summary']['terminationReason'] in ['LG_AVAILABILITY', 'LICENSE', 'FAILED_TO_START','UNKNOWN']
+    return data['summary']['terminationReason'] in ['LG_AVAILABILITY', 'FAILED_TO_START','UNKNOWN']
 
 def fill_single_slas(__id, components, data):
     if summary_precludes_details_fetch(data): return
