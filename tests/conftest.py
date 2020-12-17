@@ -35,7 +35,7 @@ def neoload_login(request, monkeypatch):
     runner = CliRunner()
     result_status = runner.invoke(status)
     # do login if not already logged-in with the right credentials
-    if "aren't logged in" in result_status.output \
+    if "aren't logged in" in result_status.output or "are'nt logged in" in result_status.output \
             or api_url not in result_status.output \
             or '*' * (len(token) - 3) + token[-3:] not in result_status.output:
         mock_login_get_urls(monkeypatch)

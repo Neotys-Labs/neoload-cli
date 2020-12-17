@@ -39,7 +39,7 @@ class TestUserData:
         user_data.do_logout()
         with pytest.raises(click.ClickException) as context:
             user_data.get_user_data()
-        assert 'You are\'nt logged. Please use command "neoload login" first' in str(context.value)
+        assert 'You aren\'t logged. Please use command "neoload login" first' in str(context.value)
 
     @pytest.mark.usefixtures('neoload_login')
     def test_is_version_lower_than(selfself):

@@ -102,4 +102,4 @@ class TestCreate:
 
         result = runner.invoke(settings, ['create', 'any'])
         assert result.exit_code == 1
-        assert 'You are\'nt logged' in str(result.output)
+        assert 'You aren\'t logged' in str(result.output)

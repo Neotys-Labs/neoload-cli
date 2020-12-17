@@ -28,7 +28,7 @@ def do_logout():
 
 def get_user_data(throw=True):
     if __user_data_singleton is None and throw:
-        raise cli_exception.CliException("You are'nt logged. Please use command \"neoload login\" first")
+        raise cli_exception.CliException("You aren't logged. Please use command \"neoload login\" first")
     return __user_data_singleton
 
 
