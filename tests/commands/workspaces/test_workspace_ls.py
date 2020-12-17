@@ -33,4 +33,4 @@ class TestWorkspaceLs:
 
         result = runner.invoke(workspaces, ['ls'])
         assert result.exit_code == 1
-        assert 'You are\'nt logged' in str(result.output)
+        assert 'You aren\'t logged' in str(result.output)

@@ -89,7 +89,7 @@ class TestResultPut:
 
         result = runner.invoke(results, ['put', 'any'])
         assert result.exit_code == 1
-        assert 'You are\'nt logged' in str(result.output)
+        assert 'You aren\'t logged' in str(result.output)
 
     def test_not_found(self, monkeypatch, invalid_data):
         runner = CliRunner()
