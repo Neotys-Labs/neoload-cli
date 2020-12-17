@@ -8,3 +8,5 @@ Pipfile.lock
 .coverage
 coverage.xml
 htmlcov/
+build/
+dist/
