@@ -6,8 +6,6 @@ name: Python package
 on:
   push:
     branches: [ '**' ]
-  pull_request:
-    branches: [ master ]
 
 jobs:
   build:
@@ -31,7 +29,9 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test with pytest
       run: |
-        PYTHONPATH="neoload" coverage3 run -m pytest
+        PYTHONPATH="neoload" COVERAGE_FILE=.coverage.unit coverage3 run -m pytest
+        PYTHONPATH="neoload" COVERAGE_FILE=.coverage.live coverage3 run -m pytest -v -x -m "makelivecalls" --makelivecalls --token ${{ secrets.NLWEB_TOKEN }} --url ${{ secrets.NLWEB_API_URL }} --workspace CLI
+        coverage3 combine
         coverage3 xml
     - name: SonarCloud Scan
       uses: sonarsource/sonarcloud-github-action@master
