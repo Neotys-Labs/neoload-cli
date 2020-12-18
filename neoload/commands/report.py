@@ -7,6 +7,7 @@ import time
 import re
 import statistics
 import math
+import time
 
 from neoload_cli_lib import tools, rest_crud, user_data, displayer
 from neoload_cli_lib.name_resolver import Resolver
@@ -68,7 +69,12 @@ def cli(template, json_in, out_file, filter, report_type, name):
 
     filter_spec = parse_filter_spec(filter)
 
-    model["components"] = get_default_components(True,filter_spec['exclude_filter'])
+    if 'include_filter' in filter_spec and filter_spec['include_filter'] is not None:
+        model["components"] = get_default_components(False,filter_spec['include_filter'])
+    else:
+        model["components"] = get_default_components(True,filter_spec['exclude_filter'])
+
+    logging.debug(model["components"])
 
     # if intent is to produce JSON directly to stdout, hide print statements
     if out_file is None: gprint = lambda msg: logger.info(msg)
@@ -116,6 +122,7 @@ def parse_filter_spec(filter_spec):
     ret['results_filter'] = None
     ret['elements_filter'] = None
     ret['exclude_filter'] = None
+    ret['include_filter'] = None
 
     if filter_spec is not None:
         filter_parts = filter_spec.split(";")
@@ -128,6 +135,8 @@ def parse_filter_spec(filter_spec):
                 ret['elements_filter'] = s.replace("elements=","",1)
             elif s.startswith("exclude"):
                 ret['exclude_filter'] = s.replace("exclude=","",1)
+            elif s.startswith("include"):
+                ret['include_filter'] = s.replace("include=","",1)
 
     return ret
 
@@ -201,34 +210,59 @@ def process_final_output(model, template, cli_details):
         model["final_output"] = t.render(data_obj)
 
 
-def add_component_if_not(components,key,default,exclude_list):
+def add_component_if(components,key,default,component_list):
     components[key] = default if not key in components else components[key]
-    #logging.getLogger().debug('exclude_list: ' + exclude_list + '; key: ' + key)
-    if exclude_list is not None and key in exclude_list.split(","):
-        components[key] = False
+    if component_list is not None and key in component_list.split(","):
+        components[key] = not default
 
-def get_default_components(default_retrieve=True,exclude_list=None):
+def get_default_components(default_retrieve=True,component_list=None):
     components = {}
-    add_if_not = lambda key, default: add_component_if_not(components,key,default,exclude_list)
-    add_if_not('summary',True) # always get summary, because many other components depend on summary elements
-    add_if_not('statistics',default_retrieve)
-    add_if_not('slas',default_retrieve)
-    add_if_not('events',default_retrieve)
-    add_if_not('transactions',default_retrieve)
-    add_if_not('all_requests',default_retrieve)
-    add_if_not('ext_data',default_retrieve)
-    add_if_not('controller_points',default_retrieve)
+    add_if = lambda key, default: add_component_if(components,key,default,component_list)
+    add_if('summary',True) # always get summary, because many other components depend on summary elements
+    add_if('statistics',default_retrieve)
+    add_if('slas',default_retrieve)
+    add_if('events',default_retrieve)
+    add_if('transactions',default_retrieve)
+    add_if('all_requests',default_retrieve)
+    add_if('ext_data',default_retrieve)
+    add_if('controller_points',default_retrieve)
     return components
 
 def can_raw_transactions_data():
     return False if user_data.is_version_lower_than('2.6.0') else True
 
-def should_raw_transactions_data(__id):
+def should_raw_transactions_data(__id, time_filter):
+    if time_filter is None:
+        return False
+
     use_raw = can_raw_transactions_data()
     logging.debug("use_raw[0]: " + str(use_raw))
     if use_raw:
-        raw_sum = rest_crud_get(get_end_point(__id, __operation_results_raw) + "?format=JSON")
-        if len(raw_sum) < 1:
+        # look for the transaction with the smallest number of iterations, but that has raw data
+
+        # grab all transactions list
+        json_elements_transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
+        txns = []
+        for el in json_elements_transactions:
+            # grab count of this transaction and only add if there are iterations
+            json_values = rest_crud_get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/values")
+            if json_values['count'] > 0:
+                txns.append({
+                    'id': el['id'],
+                    'count': json_values['count']
+                })
+
+        raw_sum = 0
+
+        # sort ascending by count (smallest number of iterations produces smallest amount of data)
+        txns = sorted(txns, key=lambda el: el['count'])
+        for el in txns:
+            this_raw_count = len(rest_crud_get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/raw?format=JSON"))
+            raw_sum += this_raw_count
+            if raw_sum > 0:
+                break
+
+        if raw_sum < 1:
             use_raw = False
             logging.debug("use_raw[1]: " + str(use_raw))
     return use_raw
@@ -285,7 +319,7 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
 
     statistics_list = get_standard_statistics_list()
 
-    use_txn_raw = should_raw_transactions_data(__id)
+    use_txn_raw = should_raw_transactions_data(__id, time_filter)
 
     fill_single_requests(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data)
 
@@ -485,12 +519,15 @@ def fill_trend_results(arr_selected, all_transactions, elements_filter, time_fil
         translate = {executor.submit(procedure, result): result for result in arr_selected}
         for future in concurrent.futures.as_completed(translate):
             i = translate[future]
+            elapsed = 0
             try:
+                start = get_perf_time()
                 data = future.result()
+                elapsed = get_perf_time() - start
             except Exception as exc:
                 logging.error('%r generated an exception: %s' % (i, exc))
             else:
-                logging.getLogger().info("parallel processed fill_trend_results worker for '" + data['name'] + "'")
+                logging.getLogger().info("parallel processed fill_trend_results worker for '{}' in {} seconds".format(data['name'],perf_time_to_sec(elapsed)))
 
     return arr_selected
 
@@ -582,7 +619,7 @@ def fill_trend_result(result, all_transactions, elements_filter, time_filter):
         found_elements = elements
 
     if len(elements) > 0:
-        use_txn_raw = should_raw_transactions_data(__id)
+        use_txn_raw = should_raw_transactions_data(__id, time_filter)
         found_elements = get_elements_data(__id, found_elements, time_binding, True, statistics_list, use_txn_raw)
         found_elements = sorted(found_elements, key=lambda x: x["aggregate"]["avgDuration"], reverse=True)
 
@@ -774,18 +811,19 @@ def get_human_readable_time(reldel):
 
 def get_elements_data(result_id, base_col, time_binding, include_points, statistics_list, use_txn_raw):
 
-    procedure = lambda el: get_element_data(el, result_id, time_binding, include_points, statistics_list, use_txn_raw)
+    procedure = lambda el: (get_perf_time(),get_element_data(el, result_id, time_binding, include_points, statistics_list, use_txn_raw))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_ELEMENTS_WORKERS) as executor:
         translate = {executor.submit(procedure, el): el for el in base_col}
         for future in concurrent.futures.as_completed(translate):
-            i = translate[future]
+            orig = translate[future]
             try:
-                data = future.result()
+                (start,after) = future.result()
+                elapsed = get_perf_time() - start
             except Exception as exc:
-                logging.error('%r generated an exception: %s' % (i, exc))
+                logging.error('%r generated an exception: %s' % (orig, exc))
             else:
-                logging.getLogger().info("parallel processed get_elements_data worker for '" + data['display_name'] + "'")
+                logging.getLogger().info("parallel processed get_elements_data worker for '{}' in {} seconds".format(orig['display_name'],perf_time_to_sec(elapsed)))
 
     return base_col
 
@@ -854,6 +892,7 @@ def get_element_data_from_sources(include_points, time_binding, use_txn_raw, res
     json_points = []
     if (include_points or time_binding is not None):
         if viable_raw_element:
+            logging.getLogger().debug("Starting get_element_data_from_sources for element ({})".format(el['id']))
             json_raws = rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/raw?format=JSON")
         else:
             json_points = rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/points?statistics=" + ",".join(statistics_list))
@@ -1034,3 +1073,10 @@ Examples:
         neoload report --json-in ~/temp.json --template tests/resources/jinja/sample-custom-report.html.j2 --out-file ~/temp.html
 
     """)
+
+def get_perf_time():
+    logging.debug('get_perf_time: {}'.format(time.time()))
+    return time.time()
+
+def perf_time_to_sec(elapsed):
+    return round(elapsed,3)
