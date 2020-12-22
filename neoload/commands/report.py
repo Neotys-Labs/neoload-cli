@@ -32,6 +32,8 @@ __operation_events = "/events"
 __operation_elements = "/elements"
 __operation_monitors = "/monitors"
 
+QUERY_CATEGORY_TRANSACTION = "category=TRANSACTION"
+
 __resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace)
 
 meta_key = 'result id'
@@ -225,6 +227,7 @@ def get_default_components(default_retrieve=True,component_list=None):
     add_if('transactions',default_retrieve)
     add_if('all_requests',default_retrieve)
     add_if('ext_data',default_retrieve)
+    add_if('monitors',default_retrieve)
     add_if('controller_points',default_retrieve)
     return components
 
@@ -241,7 +244,7 @@ def should_raw_transactions_data(__id, time_filter):
         # look for the transaction with the smallest number of iterations, but that has raw data
 
         # grab all transactions list
-        json_elements_transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
+        json_elements_transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
         txns = []
         for el in json_elements_transactions:
             # grab count of this transaction and only add if there are iterations
@@ -400,7 +403,7 @@ def fill_single_transactions(__id, elements_filter, time_binding, statistics_lis
     if components['transactions']:
         gprint("Getting transactions...")
 
-        json_elements_transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
+        json_elements_transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
         if not elements_filter is None:
             json_elements_transactions = filter_elements(json_elements_transactions, elements_filter)
 
@@ -411,9 +414,12 @@ def fill_single_transactions(__id, elements_filter, time_binding, statistics_lis
 
 def fill_single_monitors(__id, components, data):
     if summary_precludes_details_fetch(data): return
-    if components['ext_data'] or components['controller_points']:
+    if components['monitors'] or components['controller_points'] or components['ext_data']:
         gprint("Getting monitors...")
-        data['monitors'] = rest_crud_get(get_end_point(__id, __operation_monitors))
+        filled = rest_crud_get(get_end_point(__id, __operation_monitors))
+        filled = get_mon_datas(__id, lambda m: True, filled, True)
+        filled = list(sorted(filled, key=lambda x: x['display_name']))
+        data['monitors'] = filled
 
 def fill_single_ext_data(__id, components, data):
     if summary_precludes_details_fetch(data): return
@@ -607,7 +613,7 @@ def fill_trend_result(result, all_transactions, elements_filter, time_filter):
     found_elements = []
     elements = []
     # elements.extend(rest_crud_get(get_end_point(__id, __operation_elements) + "?category=REQUEST"))
-    transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=TRANSACTION")
+    transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
     elements.extend(transactions)
     if elements_filter is not None and not (result['terminationReason'] in ['FAILED_TO_START']):
         filters = parse_elements_filter(elements_filter)
