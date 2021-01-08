@@ -32,7 +32,7 @@ def cli(command, name_or_id, path, save):
 #TODO: fix validate to recurse through all includes; create unique file list map (avoid recursive references)
 
 def upload(path, settings_id, save):
-    neoLoad_project.upload_project(path, get_endpoint(settings_id), save=save)
+    neoLoad_project.upload_project(path, get_endpoint(settings_id), save)
 
 
 def meta_data(setting_id):

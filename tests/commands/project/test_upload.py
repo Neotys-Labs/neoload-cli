@@ -44,19 +44,13 @@ class TestUpload:
         basename = file.name
 
         try: # negative test case
-            neoLoad_project.save_local(source_path, basename+".bad")
+            neoLoad_project.zip_dir(source_path,basename+".bad")
             assert False, "Bad extension should have been rejected, but wasn't"
         except:
             assert True
 
-        try: # negative test case; zip shouldn't exist before save (but does)
-            neoLoad_project.save_local(source_path, basename)
-            assert False, "Doesn't catch an overwrite scenario"
-        except:
-            assert True
-
         os.remove(basename)
-        neoLoad_project.save_local(source_path, basename)
+        neoLoad_project.zip_dir(source_path,basename)
         exists = os.path.exists(basename)
         os.remove(basename) # pre-emptive cleanup
 
