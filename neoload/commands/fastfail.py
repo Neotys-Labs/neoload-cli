@@ -1,7 +1,7 @@
 import click
 
 from commands import test_results
-from neoload_cli_lib import displayer, running_tools, tools
+from neoload_cli_lib import displayer, running_tools, tools, rest_crud
 from datetime import datetime, date
 import time
 import sys
@@ -14,6 +14,7 @@ import sys
 @click.option("--max-failure", 'max_failure', type=int, default=0, help="Max SLA failure threshold; default is zero")
 def cli(command, name, stop, force, max_failure): #, max_occurs):
     """Fails if certain conditions are met, such as per-run SLAs failed % of time"""
+    rest_crud.set_current_command()
     if not command:
         tools.system_exit({'message': "command is mandatory. Please see neoload fastfail --help", 'code': 2})
         return

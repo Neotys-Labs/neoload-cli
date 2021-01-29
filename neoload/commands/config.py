@@ -2,7 +2,7 @@ import ast
 
 import click
 
-from neoload_cli_lib import config_global
+from neoload_cli_lib import config_global, rest_crud
 
 
 @click.command()
@@ -10,6 +10,7 @@ from neoload_cli_lib import config_global
 @click.argument('key_value', nargs=-1, required=False)
 def cli(command, key_value):
     """View and set the user-defined properties. This properties is kept after logout. The format of KEY_VALUE: key1=value1 key2=value2. The empty value remove the key"""
+    rest_crud.set_current_command()
     if command == 'set':
         for element in key_value:
             key, value = element.split('=')

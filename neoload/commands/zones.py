@@ -8,6 +8,7 @@ from neoload_cli_lib import rest_crud, tools
 @click.option("--static/--dynamic", "static_dynamic", default=None, help="filter for dynamic or static zones")
 def cli(name_or_id, static_dynamic, human):
     """read of NeoLoad Web zones"""
+    rest_crud.set_current_command()
     resp = rest_crud.get(get_end_point())
     resp = [elem for elem in resp if filter_result(elem, name_or_id, static_dynamic)]
     if human:

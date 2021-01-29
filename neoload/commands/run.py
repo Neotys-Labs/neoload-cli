@@ -21,6 +21,7 @@ from neoload_cli_lib import running_tools, tools, rest_crud, user_data
               help="return 0 when test is correctly launched, whatever the result of SLA")
 def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_vu, citrix_vu, return_0):
     """run a test"""
+    rest_crud.set_current_command()
     if not name_or_id or name_or_id == "cur":
         name_or_id = user_data.get_meta(test_settings.meta_key)
 

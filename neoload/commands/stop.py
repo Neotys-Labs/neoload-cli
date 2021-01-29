@@ -1,7 +1,7 @@
 import click
 
 from commands import test_results
-from neoload_cli_lib import tools, user_data, running_tools, cli_exception
+from neoload_cli_lib import tools, user_data, running_tools, cli_exception, rest_crud
 
 
 @click.command()
@@ -9,6 +9,7 @@ from neoload_cli_lib import tools, user_data, running_tools, cli_exception
 @click.argument('name', required=False)
 def cli(name, force):
     """stop a test"""
+    rest_crud.set_current_command()
     if not name or name == "cur":
         name = user_data.get_meta(test_results.meta_key)
     if not name:

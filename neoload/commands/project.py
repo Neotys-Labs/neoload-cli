@@ -12,6 +12,7 @@ import os
 @click.argument("name_or_id", type=str, required=False)
 def cli(command, name_or_id, path, save):
     """Upload and list scenario from settings"""
+    rest_crud.set_current_command()
     if not name_or_id or name_or_id == "cur":
         name_or_id = user_data.get_meta(test_settings.meta_key)
 
