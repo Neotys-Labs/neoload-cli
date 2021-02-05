@@ -5,14 +5,20 @@ from neoload_cli_lib import displayer, running_tools, tools
 from datetime import datetime, date
 import time
 import sys
+import subprocess
 
 @click.command()
 @click.argument('command', type=click.Choice(['slas'], case_sensitive=False))
 @click.argument("name", type=str, required=False)
-@click.option("--stop", 'stop', is_flag=True, default=True, help="Doesn't wait the end of test")
-@click.option("--force", 'force', is_flag=True, default=True, help="Doesn't wait the end of test")
-@click.option("--max-failure", 'max_failure', type=int, default=0, help="Max SLA failure threshold; default is zero")
-def cli(command, name, stop, force, max_failure): #, max_occurs):
+@click.option("--stop", 'stop', is_flag=True, default=True,
+              help="Stop the running test if slas threshold is reached. default is True")
+@click.option("--force", 'force', is_flag=True, default=True,
+              help="Immediately kill Load Generators and do not apply the stop policy. Some statistics may be wrong. default is True")
+@click.option("--max-failure", 'max_failure', type=int, default=0,
+              help="Max SLA percentage failure threshold; default is zero")
+@click.option("--stop-command", 'stop_command', required=False,
+              help="System command that will be executed instead of stopping NLW test. Optional.")
+def cli(command, name, stop, force, max_failure, stop_command): #, max_occurs):
     """Fails if certain conditions are met, such as per-run SLAs failed % of time"""
     if not command:
         tools.system_exit({'message': "command is mandatory. Please see neoload fastfail --help", 'code': 2})
@@ -29,12 +35,12 @@ def cli(command, name, stop, force, max_failure): #, max_occurs):
         return
 
     if command == "slas":
-        monitor_loop(__id, stop, force, max_failure)
+        monitor_loop(__id, stop, force, max_failure, stop_command)
 
     else:
         tools.system_exit({'message': "Invalid command. Please see neoload fastfail --help", 'code': 2})
 
-def monitor_loop(__id, stop, force, max_failure):
+def monitor_loop(__id, stop, force, max_failure, stop_command):
     dt_started = datetime.now()
     print('fastfail started: ' + str(dt_started))
     dt_current = dt_started
@@ -65,7 +71,13 @@ def monitor_loop(__id, stop, force, max_failure):
         if len(partial_intervals) > 0 and len(failed_intervals) < 1:
             msg += "\nSome SLAs failed, but were not above max-failure of {0}% so did not count as error.".format(max_failure)
 
-        outcomes = process_state(datas,fails,stop,force,is_initializing,is_running,msg)
+        fail_options = {
+            'stop': stop,
+            'force': force,
+            'stop_command': stop_command
+        }
+
+        outcomes = process_state(datas,fails,fail_options,is_initializing,is_running)
 
         final_run = has_exited and outcomes["has_exited"]
         has_exited = outcomes["has_exited"]
@@ -91,7 +103,12 @@ def monitor_loop(__id, stop, force, max_failure):
 
     tools.system_exit({'message': msg, 'code': exit_code})
 
-def process_state(datas,fails,stop,force,is_initializing,is_running,msg):
+def process_state(datas,fails,fail_options,is_initializing,is_running):
+
+    stop = fail_options['stop']
+    force = fail_options['force']
+    stop_command = fail_options['stop_command']
+
     ret = {
         "has_exited": False,
         "is_initializing": is_initializing,
@@ -101,6 +118,11 @@ def process_state(datas,fails,stop,force,is_initializing,is_running,msg):
 
     if len(fails) > 0:
         if status != 'TERMINATED' and stop:
+            if stop_command is not None:
+                out = subprocess.run(stop_command, shell=True, capture_output=True)
+                print(f"\nStopping test with the system command {out.args}\n - return code={out.returncode}")
+                print(f" - stdout={out.stdout}\n - stderr={out.stderr}")
+            else:
                 print("\nStopping test, force={0}".format(force))
                 tools.set_batch(True)
                 running_tools.stop(datas["id"], force)
