@@ -3,7 +3,6 @@ import jinja2
 import json
 import os
 import webbrowser
-import time
 import re
 import statistics
 import math
@@ -62,32 +61,14 @@ def cli(template, json_in, out_file, filter, report_type, name):
 
     global gprint
 
-    model = {}
-    model["json_data_text"] = None
-    model["template_text"] = None
-    model["final_output"] = None
+    model = initialize_model(filter, template)
 
     logger = logging.getLogger()
-
-    filter_spec = parse_filter_spec(filter)
-
-    if 'include_filter' in filter_spec and filter_spec['include_filter'] is not None:
-        model["components"] = get_default_components(False,filter_spec['include_filter'])
-    else:
-        model["components"] = get_default_components(True,filter_spec['exclude_filter'])
-
-    logging.debug(model["components"])
 
     # if intent is to produce JSON directly to stdout, hide print statements
     if out_file is None: gprint = lambda msg: logger.info(msg)
 
-    # process template, if specified
-    if template is not None and not parse_template_spec(model,filter_spec,template):
-        return
-
-    # process source data spec
-    if not parse_source_data_spec(json_in, model, report_type, name, filter_spec):
-        return
+    parse_source_data_spec(json_in, model, report_type, name)
 
     cli_details = {
         'arguments': {
@@ -98,24 +79,48 @@ def cli(template, json_in, out_file, filter, report_type, name):
             'report_type': report_type,
             'name': name
         },
+        'debug': logging.getLogger().level == logging.DEBUG,
         'internals': {
             'version': tools.compute_version()
         }
     }
-    cli_details['debug'] = logging.getLogger().level == logging.DEBUG
 
-    process_final_output(model, template, cli_details)
+    final_output = process_final_output(model, template, cli_details)
 
-    model["final_output"] = displayer.colorize_text(model["final_output"]) if tools.__is_color_terminal() else model["final_output"]
+    if tools.__is_color_terminal():
+        final_output = displayer.colorize_text(final_output)
 
     if out_file is not None:
-        set_file_text(out_file, model["final_output"])
+        set_file_text(out_file, final_output)
 
         if tools.is_user_interactive() and (out_file.lower().endswith(".html") or out_file.lower().endswith(".htm")):
             webbrowser.open_new_tab("file://" + out_file)
 
     else:
-        print(model["final_output"])
+        print(final_output)
+
+
+def initialize_model(filter, template):
+    filter_spec = parse_filter_spec(filter)
+
+    if 'include_filter' in filter_spec and filter_spec['include_filter'] is not None:
+        components = get_default_components(False,filter_spec['include_filter'])
+    else:
+        components = get_default_components(True,filter_spec['exclude_filter'])
+
+    logging.debug(components)
+
+    model = {
+        "json_data_text": None,
+        "filter_spec": filter_spec,
+        "components": components
+    }
+
+    # process template, if specified
+    parse_template_spec(model,filter_spec,template)
+
+    return model
+
 
 def parse_filter_spec(filter_spec):
 
@@ -151,7 +156,6 @@ def parse_template_spec(model,filter_spec,template):
             model["template_text"] = get_builtin_template_transaction_csv()
         else:
             model["template_text"] = ""
-        return True
 
     elif template.lower().startswith("builtin:console-summary"):
         model["components"] = get_default_components(False,filter_spec["exclude_filter"])
@@ -161,17 +165,15 @@ def parse_template_spec(model,filter_spec,template):
         model["components"]["slas"] = True
 
         model["template_text"] = get_builtin_console_summary()
-        return True
 
     elif os.path.isfile(template):
         model["template_text"] = get_file_text(template)
-        return True
     else:
         tools.system_exit({'message': "template value is not a file or a known type", 'code': 2})
 
-    return False
 
-def parse_source_data_spec(json_in, model, report_type, name, filter_spec):
+def parse_source_data_spec(json_in, model, report_type, name):
+    filter_spec = model['filter_spec']
 
     if not json_in is None:
         model["json_data_text"] = get_file_text(json_in) if json_in is not None else None
@@ -185,7 +187,6 @@ def parse_source_data_spec(json_in, model, report_type, name, filter_spec):
             data = get_trends_report(name,filter_spec["time_filter"],filter_spec["results_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
         else:
             tools.system_exit({'message': "No report_type named '" + report_type + "'.", 'code': 2})
-            return False
 
         model["json_data_text"] = json.dumps(data, indent=2)
 
@@ -193,7 +194,6 @@ def parse_source_data_spec(json_in, model, report_type, name, filter_spec):
         # use default
         model["json_data_text"] = '{"summary":{"name": "empty"}}'
 
-    return True
 
 def process_final_output(model, template, cli_details):
 
@@ -202,14 +202,14 @@ def process_final_output(model, template, cli_details):
     data_obj['cli'] = cli_details
 
     if model["template_text"] is None or model["template_text"] == "":
-        model["final_output"] = json.dumps(data_obj)
+        return json.dumps(data_obj)
     else:
         dirname = os.path.dirname(os.path.abspath(template))
         loader = jinja2.FileSystemLoader(searchpath=dirname)
         env = jinja2.Environment(loader=loader,autoescape=True,extensions=['jinja2.ext.debug'])
         t = env.from_string(model["template_text"])
 
-        model["final_output"] = t.render(data_obj)
+        return t.render(data_obj)
 
 
 def add_component_if(components,key,default,component_list):
@@ -244,11 +244,11 @@ def should_raw_transactions_data(__id, time_filter):
         # look for the transaction with the smallest number of iterations, but that has raw data
 
         # grab all transactions list
-        json_elements_transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
+        json_elements_transactions = rest_crud.get(get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
         txns = []
         for el in json_elements_transactions:
             # grab count of this transaction and only add if there are iterations
-            json_values = rest_crud_get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/values")
+            json_values = rest_crud.get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/values")
             if json_values['count'] > 0:
                 txns.append({
                     'id': el['id'],
@@ -260,7 +260,7 @@ def should_raw_transactions_data(__id, time_filter):
         # sort ascending by count (smallest number of iterations produces smallest amount of data)
         txns = sorted(txns, key=lambda el: el['count'])
         for el in txns:
-            this_raw_count = len(rest_crud_get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/raw?format=JSON"))
+            this_raw_count = len(rest_crud.get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/raw?format=JSON"))
             raw_sum += this_raw_count
             if raw_sum > 0:
                 break
@@ -345,7 +345,7 @@ def get_standard_statistics_list():
 def fill_single_summary(__id, time_binding, time_filter, components, data):
     if components['summary'] or components['slas'] or time_filter is not None:
         gprint("Getting test results...")
-        json_result = rest_crud_get(get_end_point(__id))
+        json_result = rest_crud.get(get_end_point(__id))
         json_result = add_test_result_summary_fields(json_result)
         data['summary'] = json_result
         if time_binding is not None:
@@ -361,30 +361,30 @@ def fill_single_slas(__id, components, data):
     if components['slas']:
         status = data['summary']['status']
         gprint("Getting global SLAs...")
-        data['sla_global'] = [] if status!='TERMINATED' else rest_crud_get(get_end_point(__id, __operation_sla_global))
+        data['sla_global'] = [] if status!='TERMINATED' else rest_crud.get(get_end_point(__id, __operation_sla_global))
         gprint("Getting per-test SLAs...")
-        data['sla_test'] = [] if status!='TERMINATED' else rest_crud_get(get_end_point(__id, __operation_sla_test))
+        data['sla_test'] = [] if status!='TERMINATED' else rest_crud.get(get_end_point(__id, __operation_sla_test))
         gprint("Getting per-interval SLAs...")
-        data['sla_interval'] = rest_crud_get(get_end_point(__id, __operation_sla_interval))
+        data['sla_interval'] = rest_crud.get(get_end_point(__id, __operation_sla_interval))
 
 def fill_single_stats(__id, components, data):
     if summary_precludes_details_fetch(data): return
     if components['statistics']:
         gprint("Getting test statistics...")
-        data['statistics'] = rest_crud_get(get_end_point(__id, __operation_statistics))
+        data['statistics'] = rest_crud.get(get_end_point(__id, __operation_statistics))
 
 def fill_single_events(__id, components, data):
     if summary_precludes_details_fetch(data): return
     if components['events']:
         gprint("Getting events...")
-        data['events'] = rest_crud_get(get_end_point(__id, __operation_events))
+        data['events'] = rest_crud.get(get_end_point(__id, __operation_events))
 
 def fill_single_requests(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data):
     if summary_precludes_details_fetch(data): return
     if components['all_requests']:
         gprint("Getting all-request data...")
 
-        json_elements_requests = rest_crud_get(get_end_point(__id, __operation_elements) + "?category=REQUEST")
+        json_elements_requests = rest_crud.get(get_end_point(__id, __operation_elements) + "?category=REQUEST")
         json_elements_all_requests = list(filter(lambda m: m['id'] == 'all-requests', json_elements_requests))
         json_elements_all_requests_preserve = json_elements_all_requests
 
@@ -403,7 +403,7 @@ def fill_single_transactions(__id, elements_filter, time_binding, statistics_lis
     if components['transactions']:
         gprint("Getting transactions...")
 
-        json_elements_transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
+        json_elements_transactions = rest_crud.get(get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
         if not elements_filter is None:
             json_elements_transactions = filter_elements(json_elements_transactions, elements_filter)
 
@@ -416,7 +416,7 @@ def fill_single_monitors(__id, components, data):
     if summary_precludes_details_fetch(data): return
     if components['monitors'] or components['controller_points'] or components['ext_data']:
         gprint("Getting monitors...")
-        filled = rest_crud_get(get_end_point(__id, __operation_monitors))
+        filled = rest_crud.get(get_end_point(__id, __operation_monitors))
         filled = get_mon_datas(__id, lambda m: True, filled, True)
         filled = list(sorted(filled, key=lambda x: x['display_name']))
         data['monitors'] = filled
@@ -596,7 +596,7 @@ def fill_trend_result(result, all_transactions, elements_filter, time_filter):
     gprint("fill_trend_result: Getting test '" + result["name"] + "' (" + result["id"] + ") statistics...")
     __id = result["id"]
     result = add_test_result_summary_fields(result)
-    json_stats = rest_crud_get(get_end_point(__id, __operation_statistics))
+    json_stats = rest_crud.get(get_end_point(__id, __operation_statistics))
 
     statistics_list = get_standard_statistics_list()
 
@@ -612,8 +612,8 @@ def fill_trend_result(result, all_transactions, elements_filter, time_filter):
 
     found_elements = []
     elements = []
-    # elements.extend(rest_crud_get(get_end_point(__id, __operation_elements) + "?category=REQUEST"))
-    transactions = rest_crud_get(get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
+    # elements.extend(rest_crud.get(get_end_point(__id, __operation_elements) + "?category=REQUEST"))
+    transactions = rest_crud.get(get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
     elements.extend(transactions)
     if elements_filter is not None and not (result['terminationReason'] in ['FAILED_TO_START']):
         filters = parse_elements_filter(elements_filter)
@@ -714,7 +714,7 @@ def get_element_user_path(el):
     return el['path'][0] if 'path' in el and len(el['path'])>0 else ""
 
 def get_results_by_result_id(__id,count_back,count_ahead):
-    result = rest_crud_get(get_end_point(__id))
+    result = rest_crud.get(get_end_point(__id))
     project = result["project"]
     scenario = result["scenario"]
     logging.debug({'project':project,'scenario':scenario})
@@ -838,7 +838,7 @@ def get_element_data(el, result_id, time_binding, include_points, statistics_lis
     parent = get_element_parent(el)
     user_path = get_element_user_path(el)
     gprint("Getting element values for '" + full_name + "'")
-    json_values = rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/values")
+    json_values = rest_crud.get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/values")
 
     (json_raws,json_points) = get_element_data_from_sources(include_points, time_binding, use_txn_raw, result_id, el, statistics_list)
 
@@ -899,9 +899,9 @@ def get_element_data_from_sources(include_points, time_binding, use_txn_raw, res
     if (include_points or time_binding is not None):
         if viable_raw_element:
             logging.getLogger().debug("Starting get_element_data_from_sources for element ({})".format(el['id']))
-            json_raws = rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/raw?format=JSON")
+            json_raws = rest_crud.get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/raw?format=JSON")
         else:
-            json_points = rest_crud_get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/points?statistics=" + ",".join(statistics_list))
+            json_points = rest_crud.get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/points?statistics=" + ",".join(statistics_list))
 
     if not time_binding is None:
         json_points = filter_by_time(json_points, time_binding, lambda p: int(p['from'])/1000, lambda p: int(p['to'])/1000)
@@ -972,7 +972,7 @@ def get_mon_datas(result_id, l_selector, base_col, include_points):
     for mon in mons:
         full_name = get_element_full_name(mon)
         gprint("Getting monitor values for '" + full_name + "'")
-        mon_points = rest_crud_get(get_end_point(result_id, __operation_monitors) + "/" + mon['id'] + "/points")
+        mon_points = rest_crud.get(get_end_point(result_id, __operation_monitors) + "/" + mon['id'] + "/points")
         time_points = list(sorted(mon_points, key=lambda x: x['from']))
         perc_points = list(sorted(map(lambda x: x['AVG'], mon_points)))
         mon["display_name"] = full_name
@@ -1029,9 +1029,6 @@ User Path\tElement\tCount\tMin\tAvg\tMax\tPerc 50\tPerc 90\tPerc 95\tPerc 99\tSu
 """{{ txn.aggregate.failureCount }}\t{{ txn.aggregate.failureRate }}
 {% endfor %}""".strip()
 
-def rest_crud_get(url):
-    ret = rest_crud.get(url)
-    return ret
 
 def print_extended_help():
     ctx = click.get_current_context()
