@@ -2,6 +2,7 @@ import pytest
 import os
 from click.testing import CliRunner
 from commands.login import cli as login
+from commands.status import cli as status
 from commands.test_results import cli as results
 from commands.report import cli as report
 from commands.report import is_guid
@@ -17,16 +18,19 @@ class TestReportTrends:
     def test_trend_export_and_template_out(self):
         runner = CliRunner()
 
+        project_name = 'rest_api'
+        scenario = 'very_long_2min'
+
         # get a result as the baseline
         result = runner.invoke(results, [
-            #'--filter','project=CPVWeatherCrisis;sort=-startDate',
+            '--filter','project={0};sort=-startDate'.format(project_name),
             'ls'
         ])
         assert_success(result)
 
         centers = json.loads(result.output)
-        centers = list(filter(lambda x: x['project']=='CPVWeatherCrisis' and x['scenario']=='Post Nominal Test', centers))
-        assert len(centers) > 1
+        centers = list(filter(lambda x: x['project']==project_name and x['scenario']==scenario, centers))
+        assert len(centers) > 1,result.output
         __id = centers[0]['id']
         assert is_guid(__id)
 
