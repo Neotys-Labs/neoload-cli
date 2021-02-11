@@ -151,7 +151,7 @@ def parse_template_spec(model,filter_spec,template):
 
     model['template_text'] = ""
 
-    if not (template is not None and len(strip(template))>0):
+    if not (template is not None and len(template.strip())>0):
         return
 
     if template.lower().startswith("builtin:transactions"):
