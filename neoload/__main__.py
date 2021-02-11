@@ -31,7 +31,6 @@ class NeoLoadCLI(click.MultiCommand):
         """Dynamically get the command."""
         ns = {}
         fn = os.path.join(plugin_folder, name.replace('-', '_') + '.py')
-        rest_crud.set_current_command(name)
         if os.path.isfile(fn):
             with open(fn) as f:
                 code = compile(f.read(), fn, 'exec')

@@ -1,5 +1,7 @@
 import logging
+import os
 import urllib.parse as urlparse
+from inspect import stack
 
 import requests
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
@@ -25,12 +27,14 @@ http.mount("http://", adapter)
 
 __current_command = ""
 __current_sub_command = ""
+__agents_already_sent = set()
 
 
-def set_current_command(command: str):
+def set_current_command():
     global __current_command
     global __current_sub_command
-    __current_command = command
+    # Find the command name by getting the caller's filePath from the stacktrace, extractBaseName and remove extension
+    __current_command = os.path.splitext(os.path.basename(stack()[1].filename))[0]
     __current_sub_command = ""
 
 
@@ -180,9 +184,19 @@ def __handle_error(response):
 
 
 def __create_additional_headers():
-    cli_version = 'dev' if __version__ is None else __version__
-    return {
+    headers = {
         'accountToken': user_data.get_user_data().get_token(),
-        'accept': 'application/json',
-        'User-Agent': 'NeoloadCli/' + cli_version + '/' + __current_command + '/' + __current_sub_command
+        'accept': 'application/json'
     }
+    add_user_agent(headers)
+    return headers
+
+
+def add_user_agent(headers):
+    global __agents_already_sent
+    # Add a user agent to headers only once per CLI command/subcommand
+    if f'{__current_command}{__current_sub_command}' not in __agents_already_sent:
+        __agents_already_sent.add(f'{__current_command}{__current_sub_command}')
+        cli_version = 'dev' if __version__ is None else __version__
+        headers.setdefault('User-Agent',
+                           'NeoloadCli/' + cli_version + '/' + __current_command + '/' + __current_sub_command)

@@ -44,6 +44,7 @@ def cli(command, name, rename, description, quality_status, junit_file, file, fi
     use      # Remember the test result you want to work on. Example : neoload
     |          test-results use MyTest#1 ; neoload test-results summary      .
     """
+    rest_crud.set_current_command()
     if not command:
         print("command is mandatory. Please see neoload tests-results --help")
         return

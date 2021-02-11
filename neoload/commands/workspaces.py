@@ -16,6 +16,7 @@ def cli(command, name_or_id):
     ls     # Lists workspaces                                                .
     use    # Remember the workspace you want to work on                      .
     """
+    rest_crud.set_current_command()
     if not command:
         print("command is mandatory. Please see neoload workspaces --help")
         return

@@ -39,6 +39,7 @@ def cli(command, name, rename, description, scenario, controller_zone_id, lg_zon
     |        test-settings use MyTest ; neoload test-settings delete         .
     createorpatch # Create a new test or patch an existing one; useful in CI .
     """
+    rest_crud.set_current_command()
     if not command:
         print("command is mandatory. Please see neoload tests-settings --help")
         return

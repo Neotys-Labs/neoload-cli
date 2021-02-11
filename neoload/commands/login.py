@@ -2,7 +2,7 @@ import sys
 import click
 
 from commands import workspaces
-from neoload_cli_lib import user_data, tools
+from neoload_cli_lib import user_data, tools, rest_crud
 
 
 @click.command()
@@ -14,6 +14,7 @@ from neoload_cli_lib import user_data, tools
 def cli(token, url, no_write, workspace, ssl_cert):
     """Store your token and API url of NeoLoad Web. The token is read from stdin if none is set.
     The default API url is "https://neoload-api.saas.neotys.com/" """
+    rest_crud.set_current_command()
     if not token:
         if sys.stdin.isatty():
             token = click.prompt("Enter your token", None, True)
