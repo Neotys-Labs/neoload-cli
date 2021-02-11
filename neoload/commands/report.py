@@ -149,6 +149,11 @@ def parse_filter_spec(filter_spec):
 
 def parse_template_spec(model,filter_spec,template):
 
+    model['template_text'] = ""
+
+    if not (template is not None and len(strip(template))>0):
+        return
+
     if template.lower().startswith("builtin:transactions"):
         model["components"] = get_default_components(False,filter_spec["exclude_filter"])
         model["components"]["transactions"] = True
