@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import urllib.parse as urlparse
 from inspect import stack
 
@@ -198,5 +199,6 @@ def add_user_agent(headers):
     if f'{__current_command}{__current_sub_command}' not in __agents_already_sent:
         __agents_already_sent.add(f'{__current_command}{__current_sub_command}')
         cli_version = 'dev' if __version__ is None else __version__
+        cli_version += "-interactive" if sys.stdin.isatty() and not tools.are_any_ci_env_vars_active() else "-automated"
         headers.setdefault('User-Agent',
                            'NeoloadCli/' + cli_version + '/' + __current_command + '/' + __current_sub_command)

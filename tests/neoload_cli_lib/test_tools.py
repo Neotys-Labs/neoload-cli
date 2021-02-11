@@ -8,7 +8,7 @@ def mock_get_env(mock_values: dict, var: str, default: str = None):
 
 
 class TestTools:
-    def test_are_any_ci_env_vars_active(self, monkeypatch):
+    def test_is_user_interactive(self, monkeypatch):
         mocks = {}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is False
@@ -52,3 +52,32 @@ class TestTools:
         mocks = {'NL_INTERACTIVE': 'Y'}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.is_user_interactive() is True
+
+    def test_are_any_ci_env_vars_active(self, monkeypatch):
+        mocks = {}
+        monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
+        assert tools.are_any_ci_env_vars_active() is False
+
+        mocks = {'TRAVIS': 'some value'}
+        monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
+        assert tools.are_any_ci_env_vars_active() is True
+
+        mocks = {'TRAVIS': 'false'}
+        monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
+        assert tools.are_any_ci_env_vars_active() is False
+
+        mocks = {'TRAVIS': 'False'}
+        monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
+        assert tools.are_any_ci_env_vars_active() is False
+
+        mocks = {'TRAVIS': '0'}
+        monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
+        assert tools.are_any_ci_env_vars_active() is False
+
+        mocks = {'TRAVIS': '1'}
+        monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
+        assert tools.are_any_ci_env_vars_active() is True
+
+        mocks = {'TRAVIS': 'True'}
+        monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
+        assert tools.are_any_ci_env_vars_active() is True

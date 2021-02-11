@@ -16,6 +16,21 @@ __regex_mongodb_id = re.compile('[a-f\\d]{24}', re.IGNORECASE)
 __true_values = ["true", "yes", "y", "1"]
 __false_values = ["false", "no", "n", "0"]
 __nl_interactive_env_var = 'NL_INTERACTIVE'
+__ci_env_var_signatures = {
+    "jenkins": ["JENKINS_URL"],  # https://wiki.jenkins.io/display/JENKINS/Building+a+software+project
+    "travis": ["TRAVIS"],  # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+    "bamboo": ["bamboo_buildNumber"],  # https://stackoverflow.com/a/44330836
+    # https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
+    "codebuild": ["CODEBUILD_BUILD_ARN"],
+    # https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
+    "azure": ["AGENT_TOOLSDIRECTORY"],
+    "gitlab": ["CI_PROJECT_ID"],  # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+    "teamcity": ["TEAMCITY_VERSION"],  # https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html
+    "circleci": ["CIRCLECI"],  # https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
+    # https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values
+    "gcloudbuild": ["BUILD_ID"],
+    "generic_ci": ["CONTINUOUS_INTEGRATION", "CI"],  # travis, circleci, and others
+}
 
 __batch = False
 
@@ -169,6 +184,14 @@ def get_boolean_value_from_env(env_var, default=False):
 
 def is_user_interactive():
     return get_boolean_value_from_env(__nl_interactive_env_var, False) or config_global.get_attr("interactive", False)
+
+
+def are_any_ci_env_vars_active():
+    for ci in __ci_env_var_signatures:
+        for env_var in __ci_env_var_signatures[ci]:
+            if os.getenv(env_var, 'false').lower().strip() not in __false_values:
+                return True
+    return False
 
 
 def ssl_cert_to_verify(ssl_cert):
