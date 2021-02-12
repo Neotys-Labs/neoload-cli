@@ -68,9 +68,9 @@ def cli(template, json_in, out_file, filter, report_type, name):
     # if intent is to produce JSON directly to stdout, hide print statements
     if out_file is None: gprint = lambda msg: logger.info(msg)
 
-    parse_source_data_spec(json_in, model, report_type, name)
+    json_data = parse_source_data_spec(json_in, model, report_type, name)
 
-    cli_details = {
+    json_data['cli'] = {
         'arguments': {
             'template': template,
             'json_in': json_in,
@@ -85,7 +85,7 @@ def cli(template, json_in, out_file, filter, report_type, name):
         }
     }
 
-    final_output = process_final_output(model, template, cli_details)
+    final_output = process_final_output(template, model.get("template_text"), json_data)
 
     if tools.__is_color_terminal():
         final_output = displayer.colorize_text(final_output)
@@ -111,13 +111,13 @@ def initialize_model(filter, template):
     logging.debug(components)
 
     model = {
-        "json_data_text": None,
         "filter_spec": filter_spec,
         "components": components
     }
 
     # process template, if specified
-    parse_template_spec(model,filter_spec,template)
+    if template and template.strip():
+        parse_template_spec(model,filter_spec,template.strip())
 
     return model
 
@@ -148,19 +148,11 @@ def parse_filter_spec(filter_spec):
     return ret
 
 def parse_template_spec(model,filter_spec,template):
-
-    model['template_text'] = ""
-
-    if not (template is not None and len(template.strip())>0):
-        return
-
     if template.lower().startswith("builtin:transactions"):
         model["components"] = get_default_components(False,filter_spec["exclude_filter"])
         model["components"]["transactions"] = True
         if template.lower().endswith("-csv"):
             model["template_text"] = get_builtin_template_transaction_csv()
-        else:
-            model["template_text"] = ""
 
     elif template.lower().startswith("builtin:console-summary"):
         model["components"] = get_default_components(False,filter_spec["exclude_filter"])
@@ -168,7 +160,6 @@ def parse_template_spec(model,filter_spec,template):
         model["components"]["summary"] = True
         model["components"]["statistics"] = True
         model["components"]["slas"] = True
-
         model["template_text"] = get_builtin_console_summary()
 
     elif os.path.isfile(template):
@@ -180,41 +171,28 @@ def parse_template_spec(model,filter_spec,template):
 def parse_source_data_spec(json_in, model, report_type, name):
     filter_spec = model['filter_spec']
 
-    if not json_in is None:
-        model["json_data_text"] = get_file_text(json_in) if json_in is not None else None
+    if json_in is not None:
+        return json.loads(get_file_text(json_in))
+
+    # no in file, so go out to source live
+    if report_type == "single":
+        return get_single_report(name,model["components"],filter_spec["time_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
+    elif report_type == "trends":
+        return get_trends_report(name,filter_spec["time_filter"],filter_spec["results_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
     else:
-        # no in file, so go out to source live
-        data = None
-
-        if report_type == "single":
-            data = get_single_report(name,model["components"],filter_spec["time_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
-        elif report_type == "trends":
-            data = get_trends_report(name,filter_spec["time_filter"],filter_spec["results_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
-        else:
-            tools.system_exit({'message': "No report_type named '" + report_type + "'.", 'code': 2})
-
-        model["json_data_text"] = json.dumps(data, indent=2)
-
-    if model["json_data_text"] is None:
-        # use default
-        model["json_data_text"] = '{"summary":{"name": "empty"}}'
+        tools.system_exit({'message': "No report_type named '" + report_type + "'.", 'code': 2})
 
 
-def process_final_output(model, template, cli_details):
-
-    data_obj = json.loads(model["json_data_text"])
-
-    data_obj['cli'] = cli_details
-
-    if model["template_text"] is None or model["template_text"] == "":
-        return json.dumps(data_obj)
+def process_final_output(template, template_text, json_data):
+    if template_text is None or template_text == "":
+        return json.dumps(json_data)
     else:
         dirname = os.path.dirname(os.path.abspath(template))
         loader = jinja2.FileSystemLoader(searchpath=dirname)
         env = jinja2.Environment(loader=loader,autoescape=True,extensions=['jinja2.ext.debug'])
-        t = env.from_string(model["template_text"])
+        t = env.from_string(template_text)
 
-        return t.render(data_obj)
+        return t.render(json_data)
 
 
 def add_component_if(components,key,default,component_list):
@@ -784,7 +762,6 @@ def get_end_point(id_test: str, operation=''):
 
 
 def get_file_text(path):
-    text = None
     with open(path, 'r') as f:
         text = f.read()
     return text

@@ -38,3 +38,13 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    - name: Zip Test Folder on failure
+      if: failure()
+      run: zip -r tests.zip tests/
+    - name: Upload Test Folder on failure
+      uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: test-folder ${{ matrix.node-version }}
+        path: tests.zip
+        retention-days: 5
