@@ -230,13 +230,14 @@ def should_raw_transactions_data(__id, time_filter):
         json_elements_transactions = rest_crud.get(get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
         txns = []
         for el in json_elements_transactions:
-            # grab count of this transaction and only add if there are iterations
-            json_values = rest_crud.get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/values")
-            if json_values['count'] > 0:
-                txns.append({
-                    'id': el['id'],
-                    'count': json_values['count']
-                })
+            if el['id'] == 'TRANSACTION':
+                # grab count of this transaction and only add if there are iterations
+                json_values = rest_crud.get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/values")
+                if json_values['count'] > 0:
+                    txns.append({
+                        'id': el['id'],
+                        'count': json_values['count']
+                    })
 
         raw_sum = 0
 
