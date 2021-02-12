@@ -218,41 +218,33 @@ def can_raw_transactions_data():
     return False if user_data.is_version_lower_than('2.6.0') else True
 
 def should_raw_transactions_data(__id, time_filter):
-    if time_filter is None:
-        return False
-
-    use_raw = can_raw_transactions_data()
-    logging.debug("use_raw[0]: " + str(use_raw))
-    if use_raw:
+    if time_filter is not None and can_raw_transactions_data():
         # look for the transaction with the smallest number of iterations, but that has raw data
 
         # grab all transactions list
         json_elements_transactions = rest_crud.get(get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
         txns = []
         for el in json_elements_transactions:
-            if el['id'] == 'TRANSACTION':
-                # grab count of this transaction and only add if there are iterations
-                json_values = rest_crud.get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/values")
-                if json_values['count'] > 0:
-                    txns.append({
-                        'id': el['id'],
-                        'count': json_values['count']
-                    })
-
-        raw_sum = 0
+            if el['type'] != 'TRANSACTION':
+                continue
+            # grab count of this transaction and only add if there are iterations
+            json_values = rest_crud.get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/values")
+            if json_values['count'] > 0:
+                txns.append({
+                    'id': el['id'],
+                    'count': json_values['count']
+                })
 
         # sort ascending by count (smallest number of iterations produces smallest amount of data)
         txns = sorted(txns, key=lambda el: el['count'])
         for el in txns:
             this_raw_count = len(rest_crud.get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/raw?format=JSON"))
-            raw_sum += this_raw_count
-            if raw_sum > 0:
-                break
+            if this_raw_count > 0:
+                logging.debug("use_raw[1]: True")
+                return True
 
-        if raw_sum < 1:
-            use_raw = False
-            logging.debug("use_raw[1]: " + str(use_raw))
-    return use_raw
+    logging.debug("use_raw[1]: False")
+    return False
 
 def parse_to_id(name_or_id):
     val = name_or_id
@@ -298,6 +290,10 @@ def get_single_report(name,components=None,time_filter=None,elements_filter=None
 
     time_binding = fill_single_summary(__id, time_binding, time_filter, components, data)
 
+    if result_seems_corrupted(data):
+        gprint('WARNING - The test result seems corrupted because of its termination reason. The report is partial.')
+        return data
+
     fill_single_slas(__id, components, data)
 
     fill_single_stats(__id, components, data)
@@ -337,11 +333,10 @@ def fill_single_summary(__id, time_binding, time_filter, components, data):
             time_binding = fill_time_binding(time_binding)
     return time_binding
 
-def summary_precludes_details_fetch(data):
+def result_seems_corrupted(data):
     return data['summary']['terminationReason'] in ['LG_AVAILABILITY', 'FAILED_TO_START','UNKNOWN']
 
 def fill_single_slas(__id, components, data):
-    if summary_precludes_details_fetch(data): return
     if components['slas']:
         status = data['summary']['status']
         gprint("Getting global SLAs...")
@@ -352,19 +347,16 @@ def fill_single_slas(__id, components, data):
         data['sla_interval'] = rest_crud.get(get_end_point(__id, __operation_sla_interval))
 
 def fill_single_stats(__id, components, data):
-    if summary_precludes_details_fetch(data): return
     if components['statistics']:
         gprint("Getting test statistics...")
         data['statistics'] = rest_crud.get(get_end_point(__id, __operation_statistics))
 
 def fill_single_events(__id, components, data):
-    if summary_precludes_details_fetch(data): return
     if components['events']:
         gprint("Getting events...")
         data['events'] = rest_crud.get(get_end_point(__id, __operation_events))
 
 def fill_single_requests(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data):
-    if summary_precludes_details_fetch(data): return
     if components['all_requests']:
         gprint("Getting all-request data...")
 
@@ -383,7 +375,6 @@ def fill_single_requests(__id, elements_filter, time_binding, statistics_list, u
         data['all_requests'] = json_elements_all_requests[0] if json_elements_all_requests is not None and len(json_elements_all_requests) > 0 else {},
 
 def fill_single_transactions(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data):
-    if summary_precludes_details_fetch(data): return
     if components['transactions']:
         gprint("Getting transactions...")
 
@@ -397,7 +388,6 @@ def fill_single_transactions(__id, elements_filter, time_binding, statistics_lis
         data['elements']['transactions'] = json_elements_transactions
 
 def fill_single_monitors(__id, components, data):
-    if summary_precludes_details_fetch(data): return
     if components['monitors'] or components['controller_points'] or components['ext_data']:
         gprint("Getting monitors...")
         filled = rest_crud.get(get_end_point(__id, __operation_monitors))
@@ -406,14 +396,12 @@ def fill_single_monitors(__id, components, data):
         data['monitors'] = filled
 
 def fill_single_ext_data(__id, components, data):
-    if summary_precludes_details_fetch(data): return
     if components['ext_data']:
         ext_datas = get_mon_datas(__id, lambda m: m['path'][0] == 'Ext. Data', data['monitors'], True)
         ext_datas = list(sorted(ext_datas, key=lambda x: x['display_name']))
         data['ext_data'] = ext_datas
 
 def fill_single_controller_points(__id, components, data):
-    if summary_precludes_details_fetch(data): return
     if components['controller_points']:
         data['controller_points'] = get_mon_datas(__id, lambda m: m['path'][0] == 'Controller', data['monitors'], True)
 
