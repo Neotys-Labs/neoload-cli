@@ -171,16 +171,16 @@ User Path	Element	Count	Min	Avg	Max	Perc 50	Perc 90	Perc 95	Perc 99	Success	S.Ra
         # Test absolute times
         assert_time_binding_from_to('1m-2m', 60, 120)
         assert_time_binding_from_to('1h5m30s-90m120s', 3930, 5520)
-        assert_time_binding_from_to('10m', 600, 120)
+        assert_time_binding_from_to('10m', 600, 121)
         assert_time_binding_from_to('-10m', 0, 600)
 
         # Test percentage of test duration (test lasts 120 sec)
-        assert_time_binding_from_to('10%-62%', 12, 74)
-        assert_time_binding_from_to('30%', 36, 120)
-        assert_time_binding_from_to('-30%', 0, 36)
+        assert_time_binding_from_to('10%-62%', 12, 75)
+        assert_time_binding_from_to('30%', 36, 121)
+        assert_time_binding_from_to('-30%', 0, 37)
 
         # Mix
-        assert_time_binding_from_to('10m-62%', 600, 74)
+        assert_time_binding_from_to('10m-62%', 600, 75)
 
     def test_filter_by_time(self):
         json_points = [{'from': 10, 'to': 20}, {'from': 10, 'to': 130}, {'from': 120, 'to': 130},

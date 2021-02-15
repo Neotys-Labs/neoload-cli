@@ -423,8 +423,8 @@ def fill_time_binding(time_binding):
             to_spec = time_parts[1] if len(time_parts) > 1 and len(time_parts[1].strip())>0 else None
             from_secs = 0 if from_spec is None else translate_time_part_to_seconds(total_duration_sec, from_spec)
             to_secs = total_duration_sec if to_spec is None else translate_time_part_to_seconds(total_duration_sec, to_spec)
-            time_binding['from_secs'] = round(from_secs)
-            time_binding['to_secs'] = round(to_secs)
+            time_binding['from_secs'] = math.floor(from_secs)
+            time_binding['to_secs'] = math.ceil(to_secs)
         return time_binding
     except Exception:
         raise ValueError("Something went wrong while fill_time_binding")
