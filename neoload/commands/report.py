@@ -134,16 +134,17 @@ def parse_filter_spec(filter_spec):
     if filter_spec is not None:
         filter_parts = filter_spec.split(";")
         for s in filter_parts:
+            index_of_equals = s.find('=') + 1
             if s.startswith("timespan"):
-                ret['time_filter'] = s.replace("timespan=","",1)
+                ret['time_filter'] = s[index_of_equals:]
             elif s.startswith("results"):
-                ret['results_filter'] = s.replace("results=","",1)
+                ret['results_filter'] = s[index_of_equals:]
             elif s.startswith("elements"):
-                ret['elements_filter'] = s.replace("elements=","",1)
+                ret['elements_filter'] = s[index_of_equals:]
             elif s.startswith("exclude"):
-                ret['exclude_filter'] = s.replace("exclude=","",1)
+                ret['exclude_filter'] = s[index_of_equals:]
             elif s.startswith("include"):
-                ret['include_filter'] = s.replace("include=","",1)
+                ret['include_filter'] = s[index_of_equals:]
 
     return ret
 
