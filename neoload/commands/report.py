@@ -8,7 +8,7 @@ import statistics
 import math
 import time
 
-from neoload_cli_lib import tools, rest_crud, user_data, displayer
+from neoload_cli_lib import tools, rest_crud, user_data, displayer, cli_exception
 from neoload_cli_lib.name_resolver import Resolver
 from dateutil.relativedelta import relativedelta
 
@@ -42,7 +42,8 @@ gprint = print
 @click.option('--template', help="A built-in known report type or the file path to the .j2 template. Built-in types include:    'builtin:transactions-csv'     'builtin:transactions-json'")
 @click.option('--json-in', help="The file path to the .json data if previously stored using --out-file and no template or a json template")
 @click.option('--out-file', help="The file path to the resulting output, or none to print to stdout")
-@click.option('--filter', help="A filter statement to scope to a timespan and/or specify which reports and elements to use for multi-result analysis")
+@click.option('--filter', help="A filter statement to scope to a timespan and/or specify which reports and elements to use for multi-result analysis. "
+                               "Usage: --filter [timespan|elements|result|include|exclude]=[VALUE]")
 @click.option('--type', 'report_type',
                 type=click.Choice(['single','trends'], case_sensitive=False),
                 required=False, default="single",
@@ -135,11 +136,13 @@ def parse_filter_spec(filter_spec):
         filter_parts = filter_spec.split(";")
         for s in filter_parts:
             index_of_equals = s.find('=') + 1
+            if index_of_equals == 0:
+                raise cli_exception.CliException('Bad syntax for filter option. Did you forget the = sign ? See help with command "neoload report"')
             if s.startswith("timespan"):
                 ret['time_filter'] = s[index_of_equals:]
-            elif s.startswith("results"):
+            elif s.startswith("result"):
                 ret['results_filter'] = s[index_of_equals:]
-            elif s.startswith("elements"):
+            elif s.startswith("element"):
                 ret['elements_filter'] = s[index_of_equals:]
             elif s.startswith("exclude"):
                 ret['exclude_filter'] = s[index_of_equals:]
@@ -1028,8 +1031,8 @@ Filtering:
 
     * results:
         * a comma or semicolon separated list of result set specifiers, such as:
-            * negative (track back N number of results since current test-results)
-            * positive (track forward N number of results since current test-results)
+            * negative For example "results=-2" trends on 2 results: the current test-result and the previous one
+            * positive For example "results=+2" trends on 2 results: the current test-result and the next one
             * specific test-result IDs (for additional baselines)
 
 
@@ -1039,13 +1042,16 @@ Examples:
         neoload report --template builtin:transactions-csv
 
     * Compiles and produces transaction aggregate data based on only data from a specific timespan
-        neoload report --template builtin:transactions-csv --filter="timespan:10%-90%"
+        neoload report --template builtin:transactions-csv --filter="timespan=10%-90%;elements=myTransactionName(s)"
 
     * Compiles JSON data and writes to a temp file, no applying templates
         neoload report --out-file ~/temp.json
 
     * Uses pre-compiled JSON data file, applies a custom template, and writes output to a file
         neoload report --json-in ~/temp.json --template tests/resources/jinja/sample-custom-report.html.j2 --out-file ~/temp.html
+
+    * Compiles data from the last 3 results to do trends, applies a custom template, and writes output to a file
+        neoload report --filter results=-3 --template tests/resources/jinja/sample-custom-report.html.j2 --out-file ~/trends.html
 
     """)
 
