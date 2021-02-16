@@ -19,6 +19,9 @@ class TestReportTemplates:
                                                'builtin:transactions', '--out-file',
                                                'tests/resources/report/actual_template_transactions.json'])
         assert_success(result_report)
+        with open('tests/resources/report/actual_template_transactions.json', 'r+', newline='\n') as actual:
+            file_content = json.load(actual)
+            actual.write(json.dumps(file_content, indent=2))
         assert filecmp.cmp('tests/resources/report/actual_template_transactions.json', 'tests/resources/report/expected_template_transactions.json') is True, "Json output for the report (file tests/resources/report/actual_template_transactions.json) is not the one expected (file tests/resources/report/expected_template_transactions.json)"
 
     def test_builtin_transactions_csv(self):

@@ -33,7 +33,7 @@ class TestReportJsonOutput:
         assert_success(result_logout)
 
         with open('tests/resources/report/actual_report.json', 'w') as f:
-            f.write(json.dumps(json_data))
+            f.write(json.dumps(json_data, indent=2))
         assert filecmp.cmp(datafiles.listdir()[0], 'tests/resources/report/actual_report.json') is True, "Json output for the report (file tests/resources/report/actual_report.json) is not the one expected (file tests/resources/report/expected_report.json)"
 
     @pytest.mark.datafiles('tests/resources/report/expected_report_filtered.json')
@@ -51,7 +51,7 @@ class TestReportJsonOutput:
         assert_success(result_logout)
 
         with open('tests/resources/report/actual_report_filtered.json', 'w') as f:
-            f.write(json.dumps(json_data))
+            f.write(json.dumps(json_data, indent=2))
         assert filecmp.cmp(datafiles.listdir()[0], 'tests/resources/report/actual_report_filtered.json') is True, "Json output for the report (file tests/resources/report/actual_report_filtered.json) is not the one expected (file tests/resources/report/expected_report_filtered.json)"
 
     def __return_json(self, endpoint):
@@ -144,7 +144,7 @@ class TestReportJsonOutput:
         assert_success(result_logout)
 
         with open('tests/resources/report/raw_actual_report.json', 'w') as f:
-            f.write(json.dumps(json_data))
+            f.write(json.dumps(json_data, indent=2))
         assert filecmp.cmp(datafiles.listdir()[0], 'tests/resources/report/raw_actual_report.json') is True, "Json output for the report (file tests/resources/report/raw_actual_report.json) is not the one expected (file tests/resources/report/raw_expected_report.json)"
 
     def __return_raw_json(self, endpoint):
