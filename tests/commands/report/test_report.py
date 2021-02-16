@@ -191,8 +191,7 @@ User Path	Element	Count	Min	Avg	Max	Perc 50	Perc 90	Perc 95	Perc 99	Success	S.Ra
         }
         filtered_json_points = report.filter_by_time(json_points, time_binding, lambda p: int(p['from']),
                                                      lambda p: int(p['to']))
-        assert filtered_json_points == [{'from': 10, 'to': 130}, {'from': 120, 'to': 130}, {'from': 10, 'to': 300},
-                                        {'from': 120, 'to': 300}]
+        assert filtered_json_points == [{'from': 120, 'to': 130}]
 
 
 def assert_time_binding_from_to(time_filter, expected_from_secs, expected_to_secs):
