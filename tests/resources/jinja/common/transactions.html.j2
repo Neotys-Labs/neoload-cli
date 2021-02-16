@@ -20,7 +20,15 @@
 <tbody>
 {% for txn in elements.transactions| rejectattr('id', 'equalto', 'all-transactions')|sort(attribute='avgDuration',reverse=true) %}
 <tr>
-<td><a href="javascript:toggleDisplay('d{{txn.id}}')">{{ txn.display_name|e }}</a></td>
+<td>
+  {% if txn.aggregate_already_aggregated_data %}
+    <div style="margin: -10px 0; cursor: help; color: #ff7600; font-size: 17pt; display: inline-block;"
+         title="The following datas are computed from already aggregated data and may be less accurate: Percentiles, counts, failure and success rates.">
+         &#9888;
+     </div>
+  {% endif %}
+  <a href="javascript:toggleDisplay('d{{txn.id}}')">{{ txn.display_name|e }}</a>
+</td>
 <td>{{ txn.aggregate.count }}</td>
 <td>{{ txn.aggregate.elementPerSecond }}</td>
 <td>{{ txn.aggregate.minDuration }}</td>

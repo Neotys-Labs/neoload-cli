@@ -37,6 +37,14 @@ class TestReportTemplates:
         assert_success(result_report)
         assert filecmp.cmp('tests/resources/report/actual_custom_report.html', 'tests/resources/report/expected_custom_report.html') is True, "Template output (file tests/resources/report/actual_custom_report.html) is not the one expected (file tests/resources/report/expected_custom_report.html)"
 
+    def test_custom_report_html_filtered(self):
+        runner = CliRunner()
+        result_report = runner.invoke(report, ['--json-in', 'tests/resources/report/expected_report_filtered.json', '--template',
+                                               'tests/resources/jinja/sample-custom-report.html.j2', '--out-file',
+                                               'tests/resources/report/actual_custom_report_filtered.html'])
+        assert_success(result_report)
+        assert filecmp.cmp('tests/resources/report/actual_custom_report_filtered.html', 'tests/resources/report/expected_custom_report_filtered.html') is True, "Template output (file tests/resources/report/actual_custom_report_filtered.html) is not the one expected (file tests/resources/report/expected_custom_report_filtered.html)"
+
     def test_custom_transactions_csv(self):
         runner = CliRunner()
         result_report = runner.invoke(report, ['--json-in', 'tests/resources/report/expected_report.json', '--template',

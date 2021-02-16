@@ -36,6 +36,24 @@ class TestReportJsonOutput:
             f.write(json.dumps(json_data))
         assert filecmp.cmp(datafiles.listdir()[0], 'tests/resources/report/actual_report.json') is True, "Json output for the report (file tests/resources/report/actual_report.json) is not the one expected (file tests/resources/report/expected_report.json)"
 
+    @pytest.mark.datafiles('tests/resources/report/expected_report_filtered.json')
+    def test_parse_source_data_spec_with_filter(self, monkeypatch, datafiles):
+        runner = CliRunner()
+        result_ws = runner.invoke(workspaces, ['use', '5f689c3f0860270001606902'])
+        assert_success(result_ws)
+
+        monkeypatch.setattr(rest_crud, 'get', lambda actual_endpoint: ast.literal_eval(self.__return_json(actual_endpoint)))
+        monkeypatch.setattr(time, 'localtime', lambda timestamp_utc: time.gmtime(timestamp_utc))
+        model = report.initialize_model("timespan=50%-70%;element=passed", "")
+        json_data = report.parse_source_data_spec(None, model, "single", "c6ae22a9-9868-4966-8b1e-8439b985e792")
+
+        result_logout = runner.invoke(logout)
+        assert_success(result_logout)
+
+        with open('tests/resources/report/actual_report_filtered.json', 'w') as f:
+            f.write(json.dumps(json_data))
+        assert filecmp.cmp(datafiles.listdir()[0], 'tests/resources/report/actual_report_filtered.json') is True, "Json output for the report (file tests/resources/report/actual_report_filtered.json) is not the one expected (file tests/resources/report/expected_report_filtered.json)"
+
     def __return_json(self, endpoint):
         if endpoint == 'v3/workspaces/5f689c3f0860270001606902/test-results/c6ae22a9-9868-4966-8b1e-8439b985e792':
             return '{"id": "c6ae22a9-9868-4966-8b1e-8439b985e792", "name": "#3", "description": "", "author": "Guillaume Bert", "terminationReason": "POLICY", "lgCount": 1, "project": "rest_api", "scenario": "very_long_2min", "status": "TERMINATED", "qualityStatus": "FAILED", "startDate": 1612539609521, "endDate": 1612539729665, "duration": 120144, "testId": "432e95c8-aeb3-46c8-a026-443dfb18874a"}'

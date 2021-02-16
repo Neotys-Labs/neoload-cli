@@ -136,8 +136,9 @@ def parse_filter_spec(filter_spec):
         filter_parts = filter_spec.split(";")
         for s in filter_parts:
             index_of_equals = s.find('=') + 1
-            if index_of_equals == 0:
-                raise cli_exception.CliException('Bad syntax for filter option. Did you forget the = sign ? See help with command "neoload report"')
+            if len(s.strip()) > 0 and index_of_equals == 0:
+                raise cli_exception.CliException(
+                    'Bad syntax for filter option. Did you forget the = sign ? See help with command "neoload report"')
             if s.startswith("timespan"):
                 ret['time_filter'] = s[index_of_equals:]
             elif s.startswith("result"):
@@ -425,6 +426,7 @@ def fill_time_binding(time_binding):
             to_secs = total_duration_sec if to_spec is None else translate_time_part_to_seconds(total_duration_sec, to_spec)
             time_binding['from_secs'] = math.floor(from_secs)
             time_binding['to_secs'] = math.ceil(to_secs)
+            time_binding['is_full_test_duration'] = abs(to_secs - from_secs - total_duration_sec) < 3
         return time_binding
     except Exception:
         raise ValueError("Something went wrong while fill_time_binding")
@@ -814,16 +816,19 @@ def get_element_data(el, result_id, time_binding, include_points, statistics_lis
     user_path = get_element_user_path(el)
     gprint("Getting element values for '" + full_name + "'")
     json_values = rest_crud.get(get_end_point(result_id, __operation_elements) + "/" + el['id'] + "/values")
+    is_full_test_duration = time_binding is None or time_binding['is_full_test_duration']
 
     (json_raws,json_points) = get_element_data_from_sources(include_points, time_binding, use_txn_raw, result_id, el, statistics_list)
 
-    if len(json_raws) > 0:
-        (perc_points,sum_of_count,sum_of_errors) = get_element_data_by_raws(json_raws,json_values)
-    else:
-        (perc_points,sum_of_count,sum_of_errors) = get_element_data_by_points(json_points,json_values)
+    if not is_full_test_duration:
+        time_binding_duration = time_binding['to_secs'] - time_binding['from_secs']
+        if len(json_raws) > 0:
+            (perc_points,sum_of_count,sum_of_errors) = get_element_data_by_raws(json_raws,json_values)
+        else:
+            (perc_points,sum_of_count,sum_of_errors) = get_element_data_by_points(json_points,json_values)
 
-    # from either data source, calculate common aggregates
-    fill_element_data_common_values(json_values,perc_points,sum_of_count,sum_of_errors)
+        # from either data source, calculate common aggregates
+        fill_element_data_common_values(json_values,perc_points,sum_of_count,sum_of_errors, time_binding_duration)
 
 # {
 #     "Elapsed": 38736,
@@ -843,14 +848,15 @@ def get_element_data(el, result_id, time_binding, include_points, statistics_lis
 
     convert_element_fields_to_seconds(convert_to_seconds,json_values)
 
-    round_fields = convert_to_seconds \
-                    + ['successRate','failureRate']
+    round_fields = convert_to_seconds + ['elementPerSecond', 'successRate', 'successPerSecond', 'failureRate',
+                                         'failurePerSecond']
 
     round_element_fields(round_fields,json_values,3)
 
     el["display_name"] = full_name
     el["parent"] = parent
     el["user_path"] = user_path
+    el["aggregate_already_aggregated_data"] = not use_txn_raw and not is_full_test_duration
     el["aggregate"] = json_values
     el["points"] = json_points
     el["raw"] = json_raws
@@ -892,6 +898,7 @@ def get_element_data_by_raws(json_raws,json_values):
     json_values['minDuration'] = 0 if len(json_raws) < 1 else min(list(map(lambda x: x[field_name], json_raws)))
     json_values['maxDuration'] = 0 if len(json_raws) < 1 else max(list(map(lambda x: x[field_name], json_raws)))
     json_values['avgDuration'] = 0 if len(json_raws) < 1 else statistics.mean(list(map(lambda x: x[field_name], json_raws)))
+    json_values['sumDuration'] = 0 if len(json_raws) < 1 else sum(list(map(lambda x: x[field_name], json_raws)))
     return (perc_points,sum_of_count,sum_of_errors)
 
 def get_element_data_by_points(json_points,json_values):
@@ -901,18 +908,28 @@ def get_element_data_by_points(json_points,json_values):
     json_values['minDuration'] = 0 if len(json_points) < 1 else min(list(map(lambda x: x['MIN_DURATION'], json_points)))
     json_values['maxDuration'] = 0 if len(json_points) < 1 else max(list(map(lambda x: x['MAX_DURATION'], json_points)))
     json_values['avgDuration'] = 0 if len(json_points) < 1 else statistics.mean(list(map(lambda x: x['AVG_DURATION'], json_points)))
+    json_values['sumDuration'] = 0 if len(json_points) < 1 else sum(list(map(lambda x: x['AVG_DURATION'], json_points)))
     return (perc_points,sum_of_count,sum_of_errors)
 
-def fill_element_data_common_values(json_values,perc_points,sum_of_count,sum_of_errors):
+def fill_element_data_common_values(json_values,perc_points,sum_of_count,sum_of_errors, time_binding_duration):
+    json_values['minTTFB'] = ''
+    json_values['maxTTFB'] = ''
+    json_values['sumTTFB'] = ''
+    json_values['avgTTFB'] = ''
+    json_values['sumDownloadedBytes'] = ''
+    json_values['downloadedBytesPerSecond'] = ''
     json_values['count'] = round(sum_of_count, 1)
+    json_values['elementPerSecond'] = sum_of_count / time_binding_duration
     json_values['percentile50'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.5)
     json_values['percentile90'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.9)
     json_values['percentile95'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.95)
     json_values['percentile99'] = 0 if len(perc_points) < 1 else percentile(perc_points,0.99)
     json_values['successCount'] = sum_of_count - sum_of_errors
-    json_values['successRate'] = 0 if sum_of_count == 0 else json_values['successCount'] / sum_of_count
+    json_values['successPerSecond'] = (sum_of_count - sum_of_errors) / time_binding_duration
+    json_values['successRate'] = 0 if sum_of_count == 0 else json_values['successCount'] / sum_of_count * 100
     json_values['failureCount'] = sum_of_errors
-    json_values['failureRate'] = 0 if sum_of_count == 0 else json_values['failureCount'] / sum_of_count
+    json_values['failurePerSecond'] = sum_of_errors / time_binding_duration
+    json_values['failureRate'] = 0 if sum_of_count == 0 else json_values['failureCount'] / sum_of_count * 100
 
 def convert_element_fields_to_seconds(convert_to_seconds,json_values):
     for field in convert_to_seconds:
