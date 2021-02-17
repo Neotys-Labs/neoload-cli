@@ -559,9 +559,10 @@ def get_trends_selected_results(arr_ids,count_back,count_ahead):
     logging.debug('count_back: {}'.format(count_back))
 
     for i in range(base_index,base_index+1+count_ahead):
-        arr_selected.append(arr_sorted_by_time[i])
+        if 0 < i < len(arr_sorted_by_time):
+            arr_selected.append(arr_sorted_by_time[i])
     for i in range(base_index+count_back,base_index):
-        if i > 0 and i < len(arr_sorted_by_time):
+        if 0 < i < len(arr_sorted_by_time):
             arr_selected.append(arr_sorted_by_time[i])
 
     arr_selected = list(sorted(arr_selected, key=lambda x: x["startDate"]))
@@ -744,7 +745,7 @@ def compile_results_from_source(base_id, all_entities, count_back, count_ahead):
         #print({'base_index':base_index,'back_index':back_index,'ahead_index':ahead_index})
         for i in range(max(back_index,0),base_index+1):
             ret.append(all_entities[i])
-        for i in range(base_index,min(ahead_index,len(all_entities)-1)):
+        for i in range(base_index+1,min(ahead_index,len(all_entities)-1)):
             ret.append(all_entities[i])
     return ret
 
