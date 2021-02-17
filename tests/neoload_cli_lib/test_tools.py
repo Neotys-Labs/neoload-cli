@@ -11,7 +11,6 @@ class TestTools:
     def test_are_any_ci_env_vars_active(self, monkeypatch):
         mocks = {}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
-
         assert tools.is_user_interactive() is False
 
         mocks = {'NL_INTERACTIVE': 'some value'}

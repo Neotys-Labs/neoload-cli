@@ -19,9 +19,6 @@ def pytest_addoption(parser):
     parser.addoption('--workspace', action='store', default=None)
     parser.addoption('--makelivecalls', action='store_true')
 
-def pytest_configure(config):
-    if not config.option.makelivecalls:
-        setattr(config.option, 'markexpr', 'not makelivecalls')
 
 def pytest_configure(config):
     if not config.option.makelivecalls:
