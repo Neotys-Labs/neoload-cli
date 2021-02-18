@@ -105,3 +105,11 @@ def mock_login_get_urls(monkeypatch, version='2.5.0'):
     if monkeypatch is not None:
         monkeypatch.setattr(user_data, '__compute_version_and_path',
                             lambda: user_data.get_user_data().set_url('http://front.com:8081/nlw', 'http://files.com:8082', version))
+
+
+def set_line_endings_to_lf(file_path):
+    """ Open the file and set all EOL character to linux LF (usefull only on windaube) """
+    with open(file_path, 'r') as f:
+        content = f.read()
+    with open(file_path, 'w', newline='\n') as fw:
+        fw.write(content)

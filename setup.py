@@ -41,13 +41,16 @@ setup(
         'termcolor',
         'coloredlogs',
         'gitignore_parser',
+        'jinja2',
+        'python-dateutil', # for 3.6 compatibility
         'tqdm',
         'requests_toolbelt',
         'urllib3',
         'coloredlogs',
         'docker',
         'pyparsing',
-        'simplejson'
+        'simplejson',
+        'colorama'
     ],
     tests_require=[
         "pytest",

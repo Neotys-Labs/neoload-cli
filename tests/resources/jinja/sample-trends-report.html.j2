@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <title>{{summary.title}}</title>
+  <head>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
+    <script type="text/javascript">{% include 'common/common.js' %}</script>
+    <script type="text/javascript">{% include 'trends/trends.js' %}</script>
+  </head>
+  <body>
+{% with title="Performance Trend Report" %}{% include 'common/header.j2' %}{% endwith %}
+
+<script type="text/javascript">
+
+</script>
+
+<script type="text/javascript">
+var colors = ['#0F948D','#C19B41','#7ABE79','#F57816','#903B97'] // http://colormind.io/
+//colors = shuffleArray(colors)
+var results = []
+{% for result in results | sort(attribute='startDate') %}
+  results.push({
+    id: "{{result.id}}",
+    name: "{{result.name}}",
+    index: {{result.index}},
+    color: colors[{{result.index}}]
+  })
+{% endfor %}
+window.results_colors = results
+</script>
+
+{% include 'trends/transaction_trends.html.j2' %}
+
+{% include 'trends/general_details.html.j2' %}
+
+<script type="text/javascript">
+appendOnLoad(function() {
+  d3.selectAll(".expandable").style("display","none");
+})
+</script>
+
+
+
+<style type="text/css">
+{% include 'common/styles.css' %}
+</style>
+  </body>
+</html>

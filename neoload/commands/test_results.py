@@ -54,7 +54,7 @@ def cli(command, name, rename, description, quality_status, junit_file, file, fi
     is_id = tools.is_id(name)
     # avoid to make two requests if we have not id.
     if command == "ls":
-        tools.ls(name, is_id, __resolver, filter, ['project','status','author'])
+        tools.ls(name, is_id, __resolver, filter, ['project','status','author','sort'])
         return
 
     __id = tools.get_id(name, __resolver, is_id)

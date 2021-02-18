@@ -1,0 +1,69 @@
+<h3>Transactions</h3>
+<table>
+<thead>
+<tr>
+<td>Name</td>
+<td>Count</td>
+<td>TPS</td>
+<td>Min Dur</td>
+<td>Avg Dur</td>
+<td>Max Dur</td>
+<td>Total</td>
+<td>Success</td>
+<td>Fail</td>
+<td>p50</td>
+<td>p90</td>
+<td>p95</td>
+<td>p99</td>
+</tr>
+</thead>
+<tbody>
+{% for txn in elements.transactions| rejectattr('id', 'equalto', 'all-transactions')|sort(attribute='avgDuration',reverse=true) %}
+<tr>
+<td>
+  {% if txn.aggregate_already_aggregated_data %}
+    <div style="margin: -10px 0; cursor: help; color: #ff7600; font-size: 17pt; display: inline-block;"
+         title="The following datas are computed from already aggregated data and may be less accurate: Percentiles, counts, failure and success rates.">
+         &#9888;
+     </div>
+  {% endif %}
+  <a href="javascript:toggleDisplay('d{{txn.id}}')">{{ txn.display_name|e }}</a>
+</td>
+<td>{{ txn.aggregate.count }}</td>
+<td>{{ txn.aggregate.elementPerSecond }}</td>
+<td>{{ txn.aggregate.minDuration }}</td>
+<td>{{ txn.aggregate.avgDuration }}</td>
+<td>{{ txn.aggregate.maxDuration }}</td>
+<td>{{ txn.totalCount }}</td>
+<td>{{ txn.aggregate.successCount }}</td>
+<td>{{ txn.aggregate.failureCount }}</td>
+<td>{{ txn.aggregate.percentile50 }}</td>
+<td>{{ txn.aggregate.percentile90 }}</td>
+<td>{{ txn.aggregate.percentile95 }}</td>
+<td>{{ txn.aggregate.percentile99 }}</td>
+</tr>
+<tr>
+<td colspan="13" class="graph">
+  <div id="d{{txn.id}}" class="expandable graph" style="height:200px;"></div>
+  <script type="text/javascript">
+  appendOnLoad(function() {
+    var data = {{ txn.points | tojson }};
+    graphTransaction(d3.select('#d{{txn.id}}'), data)
+  })
+  </script>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<script type="text/javascript">
+function graphTransaction(el, data) {
+  var specs = [];
+  specs.push(specTimeLine("User Load", "VUs", "blue", window.ctrl_user_load, d => d.from, d => d.AVG))
+  specs.push(specTimeLine("Rate", "el/s", "purple", data, d => d.from, d => d.ELEMENTS_PER_SECOND))
+  specs.push(specTimeLine("Errors", null, "red", data, d => d.from, d => d.ERRORS))
+  specs.push(specTimeLine("Duration", "ms", "green", data, d => d.from, d => d.AVG_DURATION))
+  plotSVG(el, specs)
+}
+</script>

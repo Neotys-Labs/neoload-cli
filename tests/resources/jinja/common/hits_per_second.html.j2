@@ -1,0 +1,24 @@
+<h3>Hits per Second</h3>
+<div class="clearfix">
+  <div>
+    <div id="dHitsPerSecond" style="min-height:500px;"></div>
+    <script type="text/javascript">
+    appendOnLoad(function() {
+      graphHitsPerSecond(d3.select('#dHitsPerSecond'), window.ctrl_user_load, window.all_requests)
+    })
+    </script>
+  </div>
+</div>
+
+<script type="text/javascript">
+function graphHitsPerSecond(el, ctrl_user_load, req_data) {
+  var specs = []
+  specs.push(specTimeLine("User Load", "VUs", "blue", ctrl_user_load, d => d.from, d => d.AVG))
+  specs.push(specTimeLine("Request Rate", "hits/s", "purple", req_data, d => d.from, d => d.ELEMENTS_PER_SECOND))
+  specs.push(specTimeLine("Error Rate", "err/s", "red", req_data, d => d.from, d => d.ERRORS_PER_SECOND))
+  specs.push(specTimeLine("Throughput", "Bytes/s", "green", req_data, d => d.from, d => d.THROUGHPUT))
+  plotSVG(el, specs)
+  el.append(() => createSpecsTable(specs.filter(s => s.title==="Request Rate")).node());
+}
+
+</script>

@@ -1,0 +1,3592 @@
+{
+  "id": "c6ae22a9-9868-4966-8b1e-8439b985e792",
+  "summary": {
+    "id": "c6ae22a9-9868-4966-8b1e-8439b985e792",
+    "name": "#3",
+    "description": "",
+    "author": "Guillaume Bert",
+    "terminationReason": "POLICY",
+    "lgCount": 1,
+    "project": "rest_api",
+    "scenario": "very_long_2min",
+    "status": "TERMINATED",
+    "qualityStatus": "FAILED",
+    "startDate": 1612539609521,
+    "endDate": 1612539729665,
+    "duration": 120144,
+    "testId": "432e95c8-aeb3-46c8-a026-443dfb18874a",
+    "startDateText": "2021-02-05 15:40:09",
+    "endDateText": "2021-02-05 15:42:09",
+    "durationText": "2 minutes, 0 second"
+  },
+  "statistics": {
+    "totalRequestCountSuccess": 14524,
+    "totalRequestCountFailure": 14205,
+    "totalRequestDurationAverage": 41.52066,
+    "totalRequestCountPerSecond": 239.12138,
+    "totalTransactionCountSuccess": 152,
+    "totalTransactionCountFailure": 14205,
+    "totalTransactionDurationAverage": 82.98767,
+    "totalTransactionCountPerSecond": 119.49827,
+    "totalIterationCountSuccess": 19,
+    "totalIterationCountFailure": 3567,
+    "totalGlobalDownloadedBytes": 41992679,
+    "totalGlobalDownloadedBytesPerSecond": 349519.56,
+    "totalGlobalCountFailure": 14205
+  },
+  "sla_global": [],
+  "sla_test": [
+    {
+      "kpi": "errors-count",
+      "status": "FAILED",
+      "value": 3550.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "errors-count",
+      "status": "FAILED",
+      "value": 0.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7bf42114-d630-494f-bc13-fea402ce085d",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "errors-count",
+      "status": "FAILED",
+      "value": 0.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d15f2c71-0e0b-454f-9802-2d9a5cc9baac",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "errors-count",
+      "status": "FAILED",
+      "value": 3550.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "6a0ef850-8644-4236-80e5-53748fbd2d01",
+        "name": "transaction_sla_failed",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "errors-count",
+      "status": "WARNING",
+      "value": 3550.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7dea9e71-4777-4fdb-88d0-2a3dbb2eaa1a",
+        "name": "transaction_sla_warning",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "errors-count",
+      "status": "WARNING",
+      "value": 0.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d319f4e8-d31e-4a1b-9187-b8238bc57007",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "errors-count",
+      "status": "WARNING",
+      "value": 3550.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "1034d624-451c-4523-b579-6f003ebd93f8",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "errors-count",
+      "status": "WARNING",
+      "value": 0.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "b24becfd-0be5-4e27-93c9-c7ce4a7db5e3",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "avg-page-resp-time",
+      "status": "PASSED",
+      "value": 0.03813545,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          3600.0
+        ]
+      },
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          36000.0
+        ]
+      },
+      "element": {
+        "elementId": "1ea4878e-6df1-4c5b-bd5d-3c1f0566c91d",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_passed"
+      }
+    }
+  ],
+  "sla_interval": [
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d15f2c71-0e0b-454f-9802-2d9a5cc9baac",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7bf42114-d630-494f-bc13-fea402ce085d",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d15f2c71-0e0b-454f-9802-2d9a5cc9baac",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "6a0ef850-8644-4236-80e5-53748fbd2d01",
+        "name": "transaction_sla_failed",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "6a0ef850-8644-4236-80e5-53748fbd2d01",
+        "name": "transaction_sla_failed",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7bf42114-d630-494f-bc13-fea402ce085d",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7bf42114-d630-494f-bc13-fea402ce085d",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7bf42114-d630-494f-bc13-fea402ce085d",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d15f2c71-0e0b-454f-9802-2d9a5cc9baac",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d15f2c71-0e0b-454f-9802-2d9a5cc9baac",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "6a0ef850-8644-4236-80e5-53748fbd2d01",
+        "name": "transaction_sla_failed",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d15f2c71-0e0b-454f-9802-2d9a5cc9baac",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7bf42114-d630-494f-bc13-fea402ce085d",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "6a0ef850-8644-4236-80e5-53748fbd2d01",
+        "name": "transaction_sla_failed",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_failed"
+      }
+    },
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "FAILED",
+      "failed": 100.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "6a0ef850-8644-4236-80e5-53748fbd2d01",
+        "name": "transaction_sla_failed",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7dea9e71-4777-4fdb-88d0-2a3dbb2eaa1a",
+        "name": "transaction_sla_warning",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "b24becfd-0be5-4e27-93c9-c7ce4a7db5e3",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d319f4e8-d31e-4a1b-9187-b8238bc57007",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "1034d624-451c-4523-b579-6f003ebd93f8",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7dea9e71-4777-4fdb-88d0-2a3dbb2eaa1a",
+        "name": "transaction_sla_warning",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "b24becfd-0be5-4e27-93c9-c7ce4a7db5e3",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "1034d624-451c-4523-b579-6f003ebd93f8",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "1034d624-451c-4523-b579-6f003ebd93f8",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "b24becfd-0be5-4e27-93c9-c7ce4a7db5e3",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "b24becfd-0be5-4e27-93c9-c7ce4a7db5e3",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d319f4e8-d31e-4a1b-9187-b8238bc57007",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7dea9e71-4777-4fdb-88d0-2a3dbb2eaa1a",
+        "name": "transaction_sla_warning",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d319f4e8-d31e-4a1b-9187-b8238bc57007",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d319f4e8-d31e-4a1b-9187-b8238bc57007",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "b24becfd-0be5-4e27-93c9-c7ce4a7db5e3",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "1034d624-451c-4523-b579-6f003ebd93f8",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7dea9e71-4777-4fdb-88d0-2a3dbb2eaa1a",
+        "name": "transaction_sla_warning",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "7dea9e71-4777-4fdb-88d0-2a3dbb2eaa1a",
+        "name": "transaction_sla_warning",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "d319f4e8-d31e-4a1b-9187-b8238bc57007",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "WARNING",
+      "warning": 100.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "1034d624-451c-4523-b579-6f003ebd93f8",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_warning"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "1ea4878e-6df1-4c5b-bd5d-3c1f0566c91d",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_passed"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "element": {
+        "elementId": "1df02e91-0b8c-4032-9d14-0853e9724294",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "1ea4878e-6df1-4c5b-bd5d-3c1f0566c91d",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_passed"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          3600.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          3601.0
+        ]
+      },
+      "element": {
+        "elementId": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_passed"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "element": {
+        "elementId": "818d2419-daec-43d6-b004-b1195799df57",
+        "name": "transaction_sla_passed",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          3600.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          3601.0
+        ]
+      },
+      "element": {
+        "elementId": "1df02e91-0b8c-4032-9d14-0853e9724294",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "element": {
+        "elementId": "1df02e91-0b8c-4032-9d14-0853e9724294",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "element": {
+        "elementId": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_passed"
+      }
+    },
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "1df02e91-0b8c-4032-9d14-0853e9724294",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "1df02e91-0b8c-4032-9d14-0853e9724294",
+        "name": "/",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "page"
+      }
+    },
+    {
+      "kpi": "errors-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "element": {
+        "elementId": "1ea4878e-6df1-4c5b-bd5d-3c1f0566c91d",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_passed"
+      }
+    },
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "818d2419-daec-43d6-b004-b1195799df57",
+        "name": "transaction_sla_passed",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_passed"
+      }
+    },
+    {
+      "kpi": "avg-elt-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "818d2419-daec-43d6-b004-b1195799df57",
+        "name": "transaction_sla_passed",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "avg-throughput-per-sec",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          0.0
+        ]
+      },
+      "element": {
+        "elementId": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_passed"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          3600.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          3601.0
+        ]
+      },
+      "element": {
+        "elementId": "1ea4878e-6df1-4c5b-bd5d-3c1f0566c91d",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_passed"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "element": {
+        "elementId": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+        "name": "/api/webhooks/last",
+        "category": "REQUEST",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_passed"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "element": {
+        "elementId": "818d2419-daec-43d6-b004-b1195799df57",
+        "name": "transaction_sla_passed",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    },
+    {
+      "kpi": "error-rate",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": "<=",
+        "values": [
+          -0.1
+        ]
+      },
+      "element": {
+        "elementId": "1ea4878e-6df1-4c5b-bd5d-3c1f0566c91d",
+        "name": "page",
+        "category": "PAGE",
+        "userpath": "kamoulox",
+        "parent": "transaction_sla_passed"
+      }
+    },
+    {
+      "kpi": "avg-resp-time",
+      "status": "PASSED",
+      "warning": 0.0,
+      "warningThreshold": {
+        "operator": ">=",
+        "values": [
+          3600.0
+        ]
+      },
+      "failed": 0.0,
+      "failedThreshold": {
+        "operator": ">=",
+        "values": [
+          3601.0
+        ]
+      },
+      "element": {
+        "elementId": "818d2419-daec-43d6-b004-b1195799df57",
+        "name": "transaction_sla_passed",
+        "category": "TRANSACTION",
+        "userpath": "kamoulox",
+        "parent": "Actions"
+      }
+    }
+  ],
+  "events": [
+    {
+      "id": "14205",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119729,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#4 - Actions#357"
+    },
+    {
+      "id": "14204",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119726,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#3 - Actions#359"
+    },
+    {
+      "id": "14203",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119712,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#5 - Actions#358"
+    },
+    {
+      "id": "14202",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119711,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#9 - Actions#358"
+    },
+    {
+      "id": "14201",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119710,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#1 - Actions#361"
+    },
+    {
+      "id": "14200",
+      "code": "429",
+      "elementid": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119682,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#0 - Actions#361"
+    },
+    {
+      "id": "14197",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119657,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#2 - Actions#358"
+    },
+    {
+      "id": "14198",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119657,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#7 - Actions#360"
+    },
+    {
+      "id": "14199",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119657,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#6 - Actions#359"
+    },
+    {
+      "id": "14196",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119633,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#8 - Actions#357"
+    },
+    {
+      "id": "14195",
+      "code": "429",
+      "elementid": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119602,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#4 - Actions#357"
+    },
+    {
+      "id": "14194",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119589,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#3 - Actions#359"
+    },
+    {
+      "id": "14193",
+      "code": "429",
+      "elementid": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119582,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#5 - Actions#358"
+    },
+    {
+      "id": "14192",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119568,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#1 - Actions#361"
+    },
+    {
+      "id": "14190",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119542,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#0 - Actions#361"
+    },
+    {
+      "id": "14191",
+      "code": "429",
+      "elementid": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119542,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#6 - Actions#359"
+    },
+    {
+      "id": "14189",
+      "code": "429",
+      "elementid": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119541,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#7 - Actions#360"
+    },
+    {
+      "id": "14188",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119537,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#9 - Actions#357"
+    },
+    {
+      "id": "14187",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119480,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#4 - Actions#357"
+    },
+    {
+      "id": "14186",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119455,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#2 - Actions#357"
+    },
+    {
+      "id": "14185",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119445,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#5 - Actions#358"
+    },
+    {
+      "id": "14184",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119435,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#6 - Actions#359"
+    },
+    {
+      "id": "14183",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119433,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#0 - Actions#361"
+    },
+    {
+      "id": "14182",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119424,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#7 - Actions#360"
+    },
+    {
+      "id": "14181",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119422,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#3 - Actions#358"
+    },
+    {
+      "id": "14180",
+      "code": "429",
+      "elementid": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119413,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#9 - Actions#357"
+    },
+    {
+      "id": "14179",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119391,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#8 - Actions#357"
+    },
+    {
+      "id": "14178",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119376,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#1 - Actions#360"
+    },
+    {
+      "id": "14177",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119366,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#4 - Actions#357"
+    },
+    {
+      "id": "14176",
+      "code": "429",
+      "elementid": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119329,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#2 - Actions#357"
+    },
+    {
+      "id": "14175",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119318,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#5 - Actions#358"
+    },
+    {
+      "id": "14174",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119314,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#6 - Actions#359"
+    },
+    {
+      "id": "14172",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119312,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#7 - Actions#360"
+    },
+    {
+      "id": "14173",
+      "code": "429",
+      "elementid": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119312,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#3 - Actions#358"
+    },
+    {
+      "id": "14171",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119280,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#9 - Actions#357"
+    },
+    {
+      "id": "14170",
+      "code": "429",
+      "elementid": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119253,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#1 - Actions#360"
+    },
+    {
+      "id": "14169",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119248,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#0 - Actions#360"
+    },
+    {
+      "id": "14168",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119184,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#2 - Actions#357"
+    },
+    {
+      "id": "14167",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119157,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#3 - Actions#358"
+    },
+    {
+      "id": "14166",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119155,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#8 - Actions#356"
+    },
+    {
+      "id": "14165",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119144,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#4 - Actions#356"
+    },
+    {
+      "id": "14164",
+      "code": "429",
+      "elementid": "1034d624-451c-4523-b579-6f003ebd93f8",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119122,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#1 - Actions#360"
+    },
+    {
+      "id": "14163",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119121,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#5 - Actions#357"
+    },
+    {
+      "id": "14162",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119119,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#9 - Actions#357"
+    },
+    {
+      "id": "14161",
+      "code": "429",
+      "elementid": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119101,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#0 - Actions#360"
+    },
+    {
+      "id": "14160",
+      "code": "429",
+      "elementid": "b29523e3-6f58-40fc-98a4-8e24823d9390",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119088,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#7 - Actions#359"
+    },
+    {
+      "id": "14159",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119044,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#2 - Actions#357"
+    },
+    {
+      "id": "14157",
+      "code": "429",
+      "elementid": "8f34d21e-89e0-4929-89b7-01198f3ad27d",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119034,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#8 - Actions#356"
+    },
+    {
+      "id": "14158",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119034,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#3 - Actions#358"
+    },
+    {
+      "id": "14155",
+      "code": "429",
+      "elementid": "1a080b9f-05dc-4424-b575-866dedb2acb0",
+      "fullname": "GET http://testing.intranet.neotys.com/api/webhooks/last",
+      "offset": 119001,
+      "type": "ERROR",
+      "duration": 0,
+      "source": "kamoulox#1 - Actions#360"
+    }
+  ],
+  "elements": {
+    "transactions": [
+      {
+        "id": "818d2419-daec-43d6-b004-b1195799df57",
+        "name": "transaction_sla_passed",
+        "path": [
+          "kamoulox",
+          "Actions",
+          "transaction_sla_passed"
+        ],
+        "type": "TRANSACTION",
+        "display_name": "kamoulox \\ Actions \\ transaction_sla_passed",
+        "parent": "Actions",
+        "user_path": "kamoulox",
+        "aggregate_already_aggregated_data": true,
+        "aggregate": {
+          "count": 780,
+          "elementPerSecond": 31.2,
+          "minDuration": 0.058,
+          "maxDuration": 0.202,
+          "sumDuration": 1.821,
+          "avgDuration": 0.073,
+          "minTTFB": "",
+          "maxTTFB": "",
+          "sumTTFB": "",
+          "avgTTFB": "",
+          "sumDownloadedBytes": "",
+          "downloadedBytesPerSecond": "",
+          "successCount": 9,
+          "successPerSecond": 0.36,
+          "successRate": 1.154,
+          "failureCount": 771,
+          "failurePerSecond": 30.84,
+          "failureRate": 98.846,
+          "percentile50": 0.074,
+          "percentile90": 0.077,
+          "percentile95": 0.078,
+          "percentile99": 0.079
+        },
+        "points": [
+          {
+            "from": 60000,
+            "to": 61000,
+            "AVG_TTFB": 34.677418,
+            "ERRORS": 22,
+            "AVG_DURATION": 71.58064,
+            "ERRORS_PER_SECOND": 22.0,
+            "MIN_DURATION": 63,
+            "ERROR_RATE": 70.96774,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 45,
+            "MAX_DURATION": 87,
+            "ELEMENTS_PER_SECOND": 31.0,
+            "THROUGHPUT": 78518.0,
+            "COUNT": 31
+          },
+          {
+            "from": 61000,
+            "to": 62000,
+            "AVG_TTFB": 34.29032,
+            "ERRORS": 31,
+            "AVG_DURATION": 69.03226,
+            "ERRORS_PER_SECOND": 31.0,
+            "MIN_DURATION": 62,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 40,
+            "MAX_DURATION": 77,
+            "ELEMENTS_PER_SECOND": 31.0,
+            "THROUGHPUT": 91108.0,
+            "COUNT": 31
+          },
+          {
+            "from": 62000,
+            "to": 63000,
+            "AVG_TTFB": 41.419353,
+            "ERRORS": 31,
+            "AVG_DURATION": 77.0,
+            "ERRORS_PER_SECOND": 31.0,
+            "MIN_DURATION": 63,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 112,
+            "MAX_DURATION": 147,
+            "ELEMENTS_PER_SECOND": 31.0,
+            "THROUGHPUT": 91109.0,
+            "COUNT": 31
+          },
+          {
+            "from": 63000,
+            "to": 64000,
+            "AVG_TTFB": 33.1875,
+            "ERRORS": 32,
+            "AVG_DURATION": 67.90625,
+            "ERRORS_PER_SECOND": 32.0,
+            "MIN_DURATION": 62,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 29,
+            "MAX_TTFB": 42,
+            "MAX_DURATION": 77,
+            "ELEMENTS_PER_SECOND": 32.0,
+            "THROUGHPUT": 94044.0,
+            "COUNT": 32
+          },
+          {
+            "from": 64000,
+            "to": 65000,
+            "AVG_TTFB": 33.625,
+            "ERRORS": 32,
+            "AVG_DURATION": 68.78125,
+            "ERRORS_PER_SECOND": 32.0,
+            "MIN_DURATION": 58,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 28,
+            "MAX_TTFB": 43,
+            "MAX_DURATION": 77,
+            "ELEMENTS_PER_SECOND": 32.0,
+            "THROUGHPUT": 94040.0,
+            "COUNT": 32
+          },
+          {
+            "from": 65000,
+            "to": 66000,
+            "AVG_TTFB": 38.83871,
+            "ERRORS": 31,
+            "AVG_DURATION": 74.32258,
+            "ERRORS_PER_SECOND": 31.0,
+            "MIN_DURATION": 63,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 29,
+            "MAX_TTFB": 112,
+            "MAX_DURATION": 145,
+            "ELEMENTS_PER_SECOND": 31.0,
+            "THROUGHPUT": 91098.0,
+            "COUNT": 31
+          },
+          {
+            "from": 66000,
+            "to": 67000,
+            "AVG_TTFB": 37.774193,
+            "ERRORS": 31,
+            "AVG_DURATION": 73.58064,
+            "ERRORS_PER_SECOND": 31.0,
+            "MIN_DURATION": 61,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 29,
+            "MAX_TTFB": 114,
+            "MAX_DURATION": 150,
+            "ELEMENTS_PER_SECOND": 31.0,
+            "THROUGHPUT": 91128.0,
+            "COUNT": 31
+          },
+          {
+            "from": 67000,
+            "to": 68000,
+            "AVG_TTFB": 37.4,
+            "ERRORS": 30,
+            "AVG_DURATION": 75.066666,
+            "ERRORS_PER_SECOND": 30.0,
+            "MIN_DURATION": 62,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 101,
+            "MAX_DURATION": 133,
+            "ELEMENTS_PER_SECOND": 30.0,
+            "THROUGHPUT": 88128.0,
+            "COUNT": 30
+          },
+          {
+            "from": 68000,
+            "to": 69000,
+            "AVG_TTFB": 36.129032,
+            "ERRORS": 31,
+            "AVG_DURATION": 73.645164,
+            "ERRORS_PER_SECOND": 31.0,
+            "MIN_DURATION": 61,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 31,
+            "MAX_TTFB": 57,
+            "MAX_DURATION": 94,
+            "ELEMENTS_PER_SECOND": 31.0,
+            "THROUGHPUT": 91109.0,
+            "COUNT": 31
+          },
+          {
+            "from": 69000,
+            "to": 70000,
+            "AVG_TTFB": 38.166668,
+            "ERRORS": 30,
+            "AVG_DURATION": 74.066666,
+            "ERRORS_PER_SECOND": 30.0,
+            "MIN_DURATION": 62,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 96,
+            "MAX_DURATION": 128,
+            "ELEMENTS_PER_SECOND": 30.0,
+            "THROUGHPUT": 88163.0,
+            "COUNT": 30
+          },
+          {
+            "from": 70000,
+            "to": 71000,
+            "AVG_TTFB": 39.833332,
+            "ERRORS": 30,
+            "AVG_DURATION": 78.3,
+            "ERRORS_PER_SECOND": 30.0,
+            "MIN_DURATION": 64,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 101,
+            "MAX_DURATION": 141,
+            "ELEMENTS_PER_SECOND": 30.0,
+            "THROUGHPUT": 88145.0,
+            "COUNT": 30
+          },
+          {
+            "from": 71000,
+            "to": 72000,
+            "AVG_TTFB": 34.96875,
+            "ERRORS": 32,
+            "AVG_DURATION": 71.59375,
+            "ERRORS_PER_SECOND": 32.0,
+            "MIN_DURATION": 64,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 41,
+            "MAX_DURATION": 79,
+            "ELEMENTS_PER_SECOND": 32.0,
+            "THROUGHPUT": 94020.0,
+            "COUNT": 32
+          },
+          {
+            "from": 72000,
+            "to": 73000,
+            "AVG_TTFB": 38.258064,
+            "ERRORS": 31,
+            "AVG_DURATION": 75.90323,
+            "ERRORS_PER_SECOND": 31.0,
+            "MIN_DURATION": 62,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 110,
+            "MAX_DURATION": 148,
+            "ELEMENTS_PER_SECOND": 31.0,
+            "THROUGHPUT": 91112.0,
+            "COUNT": 31
+          },
+          {
+            "from": 73000,
+            "to": 74000,
+            "AVG_TTFB": 34.366665,
+            "ERRORS": 30,
+            "AVG_DURATION": 69.53333,
+            "ERRORS_PER_SECOND": 30.0,
+            "MIN_DURATION": 63,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 43,
+            "MAX_DURATION": 78,
+            "ELEMENTS_PER_SECOND": 30.0,
+            "THROUGHPUT": 88193.0,
+            "COUNT": 30
+          },
+          {
+            "from": 74000,
+            "to": 75000,
+            "AVG_TTFB": 34.114285,
+            "ERRORS": 35,
+            "AVG_DURATION": 68.02857,
+            "ERRORS_PER_SECOND": 35.0,
+            "MIN_DURATION": 61,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 29,
+            "MAX_TTFB": 42,
+            "MAX_DURATION": 77,
+            "ELEMENTS_PER_SECOND": 35.0,
+            "THROUGHPUT": 102879.0,
+            "COUNT": 35
+          },
+          {
+            "from": 75000,
+            "to": 76000,
+            "AVG_TTFB": 32.533333,
+            "ERRORS": 30,
+            "AVG_DURATION": 66.833336,
+            "ERRORS_PER_SECOND": 30.0,
+            "MIN_DURATION": 60,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 29,
+            "MAX_TTFB": 41,
+            "MAX_DURATION": 77,
+            "ELEMENTS_PER_SECOND": 30.0,
+            "THROUGHPUT": 88205.0,
+            "COUNT": 30
+          },
+          {
+            "from": 76000,
+            "to": 77000,
+            "AVG_TTFB": 35.53125,
+            "ERRORS": 32,
+            "AVG_DURATION": 72.96875,
+            "ERRORS_PER_SECOND": 32.0,
+            "MIN_DURATION": 63,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 51,
+            "MAX_DURATION": 97,
+            "ELEMENTS_PER_SECOND": 32.0,
+            "THROUGHPUT": 94053.0,
+            "COUNT": 32
+          },
+          {
+            "from": 77000,
+            "to": 78000,
+            "AVG_TTFB": 40.19355,
+            "ERRORS": 31,
+            "AVG_DURATION": 74.870964,
+            "ERRORS_PER_SECOND": 31.0,
+            "MIN_DURATION": 61,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 29,
+            "MAX_TTFB": 129,
+            "MAX_DURATION": 168,
+            "ELEMENTS_PER_SECOND": 31.0,
+            "THROUGHPUT": 91089.0,
+            "COUNT": 31
+          },
+          {
+            "from": 78000,
+            "to": 79000,
+            "AVG_TTFB": 38.29032,
+            "ERRORS": 31,
+            "AVG_DURATION": 75.83871,
+            "ERRORS_PER_SECOND": 31.0,
+            "MIN_DURATION": 59,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 29,
+            "MAX_TTFB": 102,
+            "MAX_DURATION": 169,
+            "ELEMENTS_PER_SECOND": 31.0,
+            "THROUGHPUT": 91059.0,
+            "COUNT": 31
+          },
+          {
+            "from": 79000,
+            "to": 80000,
+            "AVG_TTFB": 36.70968,
+            "ERRORS": 31,
+            "AVG_DURATION": 71.645164,
+            "ERRORS_PER_SECOND": 31.0,
+            "MIN_DURATION": 59,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 28,
+            "MAX_TTFB": 107,
+            "MAX_DURATION": 144,
+            "ELEMENTS_PER_SECOND": 31.0,
+            "THROUGHPUT": 91123.0,
+            "COUNT": 31
+          },
+          {
+            "from": 80000,
+            "to": 81000,
+            "AVG_TTFB": 39.533333,
+            "ERRORS": 30,
+            "AVG_DURATION": 77.63333,
+            "ERRORS_PER_SECOND": 30.0,
+            "MIN_DURATION": 62,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 161,
+            "MAX_DURATION": 202,
+            "ELEMENTS_PER_SECOND": 30.0,
+            "THROUGHPUT": 88178.0,
+            "COUNT": 30
+          },
+          {
+            "from": 81000,
+            "to": 82000,
+            "AVG_TTFB": 33.0,
+            "ERRORS": 34,
+            "AVG_DURATION": 67.32353,
+            "ERRORS_PER_SECOND": 34.0,
+            "MIN_DURATION": 61,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 41,
+            "MAX_DURATION": 78,
+            "ELEMENTS_PER_SECOND": 34.0,
+            "THROUGHPUT": 99908.0,
+            "COUNT": 34
+          },
+          {
+            "from": 82000,
+            "to": 83000,
+            "AVG_TTFB": 41.3,
+            "ERRORS": 30,
+            "AVG_DURATION": 79.23333,
+            "ERRORS_PER_SECOND": 30.0,
+            "MIN_DURATION": 61,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 28,
+            "MAX_TTFB": 115,
+            "MAX_DURATION": 152,
+            "ELEMENTS_PER_SECOND": 30.0,
+            "THROUGHPUT": 88216.0,
+            "COUNT": 30
+          },
+          {
+            "from": 83000,
+            "to": 84000,
+            "AVG_TTFB": 37.5625,
+            "ERRORS": 32,
+            "AVG_DURATION": 75.28125,
+            "ERRORS_PER_SECOND": 32.0,
+            "MIN_DURATION": 63,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 111,
+            "MAX_DURATION": 154,
+            "ELEMENTS_PER_SECOND": 32.0,
+            "THROUGHPUT": 94066.0,
+            "COUNT": 32
+          },
+          {
+            "from": 84000,
+            "to": 85000,
+            "AVG_TTFB": 35.51613,
+            "ERRORS": 31,
+            "AVG_DURATION": 70.645164,
+            "ERRORS_PER_SECOND": 31.0,
+            "MIN_DURATION": 62,
+            "ERROR_RATE": 100.0,
+            "MIN_TTFB": 30,
+            "MAX_TTFB": 50,
+            "MAX_DURATION": 96,
+            "ELEMENTS_PER_SECOND": 31.0,
+            "THROUGHPUT": 91061.0,
+            "COUNT": 31
+          }
+        ],
+        "raw": [],
+        "totalCount": 780,
+        "successRate": 0.011538461538461539,
+        "failureRate": 0.9884615384615385
+      }
+    ]
+  },
+  "all_requests": [
+    {
+      "id": "all-requests",
+      "name": "<all requests>",
+      "type": "ALL_REQUESTS",
+      "display_name": "<all requests>",
+      "parent": "",
+      "user_path": "",
+      "aggregate_already_aggregated_data": true,
+      "aggregate": {
+        "count": 6238,
+        "elementPerSecond": 249.52,
+        "minDuration": 0.028,
+        "maxDuration": 0.161,
+        "sumDuration": 1.0,
+        "avgDuration": 0.04,
+        "minTTFB": "",
+        "maxTTFB": "",
+        "sumTTFB": "",
+        "avgTTFB": "",
+        "sumDownloadedBytes": "",
+        "downloadedBytesPerSecond": "",
+        "successCount": 3158,
+        "successPerSecond": 126.32,
+        "successRate": 50.625,
+        "failureCount": 3080,
+        "failurePerSecond": 123.2,
+        "failureRate": 49.375,
+        "percentile50": 0.04,
+        "percentile90": 0.042,
+        "percentile95": 0.042,
+        "percentile99": 0.042
+      },
+      "points": [
+        {
+          "from": 60000,
+          "to": 61000,
+          "AVG_TTFB": 39.91129,
+          "ERRORS": 85,
+          "AVG_DURATION": 40.572582,
+          "ERRORS_PER_SECOND": 85.0,
+          "MIN_DURATION": 30,
+          "ERROR_RATE": 34.274193,
+          "MIN_TTFB": 29,
+          "MAX_TTFB": 111,
+          "MAX_DURATION": 111,
+          "ELEMENTS_PER_SECOND": 248.0,
+          "THROUGHPUT": 309823.0,
+          "COUNT": 248
+        },
+        {
+          "from": 61000,
+          "to": 62000,
+          "AVG_TTFB": 38.258965,
+          "ERRORS": 126,
+          "AVG_DURATION": 39.474102,
+          "ERRORS_PER_SECOND": 126.0,
+          "MIN_DURATION": 30,
+          "ERROR_RATE": 50.199203,
+          "MIN_TTFB": 29,
+          "MAX_TTFB": 126,
+          "MAX_DURATION": 126,
+          "ELEMENTS_PER_SECOND": 251.0,
+          "THROUGHPUT": 369152.0,
+          "COUNT": 251
+        },
+        {
+          "from": 62000,
+          "to": 63000,
+          "AVG_TTFB": 39.57377,
+          "ERRORS": 121,
+          "AVG_DURATION": 40.692623,
+          "ERRORS_PER_SECOND": 121.0,
+          "MIN_DURATION": 30,
+          "ERROR_RATE": 49.590164,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 135,
+          "MAX_DURATION": 135,
+          "ELEMENTS_PER_SECOND": 244.0,
+          "THROUGHPUT": 357936.0,
+          "COUNT": 244
+        },
+        {
+          "from": 63000,
+          "to": 64000,
+          "AVG_TTFB": 37.15649,
+          "ERRORS": 131,
+          "AVG_DURATION": 38.160305,
+          "ERRORS_PER_SECOND": 131.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 50.0,
+          "MIN_TTFB": 29,
+          "MAX_TTFB": 95,
+          "MAX_DURATION": 95,
+          "ELEMENTS_PER_SECOND": 262.0,
+          "THROUGHPUT": 385031.0,
+          "COUNT": 262
+        },
+        {
+          "from": 64000,
+          "to": 65000,
+          "AVG_TTFB": 37.303844,
+          "ERRORS": 132,
+          "AVG_DURATION": 38.326923,
+          "ERRORS_PER_SECOND": 132.0,
+          "MIN_DURATION": 28,
+          "ERROR_RATE": 50.76923,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 136,
+          "MAX_DURATION": 136,
+          "ELEMENTS_PER_SECOND": 260.0,
+          "THROUGHPUT": 383332.0,
+          "COUNT": 260
+        },
+        {
+          "from": 65000,
+          "to": 66000,
+          "AVG_TTFB": 41.05485,
+          "ERRORS": 117,
+          "AVG_DURATION": 42.13502,
+          "ERRORS_PER_SECOND": 117.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 49.36709,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 140,
+          "MAX_DURATION": 140,
+          "ELEMENTS_PER_SECOND": 237.0,
+          "THROUGHPUT": 347374.0,
+          "COUNT": 237
+        },
+        {
+          "from": 66000,
+          "to": 67000,
+          "AVG_TTFB": 39.133064,
+          "ERRORS": 125,
+          "AVG_DURATION": 40.258064,
+          "ERRORS_PER_SECOND": 125.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 50.403225,
+          "MIN_TTFB": 29,
+          "MAX_TTFB": 114,
+          "MAX_DURATION": 115,
+          "ELEMENTS_PER_SECOND": 248.0,
+          "THROUGHPUT": 365021.0,
+          "COUNT": 248
+        },
+        {
+          "from": 67000,
+          "to": 68000,
+          "AVG_TTFB": 39.13008,
+          "ERRORS": 122,
+          "AVG_DURATION": 40.1626,
+          "ERRORS_PER_SECOND": 122.0,
+          "MIN_DURATION": 30,
+          "ERROR_RATE": 49.593494,
+          "MIN_TTFB": 29,
+          "MAX_TTFB": 117,
+          "MAX_DURATION": 118,
+          "ELEMENTS_PER_SECOND": 246.0,
+          "THROUGHPUT": 360822.0,
+          "COUNT": 246
+        },
+        {
+          "from": 68000,
+          "to": 69000,
+          "AVG_TTFB": 39.107143,
+          "ERRORS": 126,
+          "AVG_DURATION": 39.98016,
+          "ERRORS_PER_SECOND": 126.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 50.0,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 94,
+          "MAX_DURATION": 94,
+          "ELEMENTS_PER_SECOND": 252.0,
+          "THROUGHPUT": 370279.0,
+          "COUNT": 252
+        },
+        {
+          "from": 69000,
+          "to": 70000,
+          "AVG_TTFB": 39.737705,
+          "ERRORS": 123,
+          "AVG_DURATION": 40.840164,
+          "ERRORS_PER_SECOND": 123.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 50.409836,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 147,
+          "MAX_DURATION": 147,
+          "ELEMENTS_PER_SECOND": 244.0,
+          "THROUGHPUT": 359140.0,
+          "COUNT": 244
+        },
+        {
+          "from": 70000,
+          "to": 71000,
+          "AVG_TTFB": 39.958847,
+          "ERRORS": 120,
+          "AVG_DURATION": 40.90535,
+          "ERRORS_PER_SECOND": 120.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 49.382717,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 104,
+          "MAX_DURATION": 104,
+          "ELEMENTS_PER_SECOND": 243.0,
+          "THROUGHPUT": 356138.0,
+          "COUNT": 243
+        },
+        {
+          "from": 71000,
+          "to": 72000,
+          "AVG_TTFB": 38.304688,
+          "ERRORS": 128,
+          "AVG_DURATION": 39.32422,
+          "ERRORS_PER_SECOND": 128.0,
+          "MIN_DURATION": 30,
+          "ERROR_RATE": 50.0,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 133,
+          "MAX_DURATION": 134,
+          "ELEMENTS_PER_SECOND": 256.0,
+          "THROUGHPUT": 376094.0,
+          "COUNT": 256
+        },
+        {
+          "from": 72000,
+          "to": 73000,
+          "AVG_TTFB": 40.92827,
+          "ERRORS": 120,
+          "AVG_DURATION": 41.881855,
+          "ERRORS_PER_SECOND": 120.0,
+          "MIN_DURATION": 30,
+          "ERROR_RATE": 50.63291,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 147,
+          "MAX_DURATION": 147,
+          "ELEMENTS_PER_SECOND": 237.0,
+          "THROUGHPUT": 349229.0,
+          "COUNT": 237
+        },
+        {
+          "from": 73000,
+          "to": 74000,
+          "AVG_TTFB": 39.385246,
+          "ERRORS": 121,
+          "AVG_DURATION": 40.331966,
+          "ERRORS_PER_SECOND": 121.0,
+          "MIN_DURATION": 30,
+          "ERROR_RATE": 49.590164,
+          "MIN_TTFB": 29,
+          "MAX_TTFB": 134,
+          "MAX_DURATION": 134,
+          "ELEMENTS_PER_SECOND": 244.0,
+          "THROUGHPUT": 357980.0,
+          "COUNT": 244
+        },
+        {
+          "from": 74000,
+          "to": 75000,
+          "AVG_TTFB": 37.389313,
+          "ERRORS": 131,
+          "AVG_DURATION": 38.408398,
+          "ERRORS_PER_SECOND": 131.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 50.0,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 122,
+          "MAX_DURATION": 122,
+          "ELEMENTS_PER_SECOND": 262.0,
+          "THROUGHPUT": 385052.0,
+          "COUNT": 262
+        },
+        {
+          "from": 75000,
+          "to": 76000,
+          "AVG_TTFB": 36.91571,
+          "ERRORS": 131,
+          "AVG_DURATION": 37.89272,
+          "ERRORS_PER_SECOND": 131.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 50.19157,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 117,
+          "MAX_DURATION": 117,
+          "ELEMENTS_PER_SECOND": 261.0,
+          "THROUGHPUT": 383894.0,
+          "COUNT": 261
+        },
+        {
+          "from": 76000,
+          "to": 77000,
+          "AVG_TTFB": 38.888,
+          "ERRORS": 125,
+          "AVG_DURATION": 40.084,
+          "ERRORS_PER_SECOND": 125.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 50.0,
+          "MIN_TTFB": 29,
+          "MAX_TTFB": 148,
+          "MAX_DURATION": 148,
+          "ELEMENTS_PER_SECOND": 250.0,
+          "THROUGHPUT": 367346.0,
+          "COUNT": 250
+        },
+        {
+          "from": 77000,
+          "to": 78000,
+          "AVG_TTFB": 38.374016,
+          "ERRORS": 125,
+          "AVG_DURATION": 39.377953,
+          "ERRORS_PER_SECOND": 125.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 49.212597,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 129,
+          "MAX_DURATION": 129,
+          "ELEMENTS_PER_SECOND": 254.0,
+          "THROUGHPUT": 371993.0,
+          "COUNT": 254
+        },
+        {
+          "from": 78000,
+          "to": 79000,
+          "AVG_TTFB": 40.228813,
+          "ERRORS": 120,
+          "AVG_DURATION": 41.584747,
+          "ERRORS_PER_SECOND": 120.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 50.847458,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 120,
+          "MAX_DURATION": 121,
+          "ELEMENTS_PER_SECOND": 236.0,
+          "THROUGHPUT": 347894.0,
+          "COUNT": 236
+        },
+        {
+          "from": 79000,
+          "to": 80000,
+          "AVG_TTFB": 37.841698,
+          "ERRORS": 129,
+          "AVG_DURATION": 38.934364,
+          "ERRORS_PER_SECOND": 129.0,
+          "MIN_DURATION": 28,
+          "ERROR_RATE": 49.80695,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 107,
+          "MAX_DURATION": 107,
+          "ELEMENTS_PER_SECOND": 259.0,
+          "THROUGHPUT": 380260.0,
+          "COUNT": 259
+        },
+        {
+          "from": 80000,
+          "to": 81000,
+          "AVG_TTFB": 39.76543,
+          "ERRORS": 120,
+          "AVG_DURATION": 40.806583,
+          "ERRORS_PER_SECOND": 120.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 49.382717,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 161,
+          "MAX_DURATION": 161,
+          "ELEMENTS_PER_SECOND": 243.0,
+          "THROUGHPUT": 356206.0,
+          "COUNT": 243
+        },
+        {
+          "from": 81000,
+          "to": 82000,
+          "AVG_TTFB": 36.6692,
+          "ERRORS": 132,
+          "AVG_DURATION": 37.688213,
+          "ERRORS_PER_SECOND": 132.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 50.190113,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 75,
+          "MAX_DURATION": 75,
+          "ELEMENTS_PER_SECOND": 263.0,
+          "THROUGHPUT": 386744.0,
+          "COUNT": 263
+        },
+        {
+          "from": 82000,
+          "to": 83000,
+          "AVG_TTFB": 40.866665,
+          "ERRORS": 122,
+          "AVG_DURATION": 41.945835,
+          "ERRORS_PER_SECOND": 122.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 50.833332,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 150,
+          "MAX_DURATION": 150,
+          "ELEMENTS_PER_SECOND": 240.0,
+          "THROUGHPUT": 353891.0,
+          "COUNT": 240
+        },
+        {
+          "from": 83000,
+          "to": 84000,
+          "AVG_TTFB": 38.76829,
+          "ERRORS": 123,
+          "AVG_DURATION": 39.853657,
+          "ERRORS_PER_SECOND": 123.0,
+          "MIN_DURATION": 30,
+          "ERROR_RATE": 50.0,
+          "MIN_TTFB": 29,
+          "MAX_TTFB": 111,
+          "MAX_DURATION": 112,
+          "ELEMENTS_PER_SECOND": 246.0,
+          "THROUGHPUT": 361542.0,
+          "COUNT": 246
+        },
+        {
+          "from": 84000,
+          "to": 85000,
+          "AVG_TTFB": 38.916668,
+          "ERRORS": 125,
+          "AVG_DURATION": 39.924603,
+          "ERRORS_PER_SECOND": 125.0,
+          "MIN_DURATION": 29,
+          "ERROR_RATE": 49.603176,
+          "MIN_TTFB": 28,
+          "MAX_TTFB": 145,
+          "MAX_DURATION": 145,
+          "ELEMENTS_PER_SECOND": 252.0,
+          "THROUGHPUT": 369647.0,
+          "COUNT": 252
+        }
+      ],
+      "raw": [],
+      "totalCount": 6238,
+      "successRate": 0.506252003847387,
+      "failureRate": 0.493747996152613
+    }
+  ],
+  "ext_data": [],
+  "controller_points": [
+    {
+      "id": "424155ec-15a1-3b91-8261-0ae15cda2a19",
+      "name": "CPU Load",
+      "path": [
+        "Controller",
+        "CPU Load"
+      ],
+      "display_name": "Controller \\ CPU Load",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "16099c2c-e210-3e3d-acfb-2898cf8c2e97",
+      "name": "Connected",
+      "path": [
+        "Controller",
+        "Load Generator Connections",
+        "Connected"
+      ],
+      "display_name": "Controller \\ Load Generator Connections \\ Connected",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "5bffd188-0ea4-389e-92f0-03c3056a54cf",
+      "name": "Total Disconnections",
+      "path": [
+        "Controller",
+        "Load Generator Connections",
+        "Total Disconnections"
+      ],
+      "display_name": "Controller \\ Load Generator Connections \\ Total Disconnections",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "26b4b692-5398-30dc-9734-4d3e27099bab",
+      "name": "Total Reconnections",
+      "path": [
+        "Controller",
+        "Load Generator Connections",
+        "Total Reconnections"
+      ],
+      "display_name": "Controller \\ Load Generator Connections \\ Total Reconnections",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "8f0f9bab-9cf2-3958-9085-4414999b5c0d",
+      "name": "Memory Used",
+      "path": [
+        "Controller",
+        "Memory Used"
+      ],
+      "display_name": "Controller \\ Memory Used",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "93ba2663-a5df-312e-9ec6-904c4cf636de",
+      "name": "Megabits received/sec.",
+      "path": [
+        "Controller",
+        "NeoLoad Web",
+        "Megabits received/sec."
+      ],
+      "display_name": "Controller \\ NeoLoad Web \\ Megabits received/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "2904ab8d-da00-343c-95c6-5dc8cd140339",
+      "name": "Megabits sent/sec.",
+      "path": [
+        "Controller",
+        "NeoLoad Web",
+        "Megabits sent/sec."
+      ],
+      "display_name": "Controller \\ NeoLoad Web \\ Megabits sent/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "405c96a0-5e8d-3666-bd85-5efa626b8ecc",
+      "name": "Segments retransmitted/sec.",
+      "path": [
+        "Controller",
+        "Network",
+        "Segments retransmitted/sec."
+      ],
+      "display_name": "Controller \\ Network \\ Segments retransmitted/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "31df4f31-f46e-3ff7-b8e9-d331d8f5255e",
+      "name": "Segments sent/sec.",
+      "path": [
+        "Controller",
+        "Network",
+        "Segments sent/sec."
+      ],
+      "display_name": "Controller \\ Network \\ Segments sent/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "4e3f6686-51c9-36b7-8d67-085976e5af37",
+      "name": "Megabits received/sec.",
+      "path": [
+        "Controller",
+        "Network",
+        "eth7 (Intel(R) Ethernet Connection (2) I219-LM)",
+        "Megabits received/sec."
+      ],
+      "display_name": "Controller \\ Network \\ eth7 (Intel(R) Ethernet Connection (2) I219-LM) \\ Megabits received/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "a066d995-670f-3b4a-95e2-50b89018dc21",
+      "name": "Megabits sent/sec.",
+      "path": [
+        "Controller",
+        "Network",
+        "eth7 (Intel(R) Ethernet Connection (2) I219-LM)",
+        "Megabits sent/sec."
+      ],
+      "display_name": "Controller \\ Network \\ eth7 (Intel(R) Ethernet Connection (2) I219-LM) \\ Megabits sent/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "a471ab71-378c-3e5b-b119-6c9b20b86106",
+      "name": "Thread Count",
+      "path": [
+        "Controller",
+        "Thread Count"
+      ],
+      "display_name": "Controller \\ Thread Count",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "1949328f-ad88-3770-933a-f104f026f14c",
+      "name": "Throughput",
+      "path": [
+        "Controller",
+        "Throughput"
+      ],
+      "display_name": "Controller \\ Throughput",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "de6f330b-eecb-32cf-8582-63e0e1654735",
+      "name": "User Load",
+      "path": [
+        "Controller",
+        "User Load"
+      ],
+      "display_name": "Controller \\ User Load",
+      "percentiles": {
+        "percentile50": 10,
+        "percentile90": 10.0,
+        "percentile95": 10.0,
+        "percentile99": 10.0
+      },
+      "points": [
+        {
+          "from": 0,
+          "to": 1000,
+          "AVG": 0
+        },
+        {
+          "from": 1000,
+          "to": 2000,
+          "AVG": 10
+        },
+        {
+          "from": 2000,
+          "to": 3000,
+          "AVG": 10
+        }
+      ]
+    }
+  ],
+  "monitors": [
+    {
+      "id": "424155ec-15a1-3b91-8261-0ae15cda2a19",
+      "name": "CPU Load",
+      "path": [
+        "Controller",
+        "CPU Load"
+      ],
+      "display_name": "Controller \\ CPU Load",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "16099c2c-e210-3e3d-acfb-2898cf8c2e97",
+      "name": "Connected",
+      "path": [
+        "Controller",
+        "Load Generator Connections",
+        "Connected"
+      ],
+      "display_name": "Controller \\ Load Generator Connections \\ Connected",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "5bffd188-0ea4-389e-92f0-03c3056a54cf",
+      "name": "Total Disconnections",
+      "path": [
+        "Controller",
+        "Load Generator Connections",
+        "Total Disconnections"
+      ],
+      "display_name": "Controller \\ Load Generator Connections \\ Total Disconnections",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "26b4b692-5398-30dc-9734-4d3e27099bab",
+      "name": "Total Reconnections",
+      "path": [
+        "Controller",
+        "Load Generator Connections",
+        "Total Reconnections"
+      ],
+      "display_name": "Controller \\ Load Generator Connections \\ Total Reconnections",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "8f0f9bab-9cf2-3958-9085-4414999b5c0d",
+      "name": "Memory Used",
+      "path": [
+        "Controller",
+        "Memory Used"
+      ],
+      "display_name": "Controller \\ Memory Used",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "93ba2663-a5df-312e-9ec6-904c4cf636de",
+      "name": "Megabits received/sec.",
+      "path": [
+        "Controller",
+        "NeoLoad Web",
+        "Megabits received/sec."
+      ],
+      "display_name": "Controller \\ NeoLoad Web \\ Megabits received/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "2904ab8d-da00-343c-95c6-5dc8cd140339",
+      "name": "Megabits sent/sec.",
+      "path": [
+        "Controller",
+        "NeoLoad Web",
+        "Megabits sent/sec."
+      ],
+      "display_name": "Controller \\ NeoLoad Web \\ Megabits sent/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "405c96a0-5e8d-3666-bd85-5efa626b8ecc",
+      "name": "Segments retransmitted/sec.",
+      "path": [
+        "Controller",
+        "Network",
+        "Segments retransmitted/sec."
+      ],
+      "display_name": "Controller \\ Network \\ Segments retransmitted/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "31df4f31-f46e-3ff7-b8e9-d331d8f5255e",
+      "name": "Segments sent/sec.",
+      "path": [
+        "Controller",
+        "Network",
+        "Segments sent/sec."
+      ],
+      "display_name": "Controller \\ Network \\ Segments sent/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "4e3f6686-51c9-36b7-8d67-085976e5af37",
+      "name": "Megabits received/sec.",
+      "path": [
+        "Controller",
+        "Network",
+        "eth7 (Intel(R) Ethernet Connection (2) I219-LM)",
+        "Megabits received/sec."
+      ],
+      "display_name": "Controller \\ Network \\ eth7 (Intel(R) Ethernet Connection (2) I219-LM) \\ Megabits received/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "a066d995-670f-3b4a-95e2-50b89018dc21",
+      "name": "Megabits sent/sec.",
+      "path": [
+        "Controller",
+        "Network",
+        "eth7 (Intel(R) Ethernet Connection (2) I219-LM)",
+        "Megabits sent/sec."
+      ],
+      "display_name": "Controller \\ Network \\ eth7 (Intel(R) Ethernet Connection (2) I219-LM) \\ Megabits sent/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "a471ab71-378c-3e5b-b119-6c9b20b86106",
+      "name": "Thread Count",
+      "path": [
+        "Controller",
+        "Thread Count"
+      ],
+      "display_name": "Controller \\ Thread Count",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "1949328f-ad88-3770-933a-f104f026f14c",
+      "name": "Throughput",
+      "path": [
+        "Controller",
+        "Throughput"
+      ],
+      "display_name": "Controller \\ Throughput",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "de6f330b-eecb-32cf-8582-63e0e1654735",
+      "name": "User Load",
+      "path": [
+        "Controller",
+        "User Load"
+      ],
+      "display_name": "Controller \\ User Load",
+      "percentiles": {
+        "percentile50": 10,
+        "percentile90": 10.0,
+        "percentile95": 10.0,
+        "percentile99": 10.0
+      },
+      "points": [
+        {
+          "from": 0,
+          "to": 1000,
+          "AVG": 0
+        },
+        {
+          "from": 1000,
+          "to": 2000,
+          "AVG": 10
+        },
+        {
+          "from": 2000,
+          "to": 3000,
+          "AVG": 10
+        }
+      ]
+    },
+    {
+      "id": "b9316efa-fcbc-3a13-b8df-d3af2ad7630d",
+      "name": "CPU Load",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "CPU Load"
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ CPU Load",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "ad4e984e-630f-3468-bd33-9edb2bb4ef14",
+      "name": "Ping Duration (ms)",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "Controller Connection",
+        "Ping Duration (ms)"
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ Controller Connection \\ Ping Duration (ms)",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "3ef5f25e-2c6d-3132-a27e-268f4ae29e45",
+      "name": "Task Pool used",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "Http client",
+        "Task Pool used"
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ Http client \\ Task Pool used",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "3f147404-be99-38b9-bfd0-7eeb679d1c6e",
+      "name": "Thread Pool used",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "Http client",
+        "Thread Pool used"
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ Http client \\ Thread Pool used",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "915f834b-10d4-3449-bef7-128e8258b9e9",
+      "name": "Memory Used",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "Memory Used"
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ Memory Used",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "7d0f46ef-d93f-3e5e-a359-f55ea728847f",
+      "name": "Segments retransmitted/sec.",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "Network",
+        "Segments retransmitted/sec."
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ Network \\ Segments retransmitted/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "c80f2b4f-6326-3597-86e7-1651b1cb91f8",
+      "name": "Segments sent/sec.",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "Network",
+        "Segments sent/sec."
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ Network \\ Segments sent/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "73981a68-f29f-33cd-908d-a1b9d38a4146",
+      "name": "Megabits received/sec.",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "Network",
+        "eth7 (Intel(R) Ethernet Connection (2) I219-LM)",
+        "Megabits received/sec."
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ Network \\ eth7 (Intel(R) Ethernet Connection (2) I219-LM) \\ Megabits received/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "565dfa78-aa2d-35e8-890d-cb14b56318f1",
+      "name": "Megabits sent/sec.",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "Network",
+        "eth7 (Intel(R) Ethernet Connection (2) I219-LM)",
+        "Megabits sent/sec."
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ Network \\ eth7 (Intel(R) Ethernet Connection (2) I219-LM) \\ Megabits sent/sec.",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "5789ec0c-6dcb-3a83-a3fb-6f92089a8733",
+      "name": "Thread Count",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "Thread Count"
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ Thread Count",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "1b35682f-e0f3-3184-8b29-abd663698938",
+      "name": "Throughput",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "Throughput"
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ Throughput",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "db7a8e31-b67a-31f5-9f9c-194995e3fd0f",
+      "name": "User Load",
+      "path": [
+        "Default zone",
+        "LG PC087:7110",
+        "User Load"
+      ],
+      "display_name": "Default zone \\ LG PC087:7110 \\ User Load",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "ad6e903c-a684-3ef0-ae0a-b582eeb2d23f",
+      "name": "User Load",
+      "path": [
+        "Default zone",
+        "REST_API_Population",
+        "User Load"
+      ],
+      "display_name": "Default zone \\ REST_API_Population \\ User Load",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "601c9770-bc3c-3e1b-a3fc-99fdb37ea61e",
+      "name": "User Load",
+      "path": [
+        "Default zone",
+        "REST_API_Population",
+        "kamoulox",
+        "User Load"
+      ],
+      "display_name": "Default zone \\ REST_API_Population \\ kamoulox \\ User Load",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    },
+    {
+      "id": "79d6d662-3504-3ba9-9e47-297e28f29db9",
+      "name": "User Load",
+      "path": [
+        "Default zone",
+        "User Load"
+      ],
+      "display_name": "Default zone \\ User Load",
+      "percentiles": {
+        "percentile50": null,
+        "percentile90": null,
+        "percentile95": null,
+        "percentile99": null
+      },
+      "points": []
+    }
+  ]
+}

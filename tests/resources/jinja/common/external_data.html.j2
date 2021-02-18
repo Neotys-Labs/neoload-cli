@@ -1,0 +1,47 @@
+<h3>Ext. Data</h3>
+{% if (ext_data is defined) and ext_data %}
+<table>
+<thead>
+<tr>
+<td>Name</td>
+<td>p50</td>
+<td>p90</td>
+<td>p95</td>
+<td>p99</td>
+</tr>
+</thead>
+<tbody>
+{% for ext in ext_data|sort(attribute='percentiles.percentile50',reverse=true) %}
+<tr>
+<td><a href="javascript:toggleDisplay('d{{ext.id}}')">{{ ext.display_name|e }}</a></td>
+<td>{{ ext.percentiles.percentile50 }}</td>
+<td>{{ ext.percentiles.percentile90 }}</td>
+<td>{{ ext.percentiles.percentile95 }}</td>
+<td>{{ ext.percentiles.percentile99 }}</td>
+</tr>
+<tr>
+<td colspan="5" class="graph">
+  <div id="d{{ext.id}}" class="expandable graph" style="height:200px;"></div>
+  <script type="text/javascript">
+  appendOnLoad(function() {
+    var data = {{ ext.points | tojson }};
+    graphExtData(d3.select('#d{{ext.id}}'), data)
+  })
+  </script>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<script type="text/javascript">
+function graphExtData(el, data) {
+  var specs = [];
+  specs.push(specTimeLine("User Load", "VUs", "blue", window.ctrl_user_load, d => d.from, d => d.AVG))
+  specs.push(specTimeLine("Value", null, "green", data, d => d.from, d => d.AVG_DURATION))
+  plotSVG(el, specs)
+}
+</script>
+{% else %}
+    No external data in this test.
+{% endif %}

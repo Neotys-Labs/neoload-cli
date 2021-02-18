@@ -1,0 +1,31 @@
+<h3>Workload Characteristics</h3>
+<div class="clearfix">
+  <div style="float:left;width:50%;">
+    Max Running Users: <br />
+    Average Hits per Second: {{ statistics.totalRequestCountPerSecond }} <br />
+    Total Hits: {{ statistics.totalRequestCountSuccess }}<br />
+    Total Passed Transactions per Second: {{ statistics.totalTransactionCountPerSecond }}<br />
+    Total Transactions (Success): {{ statistics.totalTransactionCountSuccess }}<br />
+    Total Transactions (Failed): {{ statistics.totalTransactionCountFailure }}<br />
+  </div>
+  <div style="float:right;width:50%;">
+    <div id="dWorkload" style="height:200px;"></div>
+    <script type="text/javascript">
+    appendOnLoad(function() {
+      graphWorkload(d3.select('#dWorkload'), window.ctrl_user_load, window.all_requests)
+    })
+    </script>
+  </div>
+</div>
+
+<script type="text/javascript">
+function graphWorkload(el, ctrl_user_load, req_data) {
+  var specs = []
+  specs.push(specTimeLine("User Load", "VUs", "blue", ctrl_user_load, d => d.from, d => d.AVG))
+  specs.push(specTimeLine("Rate", "el/s", "purple", req_data, d => d.from, d => d.ELEMENTS_PER_SECOND))
+  specs.push(specTimeLine("Errors", null, "red", req_data, d => d.from, d => d.ERRORS))
+  specs.push(specTimeLine("Duration", "ms", "green", req_data, d => d.from, d => d.AVG_DURATION))
+  plotSVG(el, specs)
+}
+
+</script>

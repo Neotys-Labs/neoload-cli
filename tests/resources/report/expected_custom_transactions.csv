@@ -1,0 +1,5 @@
+User Path,Element,Parent,Count,Min,Avg,Max,Perc 50,Perc 90,Perc 95,Perc 99,Success,Success Rate,Failure,Failure Rate
+kamoulox,transaction_no_sla,Actions,3592,0.083,0.106,0.398,0.099,0.13,0.16,0.206,41,1.141,3551,98.859
+kamoulox,transaction_sla_failed,Actions,3588,0.058,0.075,0.436,0.07,0.09,0.113,0.15,38,1.059,3550,98.941
+kamoulox,transaction_sla_passed,Actions,3586,0.058,0.075,0.335,0.07,0.091,0.116,0.161,32,0.892,3554,99.108
+kamoulox,transaction_sla_warning,Actions,3591,0.058,0.075,0.401,0.07,0.09,0.111,0.156,41,1.142,3550,98.858

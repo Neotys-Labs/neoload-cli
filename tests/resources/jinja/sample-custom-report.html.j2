@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
+    <script type="text/javascript">{% include 'common/common.js' %}</script>
+    <script type="text/javascript">
+    var startDateEpoch = {{ summary.startDate }}
+    </script>
+  </head>
+  <body>
+
+{% with title=summary.name %}{% include 'common/header.j2' %}{% endwith %}
+
+<script type="text/javascript">
+window.ctrl_user_load = {{ controller_points | selectattr('name','equalto', 'User Load') | map(attribute='points') | first | tojson }};
+window.all_requests = {{ all_requests | selectattr('type','equalto', 'ALL_REQUESTS') | map(attribute='points') | first | tojson }};
+</script>
+
+{% include 'common/general_details.html.j2' %}
+
+{% include 'common/workload_characteristics.html.j2' %}
+
+{% include 'common/transactions.html.j2' %}
+
+{% include 'common/external_data.html.j2' %}
+
+{% include 'common/running_vus.html.j2' %}
+
+{% include 'common/hits_per_second.html.j2' %}
+
+<script type="text/javascript">
+appendOnLoad(function() {
+  d3.selectAll(".expandable").style("display","none");
+})
+</script>
+
+
+
+<style type="text/css">
+{% include 'common/styles.css' %}
+</style>
+  </body>
+</html>

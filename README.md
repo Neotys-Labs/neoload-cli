@@ -42,7 +42,9 @@ NOTE: For Windows command line, replace the '\\' multi-line separators above wit
      - [Excluding files from the project upload] (#excluding-files-from-the-project-upload)
  - [Run a test](#run-a-test)
    - [Stop a running test](#stop-a-running-test)
- - [View results](#view-results)
+ - [Reporting](#reporting)
+    - [View results](#view-results)
+    - [Exporting Transaction CSV data](#exporting-transaction-CSV-data)
  - [View zones](#view-zones)
  - [Create local docker infrastructure to run a test](#create-local-docker-infrastructure-to-run-a-test)
  - [Continuous Testing Examples](#continuous-testing-examples)
@@ -167,7 +169,11 @@ When hitting Ctrl+C, the CLI will try to stop the test gracefully
 neoload stop             # Send the stop signal to the test and wait until it ends.
 ```
 
-## View results
+## Reporting
+
+There is basic support in the NeoLoad CLI for viewing and exporting results.
+
+### View results
 ```
 Usage: neoload test-results [OPTIONS] [[ls|summary|junitsla|put|delete|use]] [NAME]
 neoload test-results ls                 # Lists test results                                            .
@@ -193,6 +199,88 @@ Detailed logs and results are available on Neoload Web. To get the url of the cu
 ```
 neoload logs-url                        # The URL to the test in Neoload Web
 ```
+
+### The test-results vs. report subcommands
+
+The 'test-results' subcommand is intended for direct operational queries against high-level API data.
+
+The 'report' subcommand is intended to simplify not only common data exporting needs, but also provide
+ templating capabilities over a standard, correlated data model. In contrast to the test-results
+ subcommand, 'report' can be used to generate as well as transform test result data.
+
+### Exporting Transaction CSV data
+```
+Usage: neoload report [OPTIONS]
+neoload report --template builtin:transactions-csv > temp.csv
+```
+
+### Filtering export data by timespan
+In many load tests, ramp-up and spin-down time is considered irrelevant to calculate into aggregate statistics,
+ such as how when warming up, systems may produce higher-than-expected latencies until a steady state is reached.
+
+Therefore, the NeoLoad CLI allows for export of particular time ranges by providing a timespan filter.
+
+```
+neoload report --template builtin:transactions-csv --filter "timespan=5m-95%"
+neoload report --template builtin:transactions-csv --filter "timespan=15%"
+neoload report --template builtin:transactions-csv --filter "timespan=-90%"
+```
+
+Timespan format is [Time], then '-' representing to, then another [Time]. Time format can
+ be either a human readable duration or percentage of overall test duration.
+
+Human readable time duration format is hour|minute|second such as '1h5m30s' or a sub-portion such as '5m'.
+
+Omitting the end [Time] segment will filter results beginning with the time specified to the end of the test.
+
+Similarly, ommiting the start [Time] segment will filter results beginning with the start of the test
+ to the end time specified.
+
+### Filtering export data by element
+It is often useful to narrow analysis and statistics to a particular group of activities, such as
+ Login processes across multiple workflows (user paths) or other common key business transactions.
+
+Therefore, the NeoLoad CLI allows for exports of specific transcations whose name, parent, or User Path name
+ matches specific values or patterns.
+
+```
+neoload report --template builtin:transactions-csv --filter "elements=Login"
+```
+You can filter to specific transactions or requests by specifying 'elements' and then a pipe-delimited list
+ of element GUIDs, full names, or partial name matches. This can also include python-compliant regular expressions.
+
+### Combining timespan and element filters
+```
+neoload report --template builtin:transactions-csv --filter "timespan=50%-95%;elements=AddToCart"
+```
+Both timespan and elements filters can be combined in order to get statistics for specific elements
+ within a precise portion of the test duration. Per the example above, transaction data will be computed
+ for elements that have 'AddToCart' somewhere in their name, user path, or parent element and calculate
+ aggregates based on data starting from halfway through the test up to just about the very end.
+
+### Exporting All Test Data and Using Custom Templates
+
+If you would like to use multiple templates to create separate output files for specific test data,
+ you should dump the test result data using the standard JSON scheme first:
+```
+neoload report --out-file ~/Downloads/temp.json
+```
+NOTE: by default, this queries all entity data in test results and may cause multiple API calls
+ to occur depending on the structure of the user paths and monitoring data in the test result set.
+
+Then you can produce multiple output files from a single data snapshot:
+```
+neoload report --json-in ~/Downloads/temp.json \
+               --template builtin:transactions-csv \
+               --out-file ~/Downloads/temp.csv
+
+neoload report --json-in ~/Downloads/temp.json \
+               --template /path/to/a/jinja/template.j2 \
+               --out-file ~/Downloads/temp.html
+```
+
+NOTE: built-in reports produce a reduced-scope JSON data model and are therefore faster
+ that exporting all test data for various templates and output specs.
 
 ## View zones
 ```
