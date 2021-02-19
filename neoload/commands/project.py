@@ -1,11 +1,14 @@
+import os
+
 import click
+
 from commands import test_settings
 from neoload_cli_lib import user_data, tools, rest_crud, neoLoad_project
-import os
+
 
 @click.command()
 @click.argument("command", required=True, type=click.Choice(['up', 'upload', 'meta']))
-@click.option("--path", "-p", type=click.Path(exists=True), default='.',
+@click.option("--path", "-p", type=click.Path(exists=True), default=os.getcwd(),
               help="path of project folder, zip or yml file. . is default value")
 @click.option("--save", "-s", type=click.Path(exists=False),
               help="Path to a (non-existent) file ending in .zip to preserve what was uploaded")
