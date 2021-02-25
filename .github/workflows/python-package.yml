@@ -5,7 +5,9 @@ name: Python package
 
 on:
   push:
-    branches: [ '**' ]
+    #branches: [ '**' ]
+    branches-ignore:
+      - 'TestDockerInGithubActions'
 
 jobs:
   build:

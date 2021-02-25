@@ -1,0 +1,76 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Test Docker Commands
+
+on:
+  push:
+    branches: [ '**' ]
+  workflow_dispatch:
+    inputs:
+      zone:
+        description: 'Zone'
+        required: true
+        default: 'defaultzone'
+      tags:
+        description: 'Test docker commands'
+
+jobs:
+  dind:
+    runs-on: ubuntu-latest
+    container:
+      image: docker:dind
+    steps:
+      - name: Add the Github user to the DinD host container
+        run: |
+          apk update
+          apk add -q net-tools shadow sudo
+          groupadd -g 116 githubgrp
+          adduser -G githubgrp -u 1001 -D -H -h /github/home github
+          chmod -R u=rwx,go=rx /github/home
+
+      - name: Install Python via APK
+        run: |
+          apk add -q python3-dev gcc libc-dev py3-pip git
+          which python3
+          which pip
+          prior=$(pwd)
+          cd /usr/local/bin && ln -s /usr/bin/python3 python
+          cd $prior
+
+      - name: Verify Prerequisites
+        run: |
+          python --version
+          docker --version
+          docker ps
+
+      #- uses: actions/checkout@v2
+
+      - name: Install CLI
+        run: |
+          #git clone --branch $GITHUB_REF https://github.com/$GITHUB_REPOSITORY.git && cd neoload-cli
+          mkdir -p neoload-cli && cd neoload-cli \
+            && git init && git remote add origin https://github.com/$GITHUB_REPOSITORY.git \
+            && git fetch origin $GITHUB_REF && git reset --hard FETCH_HEAD
+
+          git branch
+
+          python -m pip install -q .
+          if [ -f requirements.txt ]; then pip install -q -r requirements.txt; fi
+
+      - name: Initialize NeoLoad CLI
+        env:
+          NLWEB_API_URL: ${{ secrets.NLWEB_API_URL }}
+          NLWEB_TOKEN: ${{ secrets.NLWEB_TOKEN }}
+        run: |
+          neoload --version
+          neoload login --workspace CLI --url $NLWEB_API_URL $NLWEB_TOKEN
+          neoload status
+
+      - name: Run CLI Docker Commands
+        run: |
+          echo "Running docker up"
+          neoload --debug docker up
+          docker ps
+          echo "Running docker down"
+          neoload --debug docker down
