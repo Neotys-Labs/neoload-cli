@@ -85,40 +85,42 @@ def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
     else:
         logging.warning('No prior cached schema on disk.')
 
-    if check_schema:
-        # even if there is something local, try checking if it's different from remote
-        schema_spec_remote = "https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json"
-        if schema_spec is None: schema_spec = schema_spec_remote
-        json_schema_spec = None
+    if not check_schema:
+        return json_schema
 
-        if '://' in schema_spec:
-            try:
-                logging.info('Attempting to check remote schema hash from %s' % schema_spec)
-                json_schema_spec = requests.get(schema_spec, verify=tools.ssl_cert_to_verify(ssl_cert)).text
-            except Exception as err:
-                logging.warning('Could not obtain source schema {}\n{}'.format(schema_spec,err))
-        else:
-            # if user passed in a local file as the --schema-url (for local version testing purposes too)
-            schema_spec = os.path.abspath(schema_spec)
-            if os.path.exists(schema_spec):
-                with open(schema_spec, "r") as stream:
-                    json_schema_spec = stream.read()
-            else:
-                raise cli_exception.CliException('Could not load schema from provided file spec: %s' % schema_spec)
+    # even if there is something local, try checking if it's different from remote
+    schema_spec_remote = "https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json"
+    if schema_spec is None: schema_spec = schema_spec_remote
+    json_schema_spec = None
 
-        # compare cached to spec/remote
+    if '://' in schema_spec:
         try:
-            logging.info('Comparing cached schema to remote schema')
-            hash_disk = "" if json_schema is None else hashlib.sha256(json_schema.encode()).hexdigest()
-            hash_spec = "" if json_schema_spec is None else hashlib.sha256(json_schema_spec.encode()).hexdigest()
-            if hash_disk != hash_spec:
-                logging.info('Cached schema differs from source!')
-                json_schema = json_schema_spec
-                update_schema(json_schema_spec)
-            else:
-                logging.info('No differences between cached and remote schema.')
+            logging.info('Attempting to check remote schema hash from %s' % schema_spec)
+            json_schema_spec = requests.get(schema_spec, verify=tools.ssl_cert_to_verify(ssl_cert)).text
         except Exception as err:
-            logging.warning('Could not update schema cache {}\n{}'.format(schema_spec,err))
+            logging.warning('Could not obtain source schema {}\n{}'.format(schema_spec,err))
+    else:
+        # if user passed in a local file as the --schema-url (for local version testing purposes too)
+        schema_spec = os.path.abspath(schema_spec)
+        if os.path.exists(schema_spec):
+            with open(schema_spec, "r") as stream:
+                json_schema_spec = stream.read()
+        else:
+            raise cli_exception.CliException('Could not load schema from provided file spec: %s' % schema_spec)
+
+    # compare cached to spec/remote
+    try:
+        logging.info('Comparing cached schema to remote schema')
+        hash_disk = "" if json_schema is None else hashlib.sha256(json_schema.encode()).hexdigest()
+        hash_spec = "" if json_schema_spec is None else hashlib.sha256(json_schema_spec.encode()).hexdigest()
+        if hash_disk != hash_spec:
+            logging.info('Cached schema differs from source!')
+            json_schema = json_schema_spec
+            update_schema(json_schema_spec)
+        else:
+            logging.info('No differences between cached and remote schema.')
+    except Exception as err:
+        logging.warning('Could not update schema cache {}\n{}'.format(schema_spec,err))
 
     if json_schema is None:
         raise cli_exception.CliException('Could not obtain schema definition therefore could not validate this schema.')

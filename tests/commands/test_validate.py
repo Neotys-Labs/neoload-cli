@@ -54,3 +54,10 @@ class TestValidate:
         result = runner.invoke(validate, [str(file_path), '--schema-url', 'http://invalid.fr', '--refresh'])
         assert 'Could not obtain schema definition' in str(result.output)
         assert result.exit_code == 1
+
+    def test_dir_with_bad_schema(self):
+        path = 'tests/neoload_projects/'
+        runner = CliRunner()
+        result = runner.invoke(validate, [str(path), '--schema-url', 'https://www.neotys.com/', '--refresh'])
+        assert ' One or more errors in files underneath this directory' in str(result.output)
+        assert result.exit_code == 1
