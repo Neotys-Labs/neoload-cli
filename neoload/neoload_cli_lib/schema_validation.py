@@ -61,21 +61,27 @@ def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
     for root, dirs, files in os.walk(path):
         for file in files:
             file_path = os.path.join(root, file)
-            if any(filter(lambda ext: file_path.endswith("."+ext),extensions)):
-                if not is_not_to_be_included(file_path, nl_ignore_matcher):
-                    logging.debug("file_path: {}".format(file_path))
-                    first_time_check = False
-                    try:
-                        validate_yaml(file_path, schema_spec, ssl_cert='', check_schema=first_time_check)
-                    except Exception as err:
-                        any_errs = True
-                        if continue_on_error:
-                            logging.error(err)
-                        else:
-                            raise err
+            (any_errs,first_time_check) = validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,any_errs,first_time_check,continue_on_error)
+
     if any_errs:
         raise ValueError('One or more errors in files underneath this directory.')
 
+def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,any_errs,first_time_check,continue_on_error):
+
+    if any(filter(lambda ext,file_path=file_path: file_path.endswith("."+ext),extensions)) and \
+       not is_not_to_be_included(file_path, nl_ignore_matcher):
+        logging.debug("file_path: {}".format(file_path))
+        first_time_check = False
+        try:
+            validate_yaml(file_path, schema_spec, ssl_cert='', check_schema=first_time_check)
+        except Exception as err:
+            any_errs = True
+            if continue_on_error:
+                logging.error(err)
+            else:
+                raise err
+
+    return (any_errs,first_time_check)
 
 def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
 
@@ -91,22 +97,7 @@ def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
     # even if there is something local, try checking if it's different from remote
     schema_spec_remote = "https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json"
     if schema_spec is None: schema_spec = schema_spec_remote
-    json_schema_spec = None
-
-    if '://' in schema_spec:
-        try:
-            logging.info('Attempting to check remote schema hash from %s' % schema_spec)
-            json_schema_spec = requests.get(schema_spec, verify=tools.ssl_cert_to_verify(ssl_cert)).text
-        except Exception as err:
-            logging.warning('Could not obtain source schema {}\n{}'.format(schema_spec,err))
-    else:
-        # if user passed in a local file as the --schema-url (for local version testing purposes too)
-        schema_spec = os.path.abspath(schema_spec)
-        if os.path.exists(schema_spec):
-            with open(schema_spec, "r") as stream:
-                json_schema_spec = stream.read()
-        else:
-            raise cli_exception.CliException('Could not load schema from provided file spec: %s' % schema_spec)
+    json_schema_spec = get_json_schema_by_spec(schema_spec,ssl_cert)
 
     # compare cached to spec/remote
     try:
@@ -126,3 +117,22 @@ def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
         raise cli_exception.CliException('Could not obtain schema definition therefore could not validate this schema.')
 
     return json_schema
+
+def get_json_schema_by_spec(schema_spec,ssl_cert):
+    json_schema_spec = None
+    if '://' in schema_spec:
+        try:
+            logging.info('Attempting to check remote schema hash from %s' % schema_spec)
+            json_schema_spec = requests.get(schema_spec, verify=tools.ssl_cert_to_verify(ssl_cert)).text
+        except Exception as err:
+            logging.warning('Could not obtain source schema {}\n{}'.format(schema_spec,err))
+    else:
+        # if user passed in a local file as the --schema-url (for local version testing purposes too)
+        schema_spec = os.path.abspath(schema_spec)
+        if os.path.exists(schema_spec):
+            with open(schema_spec, "r") as stream:
+                json_schema_spec = stream.read()
+        else:
+            raise cli_exception.CliException('Could not load schema from provided file spec: %s' % schema_spec)
+
+    return json_schema_spec
