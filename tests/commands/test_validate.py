@@ -52,7 +52,5 @@ class TestValidate:
         file_path = datafiles.listdir()[0]
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path), '--schema-url', 'http://invalid.fr', '--refresh'])
-        assert 'Max retries exceeded with url' in str(result.output)
-        assert 'Failed to establish a new connection' in str(result.output)
-        assert 'Error getting the schema from the url: http://invalid.fr' in str(result.output)
+        assert 'Could not obtain schema definition' in str(result.output)
         assert result.exit_code == 1
