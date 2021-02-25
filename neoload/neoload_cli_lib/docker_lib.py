@@ -15,6 +15,9 @@ DOCKER_LG_IMAGE = 'docker.lg.image'
 DOCKER_CONTROLLER_DEFAULT_COUNT = 'docker.controller.default_count'
 DOCKER_CONTROLLER_IMAGE = 'docker.controller.image'
 
+HOOK_TEST_START = "neoload_cli_lib.docker_lib.hook_test_start"
+HOOK_TEST_STOP = "neoload_cli_lib.docker_lib.hook_test_stop"
+
 default_settings = {
     DOCKER_CONTROLLER_IMAGE: 'neotys/neoload-controller:latest',
     DOCKER_CONTROLLER_DEFAULT_COUNT: 1,
@@ -37,18 +40,18 @@ def add_set(key, list_to_add):
 
 
 def install():
-    hooks.register("test.start", "neoload_cli_lib.docker_lib.hook_test_start")
-    hooks.register("test.stop", "neoload_cli_lib.docker_lib.hook_test_stop")
+    hooks.register("test.start", HOOK_TEST_START)
+    hooks.register("test.stop", HOOK_TEST_STOP)
 
 
 def uninstall():
-    hooks.unregister("test.start", "neoload_cli_lib.docker_lib.hook_test_start")
-    hooks.unregister("test.stop", "neoload_cli_lib.docker_lib.hook_test_stop")
+    hooks.unregister("test.start", HOOK_TEST_START)
+    hooks.unregister("test.stop", HOOK_TEST_STOP)
 
 
 def status():
     installed = "installed" if hooks.is_registered("test.start",
-                                                   "neoload_cli_lib.docker_lib.hook_test_start") else "not installed"
+                                                   HOOK_TEST_START) else "not installed"
     print("configuration:")
 
     for k in default_settings:
