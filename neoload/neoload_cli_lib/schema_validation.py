@@ -16,7 +16,7 @@ from gitignore_parser import parse_gitignore
 from neoload_cli_lib.neoLoad_project import is_not_to_be_included
 
 YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
-
+__default_schema_url = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3/neoload-project/src/main/resources/as-code.latest.schema.json"
 
 def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
     try:
@@ -71,7 +71,6 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
     if any(filter(lambda ext,file_path=file_path: file_path.endswith("."+ext),extensions)) and \
        not is_not_to_be_included(file_path, nl_ignore_matcher):
         logging.debug("file_path: {}".format(file_path))
-        first_time_check = False
         try:
             validate_yaml(file_path, schema_spec, ssl_cert='', check_schema=first_time_check)
         except Exception as err:
@@ -80,6 +79,7 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
                 logging.error(err)
             else:
                 raise err
+        first_time_check = False
 
     return (any_errs,first_time_check)
 
@@ -95,7 +95,7 @@ def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
         return json_schema
 
     # even if there is something local, try checking if it's different from remote
-    schema_spec_remote = "https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/resources/as-code.latest.schema.json"
+    schema_spec_remote = __default_schema_url
     if schema_spec is None: schema_spec = schema_spec_remote
     json_schema_spec = get_json_schema_by_spec(schema_spec,ssl_cert)
 

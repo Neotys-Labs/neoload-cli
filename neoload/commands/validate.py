@@ -2,10 +2,11 @@ import click
 from neoload_cli_lib import cli_exception
 import neoload_cli_lib.schema_validation as schema_validation
 import os
+from neoload_cli_lib.schema_validation import __default_schema_url
 
 @click.command()
 @click.option('--schema-url', help="The URL of the as-code schema. By default, use the one on Github", metavar="URL",
-              default="https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3/neoload-project/src/main/resources/as-code.latest.schema.json")
+              default=__default_schema_url)
 @click.option('--refresh', is_flag=True, help="this options update schema from the web")
 @click.option('--ssl-cert', default="", help="Path to SSL certificate or write False to disable certificate checking")
 @click.argument('file')
