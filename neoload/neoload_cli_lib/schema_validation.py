@@ -29,20 +29,20 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
         if yaml_as_object is None:
             raise cli_exception.CliException('Empty file')
     except ScannerError as err:
-        raise cli_exception.CliException('This is not a valid yaml file :\n%s' % str(err))
+        raise cli_exception.CliException('This is not a valid yaml file [{}] :\n{}'.format(yaml_file_path,err))
 
     json_schema = init_yaml_schema_with_checks(schema_spec,ssl_cert,check_schema)
 
     try:
         schema_as_object = json.loads(json_schema)
     except JSONDecodeError as err:
-        raise cli_exception.CliException('This is not a valid json schema file :\n%s' % str(err))
+        raise cli_exception.CliException('This is not a valid json schema [{}] :\n{}'.format(schema_spec,err))
 
     v = jsonschema.validators.Draft7Validator(schema_as_object)
     try:
         v.validate(yaml_as_object)
     except jsonschema.SchemaError as err:
-        raise cli_exception.CliException('This is not a valid json schema file :\n%s' % str(err))
+        raise cli_exception.CliException('This is not a valid json schema:\n%s' % str(err))
     except jsonschema.ValidationError as err:
         msgs = ""
         for error in sorted(v.iter_errors(yaml_as_object), key=str):
@@ -75,7 +75,7 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
             validate_yaml(file_path, schema_spec, ssl_cert='', check_schema=first_time_check)
         except Exception as err:
             any_errs = True
-            if continue_on_error:
+            if continue_on_error and not ('not a valid json schema' in err.message):
                 import traceback
                 logging.error('{}\n{}'.format(err,
                     ''.join(traceback.format_tb(err.__traceback__))))
