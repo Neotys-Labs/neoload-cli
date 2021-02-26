@@ -76,7 +76,9 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
         except Exception as err:
             any_errs = True
             if continue_on_error:
-                logging.error(err)
+                import traceback
+                logging.error('{}\n{}'.format(err,
+                    ''.join(traceback.format_tb(err.__traceback__))))
             else:
                 raise err
         first_time_check = False
@@ -84,6 +86,7 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
     return (any_errs,first_time_check)
 
 def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
+    logging.warning('init_yaml_schema_with_checks[check_schema]:{}'.format(check_schema))
 
     json_schema = get_yaml_schema(False)
     if json_schema is not None:
@@ -120,6 +123,10 @@ def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
 
 def get_json_schema_by_spec(schema_spec,ssl_cert):
     json_schema_spec = None
+
+    if type(schema_spec).__name__ == 'LocalPath':
+        schema_spec = schema_spec.strpath
+
     if '://' in schema_spec:
         try:
             logging.info('Attempting to check remote schema hash from %s' % schema_spec)
