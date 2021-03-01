@@ -61,18 +61,18 @@ def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
     for root, dirs, files in os.walk(path):
         for file in files:
             file_path = os.path.join(root, file)
-            (any_errs,first_time_check) = validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,any_errs,first_time_check,continue_on_error)
+            (any_errs,first_time_check) = validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,any_errs,first_time_check,continue_on_error,ssl_cert)
 
     if any_errs:
         raise ValueError('One or more errors in files underneath this directory.')
 
-def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,any_errs,first_time_check,continue_on_error):
+def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,any_errs,first_time_check,continue_on_error,ssl_cert):
 
     if any(filter(lambda ext,file_path=file_path: file_path.endswith("."+ext),extensions)) and \
        not is_not_to_be_included(file_path, nl_ignore_matcher):
         logging.debug("file_path: {}".format(file_path))
         try:
-            validate_yaml(file_path, schema_spec, ssl_cert='', check_schema=first_time_check)
+            validate_yaml(file_path, schema_spec, ssl_cert, check_schema=first_time_check)
         except Exception as err:
             any_errs = True
             if continue_on_error and not ('not a valid json schema' in err.message):
