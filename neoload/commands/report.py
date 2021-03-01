@@ -55,6 +55,7 @@ def cli(template, json_in, out_file, filter, report_type, name):
     See more templates, examples, filters with "neoload report"
     """
 
+    rest_crud.set_current_command()
     if all(v is None for v in [template,json_in,out_file,filter]):
         print_extended_help()
         tools.system_exit({'code':1,'message':''})
