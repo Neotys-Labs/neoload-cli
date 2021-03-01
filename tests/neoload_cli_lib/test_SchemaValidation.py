@@ -23,7 +23,7 @@ class TestSchemaValidation:
         yaml_file_path = datafiles.listdir()[0]
         with pytest.raises(Exception) as context:
             schema_validation.validate_yaml(yaml_file_path, __schema_url__)
-        assert schema_validation.YAML_NOT_CONFIRM_MESSAGE in str(context.value)
+        assert 'Empty file' in str(context.value)
 
     @pytest.mark.datafiles('tests/neoload_projects/invalid_to_schema.yaml')
     def test_invalid_to_schema(self, datafiles):
