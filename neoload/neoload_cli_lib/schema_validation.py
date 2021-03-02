@@ -73,9 +73,12 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
         logging.debug("file_path: {}".format(file_path))
         try:
             validate_yaml(file_path, schema_spec, ssl_cert, check_schema=first_time_check)
+        except ValueError as err:
+            any_errs = True
+            logging.error("INFOMSG:%s" % str(err))
         except Exception as err:
             any_errs = True
-            if continue_on_error and not ('not a valid json schema' in err.message):
+            if continue_on_error and not ('not a valid json schema' in str(err)):
                 import traceback
                 logging.error('{}\n{}'.format(err,
                     ''.join(traceback.format_tb(err.__traceback__))))
@@ -86,13 +89,14 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
     return (any_errs,first_time_check)
 
 def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
-    logging.warning('init_yaml_schema_with_checks[check_schema]:{}'.format(check_schema))
-
     json_schema = get_yaml_schema(False)
     if json_schema is not None:
         logging.info('Loaded schema from disk.')
     else:
         logging.warning('No prior cached schema on disk.')
+
+    if json_schema is not None:
+        logging.debug("Cached schema %s" %len(json_schema))
 
     if not check_schema:
         return json_schema
@@ -100,7 +104,10 @@ def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
     # even if there is something local, try checking if it's different from remote
     schema_spec_remote = __default_schema_url
     if schema_spec is None: schema_spec = schema_spec_remote
+    logging.debug("Getting remote schema %s" %schema_spec)
     json_schema_spec = get_json_schema_by_spec(schema_spec,ssl_cert)
+    if json_schema_spec is not None:
+        logging.debug("Retrieved remote schema %s" %len(json_schema_spec))
 
     # compare cached to spec/remote
     try:
@@ -129,7 +136,7 @@ def get_json_schema_by_spec(schema_spec,ssl_cert):
 
     if '://' in schema_spec:
         try:
-            logging.info('Attempting to check remote schema hash from %s' % schema_spec)
+            logging.info('Getting remote schema from network source %s' % schema_spec)
             json_schema_spec = requests.get(schema_spec, verify=tools.ssl_cert_to_verify(ssl_cert)).text
         except Exception as err:
             logging.warning('Could not obtain source schema {}\n{}'.format(schema_spec,err))
@@ -138,6 +145,7 @@ def get_json_schema_by_spec(schema_spec,ssl_cert):
         schema_spec = os.path.abspath(schema_spec)
         if os.path.exists(schema_spec):
             with open(schema_spec, "r") as stream:
+                logging.info('Reading remote schema from storage source %s' % schema_spec)
                 json_schema_spec = stream.read()
         else:
             raise cli_exception.CliException('Could not load schema from provided file spec: %s' % schema_spec)
