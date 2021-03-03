@@ -9,12 +9,16 @@ from neoload_cli_lib import rest_crud, tools
 def cli(name_or_id, static_dynamic, human):
     """read of NeoLoad Web zones"""
     rest_crud.set_current_command()
-    resp = rest_crud.get(get_end_point())
+    resp = get_zones()
     resp = [elem for elem in resp if filter_result(elem, name_or_id, static_dynamic)]
     if human:
         print_human(resp)
     else:
         tools.print_json(resp)
+
+
+def get_zones():
+    return rest_crud.get(get_end_point())
 
 
 def get_end_point(id_zone: str = None):
