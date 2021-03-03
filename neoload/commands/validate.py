@@ -13,6 +13,10 @@ from neoload_cli_lib.schema_validation import __default_schema_url
 def cli(file, refresh, schema_url, ssl_cert):
     """Verify that the yaml FILE matches the neoload as-code file format"""
 
+    force_schema = os.environ.get('NLCLI_FORCE_SCHEMA')
+    if force_schema is not None and len(force_schema) > 0:
+        schema_url = force_schema
+
     path = os.path.abspath(file)
     try:
         if os.path.isdir(path):
