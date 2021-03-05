@@ -6,6 +6,8 @@ from datetime import datetime, date
 import time
 import sys
 import subprocess
+import yaml
+import logging
 
 @click.command()
 @click.argument('command', type=click.Choice(['slas'], case_sensitive=False))
@@ -85,6 +87,12 @@ def monitor_loop(__id, stop, force, max_failure, stop_command):
         is_initializing = outcomes["is_initializing"]
         is_running = outcomes["is_running"]
         exit_code = 0 if datas['result']['qualityStatus']=="PASSED" else 1
+
+        debugmsg = ""
+        if exit_code!=0:
+            debugmsg = "fastfail[results]: exit_code={} is a result of datas: {}".format(exit_code,yaml.dump(datas))
+            logging.debug(debugmsg)
+            msg += debugmsg
 
         if final_run:
             break
