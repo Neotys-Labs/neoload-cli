@@ -56,7 +56,7 @@ def monitor_loop(__id, stop, force, max_failure, stop_command):
     has_exited = False
     msg = ""
     exit_code = 0
-    while (abs(dt_current-dt_started).seconds / 60) < 10:
+    while (abs(dt_current-dt_started).seconds / 60) < (60 * 4): # worst case scenario 4hrs
         datas = test_results.get_sla_data_by_name_or_id(__id)
 
         partial_intervals = list(filter(lambda x: x['status']=='FAILED',datas['sla_interval']))
@@ -88,13 +88,12 @@ def monitor_loop(__id, stop, force, max_failure, stop_command):
         is_running = outcomes["is_running"]
         exit_code = 0 if datas['result']['qualityStatus']=="PASSED" else 1
 
-        debugmsg = ""
-        if exit_code!=0:
-            debugmsg = "fastfail[results]: exit_code={} is a result of datas: {}".format(exit_code,yaml.dump(datas))
-            logging.debug(debugmsg)
-            msg += debugmsg
-
         if final_run:
+            debugmsg = ""
+            if exit_code!=0:
+                debugmsg = "fastfail[results]: exit_code={} is a result of datas: {}".format(exit_code,yaml.dump(datas))
+                logging.debug(debugmsg)
+                msg += debugmsg
             break
         elif (len(fails) > 0 or len(partial_intervals) > 0):
             displayer.__print_sla(datas['sla_global'], datas['sla_test'], datas['sla_interval'])
