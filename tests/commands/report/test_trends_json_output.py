@@ -12,6 +12,7 @@ from commands.workspaces import cli as workspaces
 from helpers.test_utils import assert_success
 from neoload_cli_lib import rest_crud
 
+import os
 
 @pytest.mark.report
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
@@ -32,10 +33,18 @@ class TestTrendsJsonOutput:
         result_logout = runner.invoke(logout)
         assert_success(result_logout)
 
+
         with open('tests/resources/report/actual_trends.json', 'w', newline='\n') as f:
             f.write(json.dumps(json_data, indent=2))
+
+        msg = ""
+        statinfo = os.stat(datafiles.listdir()[0])
+        msg += "{}".format({ 'statinfo': statinfo, 'st_size': statinfo.st_size })
+        statinfo = os.stat('tests/resources/report/actual_trends.json')
+        msg += "{}".format({ 'statinfo': statinfo, 'st_size': statinfo.st_size })
+
         assert filecmp.cmp(datafiles.listdir()[0],
-                           'tests/resources/report/actual_trends.json') is True, "Json output for the report (file tests/resources/report/actual_trends.json) is not the one expected (file tests/resources/report/expected_trends.json)"
+                           'tests/resources/report/actual_trends.json') is True, "Json output for the report (file tests/resources/report/actual_trends.json) is not the one expected (file tests/resources/report/expected_trends.json)" + msg
 
     def __return_json(self, endpoint):
         if endpoint == 'v3/workspaces/5f689c3f0860270001606902/test-results/8725e0cd-92a4-4105-803b-86433851fcfc':

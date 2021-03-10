@@ -478,6 +478,8 @@ def get_trends_report(name, time_filter, results_filter, elements_filter, exclud
 
     all_transactions = []
 
+    logging.debug("Got trends: {}".format(len(arr_selected)))
+
     fill_trend_results(arr_selected, all_transactions, elements_filter, time_filter)
 
     all_transaction_names = list(map(lambda t: t["name"], all_transactions))
@@ -551,6 +553,7 @@ def get_trends_selected_results(arr_ids,count_back,count_ahead):
     base_id = arr_ids[0]["id"]
     logging.debug('base_id: {}'.format(base_id))
     arr_results = get_results_by_result_id(base_id,count_back,count_ahead)
+
     logging.debug('selected results: {}'.format(arr_results))
     arr_sorted_by_time = list(sorted(arr_results, key=lambda x: x["startDate"]))
     base_index = list(map(lambda x: x["id"],arr_sorted_by_time)).index(base_id)
@@ -565,6 +568,12 @@ def get_trends_selected_results(arr_ids,count_back,count_ahead):
     for i in range(base_index+count_back,base_index):
         if 0 < i < len(arr_sorted_by_time):
             arr_selected.append(arr_sorted_by_time[i])
+
+    for id in arr_ids:
+        results = get_results_by_result_id(id["id"],0,0)
+        arr_selected = arr_selected + results
+
+    logging.debug("arr_selected: {}".format(len(arr_selected)))
 
     arr_selected = list(sorted(arr_selected, key=lambda x: x["startDate"]))
     for i in range(0,len(arr_selected)):
@@ -724,13 +733,15 @@ def get_results_by_result_id(__id,count_back,count_ahead):
             break
 
         entities = list(filter(lambda el: el['scenario'] == scenario, entities))
+        logging.debug("entities[{}]".format(len(entities)))
 
         all_entities += entities
         params['offset'] += page_size
 
         arr_sorted_by_time = list(sorted(all_entities, key=lambda x: x["startDate"]))
-
+        logging.debug("arr_sorted_by_time: {}".format(arr_sorted_by_time))
         results = compile_results_from_source(__id, arr_sorted_by_time, count_back, count_ahead)
+        logging.debug("entities-results[{}]".format(len(results)))
 
         if ret_count < page_size:
             break
@@ -743,10 +754,19 @@ def compile_results_from_source(base_id, all_entities, count_back, count_ahead):
         base_index = list(map(lambda x: x["id"],all_entities)).index(base_id)
         back_index = base_index+count_back
         ahead_index = base_index+count_ahead
+        logging.debug("base_index: {}".format(base_index))
+        logging.debug("ahead_index: {}".format(ahead_index))
+        logging.debug("len(all_entities): {}".format(len(all_entities)))
         #print({'base_index':base_index,'back_index':back_index,'ahead_index':ahead_index})
         for i in range(max(back_index,0),base_index+1):
+            logging.debug("picked up from back_index [{}]".format(i))
             ret.append(all_entities[i])
-        for i in range(base_index+1,min(ahead_index,len(all_entities)-1)):
+        ahead_begin = base_index+1
+        ahead_end = min(ahead_index,len(all_entities)-1)
+        logging.debug("ahead_begin: {}".format(ahead_begin))
+        logging.debug("ahead_end: {}".format(ahead_end))
+        for i in range(ahead_begin,ahead_end+1):
+            logging.debug("picked up from ahead_index [{}]".format(i))
             ret.append(all_entities[i])
     return ret
 
