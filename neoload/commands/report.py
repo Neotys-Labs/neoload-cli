@@ -579,8 +579,9 @@ def get_trends_selected_results(arr_ids,count_back,count_ahead):
             arr_selected.append(arr_sorted_by_time[i])
 
     for id in arr_ids:
-        results = get_results_by_result_id(id["id"],0,0)
-        arr_selected = arr_selected + results
+        if id != base_id:
+            results = get_results_by_result_id(id["id"],0,0)
+            arr_selected = arr_selected + results
 
     arr_final = []
     for result in arr_selected:
