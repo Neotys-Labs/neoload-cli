@@ -583,12 +583,6 @@ def get_trends_selected_results(arr_ids,count_back,count_ahead):
             results = get_results_by_result_id(id["id"],0,0)
             arr_selected = arr_selected + results
 
-    arr_final = []
-    for result in arr_selected:
-        if result["id"] not in list(map(lambda r: r["id"],arr_final)):
-            arr_final.append(result)
-    arr_selected = arr_final
-
     logging.debug("arr_selected: {}".format(len(arr_selected)))
 
     arr_selected = list(sorted(arr_selected, key=lambda x: x["startDate"]))
