@@ -176,26 +176,16 @@ def parse_template_spec(model,filter_spec,template):
 
 def parse_source_data_spec(json_in, model, report_type, name):
     filter_spec = model['filter_spec']
-    ret = {}
 
     if json_in is not None:
-        ret = json.loads(get_file_text(json_in))
-    elif report_type == "single":
-        ret = get_single_report(name,model["components"],filter_spec["time_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
+        return json.loads(get_file_text(json_in))
+
+    if report_type == "single":
+        return get_single_report(name,model["components"],filter_spec["time_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
     elif report_type == "trends":
-        ret = get_trends_report(name,filter_spec["time_filter"],filter_spec["results_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
+        return get_trends_report(name,filter_spec["time_filter"],filter_spec["results_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
     else:
         tools.system_exit({'message': "No report_type named '" + report_type + "'.", 'code': 2})
-        return None
-
-    # ret['cli'] = {
-    #     'parse_source_data_spec': {
-    #         'json_in': json_in,
-    #         'report_type': report_type,
-    #         'name': name
-    #     }
-    # }
-    return ret
 
 
 def process_final_output(template, template_text, json_data):
