@@ -20,3 +20,7 @@ class CliException(click.ClickException):
         if CliException.__debug:
             __message = traceback.format_exc() + "\n\n" + __message
         return __message
+
+    @staticmethod
+    def is_debug():
+        return CliException.__debug

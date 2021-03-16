@@ -286,100 +286,62 @@ NOTE: built-in reports produce a reduced-scope JSON data model and are therefore
 ```
 neoload zones --human
 ```
-Display in a human readable way the list of all static and dynamic zones registered on Neoload Web, and the resources attached (controllers and load generators).
+Display in a human-readable way the list of all static and dynamic zones registered on Neoload Web, and the resources attached (controllers and load generators).
 
 ## Create local docker infrastructure to run a test [EXPERIMENTAL]
 
 ***WARNING: Docker features are not officially supported by Neotys as they rely heavily on your own Docker setup and environment. This command is only for local/dev test scenarios to simplify infrastructure requirements.***
-
-NOTE: this functionality is not in the 1.0.0 version (May 2020 on Pypi), but is scheduled for inclusion by June 16th 2020.
- If you want to obtain this version before that time, please intall the version 1.1.0 release candidate from pypi:
-```
-pip install neoload==1.1.0rc1
-```
-
-If you want to use the latest commit of this feature, please pull this Git repo, checkout the topic-docker-command
- branch and install locally. You may need to uninstall your existing version of this CLI first:
-```
-python3 -m pip uninstall neoload
-git clone https://github.com/Neotys-Labs/neoload-cli.git
-cd neoload-cli
-git checkout topic-docker-command
-python3 -m pip install -e .
-```
 
 In certain environments, such as on a local dev workstation or in a Docker-in-Docker CI build node, it is useful
  to "bring your own infrastructure". In other words, when you don't already have a controller and load generators
  available in a zone, you can spin some up using Docker before the test starts. An example of an all-on-one approach:
 
 ```
+neoload docker install
+
 neoload login $NLW_TOKEN \
-        test-settings --zone $NLW_ZONE_STATIC --lgs 2 --scenario sanityScenario create NewTest1 \
+        test-settings --lgs 2 --scenario sanityScenario create NewTest1 \
         project --path tests/neoload_projects/example_1 upload \
-        docker prepare
         run
 ```
 
-What the 'docker prepare' CLI command does is to look at the test-settings for what zones and how many resources
- we need, then create local Docker containers and attach them to NeoLoad Web accordingly in preparation for 'run'.
+What the 'docker install' CLI add step in run command. This step is triggered when zone of controller the test-settings is same than docker.zone (default is defaultzone).
+When it is triggered, it launches one controller with number of LG test-settings in docker.zone.
+At the end of the run the containers are removed.
+
+
+The docker container can be launched manually with neoload docker up command and removed with neoload docker down command.
+In this case the number of controller and lg is defined by configuration respectively docker.controller.default_count (default: 1) and
+docker.lg.default_count (default: 2).
+
 
 ```
-Usage: neoload test-results [OPTIONS] [[prepare|attach|detach|forget]]
+Usage: neoload docker [OPTIONS] [up|down|clean|forget|install|uninstall|status]
 
-neoload docker prepare       # uses test-settings for 'run' command
-neoload docker attach        # spin up Docker network and containers to be used for the test run
-neoload docker detach        # remove Docker resources created to facilitate the test run
-neoload docker forget        # disassociate 'run' command with docker; otherwise spin up/down Docker containers when run
+
+neoload docker up / down         # start or delete container depend on configuration 
+neoload docker install/uninstall # add/remove hooks on run command to up when the controller zone is same and zone is empty. Shut down at the end of test running.
+neoload docker forget            # remove container from the launched list. That avoid to be removed with down command.
+neoload docker clean             # remove all container created by neoload-cli even if it was forgotten.
+neoload docker status            # display configuration and general status.
 
 Options:
+  --no-wait  Do not wait for controller and load generator in zones api
+  --help     Show this message and exit.
 
---tag                        # the Docker tag (i.e. version) to use for ctrlimage and lgimage
---ctrlImage                  # the Docker image to use for the controller
---ctrlImage                  # the Docker image to use for the load generator(s)
---all                        # used in conjunction with 'detach' command; remove containers with label 'neoload-cli'
---add-hosts                  # add hosts overrides to containers; format is hostA=IP;hostB=IP
-CLI
+Configuration:
+  - docker.controller.image (default:  neotys/neoload-controller:latest)
+  - docker.controller.default_count (default: 1)
+  - docker.lg.image (default: neotys/neoload-loadgenerator:latest)
+  - docker.lg.default_count (default: 2)
+  - docker.zone (default: defaultzone)
+
 ```
 
 NOTE: Docker CLI must be installed on the system using these commands. This will use
  the Docker daemon, however it is configured. In a Docker-in-Docker context, this is inferred.
  For local workstations, it is sufficient to install Docker Desktop or Docker for Mac.
 
-NOTE: If the 'prepare' or 'attach' actions are used before the 'run' command, the test will use or reuse
- the Docker configuration for infrastructure. This requires that all zones in test-settings be static zones.
-
-NOTE: The 'forget' action undos the above note, in cases where static zones were in use by test-settings
- at first, but then were changed to use dynamic zones where Docker attaches make no sense.
-
-NOTE: When using the 'detach' or 'forget' actions and containers are running, they will be stopped.
- There will be a prompt/check if stdin is attached to this process (typically not the case in CI)
-
-### Pre-connecting Docker in Preparation for Consecutive Test Runs
-
-You may also want to spin up Docker containers and keep them around for multiple test runs using the same
- infrastructure, such that:
-
-```
-neoload login $NLW_TOKEN
-
-# configures for max number of LGs, starts with a sanity scenario (usually a 1-2min test)
-neoload test-settings --zone $NLW_ZONE_STATIC --lgs 5 --scenario sanityScenario use NewTest1 \
-        project --path tests/neoload_projects/example_1 upload
-
-# spins up 5 LGs
-neoload docker attach
-
-# runs the configured sanityScenario, verifies infrastructure, routing, and project is ready for fullTest
-neoload run
-
-# reconfigure for fullTest and run, uses all 5 load generators
-neoload test-settings --scenario fullTest use NewTest1 \
-        run
-
-# put this in an 'always' or 'finally' closure (in pipelines) to ensure Docker containers are spun down
-neoload docker --all detach
-
-```
 
 
 ## Continuous Testing Examples
