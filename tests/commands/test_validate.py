@@ -5,11 +5,17 @@ import pytest
 from click.testing import CliRunner
 from commands.validate import cli as validate
 from neoload_cli_lib.user_data import __yaml_schema_file as yaml_schema_file
+from neoload_cli_lib import user_data
 import neoload_cli_lib.schema_validation as schema_validation
 import os
+import shutil
+
 
 @pytest.mark.validation
 class TestValidate:
+    @classmethod
+    def setUpClass(cls):
+        shutil.rmtree(user_data.__config_dir)
 
     def preserve_schema(self):
         # archive existing and put it back afterwards
@@ -82,7 +88,7 @@ class TestValidate:
         assert result.exit_code == 1
 
     @pytest.mark.slow
-    @mock.patch('requests.get', mock.Mock(return_value=mock.Mock(text="iooizjfiezjfzioejfiozej")))
+    @mock.patch('requests.get', mock.Mock(return_value=mock.Mock(text="<i>ooi>zjfi<ezjfzioejfiozej")))
     def test_dir_with_bad_schema(self):
         result = self.try_dir_with_schema("https://www.never-use-external-resources-during-a-test-unit.com")
         assert 'not a valid json schema' in str(result.output)
@@ -145,7 +151,7 @@ class TestValidate:
     @pytest.mark.slow
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_dir_with_no_prior_schema(self):
-        (l,r) = self.preserve_schema()
+        (l, r) = self.preserve_schema()
 
         # now run the actual function test and capture if failed
         err_msg = None
@@ -154,10 +160,10 @@ class TestValidate:
         except Exception as err:
             err_msg = "err: {}".format(err)
 
-        self.restore_schema(l,r)
+        self.restore_schema(l, r)
 
         # finally, if a failure occured, report it in the main thread
-        assert err_msg == None, err_msg
+        assert err_msg is None, err_msg
 
     @pytest.mark.slow
     @pytest.mark.datafiles('resources/as-code.latest.schema.json')
