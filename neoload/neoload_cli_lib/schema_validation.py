@@ -19,6 +19,8 @@ YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
 __default_schema_url = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3/neoload-project/src/main/resources/as-code.latest.schema.json"
 
 def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
+    json_schema = init_yaml_schema_with_checks(schema_spec,ssl_cert,check_schema)
+
     try:
         yaml_content = open(yaml_file_path)
     except Exception as err:
@@ -30,8 +32,6 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
             raise cli_exception.CliException('Empty file: ' + str(yaml_file_path))
     except ScannerError as err:
         raise cli_exception.CliException('This is not a valid yaml file [{}] :\n{}'.format(yaml_file_path,err))
-
-    json_schema = init_yaml_schema_with_checks(schema_spec,ssl_cert,check_schema)
 
     try:
         schema_as_object = json.loads(json_schema)
@@ -49,7 +49,7 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
             path = "\\".join(list(map(lambda x: str(x), error.path)))
             msgs += "\n" + (error.message if hasattr(error, 'message') else str(error)) + "\n\tat: " + path + "\n\tgot: \n" + (yaml.dump(error.instance) if hasattr(error, 'instance') else '') + "\n"
         msgs = ("in file %s" % yaml_file_path) + msgs
-        raise ValueError(YAML_NOT_CONFIRM_MESSAGE + '\n' + msgs)
+        raise cli_exception.CliException(YAML_NOT_CONFIRM_MESSAGE + '\n' + msgs)
 
 
 def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
