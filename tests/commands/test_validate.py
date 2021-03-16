@@ -86,14 +86,16 @@ class TestValidate:
 
     @pytest.mark.slow
     def test_dir_with_bad_schema(self):
-        result = self.try_dir_with_schema('https://www.neotys.com')
-        assert 'not a valid json schema' in str(result.output)
-        assert result.exit_code == 1
+        url = 'tests/resources/report/expected_custom_report.html'
+        if os.path.isfile(url):
+            result = self.try_dir_with_schema(url)
+            assert 'not a valid json schema' in str(result.output)
+            assert result.exit_code == 1
 
     @pytest.mark.slow
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_single_with_no_prior_schema(self, datafiles):
-        (l,r) = self.preserve_schema()
+        (l, r) = self.preserve_schema()
 
         # now run the actual function test and capture if failed
         err_msg = None

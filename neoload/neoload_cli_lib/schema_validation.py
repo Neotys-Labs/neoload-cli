@@ -27,7 +27,7 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
     try:
         yaml_as_object = yaml.load(yaml_content, yaml.FullLoader)
         if yaml_as_object is None:
-            raise cli_exception.CliException('Empty file')
+            raise cli_exception.CliException('Empty file: ' + str(yaml_file_path))
     except ScannerError as err:
         raise cli_exception.CliException('This is not a valid yaml file [{}] :\n{}'.format(yaml_file_path,err))
 
@@ -47,7 +47,7 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
         msgs = ""
         for error in sorted(v.iter_errors(yaml_as_object), key=str):
             path = "\\".join(list(map(lambda x: str(x), error.path)))
-            msgs += "\n" + error.message + "\n\tat: " + path + "\n\tgot: \n" + yaml.dump(error.instance) + "\n"
+            msgs += "\n" + (error.message if hasattr(error, 'message') else str(error)) + "\n\tat: " + path + "\n\tgot: \n" + (yaml.dump(error.instance) if hasattr(error, 'instance') else '') + "\n"
         msgs = ("in file %s" % yaml_file_path) + msgs
         raise ValueError(YAML_NOT_CONFIRM_MESSAGE + '\n' + msgs)
 
@@ -75,7 +75,7 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
             validate_yaml(file_path, schema_spec, ssl_cert, check_schema=first_time_check)
         except Exception as err:
             any_errs = True
-            if continue_on_error and not ('not a valid json schema' in err.message):
+            if continue_on_error and not ('not a valid json schema' in (err.message if hasattr(err, 'message') else str(err))):
                 import traceback
                 logging.error('{}\n{}'.format(err,
                     ''.join(traceback.format_tb(err.__traceback__))))
