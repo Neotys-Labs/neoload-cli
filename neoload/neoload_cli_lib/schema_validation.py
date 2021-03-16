@@ -75,10 +75,11 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
             validate_yaml(file_path, schema_spec, ssl_cert, check_schema=first_time_check)
         except Exception as err:
             any_errs = True
-            if continue_on_error and not ('not a valid json schema' in (err.message if hasattr(err, 'message') else str(err))):
+            if continue_on_error and not ('not a valid json schema' in str(err))\
+                    and not ('Could not obtain schema definition' in str(err)):
+                #fixme: please use your own Exception
                 import traceback
-                logging.error('{}\n{}'.format(err,
-                    ''.join(traceback.format_tb(err.__traceback__))))
+                logging.error('{}\n{}'.format(err,''.join(traceback.format_tb(err.__traceback__))))
             else:
                 raise err
         first_time_check = False
@@ -121,7 +122,8 @@ def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
 
     return json_schema
 
-def get_json_schema_by_spec(schema_spec,ssl_cert):
+
+def get_json_schema_by_spec(schema_spec, ssl_cert):
     json_schema_spec = None
 
     if type(schema_spec).__name__ == 'LocalPath':

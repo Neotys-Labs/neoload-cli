@@ -86,8 +86,7 @@ class TestValidate:
 
     @pytest.mark.slow
     def test_dir_with_bad_schema(self):
-        url = 'file://'+os.getcwd()+'/tests/resources/report/expected_custom_report.html'
-        result = self.try_dir_with_schema(url)
+        result = self.try_dir_with_schema("https://www.google.com")
         assert 'not a valid json schema' in str(result.output)
         assert result.exit_code == 1
 
