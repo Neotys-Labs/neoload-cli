@@ -86,11 +86,10 @@ class TestValidate:
 
     @pytest.mark.slow
     def test_dir_with_bad_schema(self):
-        url = 'tests/resources/report/expected_custom_report.html'
-        if os.path.isfile(url):
-            result = self.try_dir_with_schema(url)
-            assert 'not a valid json schema' in str(result.output)
-            assert result.exit_code == 1
+        url = 'file://'+os.getcwd()+'/tests/resources/report/expected_custom_report.html'
+        result = self.try_dir_with_schema(url)
+        assert 'not a valid json schema' in str(result.output)
+        assert result.exit_code == 1
 
     @pytest.mark.slow
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
