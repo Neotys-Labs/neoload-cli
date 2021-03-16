@@ -86,7 +86,8 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
 
     return (any_errs,first_time_check)
 
-def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
+
+def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
     logging.warning('init_yaml_schema_with_checks[check_schema]:{}'.format(check_schema))
 
     json_schema = get_yaml_schema(False)
@@ -100,8 +101,9 @@ def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
 
     # even if there is something local, try checking if it's different from remote
     schema_spec_remote = __default_schema_url
-    if schema_spec is None: schema_spec = schema_spec_remote
-    json_schema_spec = get_json_schema_by_spec(schema_spec,ssl_cert)
+    if schema_spec is None:
+        schema_spec = schema_spec_remote
+    json_schema_spec = get_json_schema_by_spec(schema_spec, ssl_cert)
 
     # compare cached to spec/remote
     try:

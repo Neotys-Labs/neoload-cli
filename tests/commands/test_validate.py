@@ -1,4 +1,6 @@
 import re
+from unittest import mock
+
 import pytest
 from click.testing import CliRunner
 from commands.validate import cli as validate
@@ -79,16 +81,17 @@ class TestValidate:
         assert 'Could not obtain schema definition' in str(result.output)
         assert result.exit_code == 1
 
+    @pytest.mark.slow
+    @mock.patch('requests.get', mock.Mock(return_value=mock.Mock(text="iooizjfiezjfzioejfiozej")))
+    def test_dir_with_bad_schema(self):
+        result = self.try_dir_with_schema("https://www.never-use-external-resources-during-a-test-unit.com")
+        assert 'not a valid json schema' in str(result.output)
+        assert result.exit_code == 1
+
     def try_dir_with_schema(self,url):
         path = 'tests/neoload_projects/'
         runner = CliRunner()
         return runner.invoke(validate, [str(path), '--schema-url', url, '--refresh'])
-
-    @pytest.mark.slow
-    def test_dir_with_bad_schema(self):
-        result = self.try_dir_with_schema("https://www.google.com")
-        assert 'not a valid json schema' in str(result.output)
-        assert result.exit_code == 1
 
     @pytest.mark.slow
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
