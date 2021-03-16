@@ -27,7 +27,7 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
     try:
         yaml_as_object = yaml.load(yaml_content, yaml.FullLoader)
         if yaml_as_object is None:
-            raise cli_exception.CliException('Empty file: ' + yaml_file_path)
+            raise cli_exception.CliException('Empty file')
     except ScannerError as err:
         raise cli_exception.CliException('This is not a valid yaml file [{}] :\n{}'.format(yaml_file_path,err))
 
