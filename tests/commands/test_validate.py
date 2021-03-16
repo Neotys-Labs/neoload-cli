@@ -116,10 +116,10 @@ class TestValidate:
         'resources/as-code.latest.schema.json'
     )
     def test_single_with_prior_schema(self, datafiles):
-        datafiles_ascode = list(filter(lambda f: '.yaml' in f.strpath,datafiles.listdir()))[0]
-        datafiles_schema = list(filter(lambda f: '.json' in f.strpath,datafiles.listdir()))[0]
+        datafiles_ascode = list(filter(lambda f: '.yaml' in f.strpath, datafiles.listdir()))[0]
+        datafiles_schema = list(filter(lambda f: '.json' in f.strpath, datafiles.listdir()))[0]
 
-        (l,r) = self.preserve_schema()
+        (l, r) = self.preserve_schema()
 
         # now run the actual function test and capture if failed
         err_msg = None
@@ -143,6 +143,7 @@ class TestValidate:
         assert err_msg == None, err_msg
 
     @pytest.mark.slow
+    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_dir_with_no_prior_schema(self):
         (l,r) = self.preserve_schema()
 
@@ -160,7 +161,7 @@ class TestValidate:
 
     @pytest.mark.slow
     @pytest.mark.datafiles('resources/as-code.latest.schema.json')
-    def test_dir_with_schema_url_and_refresh(self,datafiles):
+    def test_dir_with_schema_url_and_refresh(self, datafiles):
         (l,r) = self.preserve_schema()
 
         with open(l, "w") as stream:
