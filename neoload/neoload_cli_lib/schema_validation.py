@@ -20,6 +20,10 @@ __default_schema_url = "https://raw.githubusercontent.com/Neotys-Labs/neoload-mo
 
 def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
     json_schema = init_yaml_schema_with_checks(schema_spec,ssl_cert,check_schema)
+    try:
+        schema_as_object = json.loads(json_schema)
+    except JSONDecodeError as err:
+        raise cli_exception.CliException('This is not a valid json schema [{}] :\n{}'.format(schema_spec,err))
 
     try:
         yaml_content = open(yaml_file_path)
@@ -32,11 +36,6 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
             raise cli_exception.CliException('Empty file: ' + str(yaml_file_path))
     except ScannerError as err:
         raise cli_exception.CliException('This is not a valid yaml file [{}] :\n{}'.format(yaml_file_path,err))
-
-    try:
-        schema_as_object = json.loads(json_schema)
-    except JSONDecodeError as err:
-        raise cli_exception.CliException('This is not a valid json schema [{}] :\n{}'.format(schema_spec,err))
 
     v = jsonschema.validators.Draft7Validator(schema_as_object)
     try:
@@ -78,8 +77,7 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
             if continue_on_error and not ('not a valid json schema' in str(err))\
                     and not ('Could not obtain schema definition' in str(err)):
                 #fixme: please use your own Exception
-                import traceback
-                logging.error('{}\n{}'.format(err,''.join(traceback.format_tb(err.__traceback__))))
+                logging.error(str(err) + "\n")
             else:
                 raise err
         first_time_check = False
@@ -88,8 +86,6 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
 
 
 def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
-    logging.warning('init_yaml_schema_with_checks[check_schema]:{}'.format(check_schema))
-
     json_schema = get_yaml_schema(False)
     if json_schema is not None:
         logging.info('Loaded schema from disk.')
