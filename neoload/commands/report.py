@@ -477,9 +477,9 @@ def get_trends_report(name, time_filter, results_filter, elements_filter, exclud
 
     all_transactions = []
 
-    logging.debug("Settled on results: {}{}".format(
+    logging.debug("Settled on {} result(s):\n{}".format(
         len(arr_selected),
-        "\n - ".join(list(map(lambda r: r["id"],arr_selected))))
+        "\n".join(list(map(lambda r: " - "+r["id"],arr_selected))))
     )
 
     fill_trend_results(arr_selected, all_transactions, elements_filter, time_filter)
