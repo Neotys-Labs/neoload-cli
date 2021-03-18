@@ -1,0 +1,3 @@
+
+class BadAsCodeSchemaException(Exception):
+    pass
