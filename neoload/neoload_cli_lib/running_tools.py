@@ -4,7 +4,7 @@ import webbrowser
 from signal import signal, SIGINT
 
 from commands import logs_url, test_results
-from neoload_cli_lib import tools, rest_crud
+from neoload_cli_lib import tools, rest_crud,hooks
 
 __current_id = None
 __count = 0
@@ -29,6 +29,7 @@ def wait(results_id, exit_code_sla):
         time.sleep(20)
 
     __current_id = None
+    hooks.trig("test.stop")
     tools.system_exit(test_results.summary(results_id), exit_code_sla)
 
 
@@ -85,5 +86,6 @@ def stop(results_id, force: bool, quit_option=False):
     policy = 'TERMINATE' if force else 'GRACEFUL'
     if tools.confirm("Do you want stop the test" + results_id + " with " + policy.lower() + " policy ?", quit_option):
         rest_crud.post(test_results.get_end_point(results_id, "/stop"), {"stopPolicy": policy})
+        hooks.trig("test.stop")
         return True
     return False

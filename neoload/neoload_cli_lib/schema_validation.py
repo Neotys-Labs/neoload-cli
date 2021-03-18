@@ -6,7 +6,7 @@ import requests
 import yaml
 from yaml.scanner import ScannerError
 
-from neoload_cli_lib import cli_exception
+from neoload_cli_lib import cli_exception, bad_as_code_exception
 from neoload_cli_lib.user_data import update_schema, get_yaml_schema, tools
 
 import logging
@@ -19,6 +19,13 @@ YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
 __default_schema_url = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3/neoload-project/src/main/resources/as-code.latest.schema.json"
 
 def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
+    json_schema = init_yaml_schema_with_checks(schema_spec,ssl_cert,check_schema)
+    try:
+        schema_as_object = json.loads(json_schema)
+    except JSONDecodeError as err:
+        raise bad_as_code_exception.BadAsCodeSchemaException(
+            'This is not a valid json schema [{}] :\n{}'.format(schema_spec, err))
+
     try:
         yaml_content = open(yaml_file_path)
     except Exception as err:
@@ -27,16 +34,9 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
     try:
         yaml_as_object = yaml.load(yaml_content, yaml.FullLoader)
         if yaml_as_object is None:
-            raise cli_exception.CliException('Empty file')
+            raise cli_exception.CliException('Empty file: ' + str(yaml_file_path))
     except ScannerError as err:
         raise cli_exception.CliException('This is not a valid yaml file [{}] :\n{}'.format(yaml_file_path,err))
-
-    json_schema = init_yaml_schema_with_checks(schema_spec,ssl_cert,check_schema)
-
-    try:
-        schema_as_object = json.loads(json_schema)
-    except JSONDecodeError as err:
-        raise cli_exception.CliException('This is not a valid json schema [{}] :\n{}'.format(schema_spec,err))
 
     v = jsonschema.validators.Draft7Validator(schema_as_object)
     try:
@@ -47,9 +47,9 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
         msgs = ""
         for error in sorted(v.iter_errors(yaml_as_object), key=str):
             path = "\\".join(list(map(lambda x: str(x), error.path)))
-            msgs += "\n" + error.message + "\n\tat: " + path + "\n\tgot: \n" + yaml.dump(error.instance) + "\n"
+            msgs += "\n" + (error.message if hasattr(error, 'message') else str(error)) + "\n\tat: " + path + "\n\tgot: \n" + (yaml.dump(error.instance) if hasattr(error, 'instance') else '') + "\n"
         msgs = ("in file %s" % yaml_file_path) + msgs
-        raise ValueError(YAML_NOT_CONFIRM_MESSAGE + '\n' + msgs)
+        raise cli_exception.CliException(YAML_NOT_CONFIRM_MESSAGE + '\n' + msgs)
 
 
 def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
@@ -75,19 +75,16 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
             validate_yaml(file_path, schema_spec, ssl_cert, check_schema=first_time_check)
         except Exception as err:
             any_errs = True
-            if continue_on_error and not ('not a valid json schema' in err.message):
-                import traceback
-                logging.error('{}\n{}'.format(err,
-                    ''.join(traceback.format_tb(err.__traceback__))))
+            if continue_on_error and not isinstance(err, bad_as_code_exception.BadAsCodeSchemaException):
+                logging.error(str(err) + "\n")
             else:
                 raise err
         first_time_check = False
 
     return (any_errs,first_time_check)
 
-def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
-    logging.warning('init_yaml_schema_with_checks[check_schema]:{}'.format(check_schema))
 
+def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
     json_schema = get_yaml_schema(False)
     if json_schema is not None:
         logging.info('Loaded schema from disk.')
@@ -99,8 +96,9 @@ def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
 
     # even if there is something local, try checking if it's different from remote
     schema_spec_remote = __default_schema_url
-    if schema_spec is None: schema_spec = schema_spec_remote
-    json_schema_spec = get_json_schema_by_spec(schema_spec,ssl_cert)
+    if schema_spec is None:
+        schema_spec = schema_spec_remote
+    json_schema_spec = get_json_schema_by_spec(schema_spec, ssl_cert)
 
     # compare cached to spec/remote
     try:
@@ -117,11 +115,12 @@ def init_yaml_schema_with_checks(schema_spec,ssl_cert='',check_schema=True):
         logging.warning('Could not update schema cache {}\n{}'.format(schema_spec,err))
 
     if json_schema is None:
-        raise cli_exception.CliException('Could not obtain schema definition therefore could not validate this schema.')
+        raise bad_as_code_exception.BadAsCodeSchemaException('Could not obtain schema definition therefore could not validate this schema.')
 
     return json_schema
 
-def get_json_schema_by_spec(schema_spec,ssl_cert):
+
+def get_json_schema_by_spec(schema_spec, ssl_cert):
     json_schema_spec = None
 
     if type(schema_spec).__name__ == 'LocalPath':
@@ -140,6 +139,6 @@ def get_json_schema_by_spec(schema_spec,ssl_cert):
             with open(schema_spec, "r") as stream:
                 json_schema_spec = stream.read()
         else:
-            raise cli_exception.CliException('Could not load schema from provided file spec: %s' % schema_spec)
+            raise bad_as_code_exception.BadAsCodeSchemaException('Could not load schema from provided file spec: %s' % schema_spec)
 
     return json_schema_spec
