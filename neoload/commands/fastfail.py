@@ -56,7 +56,8 @@ def monitor_loop(__id, stop, force, max_failure, stop_command):
     has_exited = False
     msg = ""
     exit_code = 0
-    while (abs(dt_current-dt_started).seconds / 60) < (60 * 4): # worst case scenario 4hrs
+    mins_worst_case = get_duration_mins_by_result(__id)
+    while (abs(dt_current-dt_started).seconds / 60) < (60 * 4):
         datas = test_results.get_sla_data_by_name_or_id(__id)
 
         partial_intervals = list(filter(lambda x: x['status']=='FAILED',datas['sla_interval']))
@@ -110,6 +111,15 @@ def monitor_loop(__id, stop, force, max_failure, stop_command):
     print('fastfail ended: ' + str(dt_current))
 
     tools.system_exit({'message': msg, 'code': exit_code})
+
+def get_duration_mins_by_result(__id):
+
+    ret = (60 * 4) # initial default, if results -> settings -> project
+    #summary = test_results.get_json_summary(__id)["summary"]
+    #if 'testId' in summary
+
+    #rest_crud.get_from_file_storage(get_endpoint(setting_id))
+    return ret
 
 def process_state(datas,fails,fail_options,is_initializing,is_running):
 
