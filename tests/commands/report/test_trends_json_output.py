@@ -33,7 +33,6 @@ class TestTrendsJsonOutput:
         result_logout = runner.invoke(logout)
         assert_success(result_logout)
 
-
         with open('tests/resources/report/actual_trends.json', 'w', newline='\n') as f:
             f.write(json.dumps(json_data, indent=2))
 

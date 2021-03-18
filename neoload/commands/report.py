@@ -477,7 +477,10 @@ def get_trends_report(name, time_filter, results_filter, elements_filter, exclud
 
     all_transactions = []
 
-    logging.debug("Got trends: {}".format(len(arr_selected)))
+    logging.debug("Settled on results: {}{}".format(
+        len(arr_selected),
+        "\n - ".join(list(map(lambda r: r["id"],arr_selected))))
+    )
 
     fill_trend_results(arr_selected, all_transactions, elements_filter, time_filter)
 
@@ -550,16 +553,11 @@ def get_trend_count_back_ahead(arr_directives):
 
 def get_trends_selected_results(arr_ids,count_back,count_ahead):
     base_id = arr_ids[0]["id"]
-    logging.debug('base_id: {}'.format(base_id))
     arr_results = get_results_by_result_id(base_id,count_back,count_ahead)
 
-    logging.debug('selected results: {}'.format(arr_results))
     arr_sorted_by_time = list(sorted(arr_results, key=lambda x: x["startDate"]))
     base_index = list(map(lambda x: x["id"],arr_sorted_by_time)).index(base_id)
     arr_selected = []
-    logging.debug('base_index: {}'.format(base_index))
-    logging.debug('count_ahead: {}'.format(count_ahead))
-    logging.debug('count_back: {}'.format(count_back))
 
     for i in range(base_index,base_index+1+count_ahead):
         if 0 < i < len(arr_sorted_by_time):
@@ -578,8 +576,6 @@ def get_trends_selected_results(arr_ids,count_back,count_ahead):
         if result["id"] not in list(map(lambda r: r["id"],arr_final)):
             arr_final.append(result)
     arr_selected = arr_final
-
-    logging.debug("arr_selected: {}".format(len(arr_selected)))
 
     arr_selected = list(sorted(arr_selected, key=lambda x: x["startDate"]))
     for i in range(0,len(arr_selected)):
@@ -712,13 +708,8 @@ def get_results_by_result_id(__id,count_back,count_ahead):
     result = rest_crud.get(get_end_point(__id))
     project = result["project"]
     scenario = result["scenario"]
-    logging.debug({'project':project,'scenario':scenario})
     total_expected = -count_back + 1 + count_ahead
     results = []
-    logging.debug("based_id: {}".format(__id))
-    logging.debug("total_expected: {}".format(total_expected))
-    logging.debug("count_back: {}".format(count_back))
-    logging.debug("count_ahead: {}".format(count_ahead))
 
     page_size = 200
     params = {
@@ -739,15 +730,12 @@ def get_results_by_result_id(__id,count_back,count_ahead):
             break
 
         entities = list(filter(lambda el: el['scenario'] == scenario, entities))
-        logging.debug("entities[{}]".format(len(entities)))
 
         all_entities += entities
         params['offset'] += page_size
 
         arr_sorted_by_time = list(sorted(all_entities, key=lambda x: x["startDate"]))
-        logging.debug("arr_sorted_by_time: {}".format(arr_sorted_by_time))
         results = compile_results_from_source(__id, arr_sorted_by_time, count_back, count_ahead)
-        logging.debug("entities-results[{}]".format(len(results)))
 
         if ret_count < page_size:
             break
@@ -760,19 +748,13 @@ def compile_results_from_source(base_id, all_entities, count_back, count_ahead):
         base_index = list(map(lambda x: x["id"],all_entities)).index(base_id)
         back_index = base_index+count_back
         ahead_index = base_index+count_ahead
-        logging.debug("base_index: {}".format(base_index))
-        logging.debug("ahead_index: {}".format(ahead_index))
-        logging.debug("len(all_entities): {}".format(len(all_entities)))
-        #print({'base_index':base_index,'back_index':back_index,'ahead_index':ahead_index})
+
         for i in range(max(back_index,0),base_index+1):
-            logging.debug("picked up from back_index [{}]".format(i))
             ret.append(all_entities[i])
         ahead_begin = base_index+1
         ahead_end = min(ahead_index,len(all_entities)-1)
-        logging.debug("ahead_begin: {}".format(ahead_begin))
-        logging.debug("ahead_end: {}".format(ahead_end))
+
         for i in range(ahead_begin,ahead_end+1):
-            logging.debug("picked up from ahead_index [{}]".format(i))
             ret.append(all_entities[i])
     return ret
 
