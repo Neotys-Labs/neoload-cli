@@ -1,4 +1,5 @@
 import re
+import time
 from unittest import mock
 
 import pytest
@@ -64,6 +65,7 @@ class TestValidate:
         assert result.exit_code == 1
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @mock.patch('requests.get', mock.Mock(return_value=mock.Mock(text="<!DOCTYPE html><html>invalid resource</html>")))
     def test_bad_schema(self, datafiles):
         file_path = datafiles.listdir()[0]
         runner = CliRunner()
@@ -78,8 +80,8 @@ class TestValidate:
         assert re.compile(".*Error: Missing argument [\"']FILE[\"'].*", re.DOTALL).match(result.output) is not None
         assert result.exit_code == 2
 
-    @pytest.mark.slow
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @mock.patch('requests.get', mock.Mock(side_effect=Exception("Failed to establish a new connection")))
     def test_bad_schema_url(self, datafiles):
         file_path = datafiles.listdir()[0]
         runner = CliRunner()
@@ -170,19 +172,16 @@ class TestValidate:
     def test_dir_with_schema_url_and_refresh(self, datafiles):
         (l,r) = self.preserve_schema()
 
+        orig_content = 'invalid schema should fail if used'
         with open(l, "w") as stream:
-            stream.write('invalid schema should fail if used')
-
-        orig_mtime = os.path.getmtime(l)
-        orig_content = ""
-        with open(l, "r") as stream:
-            orig_content = stream.read()
-
+            stream.write(orig_content)
 
         # now run the actual function test and capture if failed
         err_msg = None
         try:
             file_path = datafiles.listdir()[0]
+            orig_mtime = os.path.getmtime(l)
+            time.sleep(1)
             result = self.try_dir_with_schema(file_path) # should modify the schema file
             # result of above matters less than its side-effects mtime change
             now_mtime = os.path.getmtime(l)
@@ -196,4 +195,4 @@ class TestValidate:
         self.restore_schema(l,r)
 
         # finally, if a failure occured, report it in the main thread
-        assert err_msg == None, err_msg
+        assert err_msg is None, err_msg
