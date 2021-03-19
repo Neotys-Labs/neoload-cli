@@ -319,7 +319,7 @@ docker.lg.default_count (default: 2).
 Usage: neoload docker [OPTIONS] [up|down|clean|forget|install|uninstall|status]
 
 
-neoload docker up / down         # start or delete container depend on configuration 
+neoload docker up / down         # start or delete container depend on configuration
 neoload docker install/uninstall # add/remove hooks on run command to up when the controller zone is same and zone is empty. Shut down at the end of test running.
 neoload docker forget            # remove container from the launched list. That avoid to be removed with down command.
 neoload docker clean             # remove all container created by neoload-cli even if it was forgotten.
@@ -433,6 +433,8 @@ Status of IDE / editor integrations
 ## Contributing
 Feel free to fork this repo, make changes, *test locally*, and create a pull request.
 
+### Local Verification
+
 #### Tests
 As part of your testing, you should run the built-in test suite with the following command: \
 NOTE: for testing from Mac, please change the PYTHONPATH separators below to colons (:) instead of semicolons (;).
@@ -450,6 +452,22 @@ Additionally, any contributions to the DSL validation functionality, such as on 
 ./tests/neoload_projects/yaml_variants/validate_all.sh
 ```
 This command executes a number of NEGATIVE tests to prove that changes to the JSON schema or validation process produce failures when their input is malformed in very specific ways (common mistakes).
+
+### Release Process (managed by Neotys team)
+
+#### Auto-generating Changelog
+
+Before tagging a release, merged PRs should update the CHANGELOG.md via the following:
+
+```
+github_changelog_generator -u Neotys-Labs -p neoload-cli --token $GIT_CHANGELOG_GEN --exclude-tags-regex ".*(dev|rc).*" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
+```
+
+This utility is a [Ruby-based GEM](https://github.com/github-changelog-generator/github-changelog-generator) that can be installed (also used in CI/Actions) as follows:
+
+```
+gem install github_changelog_generator
+```
 
 #### Version management on pypi
 Suppose X, Y, Z and N are integers, versions will be named as following on pypi: \
