@@ -10,10 +10,11 @@ class TestFiltering:
         assert cli_params['description'] == 'a word'
 
     def test_remove_by_filter(self):
-        cli_params = {'description': 'a word'}
+        cli_params = {'description': 'a word', 'int': '6'}
         all_elements = [{"id": "someId", "name": "elementWithouDescription"},
-                        {"id": "someId", "name": "toto", "description": "a word"},
-                        {"id": "someId", "name": "notMe", "description": ".... "}]
+                        {"id": "someId", "name": "toto", "description": "a word", "int": 6},
+                        {"id": "someId", "name": "notMe", "description": ".... "},
+                        {"id": "someId", "name": "numeric", "int": 5}]
         filtered_elements = filtering.remove_by_filter(all_elements, cli_params)
         assert len(filtered_elements) == 1
-        assert filtered_elements[0] == {"id": "someId", "name": "toto", "description": "a word"}
+        assert filtered_elements[0] == {"id": "someId", "name": "toto", "description": "a word", "int": 6}
