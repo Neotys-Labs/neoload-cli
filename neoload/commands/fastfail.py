@@ -96,10 +96,15 @@ def monitor_loop(__id, stop, force, max_failure, stop_command):
                 logging.debug(debugmsg)
                 msg += debugmsg
             break
-        elif (len(fails) > 0 or len(partial_intervals) > 0):
-            displayer.__print_sla(datas['sla_global'], datas['sla_test'], datas['sla_interval'])
         else:
-            printif(sys.stdin.isatty() and not has_exited, '.', end = '')
+            if (len(fails) > 0 or len(partial_intervals) > 0):
+                failed_global = list(filter(lambda x: 'status' in x and x['status'] != 'PASSED', datas['sla_global']))
+                failed_test = list(filter(lambda x: 'status' in x and x['status'] != 'PASSED', datas['sla_test']))
+                failed_interval = list(filter(lambda x: 'status' in x and x['status'] != 'PASSED', datas['sla_interval']))
+                displayer.__print_sla(failed_global, datas['sla_test'], datas['sla_interval'])
+            else:
+                printif(sys.stdin.isatty() and not has_exited, '.', end = '')
+                
             time.sleep(15)
 
         dt_current = datetime.now()
