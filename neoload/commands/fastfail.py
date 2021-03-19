@@ -101,10 +101,10 @@ def monitor_loop(__id, stop, force, max_failure, stop_command):
                 failed_global = list(filter(lambda x: 'status' in x and x['status'] != 'PASSED', datas['sla_global']))
                 failed_test = list(filter(lambda x: 'status' in x and x['status'] != 'PASSED', datas['sla_test']))
                 failed_interval = list(filter(lambda x: 'status' in x and x['status'] != 'PASSED', datas['sla_interval']))
-                displayer.__print_sla(failed_global, datas['sla_test'], datas['sla_interval'])
+                displayer.__print_sla(failed_global, failed_test, failed_interval)
             else:
                 printif(sys.stdin.isatty() and not has_exited, '.', end = '')
-                
+
             time.sleep(15)
 
         dt_current = datetime.now()
