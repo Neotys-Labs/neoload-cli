@@ -1,13 +1,22 @@
 import re
+import time
+from unittest import mock
+
 import pytest
 from click.testing import CliRunner
 from commands.validate import cli as validate
 from neoload_cli_lib.user_data import __yaml_schema_file as yaml_schema_file
+from neoload_cli_lib import user_data
 import neoload_cli_lib.schema_validation as schema_validation
 import os
+import shutil
+
 
 @pytest.mark.validation
 class TestValidate:
+    @classmethod
+    def setUpClass(cls):
+        shutil.rmtree(user_data.__config_dir)
 
     def preserve_schema(self):
         # archive existing and put it back afterwards
@@ -56,6 +65,7 @@ class TestValidate:
         assert result.exit_code == 1
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @mock.patch('requests.get', mock.Mock(return_value=mock.Mock(text="<!DOCTYPE html><html>invalid resource</html>")))
     def test_bad_schema(self, datafiles):
         file_path = datafiles.listdir()[0]
         runner = CliRunner()
@@ -70,13 +80,20 @@ class TestValidate:
         assert re.compile(".*Error: Missing argument [\"']FILE[\"'].*", re.DOTALL).match(result.output) is not None
         assert result.exit_code == 2
 
-    @pytest.mark.slow
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @mock.patch('requests.get', mock.Mock(side_effect=Exception("Failed to establish a new connection")))
     def test_bad_schema_url(self, datafiles):
         file_path = datafiles.listdir()[0]
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path), '--schema-url', 'http://invalid.fr', '--refresh'])
         assert 'Could not obtain schema definition' in str(result.output)
+        assert result.exit_code == 1
+
+    @pytest.mark.slow
+    @mock.patch('requests.get', mock.Mock(return_value=mock.Mock(text="<i>ooi>zjfi<ezjfzioejfiozej")))
+    def test_dir_with_bad_schema(self):
+        result = self.try_dir_with_schema("https://www.never-use-external-resources-during-a-test-unit.com")
+        assert 'not a valid json schema' in str(result.output)
         assert result.exit_code == 1
 
     def try_dir_with_schema(self,url):
@@ -85,15 +102,9 @@ class TestValidate:
         return runner.invoke(validate, [str(path), '--schema-url', url, '--refresh'])
 
     @pytest.mark.slow
-    def test_dir_with_bad_schema(self):
-        result = self.try_dir_with_schema('https://www.neotys.com')
-        assert 'not a valid json schema' in str(result.output)
-        assert result.exit_code == 1
-
-    @pytest.mark.slow
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_single_with_no_prior_schema(self, datafiles):
-        (l,r) = self.preserve_schema()
+        (l, r) = self.preserve_schema()
 
         # now run the actual function test and capture if failed
         err_msg = None
@@ -113,10 +124,10 @@ class TestValidate:
         'resources/as-code.latest.schema.json'
     )
     def test_single_with_prior_schema(self, datafiles):
-        datafiles_ascode = list(filter(lambda f: '.yaml' in f.strpath,datafiles.listdir()))[0]
-        datafiles_schema = list(filter(lambda f: '.json' in f.strpath,datafiles.listdir()))[0]
+        datafiles_ascode = list(filter(lambda f: '.yaml' in f.strpath, datafiles.listdir()))[0]
+        datafiles_schema = list(filter(lambda f: '.json' in f.strpath, datafiles.listdir()))[0]
 
-        (l,r) = self.preserve_schema()
+        (l, r) = self.preserve_schema()
 
         # now run the actual function test and capture if failed
         err_msg = None
@@ -140,8 +151,9 @@ class TestValidate:
         assert err_msg == None, err_msg
 
     @pytest.mark.slow
+    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_dir_with_no_prior_schema(self):
-        (l,r) = self.preserve_schema()
+        (l, r) = self.preserve_schema()
 
         # now run the actual function test and capture if failed
         err_msg = None
@@ -150,29 +162,26 @@ class TestValidate:
         except Exception as err:
             err_msg = "err: {}".format(err)
 
-        self.restore_schema(l,r)
+        self.restore_schema(l, r)
 
         # finally, if a failure occured, report it in the main thread
-        assert err_msg == None, err_msg
+        assert err_msg is None, err_msg
 
     @pytest.mark.slow
     @pytest.mark.datafiles('resources/as-code.latest.schema.json')
-    def test_dir_with_schema_url_and_refresh(self,datafiles):
+    def test_dir_with_schema_url_and_refresh(self, datafiles):
         (l,r) = self.preserve_schema()
 
+        orig_content = 'invalid schema should fail if used'
         with open(l, "w") as stream:
-            stream.write('invalid schema should fail if used')
-
-        orig_mtime = os.path.getmtime(l)
-        orig_content = ""
-        with open(l, "r") as stream:
-            orig_content = stream.read()
-
+            stream.write(orig_content)
 
         # now run the actual function test and capture if failed
         err_msg = None
         try:
             file_path = datafiles.listdir()[0]
+            orig_mtime = os.path.getmtime(l)
+            time.sleep(1)
             result = self.try_dir_with_schema(file_path) # should modify the schema file
             # result of above matters less than its side-effects mtime change
             now_mtime = os.path.getmtime(l)
@@ -186,4 +195,4 @@ class TestValidate:
         self.restore_schema(l,r)
 
         # finally, if a failure occured, report it in the main thread
-        assert err_msg == None, err_msg
+        assert err_msg is None, err_msg
