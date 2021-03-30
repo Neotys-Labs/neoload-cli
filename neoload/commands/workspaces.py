@@ -30,9 +30,9 @@ def cli(command, name_or_id):
     # avoid to make two requests if we have not id.
     if command == "ls":
         # The endpoint GET /workspaces/{workspaceId} is not yet implemented
-        if name_or_id is not None:
-            print("ERROR: Unable to display only one workspace. API endoint not yet implemented. Please use command neoload workspaces ls without name or ID")
-        tools.ls(name_or_id, is_id, __resolver)
+        filter = None
+        if name_or_id is not None: filter = "id={}".format(name_or_id)
+        tools.ls(None, True, __resolver, filter)
         return
 
     __id = tools.get_id(name_or_id, __resolver, is_id)
