@@ -22,9 +22,12 @@ class TestWorkspaceLs:
 
     def test_list_one(self, monkeypatch, valid_data):
         runner = CliRunner()
+        mock_api_get_with_pagination(monkeypatch, 'v3/workspaces',
+                     '[{"id":"'+valid_data.default_workspace_id+'", "name":"19377", "description":".... "}]')
         result = runner.invoke(workspaces, ['ls', valid_data.default_workspace_id])
-        assert result.exit_code == 1
-        assert 'ERROR: Unable to display only one workspace. API endoint not yet implemented' in result.output
+        assert_success(result)
+        json_result = json.loads(result.output)
+        assert len(json_result)==1
 
     def test_error_not_logged_in(self):
         runner = CliRunner()
