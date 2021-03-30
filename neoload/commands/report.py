@@ -16,6 +16,8 @@ import logging
 import concurrent.futures
 import requests
 
+from datetime import datetime
+
 requests.adapters.DEFAULT_RETRIES = 5
 MAX_RESULTS_WORKERS = 2
 MAX_ELEMENTS_WORKERS = 10
@@ -70,6 +72,8 @@ def cli(template, json_in, out_file, filter, report_type, name):
     # if intent is to produce JSON directly to stdout, hide print statements
     if out_file is None: gprint = lambda msg: logger.info(msg)
 
+    gprint("Export started: {}".format(datetime.now()))
+
     json_data = parse_source_data_spec(json_in, model, report_type, name)
 
     json_data['cli'] = {
@@ -100,6 +104,8 @@ def cli(template, json_in, out_file, filter, report_type, name):
 
     else:
         print(final_output)
+
+    gprint("Export ended: {}".format(datetime.now()))
 
 
 def initialize_model(filter, template):
@@ -388,7 +394,14 @@ def fill_single_transactions(__id, elements_filter, time_binding, statistics_lis
             json_elements_transactions = filter_elements(json_elements_transactions, elements_filter)
 
         json_elements_transactions = get_elements_data(__id, json_elements_transactions, time_binding, True, statistics_list, use_txn_raw)
-        json_elements_transactions = list(sorted(json_elements_transactions, key=lambda x: x['display_name']))
+
+        no_display_name = list(filter(lambda x: 'display_name' not in x, json_elements_transactions))
+        if len(no_display_name) > 0:
+            logging.error("{} elements had no 'display_name': {}".format(len(no_display_name),no_display_name))
+
+        json_elements_transactions = list(sorted(
+            list(filter(lambda x: 'display_name' in x, json_elements_transactions)),
+            key=lambda x: x['display_name']))
 
         data['elements']['transactions'] = json_elements_transactions
 

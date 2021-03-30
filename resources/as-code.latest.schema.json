@@ -81,7 +81,7 @@
 				"$id":"#/definitions/common/text",
 				"title":"Text",
 				"type":"string",
-				"pattern":"^.*$"
+				"pattern":".*"
 			},
 			"positive_number":{
 				"$id":"#/definitions/common/positive_number",
@@ -130,36 +130,31 @@
 				"type":"string",
 				"pattern":"^.*$"
 			  },
-			  "text":{
-				"title":"Value",
-				"type":"string",
-				"pattern":"^.*$"
-			  },
-			  "full_url": {
-				  "title":"Url",
-				  "type":"string",
-				  "pattern": "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)"
-			  },
-			  "var_change_policy": {
+		  "full_url": {
+			  "title":"Url",
+			  "type":"string",
+			  "pattern": "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)"
+		  },
+		  "var_change_policy": {
 				"type":"string",
 				"default": "each_iteration",
 				"enum": ["each_use", "each_request", "each_page", "each_iteration", "each_user"]
-			  },
-			  "var_scope": {
+		  },
+		  "var_scope": {
 				"type":"string",
 				"default": "global",
 				"enum": ["local", "global", "unique"]
-			  },
-			  "var_order": {
+		  },
+		  "var_order": {
 				"type":"string",
 				"default": "global",
 				"enum": ["sequential", "random", "any"]
-			  },
-			  "var_out_of_value": {
+		  },
+		  "var_out_of_value": {
 				"type":"string",
 				"default": "global",
 				"enum": ["cycle", "stop_test", "no_value_code"]
-			  }
+		  }
 		},
 		"variables": {
 			"generic": {
@@ -594,7 +589,17 @@
 						},
 						"headers": {
 							"type": "array",
-							"items": { "$ref": "#/definitions/common/text" }
+							"items": {
+		            "type": "object",
+		            "properties": {
+		              "name": {
+		                "type": "string"
+		              },
+		              "value": {
+		                "type": "string"
+		              }
+		            }
+		          }
 						},
 						"sla_profile": { "$ref": "#/definitions/common/text" },
 						"body": { "$ref": "#/definitions/common/text" },
