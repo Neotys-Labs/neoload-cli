@@ -1,6 +1,5 @@
 import re
 
-
 def parse_filters(filter_spec, allowed_api_query_params):
     """
     Reads the filter_spec and return the filters that can be applied with public API
@@ -41,8 +40,8 @@ def remove_by_filter(all_entities, cli_params):
 def entity_matches_all_filters(entity, filters):
     for key in filters.keys():
         if key in entity:
-            find_re = filters[key]
-            in_val = entity[key]
+            find_re = filters[key] # filter value is always a string from shell arguments
+            in_val = str(entity[key]) # value from API entities might not always be string
             if not re.search(find_re, in_val):
                 return False
         else:

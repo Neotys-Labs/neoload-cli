@@ -15,9 +15,11 @@ loadtest:
   - pip3 install neoload
   - neoload --version
   - |
-    neoload login --url ${neoload_api_url} ${neoload_token} \
-            test-settings --zone ${zone_id} --scenario sanityScenario patch "My Gitlab Test With CLI" \
-            project --path tests/neoload_projects/example_1/ upload "My Gitlab Test With CLI"
+    neoload login --url ${neoload_api_url} ${neoload_token} 
+  - |
+    neoload test-settings --zone ${zone_id} --scenario sanityScenario patch "My Gitlab Test With CLI" 
+  - |
+    neoload project --path tests/neoload_projects/example_1/ upload "My Gitlab Test With CLI"
   - |
     neoload run \
             --name "TestLaunchedFromGitlab_$CI_JOB_ID" \
