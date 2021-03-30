@@ -1,5 +1,26 @@
 # Changelog
 
+## [Unreleased](https://github.com/Neotys-Labs/neoload-cli/tree/HEAD)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.0...HEAD)
+
+**Fixed bugs:**
+
+- Update fastfail and SLA report, warning are not failures [\#145](https://github.com/Neotys-Labs/neoload-cli/pull/145) ([paulsbruce](https://github.com/paulsbruce))
+- Fix report 00184240 [\#143](https://github.com/Neotys-Labs/neoload-cli/pull/143) ([paulsbruce](https://github.com/paulsbruce))
+- Convert entity property values to string before filter compare [\#133](https://github.com/Neotys-Labs/neoload-cli/pull/133) ([paulsbruce](https://github.com/paulsbruce))
+- Fix trends back/ahead result selection logic [\#132](https://github.com/Neotys-Labs/neoload-cli/pull/132) ([paulsbruce](https://github.com/paulsbruce))
+
+**Documentation updates:**
+
+- fix\(doc\): Issues with gitlab openshit CI examples [\#141](https://github.com/Neotys-Labs/neoload-cli/pull/141) ([TanguyBaudrin](https://github.com/TanguyBaudrin))
+- Update changelog with auto-generated details; old one only went to 1.… [\#137](https://github.com/Neotys-Labs/neoload-cli/pull/137) ([paulsbruce](https://github.com/paulsbruce))
+
+**Merged pull requests:**
+
+- Fix validate command from as-code training outcomes [\#144](https://github.com/Neotys-Labs/neoload-cli/pull/144) ([paulsbruce](https://github.com/paulsbruce))
+- Update ls to use internal filtering b/c endpoint not implemented; tes… [\#142](https://github.com/Neotys-Labs/neoload-cli/pull/142) ([paulsbruce](https://github.com/paulsbruce))
+
 ## [1.3.0](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.0) (2021-03-18)
 
 [Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.2.1...1.3.0)
@@ -80,10 +101,6 @@
 
 [Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.1.5...1.1.6)
 
-**Implemented enhancements:**
-
-- Add 'cur' pseudonym support to logs-url [\#98](https://github.com/Neotys-Labs/neoload-cli/pull/98) ([stephanemartin](https://github.com/stephanemartin))
-
 **Documentation updates:**
 
 - Update CHANGELOG.md [\#110](https://github.com/Neotys-Labs/neoload-cli/pull/110) ([stephanemartin](https://github.com/stephanemartin))
@@ -127,6 +144,7 @@
 
 **Implemented enhancements:**
 
+- Add 'cur' pseudonym support to logs-url [\#98](https://github.com/Neotys-Labs/neoload-cli/pull/98) ([stephanemartin](https://github.com/stephanemartin))
 - Add capability to manage self signed certificate [\#94](https://github.com/Neotys-Labs/neoload-cli/pull/94) ([stephanemartin](https://github.com/stephanemartin))
 - Update to use master branch and include --lgs [\#93](https://github.com/Neotys-Labs/neoload-cli/pull/93) ([paulsbruce](https://github.com/paulsbruce))
 
