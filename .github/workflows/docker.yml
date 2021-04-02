@@ -60,16 +60,21 @@ jobs:
                 /bin/ln -s $HOME/.bashrc $HOME/.bash_profile && \
                 /bin/bash $HOME/pyenv-installer && \
                 rm $HOME/pyenv-installer && \
-                echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile && \
-                echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile && \
-                echo 'eval "$(pyenv init -)"' >> ~/.bash_profile
+                echo 'export PYENV_ROOT="$HOME/.pyenv"' >> $HOME/.bash_profile && \
+                echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> $HOME/.bash_profile && \
+                echo 'eval "$(pyenv init -)"' >> $HOME/.bash_profile && \
+                echo 'eval "$(pyenv virtualenv-init -)"' >> $HOME/.bash_profile
 
           PYENV_ROOT=$HOME/.pyenv && export PYENV_ROOT=$PYENV_ROOT
+          echo "::set-env name=PYENV_ROOT::$PYENV_ROOT"
           PATH=$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH && export PATH=$PATH
+          echo "::set-env name=PATH::$PATH"
 
           pyenv install -v ${{ matrix.python-version }}
 
           ln -s $PYENV_ROOT/bin/python3 $PYENV_ROOT/bin/python
+
+          ls -latr $PYENV_ROOT/bin
 
           #apk add -q python3-dev gcc libc-dev py3-pip git
 
