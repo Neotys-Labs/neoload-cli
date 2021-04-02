@@ -43,7 +43,7 @@ jobs:
 
       - name: Install Python via APK
         run: |
-          apk-install curl \
+          apk add curl \
                 ca-certificates \
                 bash \
                 git \
@@ -106,4 +106,3 @@ jobs:
           PYTHONPATH="neoload" COVERAGE_FILE=.coverage.live coverage3 run -m pytest -v -x -m "makelivecalls" --makelivecalls --token ${{ secrets.NLWEB_TOKEN }} --url ${{ secrets.NLWEB_API_URL }} --workspace CLI
           coverage3 combine
           coverage3 xml
-          
