@@ -24,15 +24,15 @@ jobs:
     container:
       image: docker:dind
     steps:
-      - name: Add the Github user to the DinD host container
-        run: |
-          apk update
-          apk add -q net-tools shadow sudo
-          groupadd -g 116 githubgrp
-          adduser -G githubgrp -u 1001 -D -H -h /github/home github
-          chmod -R u=rwx,go=rx /github/home
-          HOME=/github/home
-          export HOME=$HOME
+      # - name: Add the Github user to the DinD host container
+      #   run: |
+      #     apk update
+      #     apk add -q net-tools shadow sudo
+      #     groupadd -g 116 githubgrp
+      #     adduser -G githubgrp -u 1001 -D -H -h /github/home github
+      #     chmod -R u=rwx,go=rx /github/home
+      #     HOME=/github/home
+      #     export HOME=$HOME
 
       ## sadly, this Github action only installs python on the Ubuntu build HOST
       - name: Set up Python ${{ matrix.python-version }}
@@ -80,14 +80,15 @@ jobs:
 
       - name: Verify Python Installation
         run: |
+          whoami
           echo "PYENV_ROOT: $PYENV_ROOT"
           echo "PATH: $PATH"
           which python3
           which python
           which pip
-          prior=$(pwd)
-          cd /usr/local/bin && ln -s /usr/bin/python3 python
-          cd $prior
+          # prior=$(pwd)
+          # cd /usr/local/bin && ln -s /usr/bin/python3 python
+          # cd $prior
 
       - name: Verify Prerequisites
         run: |
