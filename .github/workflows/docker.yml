@@ -50,6 +50,7 @@ jobs:
                 openssl-dev \
                 readline-dev \
                 bzip2-dev \
+                zlib-dev \
                 ncurses-dev \
                 linux-headers \
                 build-base
