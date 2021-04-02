@@ -5,7 +5,7 @@ name: Test Docker Commands
 
 on:
   push:
-    branches: [ '**' ]
+    branches: [ 'TestDockerInGithubActions' ]
   workflow_dispatch:
     inputs:
       zone:
