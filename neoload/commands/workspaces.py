@@ -30,9 +30,9 @@ def cli(command, name_or_id):
     # avoid to make two requests if we have not id.
     if command == "ls":
         # The endpoint GET /workspaces/{workspaceId} is not yet implemented
-        filter = None
-        if name_or_id is not None: filter = "id={}".format(name_or_id)
-        tools.ls(None, True, __resolver, filter)
+        ws_filter = None
+        if name_or_id is not None: ws_filter = "id={}".format(name_or_id)
+        tools.ls(None, True, __resolver, ws_filter)
         return
 
     __id = tools.get_id(name_or_id, __resolver, is_id)
