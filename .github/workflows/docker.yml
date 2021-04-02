@@ -95,7 +95,9 @@ jobs:
           echo "PATH: $PATH"
           whoami
           ls -latr $pythonLocation
-          python3 --version
+          echo "Listing version-specific"
+          ls -latr /__t/Python/3.6.13/x64/bin
+          python --version
           docker --version
           docker ps
 
