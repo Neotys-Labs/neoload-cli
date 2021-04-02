@@ -94,7 +94,7 @@ jobs:
         run: |
           echo "PATH: $PATH"
           whoami
-          ls -latr /usr/bin
+          ls -latr $pythonLocation
           python --version
           docker --version
           docker ps
