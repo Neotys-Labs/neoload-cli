@@ -43,7 +43,7 @@ jobs:
 
       - name: Install Python via APK
         run: |
-          apk add curl \
+          apk add -q curl \
                 ca-certificates \
                 bash \
                 git \
@@ -69,8 +69,11 @@ jobs:
 
           pyenv install -v ${{ matrix.python-version }}
 
+          ln -s $PYENV_ROOT/bin/python3 $PYENV_ROOT/bin/python
+
           #apk add -q python3-dev gcc libc-dev py3-pip git
           which python3
+          which python
           which pip
           prior=$(pwd)
           cd /usr/local/bin && ln -s /usr/bin/python3 python
