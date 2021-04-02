@@ -87,7 +87,7 @@ def __build_test_suite(json_result, kind, sla_json):
     test_name = sla_json['kpi']
 
     tc = TestCase(test_name, suite_name)
-    if status == "FAILED" or status == "WARNING":
+    if status == "FAILED": # or status == "WARNING":
         txt = __build_unit_test(json_result, kind, sla_json)
         tc.add_failure_info("SLA failed", txt, 'NeoLoad SLA')
 
@@ -137,6 +137,8 @@ def __build_unit_test(json_result, kind, sla_json):
     text += 'Results: <br/><br/>'
     text += '%s=%s%%<br/><br/>' % (sla_json['kpi'], str(reported))
     text += 'Created N/A<br/>'
+
+    text = text.replace('<br/>','\n')
 
     return text
 

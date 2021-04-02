@@ -16,6 +16,8 @@ import logging
 import concurrent.futures
 import requests
 
+from datetime import datetime
+
 requests.adapters.DEFAULT_RETRIES = 5
 MAX_RESULTS_WORKERS = 2
 MAX_ELEMENTS_WORKERS = 10
@@ -70,6 +72,8 @@ def cli(template, json_in, out_file, filter, report_type, name):
     # if intent is to produce JSON directly to stdout, hide print statements
     if out_file is None: gprint = lambda msg: logger.info(msg)
 
+    gprint("Export started: {}".format(datetime.now()))
+
     json_data = parse_source_data_spec(json_in, model, report_type, name)
 
     json_data['cli'] = {
@@ -100,6 +104,8 @@ def cli(template, json_in, out_file, filter, report_type, name):
 
     else:
         print(final_output)
+
+    gprint("Export ended: {}".format(datetime.now()))
 
 
 def initialize_model(filter, template):
@@ -180,7 +186,6 @@ def parse_source_data_spec(json_in, model, report_type, name):
     if json_in is not None:
         return json.loads(get_file_text(json_in))
 
-    # no in file, so go out to source live
     if report_type == "single":
         return get_single_report(name,model["components"],filter_spec["time_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
     elif report_type == "trends":
@@ -389,7 +394,14 @@ def fill_single_transactions(__id, elements_filter, time_binding, statistics_lis
             json_elements_transactions = filter_elements(json_elements_transactions, elements_filter)
 
         json_elements_transactions = get_elements_data(__id, json_elements_transactions, time_binding, True, statistics_list, use_txn_raw)
-        json_elements_transactions = list(sorted(json_elements_transactions, key=lambda x: x['display_name']))
+
+        no_display_name = list(filter(lambda x: 'display_name' not in x, json_elements_transactions))
+        if len(no_display_name) > 0:
+            logging.error("{} elements had no 'display_name': {}".format(len(no_display_name),no_display_name))
+
+        json_elements_transactions = list(sorted(
+            list(filter(lambda x: 'display_name' in x, json_elements_transactions)),
+            key=lambda x: x['display_name']))
 
         data['elements']['transactions'] = json_elements_transactions
 
@@ -478,6 +490,11 @@ def get_trends_report(name, time_filter, results_filter, elements_filter, exclud
 
     all_transactions = []
 
+    logging.debug("Settled on {} result(s):\n{}".format(
+        len(arr_selected),
+        "\n".join(list(map(lambda r: " - "+r["id"],arr_selected))))
+    )
+
     fill_trend_results(arr_selected, all_transactions, elements_filter, time_filter)
 
     all_transaction_names = list(map(lambda t: t["name"], all_transactions))
@@ -549,15 +566,11 @@ def get_trend_count_back_ahead(arr_directives):
 
 def get_trends_selected_results(arr_ids,count_back,count_ahead):
     base_id = arr_ids[0]["id"]
-    logging.debug('base_id: {}'.format(base_id))
     arr_results = get_results_by_result_id(base_id,count_back,count_ahead)
-    logging.debug('selected results: {}'.format(arr_results))
+
     arr_sorted_by_time = list(sorted(arr_results, key=lambda x: x["startDate"]))
     base_index = list(map(lambda x: x["id"],arr_sorted_by_time)).index(base_id)
     arr_selected = []
-    logging.debug('base_index: {}'.format(base_index))
-    logging.debug('count_ahead: {}'.format(count_ahead))
-    logging.debug('count_back: {}'.format(count_back))
 
     for i in range(base_index,base_index+1+count_ahead):
         if 0 < i < len(arr_sorted_by_time):
@@ -565,6 +578,17 @@ def get_trends_selected_results(arr_ids,count_back,count_ahead):
     for i in range(base_index+count_back,base_index):
         if 0 < i < len(arr_sorted_by_time):
             arr_selected.append(arr_sorted_by_time[i])
+
+    for id in arr_ids:
+        if id not in list(map(lambda r: r["id"],arr_selected)):
+            results = get_results_by_result_id(id["id"],0,0)
+            arr_selected = arr_selected + results
+
+    arr_final = []
+    for result in arr_selected:
+        if result["id"] not in list(map(lambda r: r["id"],arr_final)):
+            arr_final.append(result)
+    arr_selected = arr_final
 
     arr_selected = list(sorted(arr_selected, key=lambda x: x["startDate"]))
     for i in range(0,len(arr_selected)):
@@ -697,13 +721,8 @@ def get_results_by_result_id(__id,count_back,count_ahead):
     result = rest_crud.get(get_end_point(__id))
     project = result["project"]
     scenario = result["scenario"]
-    logging.debug({'project':project,'scenario':scenario})
     total_expected = -count_back + 1 + count_ahead
     results = []
-    logging.debug("based_id: {}".format(__id))
-    logging.debug("total_expected: {}".format(total_expected))
-    logging.debug("count_back: {}".format(count_back))
-    logging.debug("count_ahead: {}".format(count_ahead))
 
     page_size = 200
     params = {
@@ -729,7 +748,6 @@ def get_results_by_result_id(__id,count_back,count_ahead):
         params['offset'] += page_size
 
         arr_sorted_by_time = list(sorted(all_entities, key=lambda x: x["startDate"]))
-
         results = compile_results_from_source(__id, arr_sorted_by_time, count_back, count_ahead)
 
         if ret_count < page_size:
@@ -743,10 +761,13 @@ def compile_results_from_source(base_id, all_entities, count_back, count_ahead):
         base_index = list(map(lambda x: x["id"],all_entities)).index(base_id)
         back_index = base_index+count_back
         ahead_index = base_index+count_ahead
-        #print({'base_index':base_index,'back_index':back_index,'ahead_index':ahead_index})
+
         for i in range(max(back_index,0),base_index+1):
             ret.append(all_entities[i])
-        for i in range(base_index+1,min(ahead_index,len(all_entities)-1)):
+        ahead_begin = base_index+1
+        ahead_end = min(ahead_index,len(all_entities)-1)
+
+        for i in range(ahead_begin,ahead_end+1):
             ret.append(all_entities[i])
     return ret
 

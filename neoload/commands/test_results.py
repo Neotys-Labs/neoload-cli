@@ -130,6 +130,10 @@ def get_id_by_name_or_id(name):
 
     return __id
 
+def get_json_summary(__id):
+    return {
+        "summary": rest_crud.get(get_end_point(__id))
+    }
 
 def get_sla_data_by_name_or_id(name):
     __id = get_id_by_name_or_id(name)

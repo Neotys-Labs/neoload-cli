@@ -6,6 +6,8 @@ from datetime import datetime, date
 import time
 import sys
 import subprocess
+import yaml
+import logging
 
 @click.command()
 @click.argument('command', type=click.Choice(['slas'], case_sensitive=False))
@@ -54,7 +56,8 @@ def monitor_loop(__id, stop, force, max_failure, stop_command):
     has_exited = False
     msg = ""
     exit_code = 0
-    while (abs(dt_current-dt_started).seconds / 60) < 10:
+    mins_worst_case = get_duration_mins_by_result(__id)
+    while (abs(dt_current-dt_started).seconds / 60) < mins_worst_case:
         datas = test_results.get_sla_data_by_name_or_id(__id)
 
         partial_intervals = list(filter(lambda x: x['status']=='FAILED',datas['sla_interval']))
@@ -86,13 +89,12 @@ def monitor_loop(__id, stop, force, max_failure, stop_command):
         is_running = outcomes["is_running"]
         exit_code = 0 if datas['result']['qualityStatus']=="PASSED" else 1
 
-        if final_run:
-            break
-        elif (len(fails) > 0 or len(partial_intervals) > 0):
-            displayer.__print_sla(datas['sla_global'], datas['sla_test'], datas['sla_interval'])
+        should_continue = monitor_loop_check(datas,fails,partial_intervals,final_run,has_exited,exit_code)
+        if should_continue:
+            if not has_exited:
+                time.sleep(15)
         else:
-            printif(sys.stdin.isatty() and not has_exited, '.', end = '')
-            time.sleep(15)
+            break
 
         dt_current = datetime.now()
 
@@ -103,6 +105,35 @@ def monitor_loop(__id, stop, force, max_failure, stop_command):
     print('fastfail ended: ' + str(dt_current))
 
     tools.system_exit({'message': msg, 'code': exit_code})
+
+def monitor_loop_check(datas,fails,partial_intervals,final_run,has_exited,exit_code):
+    should_continue = True
+
+    if final_run:
+        debugmsg = ""
+        if exit_code!=0:
+            debugmsg = "fastfail[results]: exit_code={} is a result of datas: {}".format(exit_code,yaml.dump(datas))
+            logging.debug(debugmsg)
+        should_continue = False
+    else:
+        if (len(fails) > 0 or len(partial_intervals) > 0):
+            failed_global = list(filter(lambda x: 'status' in x and x['status'] == 'FAILED', datas['sla_global']))
+            failed_test = list(filter(lambda x: 'status' in x and x['status'] == 'FAILED', datas['sla_test']))
+            failed_interval = list(filter(lambda x: 'status' in x and x['status'] == 'FAILED', datas['sla_interval']))
+            displayer.__print_sla(failed_global, failed_test, failed_interval)
+        else:
+            printif(sys.stdin.isatty() and not has_exited, '.', end = '')
+
+    return should_continue
+
+def get_duration_mins_by_result(__id):
+
+    ret = (60 * 4) # initial default, if results -> settings -> project
+    #summary = test_results.get_json_summary(__id)["summary"]
+    #if 'testId' in summary
+
+    #rest_crud.get_from_file_storage(get_endpoint(setting_id))
+    return ret
 
 def process_state(datas,fails,fail_options,is_initializing,is_running):
 

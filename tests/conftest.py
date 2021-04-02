@@ -10,7 +10,7 @@ import sys
 
 sys.path.append('neoload')
 __default_random_token = '12345678912345678901ae6d8af6abcdefabcdefabcdef'
-__default_api_url = 'https://preprod-neoload-api.saas.neotys.com/'
+__default_api_url = 'https://neoload-web-api.neotys.perfreleng.org/'
 
 
 def pytest_addoption(parser):
