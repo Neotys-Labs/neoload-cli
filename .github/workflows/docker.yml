@@ -72,6 +72,12 @@ jobs:
           ln -s $PYENV_ROOT/bin/python3 $PYENV_ROOT/bin/python
 
           #apk add -q python3-dev gcc libc-dev py3-pip git
+
+      - name: Verify Python Installation
+        run: |
+          bash
+          echo "PYENV_ROOT: $PYENV_ROOT"
+          echo "PATH: $PATH"
           which python3
           which python
           which pip
@@ -81,6 +87,7 @@ jobs:
 
       - name: Verify Prerequisites
         run: |
+          bash
           python --version
           docker --version
           docker ps
@@ -98,6 +105,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          bash
           python -m pip install --upgrade pip
           python -m pip install .
           python -m pip install coverage
