@@ -85,12 +85,14 @@ jobs:
           which python3
           which python
           which pip
-          prior=$(pwd)
-          cd /usr/local/bin && ln -s /usr/bin/python3 python
-          cd $prior
+          # prior=$(pwd)
+          # cd /usr/local/bin && ln -s /usr/bin/python3 python
+          # cd $prior
 
       - name: Verify Prerequisites
         run: |
+          echo "PATH: $PATH"
+          ls -latr /__t/Python/3.6.13/x64/bin
           python --version
           docker --version
           docker ps
