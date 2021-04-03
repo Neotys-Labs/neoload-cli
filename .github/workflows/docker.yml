@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    needs: dind
+    # needs: dind
     strategy:
       matrix:
         python-version: ['3.6'] #, '3.8']
@@ -35,7 +35,7 @@ jobs:
         whoami
 
         pip install docker
-        
+
         dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
 
         #export DOCKER_HOST="tcp://0.0.0.0:2375"
