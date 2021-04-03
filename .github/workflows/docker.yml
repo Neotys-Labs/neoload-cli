@@ -5,19 +5,18 @@ name: Test Docker Commands
 
 on:
   push:
-    branches: [ 'TestDockerInGithubActions' ]
+    branches: [ '**' ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.6'] #, '3.8']
+        python-version: ['3.6', '3.8']
     env:
       zoneId: xWbV4
       image_ctrl: "public.ecr.aws/neotys/neoload-controller:7.7.0"
       image_lg: "public.ecr.aws/neotys/neoload-loadgenerator:7.7.0"
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -45,11 +44,11 @@ jobs:
 
         coverage3 combine
         coverage3 xml
-    # - name: SonarCloud Scan
-    #   uses: sonarsource/sonarcloud-github-action@master
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     - name: Zip Test Folder on failure
       if: failure()
       run: zip -r tests.zip tests/
