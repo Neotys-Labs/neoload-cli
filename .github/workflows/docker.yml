@@ -9,7 +9,7 @@ on:
 
 jobs:
   diffs:
-    name: Find Docker-related changes
+    name: Look for Specific Changes
     outputs:
       found_one: ${{ steps.check_files.outputs.found_one }}
       workflow_change: ${{ steps.check_files.outputs.workflow_change }}
