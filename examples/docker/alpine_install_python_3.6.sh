@@ -13,6 +13,7 @@ export LANG=$LANG
 
 # runtime dependencies
 set -eux; \
+  apk update && \
 	apk add --no-cache \
 # install ca-certificates so that HTTPS works consistently
 		ca-certificates \
