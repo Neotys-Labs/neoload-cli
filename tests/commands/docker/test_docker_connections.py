@@ -41,5 +41,5 @@ class TestDockerConnections:
         except:
             last_err = err
 
-        assert up_happened, "Could not run the docker UP command: {}".format("" if last_err is none else str(last_err))
-        assert down_happened, "Could not run the docker DOWN command: {}".format("" if last_err is none else str(last_err))
+        assert up_happened, "Could not run the docker UP command: {}".format("" if last_err is None else str(last_err))
+        assert down_happened, "Could not run the docker DOWN command: {}".format("" if last_err is None else str(last_err))
