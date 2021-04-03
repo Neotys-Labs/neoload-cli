@@ -17,15 +17,15 @@ jobs:
 
     services:
       dind:
-        image: docker:dind
+        image: public.ecr.aws/neotys/docker:dind
         ports:
           - 2376:2376
           - 2375:2375
 
     steps:
-    - uses: actions-hub/docker/cli@master
     - name: Setup Host docker agent to DinD
       run: |
+        apk add --update docker
         export DOCKER_HOST="tcp://0.0.0.0:2375"
         docker ps
     - uses: actions/checkout@v2
