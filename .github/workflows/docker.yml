@@ -53,7 +53,7 @@ jobs:
       - name: Install Python via APK
         run: |
           pwd
-          neoload-cli/examples/docker/alpine_install_python_${{ matrix.python-version }}.sh
+          examples/docker/alpine_install_python_${{ matrix.python-version }}.sh
       # - name: Install Python via APK
       #   run: |
       #     apk add -q curl \
