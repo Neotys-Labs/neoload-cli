@@ -50,7 +50,8 @@ setup(
         'docker',
         'pyparsing',
         'simplejson',
-        'colorama'
+        'colorama',
+        'importlib-resources'
     ],
     tests_require=[
         "pytest",

@@ -40,7 +40,7 @@ jobs:
     needs: diffs
     strategy:
       matrix:
-        python-version: ['3.6'] #, '3.8']
+        python-version: ['3.6', '3.8']
     env:
       zoneId: xWbV4
       image_ctrl: "public.ecr.aws/neotys/neoload-controller:7.7.0"
