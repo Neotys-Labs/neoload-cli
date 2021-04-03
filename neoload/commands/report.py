@@ -185,7 +185,7 @@ def parse_template_spec(model,filter_spec,template):
         model["components"]["summary"] = True
         model["components"]["statistics"] = True
         model["components"]["slas"] = True
-        model["template_text"] = get_builtin_console_summary()
+        model["template_text"] = get_builtin_template_console_summary()
 
     elif os.path.isfile(template):
         model["template_text"] = get_file_text(template)
@@ -1032,7 +1032,7 @@ def unique(seq, idfun=None):
 def get_builtin_template_transaction_csv():
     return get_resource_as_string('tests/resources/jinja/builtin_transactions_csv.j2').strip()
 
-def get_builtin_console_summary():
+def get_builtin_template_console_summary():
     return get_resource_as_string('tests/resources/jinja/builtin_console_summary.j2').strip()
 
 
