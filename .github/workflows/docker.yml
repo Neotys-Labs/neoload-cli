@@ -33,7 +33,8 @@ jobs:
           chmod -R u=rwx,go=rx /github/home
           HOME=/github/home
           export HOME=$HOME
-          echo "::set-env name=HOME::$HOME"
+          #echo "{path}" >> $GITHUB_PATH
+          echo "HOME=$HOME" >> $GITHUB_ENV
 
       ## sadly, this Github action only installs python on the Ubuntu build HOST
       - name: Set up Python ${{ matrix.python-version }}
