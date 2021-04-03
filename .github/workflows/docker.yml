@@ -23,9 +23,9 @@ jobs:
     #       - 2375:2375
 
     steps:
-    - name: Initialize Workspace
-      run: |
-        curl -fsSL https://get.docker.com/rootless | sh
+    # - name: Initialize Workspace
+    #   run: |
+    #     curl -fsSL https://get.docker.com/rootless | sh
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
