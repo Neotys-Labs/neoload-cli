@@ -24,6 +24,7 @@ class TestDockerConnections:
         runner = CliRunner()
         last_err = None
         up_happened = False
+        status_shows_containers = False
         down_happened = False
         try:
             result = runner.invoke(docker, ['up'])
@@ -31,6 +32,15 @@ class TestDockerConnections:
             up_happened = True
         except Exception as err:
             last_err = err
+
+        if up_happened:
+            try:
+                result = runner.invoke(docker, ['status'])
+                assert_success(result)
+                assert ' [running]' in result.output
+                status_shows_containers = True
+            except:
+                last_err = err
 
         try:
             # always try, even if for simply to clean up
@@ -41,5 +51,8 @@ class TestDockerConnections:
         except:
             last_err = err
 
-        assert up_happened, "Could not run the docker UP command: {}".format("" if last_err is None else str(last_err))
-        assert down_happened, "Could not run the docker DOWN command: {}".format("" if last_err is None else str(last_err))
+        extra_detail = "" if last_err is None else str(last_err)
+
+        assert up_happened, "Could not run the docker UP command: {}".format(extra_detail)
+        assert status_shows_containers, "Could not verify that containers are running after 'up' command: {}".format(extra_detail)
+        assert down_happened, "Could not run the docker DOWN command: {}".format(extra_detail)
