@@ -116,9 +116,9 @@ jobs:
           echo "Python at:"
           which python
 
-          echo "/usr/bin" && ls -latr /usr/bin
-
           echo "Checking Python version"
+
+          cat $pythonLocation/bin/python3
 
           python3 --version
           python --version
