@@ -55,7 +55,6 @@ jobs:
         run: |
           uname -a
           whoami
-          which ca-certificates
           chmod +x examples/docker/alpine_install_python_${{ matrix.python-version }}.sh
           examples/docker/alpine_install_python_${{ matrix.python-version }}.sh
       # - name: Install Python via APK
