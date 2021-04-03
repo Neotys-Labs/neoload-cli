@@ -5,7 +5,7 @@ name: Test Docker Commands
 
 on:
   push:
-    branches: [ '**' ]
+    branches: [ 'TestDockerInGithubActions' ]
 
 jobs:
   build:
@@ -33,15 +33,17 @@ jobs:
         python -m pip install .
         python -m pip install coverage
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Test with pytest
+    - name: Test with pytest (unit / mocks)
       run: |
         PYTHONPATH="neoload" COVERAGE_FILE=.coverage.unit coverage3 run -m pytest
-
+    - name: Test with pytest (live calls / integration)
+      run: |
         neoload config set docker.controller.image=${{ env.image_ctrl }}
         neoload config set docker.lg.image=${{ env.image_lg }}
         neoload config set docker.zone=${{ env.zoneId }}
         PYTHONPATH="neoload" COVERAGE_FILE=.coverage.live coverage3 run -m pytest -v -x -m "makelivecalls" --makelivecalls --token ${{ secrets.NLWEB_TOKEN }} --url ${{ secrets.NLWEB_API_URL }} --workspace CLI
-
+    - name: Combine and Create Coverage Report
+      run: |
         coverage3 combine
         coverage3 xml
     - name: SonarCloud Scan
