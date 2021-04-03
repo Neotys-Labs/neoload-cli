@@ -9,18 +9,18 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    needs: dind
     strategy:
       matrix:
         python-version: ['3.6'] #, '3.8']
 
-    services:
-      dind:
-        image: public.ecr.aws/neotys/docker:dind
-        ports:
-          - 2376:2376
-          - 2375:2375
+    # services:
+    #   dind:
+    #     image: public.ecr.aws/neotys/docker:dind
+    #     ports:
+    #       - 2376:2376
+    #       - 2375:2375
 
     steps:
     - uses: actions/checkout@v2
@@ -35,7 +35,10 @@ jobs:
         whoami
 
         pip install docker
-        export DOCKER_HOST="tcp://0.0.0.0:2376"
+        
+        dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
+
+        #export DOCKER_HOST="tcp://0.0.0.0:2375"
         docker ps
     - name: Install dependencies
       run: |
