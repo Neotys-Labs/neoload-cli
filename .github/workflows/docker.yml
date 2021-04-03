@@ -19,8 +19,9 @@ jobs:
     steps:
       - name: Add the Github user to the DinD host container
         run: |
+          uname -a
           apk update
-          apk add -q net-tools shadow sudo bash git ca-certificates
+          apk add net-tools shadow sudo bash git ca-certificates
           groupadd -g 1000 githubgp
           adduser -G githubgp -u 1001 -D -H -h /github/home github
           id -G root
@@ -43,6 +44,7 @@ jobs:
       - name: Get Repo Sources
         shell: bash
         run: |
+          uname -a
           whoami
           git init && git remote add origin https://github.com/$GITHUB_REPOSITORY.git \
             && git fetch origin $GITHUB_REF && git reset --hard FETCH_HEAD
@@ -51,8 +53,9 @@ jobs:
 
       - name: Install Python via APK
         run: |
-          pwd
-          ls -latr $(pwd)
+          uname -a
+          whoami
+          which ca-certificates
           chmod +x examples/docker/alpine_install_python_${{ matrix.python-version }}.sh
           examples/docker/alpine_install_python_${{ matrix.python-version }}.sh
       # - name: Install Python via APK
