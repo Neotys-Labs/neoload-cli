@@ -42,7 +42,7 @@ jobs:
       image_ctrl: "public.ecr.aws/neotys/neoload-controller:7.7.0"
       image_lg: "public.ecr.aws/neotys/neoload-loadgenerator:7.7.0"
       merge_to_trunk: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-      integration_moment: ${{ github.event_name == 'pull_request' }}
+      integration_moment: false # ${{ github.event_name == 'pull_request' }}
       docker_files_changed: ${{ needs.check_docker_changes.outputs.found_one == 'true' }}
     steps:
     - uses: actions/checkout@v2
