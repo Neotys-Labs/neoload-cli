@@ -8,10 +8,11 @@ on:
     branches: [ 'TestDockerInGithubActions' ]
 
 jobs:
-  check_docker_changes:
+  diffs:
     name: Find Docker-related changes
     outputs:
       found_one: ${{ steps.check_files.outputs.found_one }}
+      workflow_change: ${{ steps.check_files.outputs.workflow_change }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,17 +24,20 @@ jobs:
         id: check_files
         run: |
           echo "::set-output name=found_one::false"
+          echo "::set-output name=workflow_change::false"
           git diff --name-only HEAD^ HEAD > diff_files.txt
           while IFS= read -r file; do
             if [[ $file == *docker* ]]; then
               echo "::set-output name=found_one::true"
-              break
+            fi
+            if [[ $file == .github/workflows/* ]]; then
+              echo "::set-output name=workflow_change::true"
             fi
           done < diff_files.txt
 
   build:
     runs-on: ubuntu-latest
-    needs: check_docker_changes
+    needs: diffs
     strategy:
       matrix:
         python-version: ['3.6'] #, '3.8']
@@ -42,8 +46,8 @@ jobs:
       image_ctrl: "public.ecr.aws/neotys/neoload-controller:7.7.0"
       image_lg: "public.ecr.aws/neotys/neoload-loadgenerator:7.7.0"
       merge_to_trunk: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-      integration_moment: false # ${{ github.event_name == 'pull_request' }}
-      docker_files_changed: ${{ needs.check_docker_changes.outputs.found_one == 'true' }}
+      integration_moment: ${{ github.event_name == 'pull_request' || needs.diffs.outputs.workflow_change == 'true' }}
+      docker_files_changed: ${{ needs.diffs.outputs.found_one == 'true' }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
