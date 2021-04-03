@@ -23,7 +23,6 @@ jobs:
         python-version: ['3.6'] #3.8.6
     container:
       image: docker:dind
-      options: --user 1001
     steps:
       - name: Add the Github user to the DinD host container
         run: |
@@ -34,6 +33,7 @@ jobs:
           chmod -R u=rwx,go=rx /github/home
           HOME=/github/home
           export HOME=$HOME
+          echo "::set-env name=HOME::$HOME"
 
       ## sadly, this Github action only installs python on the Ubuntu build HOST
       - name: Set up Python ${{ matrix.python-version }}
