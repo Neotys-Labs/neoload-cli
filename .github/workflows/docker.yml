@@ -30,7 +30,7 @@ jobs:
             if [[ $file == *docker* ]]; then
               echo "::set-output name=found_one::true"
             fi
-            if [[ $file == */workflows/* ]]; then
+            if [[ $file == */workflows/*.yml ]]; then
               echo "::set-output name=workflow_change::true"
             fi
           done < diff_files.txt
