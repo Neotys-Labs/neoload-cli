@@ -30,7 +30,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Setup Host docker agent to DinD
       run: |
-        python pip install docker
+        pip install docker
         export DOCKER_HOST="tcp://0.0.0.0:2375"
         docker ps
     - name: Install dependencies
