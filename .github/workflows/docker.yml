@@ -95,6 +95,7 @@ jobs:
           which python3
           which python
           which pip
+          chown -R root $pythonLocation
           # prior=$(pwd)
           # cd $pythonLocation && ln -s /usr/bin/python3 python
           # cd $prior
