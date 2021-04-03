@@ -20,7 +20,7 @@ jobs:
       - name: Add the Github user to the DinD host container
         run: |
           apk update
-          apk add -q net-tools shadow sudo bash git
+          apk add -q net-tools shadow sudo bash git ca-certificates
           groupadd -g 1000 githubgp
           adduser -G githubgp -u 1001 -D -H -h /github/home github
           id -G root
