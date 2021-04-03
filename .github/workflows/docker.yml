@@ -22,29 +22,21 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Setup Host docker agent to DinD
-      run: |
-        #pip install docker
-        docker ps
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install .
         python -m pip install coverage
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Test Docker Up/Down
-      run: |
-        neoload login --url ${{ secrets.NLWEB_API_URL }} --workspace CLI ${{ secrets.NLWEB_TOKEN }}
-        neoload config set docker.controller.image=public.ecr.aws/neotys/neoload-controller:7.7.0
-        neoload config set docker.lg.image=public.ecr.aws/neotys/neoload-loadgenerator:7.7.0
-        neoload config set docker.zone=${{ env.zoneId }}
-        neoload docker status
-        neoload docker up
-        neoload docker down
     - name: Test with pytest
       run: |
         PYTHONPATH="neoload" COVERAGE_FILE=.coverage.unit coverage3 run -m pytest
+
+        neoload config set docker.controller.image=public.ecr.aws/neotys/neoload-controller:7.7.0
+        neoload config set docker.lg.image=public.ecr.aws/neotys/neoload-loadgenerator:7.7.0
+        neoload config set docker.zone=${{ env.zoneId }}
         PYTHONPATH="neoload" COVERAGE_FILE=.coverage.live coverage3 run -m pytest -v -x -m "makelivecalls" --makelivecalls --token ${{ secrets.NLWEB_TOKEN }} --url ${{ secrets.NLWEB_API_URL }} --workspace CLI
+
         coverage3 combine
         coverage3 xml
     # - name: SonarCloud Scan
