@@ -107,7 +107,10 @@ jobs:
           echo "/usr/bin" && ls -latr /usr/bin
           echo "/__t" && ls -latr /__t
           echo "/__t/Python" && ls -latr /__t/Python
-          echo "$pythonLocation" && ls -latr $pythonLocation
+          echo "pythonLocation" && ls -latr $pythonLocation
+          echo "pythonLocation/bin" && ls -latr $pythonLocation/bin
+
+          ln -s $(which python) /usr/bin/python
 
           python --version
           docker --version
