@@ -13,6 +13,8 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.6'] #, '3.8']
+    env:
+      zoneId: xWbV4
 
     steps:
     - uses: actions/checkout@v2
@@ -33,6 +35,10 @@ jobs:
     - name: Test Docker Up/Down
       run: |
         neoload login --url ${{ secrets.NLWEB_API_URL }} --workspace CLI ${{ secrets.NLWEB_TOKEN }}
+        neoload config set docker.controller.image=public.ecr.aws/neotys/neoload-controller:7.7.0
+        neoload config set docker.lg.image=public.ecr.aws/neotys/neoload-loadgenerator:7.7.0
+        neoload config set docker.zone=${{ env.zoneId }}
+        neoload docker status
         neoload docker up
         neoload docker down
     - name: Test with pytest
