@@ -8,22 +8,55 @@ on:
     branches: [ 'TestDockerInGithubActionsX' ]
 
 jobs:
+  check_docker_changes:
+    name: Find Docker-related changes
+    outputs:
+      found_one: ${{ steps.check_files.outputs.found_one }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: check modified files
+        id: check_files
+        run: |
+          echo "::set-output name=found_one::false"
+          git diff --name-only HEAD^ HEAD > diff_files.txt
+          while IFS= read -r file; do
+            if [[ $file == *docker* ]]; then
+              echo "::set-output name=found_one::true"
+              break
+            fi
+          done < diff_files.txt
+
   build:
     runs-on: ubuntu-latest
+    needs: check_docker_changes
     strategy:
       matrix:
-        python-version: ['3.6', '3.8']
+        python-version: ['3.6'] #, '3.8']
     env:
       zoneId: xWbV4
       image_ctrl: "public.ecr.aws/neotys/neoload-controller:7.7.0"
       image_lg: "public.ecr.aws/neotys/neoload-loadgenerator:7.7.0"
+      merge_to_trunk: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      integration_moment: ${{ github.event_name == 'pull_request' }}
+      docker_files_changed: ${{ needs.check_docker_changes.outputs.found_one == 'true' }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Echo Job State Variables
+      run: |
+        echo "merge_to_trunk: ${{ env.merge_to_trunk }}"
+        echo "integration_moment: ${{ env.integration_moment }}"
+        echo "docker_files_changed: ${{ env.docker_files_changed }}"
     - name: Pre-cache Docker Images
+      if: ${{ env.merge_to_trunk || env.integration_moment || env.docker_files_changed }}
       run: |
         docker pull ${{ env.image_ctrl }}
         docker pull ${{ env.image_lg }}
@@ -37,6 +70,7 @@ jobs:
       run: |
         PYTHONPATH="neoload" COVERAGE_FILE=.coverage.unit coverage3 run -m pytest
     - name: Test with pytest (live calls / integration)
+      if: ${{ env.merge_to_trunk || env.integration_moment || env.docker_files_changed }}
       run: |
         neoload config set docker.controller.image=${{ env.image_ctrl }}
         neoload config set docker.lg.image=${{ env.image_lg }}
