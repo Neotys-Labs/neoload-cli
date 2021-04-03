@@ -28,7 +28,7 @@ jobs:
         run: |
           apk update
           apk add -q net-tools shadow sudo
-          groupadd -g 116 githubgrp
+          groupadd -g 1000 githubgrp
           adduser -G githubgrp -u 1001 -D -H -h /github/home github
           chmod -R u=rwx,go=rx /github/home
           HOME=/github/home
