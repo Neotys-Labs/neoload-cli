@@ -52,11 +52,11 @@ jobs:
         PYTHONPATH="neoload" COVERAGE_FILE=.coverage.live coverage3 run -m pytest -v -x -m "makelivecalls" --makelivecalls --token ${{ secrets.NLWEB_TOKEN }} --url ${{ secrets.NLWEB_API_URL }} --workspace CLI
         coverage3 combine
         coverage3 xml
-    - name: SonarCloud Scan
-      uses: sonarsource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    # - name: SonarCloud Scan
+    #   uses: sonarsource/sonarcloud-github-action@master
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     - name: Zip Test Folder on failure
       if: failure()
       run: zip -r tests.zip tests/
