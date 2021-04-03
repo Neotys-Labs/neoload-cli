@@ -23,13 +23,18 @@ jobs:
         python-version: ['3.6'] #3.8.6
     container:
       image: docker:dind
+      options: --user root # because github actions use github:githubgrp
     steps:
       - name: Add the Github user to the DinD host container
+        shell: bash
         run: |
           apk update
           apk add -q net-tools shadow sudo
           groupadd -g 1000 githubgrp
           adduser -G githubgrp -u 1001 -D -H -h /github/home github
+          id -G root
+          usermod -a -G githubgrp root
+          id -G root
           chmod -R u=rwx,go=rx /github/home
           HOME=/github/home
           export HOME=$HOME
@@ -79,26 +84,32 @@ jobs:
       #     ls -latr $PYENV_ROOT/bin
       #
       #     #apk add -q python3-dev gcc libc-dev py3-pip git
+        shell: bash
+        run: |
+          echo "$pythonLocation" >> $GITHUB_PATH
 
       - name: Verify Python Installation
+        shell: bash
         run: |
           whoami
-          echo "PYENV_ROOT: $PYENV_ROOT"
+          echo "pythonLocation: $pythonLocation"
+          echo "GITHUB_PATH: $GITHUB_PATH"
           echo "PATH: $PATH"
           which python3
           which python
           which pip
           # prior=$(pwd)
-          # cd /usr/local/bin && ln -s /usr/bin/python3 python
+          # cd $pythonLocation && ln -s /usr/bin/python3 python
           # cd $prior
 
       - name: Verify Prerequisites
+        shell: bash
         run: |
           echo "PATH: $PATH"
           whoami
           ls -latr $pythonLocation
-          echo "Listing version-specific"
-          ls -latr /__t/Python/3.6.13/x64/bin
+          echo "Showing version-specific"
+          $pythonLocation/python --version
           python --version
           docker --version
           docker ps
@@ -106,6 +117,7 @@ jobs:
       #- uses: actions/checkout@v2
 
       - name: Install CLI
+        shell: bash
         run: |
           #git clone --branch $GITHUB_REF https://github.com/$GITHUB_REPOSITORY.git && cd neoload-cli
           mkdir -p neoload-cli && cd neoload-cli \
@@ -115,6 +127,7 @@ jobs:
           git branch
 
       - name: Install dependencies
+        shell: bash
         run: |
           bash
           python -m pip install --upgrade pip
@@ -122,6 +135,7 @@ jobs:
           python -m pip install coverage
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Test with pytest
+        shell: bash
         run: |
           neoload --version
 
