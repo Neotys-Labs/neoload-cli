@@ -8,26 +8,72 @@ on:
     branches: [ '**' ]
 
 jobs:
+  diffs:
+    name: Look for Specific Changes
+    outputs:
+      found_one: ${{ steps.check_files.outputs.found_one }}
+      workflow_change: ${{ steps.check_files.outputs.workflow_change }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: check modified files
+        id: check_files
+        run: |
+          echo "::set-output name=found_one::false"
+          echo "::set-output name=workflow_change::false"
+          git diff --name-only HEAD^ HEAD > diff_files.txt
+          while IFS= read -r file; do
+            if [[ $file == *docker* ]]; then
+              echo "::set-output name=found_one::true"
+            fi
+            if [[ $file == */workflows/*.yml ]]; then
+              echo "::set-output name=workflow_change::true"
+            fi
+          done < diff_files.txt
+
   build:
     runs-on: ubuntu-latest
+    needs: diffs
     strategy:
       matrix:
-        python-version: ['3.6', '3.8']
+        python-version: ['3.6'] #, '3.8']
     env:
       zoneId: xWbV4
       image_ctrl: "public.ecr.aws/neotys/neoload-controller:7.7.0"
       image_lg: "public.ecr.aws/neotys/neoload-loadgenerator:7.7.0"
       merge_to_trunk: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-      integration_moment: ${{ github.event_name == 'pull_request' }}
+      integration_moment: ${{ github.event_name == 'pull_request' || needs.diffs.outputs.workflow_change == 'true' }}
+      docker_files_changed: ${{ needs.diffs.outputs.found_one == 'true' }}
     steps:
+    - name: Echo Job State Variables
+      run: |
+        echo "github.event_name: ${{ github.event_name }}"
+        echo "github.ref: ${{ github.ref }}"
+        echo "workflow_change: ${{ needs.diffs.outputs.workflow_change }}"
+        echo "found_one: ${{ needs.diffs.outputs.found_one }}"
+        echo "merge_to_trunk: ${{ env.merge_to_trunk }}"
+        echo "integration_moment: ${{ env.integration_moment }}"
+        echo "docker_files_changed: ${{ env.docker_files_changed }}"
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Pre-cache Docker Images
-      if: ${{ env.merge_to_trunk || env.integration_moment }}
+    - name: "If-FullTesting: Configure AWS Credentials" # https://docs.amazonaws.cn/en_us/AmazonECR/latest/public/public-service-quotas.html
+      if: ${{ env.merge_to_trunk == 'true' || env.integration_moment == 'true' || env.docker_files_changed == 'true' }}
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    - name: "If-FullTesting: Pre-cache Images"
+      if: ${{ env.merge_to_trunk == 'true' || env.integration_moment == 'true' || env.docker_files_changed == 'true' }}
       run: |
+        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
         docker pull ${{ env.image_ctrl }}
         docker pull ${{ env.image_lg }}
     - name: Install dependencies
@@ -39,8 +85,8 @@ jobs:
     - name: Test with pytest (unit / mocks)
       run: |
         PYTHONPATH="neoload" COVERAGE_FILE=.coverage.unit coverage3 run -m pytest
-    - name: Test with pytest (live calls / integration)
-      if: ${{ env.merge_to_trunk || env.integration_moment }}
+    - name: "If-FullTesting: Test with pytest (live calls / integration)"
+      if: ${{ env.merge_to_trunk == 'true' || env.integration_moment == 'true' || env.docker_files_changed == 'true' }}
       run: |
         neoload config set docker.controller.image=${{ env.image_ctrl }}
         neoload config set docker.lg.image=${{ env.image_lg }}
