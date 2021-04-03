@@ -159,6 +159,19 @@ def parse_filter_spec(filter_spec):
 
     return ret
 
+def get_resource_as_string(relative_path):
+    try:
+        import importlib.resources as pkg_resources
+    except ImportError:
+        # Try backported to PY<37 `importlib_resources`.
+        import importlib_resources as pkg_resources
+
+    path = relative_path.split(os.path.sep)
+    namespace = ".".join(path[:-1])
+    file = path[-1]
+    logging.debug({'path':path,'namespace':namespace,'file':file})
+    return pkg_resources.read_text(namespace, file)
+
 def parse_template_spec(model,filter_spec,template):
     if template.lower().startswith("builtin:transactions"):
         model["components"] = get_default_components(False,filter_spec["exclude_filter"])
@@ -1017,32 +1030,11 @@ def unique(seq, idfun=None):
     return result
 
 def get_builtin_template_transaction_csv():
-    return """
-User Path;Element;Parent;Count;Min;Avg;Max;Perc 50;Perc 90;Perc 95;Perc 99;Success;Success Rate;Failure;Failure Rate{%
-    for txn in elements.transactions | rejectattr('id', 'equalto', 'all-transactions') | rejectattr('aggregate.count', 'equalto', 0) | sort(attribute='avgDuration',reverse=true) %}
-{{ txn.user_path|e }};{{ txn.name|e }};{{ txn.parent|e }};{{ txn.aggregate.count }};{{ txn.aggregate.minDuration }};{{ txn.aggregate.avgDuration }};{{ txn.aggregate.maxDuration }};{{ txn.aggregate.percentile50 }};{{ txn.aggregate.percentile90 }};{{ txn.aggregate.percentile95 }};{{ txn.aggregate.percentile99 }};{{ txn.aggregate.successCount }};{{ txn.aggregate.successRate }};{{ txn.aggregate.failureCount }};{{ txn.aggregate.failureRate }}{%
-    endfor %}""".strip()
+    return get_resource_as_string('tests/resources/jinja/builtin_transactions_csv.j2').strip()
 
 def get_builtin_console_summary():
-    return """
+    return get_resource_as_string('tests/resources/jinja/builtin_console_summary.j2').strip()
 
-Test Name: {{summary.name}}
-Start: {{summary.startDateText}}\tDuration: {{summary.durationText}}
-End: {{summary.endDateText}}\tExecution Status: {{summary.status}} by {{summary.terminationReason}}
-Description: {{summary.description}}
-Project: {{summary.project}}
-Scenario: {{summary.scenario}}
-Quality Status: {{summary.qualityStatus}}
-
-Transactions summary:
-User Path\tElement\tCount\tMin\tAvg\tMax\tPerc 50\tPerc 90\tPerc 95\tPerc 99\tSuccess\tS.Rate\tFailure\tF.Rate
-{% for txn in elements.transactions | rejectattr('id', 'equalto', 'all-transactions') | rejectattr('aggregate.count', 'equalto', '0') | sort(attribute='avgDuration',reverse=true)
-%}{{ txn.user_path|e }}\t{{ txn.name|e }}\t{{ txn.aggregate.count }}\t""" \
-"""{{ txn.aggregate.minDuration }}\t{{ txn.aggregate.avgDuration }}\t{{ txn.aggregate.maxDuration }}\t""" \
-"""{{ txn.aggregate.percentile50 }}\t{{ txn.aggregate.percentile90 }}\t{{ txn.aggregate.percentile95 }}\t{{ txn.aggregate.percentile99 }}\t""" \
-"""{{ txn.aggregate.successCount }}\t{{ txn.aggregate.successRate }}\t""" \
-"""{{ txn.aggregate.failureCount }}\t{{ txn.aggregate.failureRate }}
-{% endfor %}""".strip()
 
 
 def print_extended_help():
