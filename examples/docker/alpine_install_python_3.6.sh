@@ -13,11 +13,8 @@ export LANG=$LANG
 
 # runtime dependencies
 set -eux; \
-apk update && 
-	apk add --no-cache \
-# install ca-certificates so that HTTPS works consistently
-		ca-certificates \
-	;
+apk update &&
+	apk add --no-cache ca-certificates
 # other runtime dependencies for Python are installed later
 
 GPG_KEY=0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D
@@ -68,7 +65,6 @@ set -ex \
 		tk-dev \
 		xz-dev \
 		zlib-dev \
-# add build deps before removing fetch deps in case there's overlap
 	&& apk del --no-network .fetch-deps \
 	\
 	&& cd /usr/src/python \
@@ -83,11 +79,8 @@ set -ex \
 		--with-system-ffi \
 		--without-ensurepip \
 	&& make -j "$(nproc)" \
-# set thread stack size to 1MB so we don't segfault before we hit sys.getrecursionlimit()
-# https://github.com/alpinelinux/aports/commit/2026e1259422d4e0cf92391ca2d3844356c649d0
 		EXTRA_CFLAGS="-DTHREAD_STACK_SIZE=0x100000" \
 		LDFLAGS="-Wl,--strip-all" \
-# setting PROFILE_TASK makes "--enable-optimizations" reasonable: https://bugs.python.org/issue36044 / https://github.com/docker-library/python/issues/160#issuecomment-509426916
 		PROFILE_TASK='-m test.regrtest --pgo \
 			test_array \
 			test_base64 \
