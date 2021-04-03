@@ -99,11 +99,7 @@ jobs:
           # cd $pythonLocation && ln -s /usr/bin/python3 python
           # cd $prior
 
-      - name: Verify Prerequisites
-        shell: bash
-        run: |
           echo "PATH: $PATH"
-          whoami
           echo "/usr/bin" && ls -latr /usr/bin
           echo "/__t" && ls -latr /__t
           echo "/__t/Python" && ls -latr /__t/Python
@@ -111,7 +107,16 @@ jobs:
           echo "pythonLocation/bin" && ls -latr $pythonLocation/bin
 
           ln -s $(which python) /usr/bin/python
-          # change
+
+      - name: Verify Prerequisites
+        shell: bash
+        run: |
+          whoami
+
+          echo "Python at:"
+          which python
+
+          echo "Checking Python version"
 
           python --version
           docker --version
