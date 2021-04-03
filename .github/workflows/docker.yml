@@ -56,7 +56,7 @@ jobs:
         echo "integration_moment: ${{ env.integration_moment }}"
         echo "docker_files_changed: ${{ env.docker_files_changed }}"
     - name: Pre-cache Docker Images
-      if: ${{ env.merge_to_trunk || env.integration_moment || env.docker_files_changed }}
+      if: ${{ env.merge_to_trunk == 'true' || env.integration_moment == 'true' || env.docker_files_changed == 'true' }}
       run: |
         docker pull ${{ env.image_ctrl }}
         docker pull ${{ env.image_lg }}
@@ -70,7 +70,7 @@ jobs:
       run: |
         PYTHONPATH="neoload" COVERAGE_FILE=.coverage.unit coverage3 run -m pytest
     - name: Test with pytest (live calls / integration)
-      if: ${{ env.merge_to_trunk || env.integration_moment || env.docker_files_changed }}
+      if: ${{ env.merge_to_trunk == 'true' || env.integration_moment == 'true' || env.docker_files_changed == 'true' }}
       run: |
         neoload config set docker.controller.image=${{ env.image_ctrl }}
         neoload config set docker.lg.image=${{ env.image_lg }}
