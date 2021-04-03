@@ -84,13 +84,11 @@ jobs:
       #     ls -latr $PYENV_ROOT/bin
       #
       #     #apk add -q python3-dev gcc libc-dev py3-pip git
-        shell: bash
-        run: |
-          echo "$pythonLocation" >> $GITHUB_PATH
 
       - name: Verify Python Installation
         shell: bash
         run: |
+          echo "$pythonLocation" >> $GITHUB_PATH
           whoami
           echo "pythonLocation: $pythonLocation"
           echo "GITHUB_PATH: $GITHUB_PATH"
