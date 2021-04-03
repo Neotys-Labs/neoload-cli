@@ -6,14 +6,6 @@ name: Test Docker Commands
 on:
   push:
     branches: [ 'TestDockerInGithubActions' ]
-  workflow_dispatch:
-    inputs:
-      zone:
-        description: 'Zone'
-        required: true
-        default: 'defaultzone'
-      tags:
-        description: 'Test docker commands'
 
 jobs:
   dind:
@@ -23,16 +15,16 @@ jobs:
         python-version: ['3.6'] #3.8.6
     container:
       image: docker:dind
-      options: --user root # because github actions use github:githubgrp
+      options: --user root # because github actions use github:githubgp
     steps:
       - name: Add the Github user to the DinD host container
         run: |
           apk update
           apk add -q net-tools shadow sudo bash
-          groupadd -g 1000 githubgrp
-          adduser -G githubgrp -u 1001 -D -H -h /github/home github
+          groupadd -g 1000 githubgp
+          adduser -G githubgp -u 1001 -D -H -h /github/home github
           id -G root
-          usermod -a -G githubgrp root
+          usermod -a -G githubgp root
           id -G root
           chmod -R u=rwx,go=rx /github/home
           HOME=/github/home
@@ -41,12 +33,27 @@ jobs:
           echo "HOME=$HOME" >> $GITHUB_ENV
 
       ## sadly, this Github action only installs python on the Ubuntu build HOST
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
+      # - name: Set up Python ${{ matrix.python-version }}
+      #   uses: actions/setup-python@v2
+      #   with:
+      #     python-version: ${{ matrix.python-version }}
       ## the context below is within an ALPINE DOCKER container, so Python with specific version must be installed
 
+      #- uses: actions/checkout@v2
+      - name: Get Repo Sources
+        shell: bash
+        run: |
+          whoami
+          mkdir -p neoload-cli && cd neoload-cli \
+            && git init && git remote add origin https://github.com/$GITHUB_REPOSITORY.git \
+            && git fetch origin $GITHUB_REF && git reset --hard FETCH_HEAD
+
+          git branch
+
+      - name: Install Python via APK
+        run: |
+          pwd
+          neoload-cli/examples/docker/alpine_install_python_${{ matrix.python-version }}.sh
       # - name: Install Python via APK
       #   run: |
       #     apk add -q curl \
@@ -95,18 +102,18 @@ jobs:
           which python3
           which python
           which pip
-          # prior=$(pwd)
-          # cd $pythonLocation && ln -s /usr/bin/python3 python
-          # cd $prior
-
-          echo "PATH: $PATH"
-          echo "/usr/bin" && ls -latr /usr/bin
-          echo "/__t" && ls -latr /__t
-          echo "/__t/Python" && ls -latr /__t/Python
-          echo "pythonLocation" && ls -latr $pythonLocation
-          echo "pythonLocation/bin" && ls -latr $pythonLocation/bin
-
-          ln -s $(which python) /usr/bin/python
+          # # prior=$(pwd)
+          # # cd $pythonLocation && ln -s /usr/bin/python3 python
+          # # cd $prior
+          #
+          # echo "PATH: $PATH"
+          # echo "/usr/bin" && ls -latr /usr/bin
+          # echo "/__t" && ls -latr /__t
+          # echo "/__t/Python" && ls -latr /__t/Python
+          # echo "pythonLocation" && ls -latr $pythonLocation
+          # echo "pythonLocation/bin" && ls -latr $pythonLocation/bin
+          #
+          # ln -s $(which python) /usr/bin/python
 
       - name: Verify Prerequisites
         shell: bash
@@ -118,26 +125,14 @@ jobs:
 
           echo "Checking Python version"
 
-          cat $pythonLocation/bin/python3
+          # cat $pythonLocation/bin/python3
 
           python3 --version
           python --version
           docker --version
           docker ps
 
-      #- uses: actions/checkout@v2
-
-      - name: Install CLI
-        shell: bash
-        run: |
-          #git clone --branch $GITHUB_REF https://github.com/$GITHUB_REPOSITORY.git && cd neoload-cli
-          mkdir -p neoload-cli && cd neoload-cli \
-            && git init && git remote add origin https://github.com/$GITHUB_REPOSITORY.git \
-            && git fetch origin $GITHUB_REF && git reset --hard FETCH_HEAD
-
-          git branch
-
-      - name: Install dependencies
+      - name: Install NeoLoad CLI from Branch
         shell: bash
         run: |
           bash
