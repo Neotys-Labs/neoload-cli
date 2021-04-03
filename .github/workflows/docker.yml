@@ -116,8 +116,11 @@ jobs:
           echo "Python at:"
           which python
 
+          echo "/usr/bin" && ls -latr /usr/bin
+
           echo "Checking Python version"
 
+          python3 --version
           python --version
           docker --version
           docker ps
