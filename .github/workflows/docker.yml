@@ -104,8 +104,10 @@ jobs:
         run: |
           echo "PATH: $PATH"
           whoami
-          alias python=$(which python)
-          ls -latr $pythonLocation
+          echo "/usr/bin" && ls -latr /usr/bin
+          echo "/__t" && ls -latr /__t
+          echo "/__t/Python" && ls -latr /__t/Python
+          echo "$pythonLocation" && ls -latr $pythonLocation
 
           python --version
           docker --version
