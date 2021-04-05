@@ -1,5 +1,4 @@
-import neoload_cli_lib.rest_crud as rest_crud
-from neoload_cli_lib import cli_exception
+from neoload_cli_lib import rest_crud,cli_exception
 
 
 class Resolver:
