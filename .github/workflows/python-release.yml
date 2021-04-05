@@ -20,6 +20,10 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install setuptools wheel twine
+    - name: Update Changelog for Dist
+      run: |
+        github_changelog_generator -u Neotys-Labs -p neoload-cli --token ${{ secrets.GIT_CHANGELOG_GEN }} --exclude-tags-regex ".*(dev|rc).*" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
+        cat CHANGELOG.md
     - name: Build package
       run: |
         python setup.py sdist bdist_wheel
@@ -28,3 +32,10 @@ jobs:
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.PYPI_TOKEN }}
+    - name: Archive Changelog
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: CHANGELOG
+        path: CHANGELOG.md
+        retention-days: 5
