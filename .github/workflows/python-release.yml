@@ -32,16 +32,18 @@ jobs:
         git remote -v show
         git branch
         git tag --list
-    - name: Update Changelog for Dist
-      run: |
-        gem install github_changelog_generator
-        github_changelog_generator -u Neotys-Labs -p neoload-cli --token ${{ secrets.GIT_CHANGELOG_GEN }} --exclude-tags-regex ".*(dev|rc).*" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
-        cat CHANGELOG.md
-    - name: Re-check Git Sources
-      run: |
-        git remote -v show
-        git branch
-        git tag --list
+        git status
+    # - name: Update Changelog for Dist
+    #   run: |
+    #     gem install github_changelog_generator
+    #     github_changelog_generator -u Neotys-Labs -p neoload-cli --token ${{ secrets.GIT_CHANGELOG_GEN }} --exclude-tags-regex ".*(dev|rc).*" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
+    #     cat CHANGELOG.md
+    # - name: Re-check Git Sources
+    #   run: |
+    #     git remote -v show
+    #     git branch
+    #     git tag --list
+    #     git status
     - name: Build package
       run: |
         python setup.py sdist bdist_wheel
