@@ -7,7 +7,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    env:
+      is_pre_release: contains(github.ref, 'rc') || contains(github.ref, 'dev')
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.x
@@ -36,6 +37,17 @@ jobs:
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.PYPI_TOKEN }}
+    - uses: actions/checkout@v2
+      if: ${{ contains(github.ref, 'refs/tags') && env.is_pre_release == 'false' }}
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git remote -v show
+        git branch
+
+        git add CHANGELOG.md
+        git commit -m "Auto-gen CHANGELOG via Github Action after successful upload to Pypi"
+        git push
     - name: Archive Changelog
       uses: actions/upload-artifact@v2
       if: always()
