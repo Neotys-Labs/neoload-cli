@@ -8,7 +8,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      is_pre_release: contains(github.ref, 'rc') || contains(github.ref, 'dev')
+      is_pre_release: ${{ contains(github.ref, 'rc') || contains(github.ref, 'dev') }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.x
