@@ -8,7 +8,7 @@ on:
         required: true
 
 jobs:
-  deploy:
+  autogen-changelog:
     runs-on: ubuntu-latest
     env:
       new_branch_name: CHANGELOG-${{ github.event.inputs.tag }}
@@ -40,7 +40,7 @@ jobs:
         #echo "$stdout.sync = true" > $HOME/.rubyopts.rb
         #export RUBYOPT="-r $HOME/.rubyopts.rb"
 
-        github_changelog_generator -u Neotys-Labs -p neoload-cli --token ${{ secrets.GIT_CHANGELOG_GEN }} --exclude-tags-regex ".*(dev|rc).*" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
+        github_changelog_generator -u Neotys-Labs -p neoload-cli --token ${{ secrets.GIT_CHANGELOG_GEN }} --exclude-tags-regex ".*(dev|rc).*" --exclude-labels "excludefromchangelog" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
         cat CHANGELOG.md
     - name: "Push CHANGELOG to master"
       run: |
