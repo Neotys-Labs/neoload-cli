@@ -38,8 +38,7 @@ jobs:
         git status
     - name: "Push CHANGELOG to master"
       run: |
-        TAG=$(echo "${{ github.ref }}" | sed 's|refs/tags/||g')
-        git checkout -b "Post-release $TAG CHANGELOG Update"
+        git checkout -b "CHANGELOG-${{ github.event.inputs.tag }}"
         git remote -v show
         git branch
         git status
