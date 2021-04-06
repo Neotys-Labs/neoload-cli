@@ -13,11 +13,28 @@
 
 **Documentation updates:**
 
+- Update changelog [\#151](https://github.com/Neotys-Labs/neoload-cli/pull/151) ([paulsbruce](https://github.com/paulsbruce))
 - fix\(doc\): Issues with gitlab openshit CI examples [\#141](https://github.com/Neotys-Labs/neoload-cli/pull/141) ([TanguyBaudrin](https://github.com/TanguyBaudrin))
 - Update changelog with auto-generated details; old one only went to 1.… [\#137](https://github.com/Neotys-Labs/neoload-cli/pull/137) ([paulsbruce](https://github.com/paulsbruce))
 
 **Merged pull requests:**
 
+- CHANGELOG: Add --set-upstream to push [\#162](https://github.com/Neotys-Labs/neoload-cli/pull/162) ([paulsbruce](https://github.com/paulsbruce))
+- CHANGELOG: Disable RUBYOPT [\#161](https://github.com/Neotys-Labs/neoload-cli/pull/161) ([paulsbruce](https://github.com/paulsbruce))
+- CHANGELOG: Add ident and ruby defaults [\#160](https://github.com/Neotys-Labs/neoload-cli/pull/160) ([paulsbruce](https://github.com/paulsbruce))
+- Update CHANGELOG to base on refs/heads/master [\#159](https://github.com/Neotys-Labs/neoload-cli/pull/159) ([paulsbruce](https://github.com/paulsbruce))
+- Fix CHANGELOG workflow PR naming [\#158](https://github.com/Neotys-Labs/neoload-cli/pull/158) ([paulsbruce](https://github.com/paulsbruce))
+- Split out CHANGELOG from tag release workflows [\#157](https://github.com/Neotys-Labs/neoload-cli/pull/157) ([paulsbruce](https://github.com/paulsbruce))
+- Disable CHANGELOG gen to check PEP diffs [\#156](https://github.com/Neotys-Labs/neoload-cli/pull/156) ([paulsbruce](https://github.com/paulsbruce))
+- Add ref to release checkout process [\#155](https://github.com/Neotys-Labs/neoload-cli/pull/155) ([paulsbruce](https://github.com/paulsbruce))
+- Test revert to setuptools\_scm==5.0.1 [\#154](https://github.com/Neotys-Labs/neoload-cli/pull/154) ([paulsbruce](https://github.com/paulsbruce))
+- Add version.py back in for tag-based pre-release workflows [\#153](https://github.com/Neotys-Labs/neoload-cli/pull/153) ([paulsbruce](https://github.com/paulsbruce))
+- Push auto-gen CHANGELOG back to master on success [\#152](https://github.com/Neotys-Labs/neoload-cli/pull/152) ([paulsbruce](https://github.com/paulsbruce))
+- Make status human readable [\#150](https://github.com/Neotys-Labs/neoload-cli/pull/150) ([paulsbruce](https://github.com/paulsbruce))
+- Improve builtin templates [\#149](https://github.com/Neotys-Labs/neoload-cli/pull/149) ([paulsbruce](https://github.com/paulsbruce))
+- Add more granular Docker checks [\#148](https://github.com/Neotys-Labs/neoload-cli/pull/148) ([paulsbruce](https://github.com/paulsbruce))
+- Add docker coverage [\#147](https://github.com/Neotys-Labs/neoload-cli/pull/147) ([paulsbruce](https://github.com/paulsbruce))
+- Sonar updates [\#146](https://github.com/Neotys-Labs/neoload-cli/pull/146) ([paulsbruce](https://github.com/paulsbruce))
 - Fix validate command from as-code training outcomes [\#144](https://github.com/Neotys-Labs/neoload-cli/pull/144) ([paulsbruce](https://github.com/paulsbruce))
 - Update ls to use internal filtering b/c endpoint not implemented; tes… [\#142](https://github.com/Neotys-Labs/neoload-cli/pull/142) ([paulsbruce](https://github.com/paulsbruce))
 
@@ -59,7 +76,7 @@
 
 ## [1.2.0](https://github.com/Neotys-Labs/neoload-cli/tree/1.2.0) (2021-02-18)
 
-[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.2.0rc1...1.2.0)
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.1.8...1.2.0)
 
 **Implemented enhancements:**
 
@@ -67,6 +84,10 @@
 - Add --save path argument to upload command [\#117](https://github.com/Neotys-Labs/neoload-cli/pull/117) ([paulsbruce](https://github.com/paulsbruce))
 - Add global config feature [\#115](https://github.com/Neotys-Labs/neoload-cli/pull/115) ([stephanemartin](https://github.com/stephanemartin))
 - Topic report command [\#107](https://github.com/Neotys-Labs/neoload-cli/pull/107) ([paulsbruce](https://github.com/paulsbruce))
+
+**Closed issues:**
+
+- Error during the Get junit SLA report [\#116](https://github.com/Neotys-Labs/neoload-cli/issues/116)
 
 **Merged pull requests:**
 
@@ -140,17 +161,22 @@
 
 ## [1.1.4](https://github.com/Neotys-Labs/neoload-cli/tree/1.1.4) (2020-09-25)
 
-[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.1.4rc8...1.1.4)
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.1.3...1.1.4)
 
 **Implemented enhancements:**
 
 - Add 'cur' pseudonym support to logs-url [\#98](https://github.com/Neotys-Labs/neoload-cli/pull/98) ([stephanemartin](https://github.com/stephanemartin))
 - Add capability to manage self signed certificate [\#94](https://github.com/Neotys-Labs/neoload-cli/pull/94) ([stephanemartin](https://github.com/stephanemartin))
 - Update to use master branch and include --lgs [\#93](https://github.com/Neotys-Labs/neoload-cli/pull/93) ([paulsbruce](https://github.com/paulsbruce))
+- Topic upload .nlignore [\#90](https://github.com/Neotys-Labs/neoload-cli/pull/90) ([paulsbruce](https://github.com/paulsbruce))
 
 **Fixed bugs:**
 
 - Remove timeout for bigfile and slow server [\#97](https://github.com/Neotys-Labs/neoload-cli/pull/97) ([stephanemartin](https://github.com/stephanemartin))
+
+**Documentation updates:**
+
+- Add AWS CodeBuild example pipeline [\#84](https://github.com/Neotys-Labs/neoload-cli/pull/84) ([paulsbruce](https://github.com/paulsbruce))
 
 ## [1.1.3](https://github.com/Neotys-Labs/neoload-cli/tree/1.1.3) (2020-08-19)
 
@@ -158,19 +184,11 @@
 
 ## [1.1.2](https://github.com/Neotys-Labs/neoload-cli/tree/1.1.2) (2020-08-18)
 
-[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.1.1rc1...1.1.2)
-
-**Implemented enhancements:**
-
-- Topic upload .nlignore [\#90](https://github.com/Neotys-Labs/neoload-cli/pull/90) ([paulsbruce](https://github.com/paulsbruce))
-
-**Documentation updates:**
-
-- Add AWS CodeBuild example pipeline [\#84](https://github.com/Neotys-Labs/neoload-cli/pull/84) ([paulsbruce](https://github.com/paulsbruce))
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.1.0...1.1.2)
 
 ## [1.1.0](https://github.com/Neotys-Labs/neoload-cli/tree/1.1.0) (2020-08-11)
 
-[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.1.0rc2...1.1.0)
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.0.1...1.1.0)
 
 **Implemented enhancements:**
 
@@ -187,6 +205,10 @@
 - Fix issue on sample Jenkinsfile [\#76](https://github.com/Neotys-Labs/neoload-cli/pull/76) ([stephanemartin](https://github.com/stephanemartin))
 - Add as-code schema to keep compatibility with CLI v0 [\#70](https://github.com/Neotys-Labs/neoload-cli/pull/70) ([guillaumebert](https://github.com/guillaumebert))
 
+**Closed issues:**
+
+- Cli Crash when Neoload Web doesn't give one value. [\#74](https://github.com/Neotys-Labs/neoload-cli/issues/74)
+
 **Merged pull requests:**
 
 - Miscellaneous improvements [\#86](https://github.com/Neotys-Labs/neoload-cli/pull/86) ([stephanemartin](https://github.com/stephanemartin))
@@ -194,7 +216,7 @@
 
 ## [1.0.1](https://github.com/Neotys-Labs/neoload-cli/tree/1.0.1) (2020-06-25)
 
-[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.1.0rc1...1.0.1)
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.0.0...1.0.1)
 
 **Fixed bugs:**
 
@@ -210,7 +232,7 @@
 
 ## [1.0.0](https://github.com/Neotys-Labs/neoload-cli/tree/1.0.0) (2020-05-14)
 
-[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.0.0rc3...1.0.0)
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/be4a5ffb33d78b882da89705636176737114f389...1.0.0)
 
 
 
