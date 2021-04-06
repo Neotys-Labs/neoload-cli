@@ -1,0 +1,64 @@
+name: CHANGELOG PR After Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release Tag'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    #if: ${{ !contains(github.ref, 'rc') && !contains(github.ref, 'dev') }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        ref: refs/tags/${{ github.event.inputs.tag }}
+    - name: Check Git Sources
+      run: |
+        git remote -v show
+        git branch
+        git tag --list
+        git status
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+    - name: Update Changelog for Dist
+      run: |
+        gem install github_changelog_generator
+        github_changelog_generator -u Neotys-Labs -p neoload-cli --token ${{ secrets.GIT_CHANGELOG_GEN }} --exclude-tags-regex ".*(dev|rc).*" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
+        cat CHANGELOG.md
+    - name: Re-check Git Sources
+      run: |
+        git remote -v show
+        git branch
+        git tag --list
+        git status
+    - name: "Push CHANGELOG to master"
+      run: |
+        TAG=$(echo "${{ github.ref }}" | sed 's|refs/tags/||g')
+        git checkout -b "Post-release $TAG CHANGELOG Update"
+        git remote -v show
+        git branch
+        git status
+
+        git add CHANGELOG.md
+        git status
+        git commit -m "Auto-gen CHANGELOG via Github Action after successful upload to Pypi"
+        git status
+        git log -n 5
+        git push
+    - name: pull-request
+      uses: repo-sync/pull-request@v2
+      with:
+        destination_branch: "master"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Archive Changelog
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: CHANGELOG
+        path: CHANGELOG.md
+        retention-days: 5
