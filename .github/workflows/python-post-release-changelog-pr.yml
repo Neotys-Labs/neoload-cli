@@ -10,6 +10,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      new_branch_name: CHANGELOG-${{ github.event.inputs.tag }}
     #if: ${{ !contains(github.ref, 'rc') && !contains(github.ref, 'dev') }}
     steps:
     - uses: actions/checkout@v2
@@ -19,30 +21,29 @@ jobs:
     - name: Check Git Sources
       run: |
         git remote -v show
-        git branch
         git tag --list
+
+        git config --global user.email "neoload-cli@noreply.github.com"
+        git config --global user.name "${{ github.actor }}"
+
+        git checkout -b "${{ env.new_branch_name }}"
+        git branch
         git status
+
     - uses: ruby/setup-ruby@v1
       with:
         ruby-version: 2.7
     - name: Update Changelog for Dist
       run: |
         gem install github_changelog_generator
+
+        echo "$stdout.sync = true" > $HOME/.rubyopts.rb
+        export RUBYOPT="-r $HOME/.rubyopts.rb"
+
         github_changelog_generator -u Neotys-Labs -p neoload-cli --token ${{ secrets.GIT_CHANGELOG_GEN }} --exclude-tags-regex ".*(dev|rc).*" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
         cat CHANGELOG.md
-    - name: Re-check Git Sources
-      run: |
-        git remote -v show
-        git branch
-        git tag --list
-        git status
     - name: "Push CHANGELOG to master"
       run: |
-        git checkout -b "CHANGELOG-${{ github.event.inputs.tag }}"
-        git remote -v show
-        git branch
-        git status
-
         git add CHANGELOG.md
         git status
         git commit -m "Auto-gen CHANGELOG via Github Action after successful upload to Pypi"
@@ -52,7 +53,11 @@ jobs:
     - name: pull-request
       uses: repo-sync/pull-request@v2
       with:
+        source_branch: "${{ env.new_branch_name }}"
         destination_branch: "master"
+        pr_title: "Auto-generate CHANGELOG after tag ${{ github.event.inputs.tag }}"
+        pr_label: "documentation"
+        pr_draft: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Archive Changelog
       uses: actions/upload-artifact@v2
