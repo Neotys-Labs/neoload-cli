@@ -49,7 +49,7 @@ jobs:
         git commit -m "Auto-gen CHANGELOG via Github Action after successful upload to Pypi"
         git status
         git log -n 5
-        git push
+        git push --set-upstream origin ${{ env.new_branch_name }}
     - name: pull-request
       uses: repo-sync/pull-request@v2
       with:
