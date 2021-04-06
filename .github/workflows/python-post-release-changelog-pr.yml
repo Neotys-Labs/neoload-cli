@@ -37,8 +37,8 @@ jobs:
       run: |
         gem install github_changelog_generator
 
-        echo "$stdout.sync = true" > $HOME/.rubyopts.rb
-        export RUBYOPT="-r $HOME/.rubyopts.rb"
+        #echo "$stdout.sync = true" > $HOME/.rubyopts.rb
+        #export RUBYOPT="-r $HOME/.rubyopts.rb"
 
         github_changelog_generator -u Neotys-Labs -p neoload-cli --token ${{ secrets.GIT_CHANGELOG_GEN }} --exclude-tags-regex ".*(dev|rc).*" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
         cat CHANGELOG.md
