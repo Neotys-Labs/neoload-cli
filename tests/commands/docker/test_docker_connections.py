@@ -5,7 +5,7 @@ from commands.login import cli as login
 from commands.status import cli as status
 from commands.docker import cli as docker
 from neoload_cli_lib import docker_lib
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 import json
 import tempfile
 

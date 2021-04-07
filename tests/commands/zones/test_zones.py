@@ -1,7 +1,7 @@
 import pytest
 from click.testing import CliRunner
 from commands.zones import cli as zones
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 
 
 @pytest.mark.zones

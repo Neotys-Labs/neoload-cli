@@ -9,7 +9,7 @@ from click.testing import CliRunner
 from commands import report
 from commands.logout import cli as logout
 from commands.workspaces import cli as workspaces
-from helpers.test_utils import assert_success
+from tests.helpers.test_utils import assert_success
 from neoload_cli_lib import rest_crud
 from neoload_cli_lib.user_data import UserData
 

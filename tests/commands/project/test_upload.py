@@ -2,7 +2,7 @@ import pytest
 from click.testing import CliRunner
 from commands.project import cli as project
 from commands.status import cli as status
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 
 from neoload_cli_lib import neoLoad_project
 import os, tempfile, time
