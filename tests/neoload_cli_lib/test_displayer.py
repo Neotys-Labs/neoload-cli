@@ -6,7 +6,7 @@ import sys
 import unicodedata
 
 import pytest
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 
 from neoload_cli_lib import displayer
 

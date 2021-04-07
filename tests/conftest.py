@@ -5,7 +5,7 @@ from click.testing import CliRunner
 from commands.login import cli as login
 from commands.status import cli as status
 from commands.config import cli as config
-from helpers.test_utils import mock_login_get_urls
+from tests.helpers.test_utils import mock_login_get_urls
 
 import sys
 

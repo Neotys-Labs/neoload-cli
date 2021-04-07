@@ -10,7 +10,7 @@ from commands.test_settings import cli as settings
 from commands.workspaces import cli as workspaces
 from commands.test_results import cli as results
 
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 
 
 @pytest.mark.makelivecalls

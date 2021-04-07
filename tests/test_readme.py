@@ -12,7 +12,7 @@ from commands.validate import cli as validate
 from commands.run import cli as run
 from commands.stop import cli as stop
 
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 
 
 @pytest.mark.acceptance

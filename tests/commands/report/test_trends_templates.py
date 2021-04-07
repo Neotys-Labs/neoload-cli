@@ -4,7 +4,7 @@ import pytest
 from click.testing import CliRunner
 
 from commands.report import cli as report
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 from neoload_cli_lib import tools
 
 

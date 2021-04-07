@@ -4,7 +4,7 @@ from click.testing import CliRunner
 from commands.login import cli as login
 from commands.test_results import cli as results
 from commands.report import cli as report
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 import tempfile
 
 @pytest.mark.report

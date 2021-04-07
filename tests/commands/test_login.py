@@ -2,7 +2,7 @@ import pytest
 from click.testing import CliRunner
 from commands.login import cli as login
 from commands.status import cli as status
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 from neoload_cli_lib import user_data
 from neoload_cli_lib.user_data import get_user_data
 

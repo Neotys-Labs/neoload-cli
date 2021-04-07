@@ -6,7 +6,7 @@ from commands.status import cli as status
 from commands.test_results import cli as results
 from commands.report import cli as report
 from commands.report import is_guid
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 import json
 import tempfile
 

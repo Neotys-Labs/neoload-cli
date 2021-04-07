@@ -5,7 +5,7 @@ from commands.login import cli as login
 from commands.status import cli as status
 from commands.test_results import cli as results
 from commands.fastfail import cli as fastfail
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 
 @pytest.mark.fastfail
 @pytest.mark.slow

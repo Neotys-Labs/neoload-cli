@@ -1,7 +1,7 @@
 import click
 import pytest
 import neoload_cli_lib.user_data as user_data
-from helpers.test_utils import mock_login_get_urls
+from tests.helpers.test_utils import mock_login_get_urls
 
 
 @pytest.mark.authentication

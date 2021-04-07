@@ -2,7 +2,7 @@ import pytest
 from click.testing import CliRunner
 from commands.workspaces import cli as workspaces
 from commands.logout import cli as logout
-from helpers.test_utils import *
+from tests.helpers.test_utils import *
 
 
 @pytest.mark.workspaces
