@@ -4,13 +4,14 @@ from _pytest.main import Session
 from click.testing import CliRunner
 from commands.login import cli as login
 from commands.status import cli as status
+from commands.config import cli as config
 from helpers.test_utils import mock_login_get_urls
 
 import sys
 
 sys.path.append('neoload')
 __default_random_token = '12345678912345678901ae6d8af6abcdefabcdefabcdef'
-__default_api_url = 'https://preprod-neoload-api.saas.neotys.com/'
+__default_api_url = 'https://neoload-web-api.neotys.perfreleng.org/'
 
 
 def pytest_addoption(parser):
@@ -32,6 +33,7 @@ def pytest_sessionstart(session: Session):
     The test suite needs to start already logged in, because during the class initialization
     of the commands, the function base_endpoint_with_workspace() throw an exception if not logged in.
     """
+    CliRunner().invoke(config, ["set", "status.resolvenames=False"])
     CliRunner().invoke(login, ["xxxxx", '--url', "bad_url"])
 
 
@@ -40,6 +42,12 @@ def neoload_login(request, monkeypatch):
     token = request.config.getoption('--token')
     api_url = request.config.getoption('--url')
     workspace = request.config.getoption('--workspace')
+
+    makelivecalls = request.config.getoption('--makelivecalls')
+    if makelivecalls:
+        CliRunner().invoke(config, ["set", "status.resolvenames=True"])
+        CliRunner().invoke(config, ["set", "docker.zone=xWbV4"])
+
     runner = CliRunner()
     result_status = runner.invoke(status)
     # do login if not already logged-in with the right credentials

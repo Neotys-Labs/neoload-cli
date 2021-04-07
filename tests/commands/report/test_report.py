@@ -127,10 +127,8 @@ class TestReport:
                               'include_filter': 'requests',
                               'results_filter': '-2',
                               'time_filter': '8-10'},
-                         'template_text': """User Path;Element;Parent;Count;Min;Avg;Max;Perc 50;Perc 90;Perc 95;Perc 99;Success;Success Rate;Failure;Failure Rate{%
-    for txn in elements.transactions | rejectattr('id', 'equalto', 'all-transactions') | rejectattr('aggregate.count', 'equalto', 0) | sort(attribute='avgDuration',reverse=true) %}
-{{ txn.user_path|e }};{{ txn.name|e }};{{ txn.parent|e }};{{ txn.aggregate.count }};{{ txn.aggregate.minDuration }};{{ txn.aggregate.avgDuration }};{{ txn.aggregate.maxDuration }};{{ txn.aggregate.percentile50 }};{{ txn.aggregate.percentile90 }};{{ txn.aggregate.percentile95 }};{{ txn.aggregate.percentile99 }};{{ txn.aggregate.successCount }};{{ txn.aggregate.successRate }};{{ txn.aggregate.failureCount }};{{ txn.aggregate.failureRate }}{%
-    endfor %}"""}
+                         'template_text': report.get_builtin_template_transaction_csv()
+                         }
 
     def test_initialize_model_console(self):
         model = report.initialize_model(
@@ -152,19 +150,7 @@ class TestReport:
                               'include_filter': 'all_requests',
                               'results_filter': '-2',
                               'time_filter': '8-10'},
-                         'template_text': """Test Name: {{summary.name}}
-Start: {{summary.startDateText}}	Duration: {{summary.durationText}}
-End: {{summary.endDateText}}	Execution Status: {{summary.status}} by {{summary.terminationReason}}
-Description: {{summary.description}}
-Project: {{summary.project}}
-Scenario: {{summary.scenario}}
-Quality Status: {{summary.qualityStatus}}
-
-Transactions summary:
-User Path	Element	Count	Min	Avg	Max	Perc 50	Perc 90	Perc 95	Perc 99	Success	S.Rate	Failure	F.Rate
-{% for txn in elements.transactions | rejectattr('id', 'equalto', 'all-transactions') | rejectattr('aggregate.count', 'equalto', '0') | sort(attribute='avgDuration',reverse=true)
-%}{{ txn.user_path|e }}	{{ txn.name|e }}	{{ txn.aggregate.count }}	{{ txn.aggregate.minDuration }}	{{ txn.aggregate.avgDuration }}	{{ txn.aggregate.maxDuration }}	{{ txn.aggregate.percentile50 }}	{{ txn.aggregate.percentile90 }}	{{ txn.aggregate.percentile95 }}	{{ txn.aggregate.percentile99 }}	{{ txn.aggregate.successCount }}	{{ txn.aggregate.successRate }}	{{ txn.aggregate.failureCount }}	{{ txn.aggregate.failureRate }}
-{% endfor %}"""
+                         'template_text': report.get_builtin_template_console_summary()
                          }
 
     def test_fill_time_binding(self):

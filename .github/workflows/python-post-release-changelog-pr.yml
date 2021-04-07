@@ -1,0 +1,68 @@
+name: CHANGELOG PR After Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release Tag'
+        required: true
+
+jobs:
+  autogen-changelog:
+    runs-on: ubuntu-latest
+    env:
+      new_branch_name: CHANGELOG-${{ github.event.inputs.tag }}
+    #if: ${{ !contains(github.ref, 'rc') && !contains(github.ref, 'dev') }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        ref: refs/heads/master
+    - name: Check Git Sources
+      run: |
+        git remote -v show
+        git tag --list
+
+        git config --global user.email "neoload-cli@noreply.github.com"
+        git config --global user.name "${{ github.actor }}"
+
+        git checkout -b "${{ env.new_branch_name }}"
+        git branch
+        git status
+
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+    - name: Update Changelog for Dist
+      run: |
+        gem install github_changelog_generator
+
+        #echo "$stdout.sync = true" > $HOME/.rubyopts.rb
+        #export RUBYOPT="-r $HOME/.rubyopts.rb"
+
+        github_changelog_generator -u Neotys-Labs -p neoload-cli --token ${{ secrets.GIT_CHANGELOG_GEN }} --exclude-tags-regex ".*(dev|rc).*" --exclude-labels "excludefromchangelog" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
+        cat CHANGELOG.md
+    - name: "Push CHANGELOG to master"
+      run: |
+        git add CHANGELOG.md
+        git status
+        git commit -m "Auto-gen CHANGELOG via Github Action after successful upload to Pypi"
+        git status
+        git log -n 5
+        git push --set-upstream origin ${{ env.new_branch_name }}
+    - name: pull-request
+      uses: repo-sync/pull-request@v2
+      with:
+        source_branch: "${{ env.new_branch_name }}"
+        destination_branch: "master"
+        pr_title: "Auto-generate CHANGELOG after tag ${{ github.event.inputs.tag }}"
+        pr_label: "documentation"
+        pr_draft: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Archive Changelog
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: CHANGELOG
+        path: CHANGELOG.md
+        retention-days: 5

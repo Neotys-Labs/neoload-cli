@@ -189,7 +189,7 @@ def extract_number(prefix, element):
 
 def max_number(prefix):
     containers_list = client.containers.list(all=True)
-    return max(map(lambda c: extract_number(prefix, c), containers_list))
+    return 0 if len(containers_list)==0 else max(map(lambda c: extract_number(prefix, c), containers_list))
 
 
 def start_container(image, configuration, count, reason):

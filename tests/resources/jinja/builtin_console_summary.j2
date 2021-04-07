@@ -1,0 +1,88 @@
+{{ "%-12s" | format("Test Name:") -}}
+{{ "%-28s" | format(summary.name) -}}
+{{ "%-40s" | format("") -}}
+{{ "%-10s" | format("Project: ") -}}
+{{ "%-30s" | format(summary.project) -}}
+{{ "" }}
+{{ "%-12s" | format("Start: ") -}}
+{{ "%-28s" | format(summary.startDateText) -}}
+{{ "%-10s" | format("Duration: ") -}}
+{{ "%-30s" | format(summary.durationText) -}}
+{{ "%-10s" | format("Scenario: ") -}}
+{{ "%-30s" | format(summary.scenario) -}}
+{{ "" }}
+{{ "%-12s" | format("End: ") -}}
+{{ "%-28s" | format(summary.endDateText) -}}
+{{ "%-10s" | format("Q.Status: ") -}}
+<text color="Fore.{% if(summary.qualityStatus=="PASSED") -%}GREEN{% else -%}RED{% endif -%}">{{ "" -}}
+{{ "%-30s" | format(summary.qualityStatus) -}}
+</text>{{ "" -}}
+{{ "%-10s" | format("E.Status: ") -}}
+<text color="Fore.{% if(summary.status=="TERMINATED" and summary.terminationReason=="POLICY") -%}GREEN{% else -%}RED{% endif -%}">{{ "" -}}
+{{ "%-30s" | format(summary.status + " by " + summary.terminationReason) -}}
+</text>{{ "" -}}
+{{ "" }}
+{% if( (summary.description is defined) and summary.description) %}
+Description: {{ "%-68s" | format(summary.description,)}}
+{% endif %}
+Test Statistics:
+
+{{ "%-15s" | format("Requests") -}}
+{{ "%-15s" | format("Avg. Dur:") -}}
+{{ "%-15s" | format("# Success:") -}}
+{{ "%-15s" | format("# Failed:") -}}
+{{ "" }}
+{{ "Total: %-8s" | format((statistics.totalRequestCountSuccess + statistics.totalRequestCountFailure)) -}}
+{{ "%-15s" | format(statistics.totalRequestDurationAverage | round(0) | int ~ 'ms') -}}
+<text color="Fore.{% if(statistics.totalRequestCountFailure<1) -%}GREEN{% else -%}RED{% endif -%}">{{ "" -}}
+{{ "%-15s" | format(statistics.totalRequestCountSuccess) -}}
+{{ "%-15s" | format(statistics.totalRequestCountFailure) -}}
+</text>{{ "" -}}
+{{ "" }}
+
+{{ "%-15s" | format("Throughput") -}}
+{{ "%-15s" | format("Avg. RPS: ") -}}
+{{ "%-15s" | format("Avg. MBPS: ") -}}
+{{ "" }}
+{{ "%-15s" | format((statistics.totalGlobalDownloadedBytes / 1000000) | round(6) | float ~ 'MB') -}}
+{{ "%-15s" | format(statistics.totalRequestCountPerSecond | round(3),) -}}
+{{ "%-15s" | format((statistics.totalGlobalDownloadedBytesPerSecond / 1000000) | round(6),) -}}
+{{ "" }}
+
+{{ "%-15s" | format("Iterations") -}}
+{{ "%-15s" | format("Success: ") -}}
+{{ "%-15s" | format("Failed: ") -}}
+{{ "" }}
+{{ "Total: %-8s" | format((statistics.totalIterationCountSuccess+statistics.totalIterationCountFailure)) -}}
+<text color="Fore.{% if(statistics.totalIterationCountFailure<1) -%}GREEN{% else -%}RED{% endif -%}">{{ "" -}}
+{{ "%-15s" | format(statistics.totalIterationCountSuccess) -}}
+{{ "%-15s" | format(statistics.totalIterationCountFailure) -}}
+</text>{{ "" -}}
+{{ "" }}
+
+Transactions summary:
+{% if (elements.transactions is defined) and elements.transactions %}
+{{ "%-15s" | format('User Path') -}}
+{{ "%-15s" | format('Transaction') -}}
+{{ '\t' }}Count{{ '\t' }}Min{{ '\t' }}Avg{{ '\t' }}Max{{ '\t' -}}
+Perc 50{{ '\t' }}Perc 90{{ '\t' }}Perc 95{{ '\t' }}Perc 99{{ '\t' -}}
+Success{{ '\t' }}S.Rate{{ '\t' }}Failure{{ '\t' }}F.Rate
+{%- for txn in elements.transactions | rejectattr('id', 'equalto', 'all-transactions') | rejectattr('aggregate.count', 'equalto', '0') | sort(attribute='avgDuration',reverse=true) %}
+{{ "%-15s" | format(txn.user_path|e) -}}
+{{ "%-15s" | format(txn.name|e) -}}
+{{ '\t' }}{{ txn.aggregate.count -}}
+{{ '\t' }}{{ txn.aggregate.minDuration }}{{ '\t' }}{{ txn.aggregate.avgDuration }}{{ '\t' }}{{ txn.aggregate.maxDuration -}}
+{{ '\t' }}{{ txn.aggregate.percentile50 }}{{ '\t' }}{{ txn.aggregate.percentile90 }}{{ '\t' }}{{ txn.aggregate.percentile95 }}{{ '\t' }}{{ txn.aggregate.percentile99 -}}
+<text color="Fore.{% if(txn.aggregate.failureCount<1) -%}GREEN{% else -%}RED{% endif -%}">{{ "" -}}
+{{ '\t' }}{{ txn.aggregate.successCount }}{{ '\t' }}{{ (txn.aggregate.successRate) | round(3) }}%{{ "" -}}
+{{ '\t' }}{{ txn.aggregate.failureCount }}{{ '\t' }}{{ (txn.aggregate.failureRate) | round(3) }}%{{ "" -}}
+</text>{{ "" -}}
+{%- endfor -%}
+
+{% else %}
+    No transaction data exists for this test. Try wrapping your requests in a transaction to get percentiles.
+{% endif %}
+{% if (cli is defined and cli.debug is defined) and cli.debug -%}
+{{ "" }}
+<text color="Fore.BLACK">{{ "%115s:%5s"|format('c', cli.internals.total_requests) }}</text>{{ "" -}}
+{% endif -%}

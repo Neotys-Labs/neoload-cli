@@ -7,7 +7,8 @@ import requests
 import yaml
 from simplejson import JSONDecodeError
 
-from neoload_cli_lib import rest_crud, cli_exception, tools
+from neoload_cli_lib import rest_crud, cli_exception, tools, config_global
+from neoload_cli_lib.name_resolver import Resolver
 
 __conf_name = "neoload-cli"
 __version = "1.0"
@@ -40,10 +41,36 @@ def do_login(token, url, no_write, ssl_cert=''):
     global __user_data_singleton
     __user_data_singleton = UserData.from_login(token, url)
     __user_data_singleton.set_ssl_cert(ssl_cert)
+    __user_data_singleton.set_metadata_names_resolver(resolve_user_data_metadata_name)
     __compute_version_and_path()
     __save_user_data()
     return __user_data_singleton
 
+def resolve_user_data_metadata_name(user_data, key, value):
+    config_resolvenames = config_global.get_attr('status.resolvenames')
+    config_resolvenames = "" if config_resolvenames is None else str(config_resolvenames).lower()
+    if config_resolvenames == 'false':
+        return None
+
+    resolver = None
+    is_id = None
+    name = None
+    if key == 'result id':
+        name = value
+        resolver = Resolver("/test-results", rest_crud.base_endpoint_with_workspace)
+    elif key == 'settings id':
+        name = value
+        resolver = Resolver("/tests", rest_crud.base_endpoint_with_workspace)
+    elif key == 'workspace id':
+        name = value
+        resolver = Resolver("/workspaces", rest_crud.base_endpoint)
+        is_id = True
+    if resolver is not None:
+        if is_id is None:
+            is_id = tools.is_id(name)
+        entity = tools.get_named_or_id(name, is_id, resolver)
+        return entity["name"]
+    return None
 
 def get_front_url_by_private_entrypoint():
     response = rest_crud.get('/nlweb/rest/rest-api/url-api/v1/action/get-front-end-url')
@@ -91,6 +118,7 @@ def get_nlweb_information():
 class UserData:
     def __init__(self, token=None, url=None, desc=None):
         self.metadata = {}
+        self.resolve_func = None
         if desc:
             self.__dict__.update(desc)
         else:
@@ -110,7 +138,8 @@ class UserData:
         metadata = ""
         for (key, value) in self.metadata.items():
             if value is not None:
-                metadata += key + ": " + str(value) + "\n"
+                name = None if self.resolve_func is None else self.resolve_func(self,key,value)
+                metadata += key + ": " + str(value) + (" ({})".format(name) if name is not None else "") + "\n"
         return "You are logged on " + self.url + " with token " + token + "\n\n" + metadata
 
     def get_url(self):
@@ -142,12 +171,17 @@ class UserData:
         if ssl_cert:
             self.metadata['ssl certificate'] = ssl_cert
 
+    def set_metadata_names_resolver(self, resolve_func):
+        self.resolve_func = resolve_func
+
 
 def __load_user_data():
     if os.path.exists(__config_file):
         with open(__config_file, "r") as stream:
             load = yaml.load(stream, Loader=yaml.BaseLoader)
-            return UserData.from_dict(load)
+            ret = UserData.from_dict(load)
+            ret.set_metadata_names_resolver(resolve_user_data_metadata_name)
+            return ret
 
     return None
 

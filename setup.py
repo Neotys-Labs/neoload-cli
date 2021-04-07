@@ -19,7 +19,7 @@ setup(
             'neoload=neoload.__main__:cli'
         ]
     },
-    setup_requires=['setuptools_scm'],
+    setup_requires=['setuptools_scm==5.0.1'],
     use_scm_version={
         'write_to': 'neoload/version.py',
         'write_to_template': '__version__ = "{version}"',
@@ -50,7 +50,8 @@ setup(
         'docker',
         'pyparsing',
         'simplejson',
-        'colorama'
+        'colorama',
+        'importlib-resources'
     ],
     tests_require=[
         "pytest",

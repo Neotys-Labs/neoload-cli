@@ -16,6 +16,8 @@ import logging
 import concurrent.futures
 import requests
 
+from datetime import datetime
+
 requests.adapters.DEFAULT_RETRIES = 5
 MAX_RESULTS_WORKERS = 2
 MAX_ELEMENTS_WORKERS = 10
@@ -70,6 +72,8 @@ def cli(template, json_in, out_file, filter, report_type, name):
     # if intent is to produce JSON directly to stdout, hide print statements
     if out_file is None: gprint = lambda msg: logger.info(msg)
 
+    gprint("Export started: {}".format(datetime.now()))
+
     json_data = parse_source_data_spec(json_in, model, report_type, name)
 
     json_data['cli'] = {
@@ -100,6 +104,8 @@ def cli(template, json_in, out_file, filter, report_type, name):
 
     else:
         print(final_output)
+
+    gprint("Export ended: {}".format(datetime.now()))
 
 
 def initialize_model(filter, template):
@@ -153,6 +159,19 @@ def parse_filter_spec(filter_spec):
 
     return ret
 
+def get_resource_as_string(relative_path):
+    try:
+        import importlib.resources as pkg_resources
+    except ImportError:
+        # Try backported to PY<37 `importlib_resources`.
+        import importlib_resources as pkg_resources
+
+    path = relative_path.split(os.path.sep)
+    namespace = ".".join(path[:-1])
+    file = path[-1]
+    logging.debug({'path':path,'namespace':namespace,'file':file})
+    return pkg_resources.read_text(namespace, file)
+
 def parse_template_spec(model,filter_spec,template):
     if template.lower().startswith("builtin:transactions"):
         model["components"] = get_default_components(False,filter_spec["exclude_filter"])
@@ -166,7 +185,7 @@ def parse_template_spec(model,filter_spec,template):
         model["components"]["summary"] = True
         model["components"]["statistics"] = True
         model["components"]["slas"] = True
-        model["template_text"] = get_builtin_console_summary()
+        model["template_text"] = get_builtin_template_console_summary()
 
     elif os.path.isfile(template):
         model["template_text"] = get_file_text(template)
@@ -180,7 +199,6 @@ def parse_source_data_spec(json_in, model, report_type, name):
     if json_in is not None:
         return json.loads(get_file_text(json_in))
 
-    # no in file, so go out to source live
     if report_type == "single":
         return get_single_report(name,model["components"],filter_spec["time_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
     elif report_type == "trends":
@@ -389,7 +407,14 @@ def fill_single_transactions(__id, elements_filter, time_binding, statistics_lis
             json_elements_transactions = filter_elements(json_elements_transactions, elements_filter)
 
         json_elements_transactions = get_elements_data(__id, json_elements_transactions, time_binding, True, statistics_list, use_txn_raw)
-        json_elements_transactions = list(sorted(json_elements_transactions, key=lambda x: x['display_name']))
+
+        no_display_name = list(filter(lambda x: 'display_name' not in x, json_elements_transactions))
+        if len(no_display_name) > 0:
+            logging.error("{} elements had no 'display_name': {}".format(len(no_display_name),no_display_name))
+
+        json_elements_transactions = list(sorted(
+            list(filter(lambda x: 'display_name' in x, json_elements_transactions)),
+            key=lambda x: x['display_name']))
 
         data['elements']['transactions'] = json_elements_transactions
 
@@ -478,6 +503,11 @@ def get_trends_report(name, time_filter, results_filter, elements_filter, exclud
 
     all_transactions = []
 
+    logging.debug("Settled on {} result(s):\n{}".format(
+        len(arr_selected),
+        "\n".join(list(map(lambda r: " - "+r["id"],arr_selected))))
+    )
+
     fill_trend_results(arr_selected, all_transactions, elements_filter, time_filter)
 
     all_transaction_names = list(map(lambda t: t["name"], all_transactions))
@@ -549,15 +579,11 @@ def get_trend_count_back_ahead(arr_directives):
 
 def get_trends_selected_results(arr_ids,count_back,count_ahead):
     base_id = arr_ids[0]["id"]
-    logging.debug('base_id: {}'.format(base_id))
     arr_results = get_results_by_result_id(base_id,count_back,count_ahead)
-    logging.debug('selected results: {}'.format(arr_results))
+
     arr_sorted_by_time = list(sorted(arr_results, key=lambda x: x["startDate"]))
     base_index = list(map(lambda x: x["id"],arr_sorted_by_time)).index(base_id)
     arr_selected = []
-    logging.debug('base_index: {}'.format(base_index))
-    logging.debug('count_ahead: {}'.format(count_ahead))
-    logging.debug('count_back: {}'.format(count_back))
 
     for i in range(base_index,base_index+1+count_ahead):
         if 0 < i < len(arr_sorted_by_time):
@@ -565,6 +591,17 @@ def get_trends_selected_results(arr_ids,count_back,count_ahead):
     for i in range(base_index+count_back,base_index):
         if 0 < i < len(arr_sorted_by_time):
             arr_selected.append(arr_sorted_by_time[i])
+
+    for id in arr_ids:
+        if id not in list(map(lambda r: r["id"],arr_selected)):
+            results = get_results_by_result_id(id["id"],0,0)
+            arr_selected = arr_selected + results
+
+    arr_final = []
+    for result in arr_selected:
+        if result["id"] not in list(map(lambda r: r["id"],arr_final)):
+            arr_final.append(result)
+    arr_selected = arr_final
 
     arr_selected = list(sorted(arr_selected, key=lambda x: x["startDate"]))
     for i in range(0,len(arr_selected)):
@@ -697,13 +734,8 @@ def get_results_by_result_id(__id,count_back,count_ahead):
     result = rest_crud.get(get_end_point(__id))
     project = result["project"]
     scenario = result["scenario"]
-    logging.debug({'project':project,'scenario':scenario})
     total_expected = -count_back + 1 + count_ahead
     results = []
-    logging.debug("based_id: {}".format(__id))
-    logging.debug("total_expected: {}".format(total_expected))
-    logging.debug("count_back: {}".format(count_back))
-    logging.debug("count_ahead: {}".format(count_ahead))
 
     page_size = 200
     params = {
@@ -729,7 +761,6 @@ def get_results_by_result_id(__id,count_back,count_ahead):
         params['offset'] += page_size
 
         arr_sorted_by_time = list(sorted(all_entities, key=lambda x: x["startDate"]))
-
         results = compile_results_from_source(__id, arr_sorted_by_time, count_back, count_ahead)
 
         if ret_count < page_size:
@@ -743,10 +774,13 @@ def compile_results_from_source(base_id, all_entities, count_back, count_ahead):
         base_index = list(map(lambda x: x["id"],all_entities)).index(base_id)
         back_index = base_index+count_back
         ahead_index = base_index+count_ahead
-        #print({'base_index':base_index,'back_index':back_index,'ahead_index':ahead_index})
+
         for i in range(max(back_index,0),base_index+1):
             ret.append(all_entities[i])
-        for i in range(base_index+1,min(ahead_index,len(all_entities)-1)):
+        ahead_begin = base_index+1
+        ahead_end = min(ahead_index,len(all_entities)-1)
+
+        for i in range(ahead_begin,ahead_end+1):
             ret.append(all_entities[i])
     return ret
 
@@ -996,32 +1030,11 @@ def unique(seq, idfun=None):
     return result
 
 def get_builtin_template_transaction_csv():
-    return """
-User Path;Element;Parent;Count;Min;Avg;Max;Perc 50;Perc 90;Perc 95;Perc 99;Success;Success Rate;Failure;Failure Rate{%
-    for txn in elements.transactions | rejectattr('id', 'equalto', 'all-transactions') | rejectattr('aggregate.count', 'equalto', 0) | sort(attribute='avgDuration',reverse=true) %}
-{{ txn.user_path|e }};{{ txn.name|e }};{{ txn.parent|e }};{{ txn.aggregate.count }};{{ txn.aggregate.minDuration }};{{ txn.aggregate.avgDuration }};{{ txn.aggregate.maxDuration }};{{ txn.aggregate.percentile50 }};{{ txn.aggregate.percentile90 }};{{ txn.aggregate.percentile95 }};{{ txn.aggregate.percentile99 }};{{ txn.aggregate.successCount }};{{ txn.aggregate.successRate }};{{ txn.aggregate.failureCount }};{{ txn.aggregate.failureRate }}{%
-    endfor %}""".strip()
+    return get_resource_as_string('tests/resources/jinja/builtin_transactions_csv.j2').strip()
 
-def get_builtin_console_summary():
-    return """
+def get_builtin_template_console_summary():
+    return get_resource_as_string('tests/resources/jinja/builtin_console_summary.j2').strip()
 
-Test Name: {{summary.name}}
-Start: {{summary.startDateText}}\tDuration: {{summary.durationText}}
-End: {{summary.endDateText}}\tExecution Status: {{summary.status}} by {{summary.terminationReason}}
-Description: {{summary.description}}
-Project: {{summary.project}}
-Scenario: {{summary.scenario}}
-Quality Status: {{summary.qualityStatus}}
-
-Transactions summary:
-User Path\tElement\tCount\tMin\tAvg\tMax\tPerc 50\tPerc 90\tPerc 95\tPerc 99\tSuccess\tS.Rate\tFailure\tF.Rate
-{% for txn in elements.transactions | rejectattr('id', 'equalto', 'all-transactions') | rejectattr('aggregate.count', 'equalto', '0') | sort(attribute='avgDuration',reverse=true)
-%}{{ txn.user_path|e }}\t{{ txn.name|e }}\t{{ txn.aggregate.count }}\t""" \
-"""{{ txn.aggregate.minDuration }}\t{{ txn.aggregate.avgDuration }}\t{{ txn.aggregate.maxDuration }}\t""" \
-"""{{ txn.aggregate.percentile50 }}\t{{ txn.aggregate.percentile90 }}\t{{ txn.aggregate.percentile95 }}\t{{ txn.aggregate.percentile99 }}\t""" \
-"""{{ txn.aggregate.successCount }}\t{{ txn.aggregate.successRate }}\t""" \
-"""{{ txn.aggregate.failureCount }}\t{{ txn.aggregate.failureRate }}
-{% endfor %}""".strip()
 
 
 def print_extended_help():
