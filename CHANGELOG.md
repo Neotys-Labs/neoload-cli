@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased](https://github.com/Neotys-Labs/neoload-cli/tree/HEAD)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.3...HEAD)
+
+**Documentation updates:**
+
+- Auto-generate CHANGELOG after tag 1.3.2 [\#169](https://github.com/Neotys-Labs/neoload-cli/pull/169) ([github-actions[bot]](https://github.com/apps/github-actions))
+
+## [1.3.3](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.3) (2021-04-15)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.2...1.3.3)
+
 ## [1.3.2](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.2) (2021-04-07)
 
 [Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.1...1.3.2)
