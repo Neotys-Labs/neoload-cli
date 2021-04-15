@@ -37,7 +37,7 @@ def get_docker_client():
     if not client:
         try:
             client = docker.from_env()
-        except Exception as ex:
+        except Exception:
             if cli_exception.CliException.is_debug():
                 logging.exception("Exception occurs during docker client creation.")
             raise cli_exception.CliException("Exception occurs during docker client creation.")
