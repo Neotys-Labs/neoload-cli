@@ -29,8 +29,19 @@ default_settings = {
     DOCKER_LAUNCHED: []
 }
 
-client = docker.from_env()
+client=None
 
+
+def get_docker_client():
+    global client
+    if not client:
+        try:
+            client = docker.from_env()
+        except Exception as ex:
+            if cli_exception.CliException.is_debug():
+                logging.exception("Exception occurs during docker client creation.")
+            raise cli_exception.CliException("Exception occurs during docker client creation.")
+    return client
 
 def get_setting(key):
     return config_global.get_attr(key, default_settings.get(key))
@@ -52,8 +63,7 @@ def uninstall():
 
 
 def status():
-    installed = "installed" if hooks.is_registered(HOOK_NAME_TEST_START,
-                                                   HOOK_TEST_START) else "not installed"
+    installed = "installed" if hooks.is_registered(HOOK_NAME_TEST_START, HOOK_TEST_START) else "not installed"
     print("configuration:")
 
     for k in default_settings:
@@ -81,7 +91,7 @@ def status():
 
 def container_status(container_id):
     try:
-        container = client.containers.get(container_id)
+        container = get_docker_client().containers.get(container_id)
         return container.name + ' [' + container.status + ']'
     except docker.errors.NotFound:
         return container_id + ' [NOT FOUND]'
@@ -89,7 +99,7 @@ def container_status(container_id):
 
 def check_images(key):
     image_name = get_setting(key)
-    image_status = " is not pulled" if len(client.images.list(image_name)) == 0 else " is pulled"
+    image_status = " is not pulled" if len(get_docker_client().images.list(image_name)) == 0 else " is pulled"
     print("image " + image_name + image_status)
 
 
@@ -157,7 +167,7 @@ def generate_conf_lg(zone):
 def stop_infra():
     for container_id in get_setting(DOCKER_LAUNCHED):
         try:
-            container = client.containers.get(container_id)
+            container = get_docker_client().containers.get(container_id)
             container.stop()
         except docker.errors.NotFound:
             pass
@@ -188,8 +198,8 @@ def extract_number(prefix, element):
 
 
 def max_number(prefix):
-    containers_list = client.containers.list(all=True)
-    return 0 if len(containers_list)==0 else max(map(lambda c: extract_number(prefix, c), containers_list))
+    containers_list = get_docker_client().containers.list(all=True)
+    return max(map(lambda c: extract_number(prefix, c), containers_list)) if containers_list else 0
 
 
 def start_container(image, configuration, count, reason):
@@ -198,7 +208,7 @@ def start_container(image, configuration, count, reason):
     containers = []
     for i in range(count):
         name = prefix + '-' + str(number + i + 1) + '-' + socket.gethostname().lower()
-        container = client.containers.run(
+        container = get_docker_client().containers.run(
             image=image.id,
             name=name,
             hostname=name,
@@ -279,23 +289,23 @@ def hook_test_stop():
 
 def pull_if_needed(image_name):
     try:
-        return client.images.get(image_name)
+        return get_docker_client().images.get(image_name)
     except docker.errors.ImageNotFound:
         print("Pulling [" + image_name + "]", file=sys.stderr)
-        return client.images.pull(image_name)
+        return get_docker_client().images.pull(image_name)
 
 
 def check_docker():
     preempt_msg = "Unexpected error in 'try_docker_system':"
     try:
         preempt_msg = "Could not ping the Docker host."
-        client.ping()
+        get_docker_client().ping()
 
         preempt_msg = "Could not obtain version info from the Docker host."
-        client.version()
+        get_docker_client().version()
 
         preempt_msg = "Could not list containers on the Docker host."
-        client.containers.list()
+        get_docker_client().containers.list()
 
     except Exception:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -312,14 +322,14 @@ def check_docker():
 
 
 def clean():
-    list_to_clean = client.containers.list(all=True, filters={'label': 'launched-by-neoload-cli'})
+    list_to_clean = get_docker_client().containers.list(all=True, filters={'label': 'launched-by-neoload-cli'})
     for container in list_to_clean:
         container.stop()
     forget()
 
 
 def kill():
-    list_to_clean = client.containers.list(all=True, filters={'label': 'launched-by-neoload-cli'})
+    list_to_clean = get_docker_client().containers.list(all=True, filters={'label': 'launched-by-neoload-cli'})
     for container in list_to_clean:
         container.remove(force=True, v=True)
     forget()
