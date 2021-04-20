@@ -166,11 +166,17 @@ def get_resource_as_string(relative_path):
         # Try backported to PY<37 `importlib_resources`.
         import importlib_resources as pkg_resources
 
-    path = relative_path.split(os.path.sep)
+    path = split_path(relative_path)
     namespace = ".".join(path[:-1])
     file = path[-1]
     logging.debug({'path':path,'namespace':namespace,'file':file})
     return pkg_resources.read_text(namespace, file)
+
+def split_path(path):
+    sep = os.path.sep
+    if sep not in path: sep = '/' # try internal posix style
+    if sep not in path: sep = '\\' # try Windows style (resolves to a single slash)
+    return path.split(sep)
 
 def parse_template_spec(model,filter_spec,template):
     if template.lower().startswith("builtin:transactions"):

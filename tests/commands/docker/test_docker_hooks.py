@@ -11,6 +11,7 @@ import tempfile
 
 @pytest.mark.docker
 @pytest.mark.slow
+@pytest.mark.makelivecalls
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
 class TestDockerHooks:
     def test_docker_install(self):
