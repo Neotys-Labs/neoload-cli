@@ -166,11 +166,14 @@ def get_resource_as_string(relative_path):
         # Try backported to PY<37 `importlib_resources`.
         import importlib_resources as pkg_resources
 
+
     path = split_path(relative_path)
     namespace = ".".join(path[:-1])
     file = path[-1]
     logging.debug({'path':path,'namespace':namespace,'file':file})
-    return pkg_resources.read_text(namespace, file)
+    contents = pkg_resources.read_text(namespace, file)
+    logging.debug("get_resource_as_string[contents]: {}".format(contents))
+    return contents
 
 def split_path(path):
     sep = os.path.sep
