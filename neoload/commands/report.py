@@ -172,7 +172,6 @@ def get_resource_as_string(relative_path):
     file = path[-1]
     logging.debug({'path':path,'namespace':namespace,'file':file})
     contents = pkg_resources.read_text(namespace, file)
-    logging.debug("get_resource_as_string[contents]: {}".format(contents))
     return contents
 
 def split_path(path):
