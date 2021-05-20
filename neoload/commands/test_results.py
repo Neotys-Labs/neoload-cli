@@ -1,4 +1,5 @@
 import json
+import logging
 import sys
 
 import click
@@ -16,12 +17,14 @@ __resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace)
 
 meta_key = 'result id'
 
+
 def load_from_file(file):
     try:
         return json.load(file)
     except json.JSONDecodeError as err:
         raise cli_exception.CliException('%s\nThis command requires a valid Json input.\n'
                                          'Example: neoload test-settings create {"name":"TestName"}' % str(err))
+
 
 @click.command()
 @click.argument('command',
@@ -33,8 +36,12 @@ def load_from_file(file):
 @click.option('--quality-status', 'quality_status', type=click.Choice(['PASSED', 'FAILED']), help="")
 @click.option('--junit-file', 'junit_file', default="junit-sla.xml", help="Output the junit sla report to this path")
 @click.option('--file', type=click.File('r'), help="Json file with the data to be sent to the API.")
-@click.option('--filter', help="Filter test results by fields. Mostly used filters are : name, scenario, project, status.")
-def cli(command, name, rename, description, quality_status, junit_file, file, filter):
+@click.option('--filter',
+              help="Filter test results by fields. Mostly used filters are : name, scenario, project, status.")
+@click.option('--external-url', 'external_url', help="URL to an external system, for example the CI job's link")
+@click.option('--external-url-label', 'external_url_label',
+              help="Label to describe the external URL, for example the CI name or job ID")
+def cli(command, name, rename, description, quality_status, junit_file, file, filter, external_url, external_url_label):
     """
     ls       # Lists test results                                            .
     summary  # Display a summary of the result : SLAs and statistics         .
@@ -54,7 +61,7 @@ def cli(command, name, rename, description, quality_status, junit_file, file, fi
     is_id = tools.is_id(name)
     # avoid to make two requests if we have not id.
     if command == "ls":
-        tools.ls(name, is_id, __resolver, filter, ['project','status','author','sort'])
+        tools.ls(name, is_id, __resolver, filter, ['project', 'status', 'author', 'sort'])
         return
 
     __id = tools.get_id(name, __resolver, is_id)
@@ -75,7 +82,10 @@ def cli(command, name, rename, description, quality_status, junit_file, file, fi
         delete(__id)
         user_data.set_meta(meta_key, None)
     else:
-        json_data = load_from_file(file) if file else create_json(rename, description, quality_status)
+        json_data = load_from_file(file) if file else create_json(rename, description, quality_status, external_url,
+                                                                  external_url_label)
+        print_compatibility_warning_for_old_nlw(json_data)
+
         if command == "put":
             put(__id, json_data)
         elif command == "patch":
@@ -98,6 +108,9 @@ def put(__id, json_data):
 
 
 def patch(__id, json_data):
+    if user_data.is_version_lower_than('2.10.0'):
+        raise cli_exception.CliException('Patch is not implemented in Neoload Web version below 2.10.0. '
+                                         'Please upgrade your Neoload Web.')
     rep = rest_crud.patch(get_end_point(__id), json_data)
     tools.get_id_and_print_json(rep)
 
@@ -107,7 +120,17 @@ def set_empty_fields_with_blank(json_data):
         json_data['description'] = ''
     if 'qualityStatus' not in json_data:
         json_data['qualityStatus'] = ''
+    if 'externalUrl' not in json_data:
+        json_data['externalUrl'] = ''
+    if 'externalUrlLabel' not in json_data:
+        json_data['externalUrlLabel'] = ''
     return json_data
+
+
+def print_compatibility_warning_for_old_nlw(json_data):
+    if user_data.is_version_lower_than('2.10.0') and ('externalUrl' in json_data or 'externalUrlLabel' in json_data):
+        logging.warning('The external-url and external-url-label options are available since '
+                        'Neoload Web 2.10.0 and will be ignored. Please upgrade your Neoload Web.')
 
 
 def junit(__id, junit_file):
@@ -130,10 +153,12 @@ def get_id_by_name_or_id(name):
 
     return __id
 
+
 def get_json_summary(__id):
     return {
         "summary": rest_crud.get(get_end_point(__id))
     }
+
 
 def get_sla_data_by_name_or_id(name):
     __id = get_id_by_name_or_id(name)
@@ -176,7 +201,7 @@ def get_end_point(id_test: str = None, operation=''):
     return rest_crud.base_endpoint_with_workspace() + __endpoint + slash_id_test + operation
 
 
-def create_json(name, description, quality_status):
+def create_json(name, description, quality_status, external_url, external_url_label):
     data = {}
     if name is not None:
         data['name'] = name
@@ -184,8 +209,12 @@ def create_json(name, description, quality_status):
         data['description'] = description
     if quality_status is not None:
         data['qualityStatus'] = quality_status
+    if external_url is not None:
+        data['externalUrl'] = external_url
+    if external_url_label is not None:
+        data['externalUrlLabel'] = external_url_label
     if len(data) == 0 and sys.stdin.isatty():
-        for field in ['name', 'description', 'qualityStatus']:
+        for field in ['name', 'description', 'qualityStatus', 'externalUrl', 'externalUrlLabel']:
             data[field] = input(field)
     return data
 
