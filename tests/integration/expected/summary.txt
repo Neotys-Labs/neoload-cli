@@ -21,7 +21,9 @@ PerIntervalSLA [avg-resp-time] PASSED on [simpledemo > Actions > /]
     "startDate": 1595933846905,
     "endDate": 1595933907195,
     "duration": 60290,
-    "testId": "c31fb9b6-046f-4176-87c8-1bc9bbac9b60"
+    "testId": "c31fb9b6-046f-4176-87c8-1bc9bbac9b60",
+    "externalUrl": "",
+    "externalUrlLabel": ""
   },
   "statistics": {
     "totalRequestCountSuccess": 740,

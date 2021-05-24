@@ -29,7 +29,9 @@ PerIntervalSLA [avg-resp-time] PASSED on [simpledemo > Actions > /]
     "startDate": 1590771663205,
     "endDate": 1590771724404,
     "duration": 61199,
-    "testId": "b1e7e208-e858-435a-b142-de76b7882b6b"
+    "testId": "b1e7e208-e858-435a-b142-de76b7882b6b",
+    "externalUrl": "https://jenkins/1234",
+    "externalUrlLabel": "Jenkins build 1234"
   },
   "statistics": {
     "totalRequestCountSuccess": 119,
