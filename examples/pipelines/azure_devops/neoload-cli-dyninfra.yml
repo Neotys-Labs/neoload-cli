@@ -50,8 +50,10 @@ jobs:
         neoload run \
                        --web-vu 5 \
                        --as-code default.yaml,slas/uat.yaml \
-                       --name "TestLaunchedFromAzureCI_build_$(Build.BuildNumber)" \
-                       --description "Azure example with meta; $(Build.BuildUri)" \
+                       --name "Azure pipeline performance regression task $(Build.BuildNumber)" \
+                       --external-url "$(Build.BuildUri)" \
+                       --external-url-label "Azure CI build $(Build.BuildNumber)" \
+                       --description "Azure result description" \
                        "My Azure Test With CLI"
 
   - task: Bash@3

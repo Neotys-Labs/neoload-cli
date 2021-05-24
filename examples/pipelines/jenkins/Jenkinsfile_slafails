@@ -77,6 +77,10 @@ USER jenkins
                 withEnv(["HOME=${env.WORKSPACE}"]) {
                   sh """neoload run \
                       --detached \
+                      --name "Jenkins pipeline performance regression test ${BUILD_NUMBER}" \
+                      --external-url '${BUILD_URL}' \
+                      --external-url-label 'Jenkins build ${BUILD_NUMBER}' \
+                      --description "Jenkins result description" \
                       --web-vu 25 \
                       --as-code default.yaml,slas/uat.yaml
                      """

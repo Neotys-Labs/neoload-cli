@@ -115,7 +115,7 @@ You can optionally define :
  - The test-settings description
  - The controller and load generator's zone to use (defaultzone is set by default)
  - How many load generators to use for the zone (1 LG on the defaultzone is set by default)
- - Advanced users who already have several zones with available resources in it, specify all zones and the number of LGs with --controller-zone-id and lg-zone-ids
+ - Advanced users who already have several zones with available resources in it can write : ```--zone my_controller_zone --lgs lg_zoneA:2,lg_zoneB:3```
 
 To work with a specific test already created and be able to chain commands
 ```
@@ -175,7 +175,7 @@ There is basic support in the NeoLoad CLI for viewing and exporting results.
 
 ### View results
 ```
-Usage: neoload test-results [OPTIONS] [[ls|summary|junitsla|put|delete|use]] [NAME]
+Usage: neoload test-results [OPTIONS] [[ls|summary|junitsla|put|patch|delete|use]] [NAME]
 neoload test-results ls                 # Lists test results                                            .
 neoload test-results use                # Remember the test result you want to work on.                           .
 neoload test-results summary            # The Json result summary, with SLAs
