@@ -22,7 +22,10 @@ loadtest:
     neoload project --path tests/neoload_projects/example_1/ upload "My Gitlab Test With CLI"
   - |
     neoload run \
-            --name "TestLaunchedFromGitlab_$CI_JOB_ID" \
+            --name "Gitlab pipeline performance regression test $CI_JOB_ID" \
+            --external-url "$CI_JOB_URL" \
+            --external-url-label "Gitlab build $CI_JOB_ID" \
+            --description "Gitlab result description" \
             --web-vu 5 \
             --as-code default.yaml,slas/uat.yaml \
             "My Gitlab Test With CLI"

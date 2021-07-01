@@ -20,7 +20,7 @@ stages:
       - neoload project --path simpledemo.yml upload
 
       # Run test
-      - neoload run --name Bamboo-${bamboo.buildNumber}
+      - neoload run --name "Bamboo pipeline performance regression test ${bamboo.buildNumber}" --external-url "${bamboo.resultsUrl}" --external-url-label "Bamboo build ${bamboo.buildNumber}"
 
       # Generate test report
       - neoload test-results junitsla

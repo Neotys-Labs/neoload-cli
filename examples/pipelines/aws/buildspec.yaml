@@ -24,8 +24,8 @@ phases:
       - |
         neoload test-settings --zone ${NLW_ZONE} --scenario fullTest createorpatch "example-AWScodebuild-SLAfail" \
                 project --path tests/neoload_projects/example_1/ upload \
-                run --detached --name "Build $CODEBUILD_BUILD_NUMBER" --web-vu 25 \
-                    --as-code default.yaml,slas/uat.yaml
+                run --detached --external-url "https://console.aws.amazon.com/codesuite/codebuild/home" \
+                    --external-url-label "AWS Build $CODEBUILD_BUILD_NUMBER" --web-vu 25 --as-code default.yaml,slas/uat.yaml
 
       ## Option 1: simply wait for test finalization
       #- neoload wait cur

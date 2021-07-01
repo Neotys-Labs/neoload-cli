@@ -17,15 +17,15 @@ class TestResultPut:
         assert 'result id:' not in result_status.output
 
         mock_api_get(monkeypatch, 'v2/test-results/%s' % valid_data.test_result_id,
-                     '{"id":"%s", "name":"test-name before", "description":"",'
-                     '"qualityStatus":"PASSED"}' % valid_data.test_result_id)
+                     '{"id":"%s", "name":"test-name before", "description":"", "qualityStatus":"PASSED",'
+                     '"externalUrl":"http://urlBefore","externalUrlLabel":"libBefore"}' % valid_data.test_result_id)
         result_ls = runner.invoke(results, ['ls', valid_data.test_result_id])
         assert_success(result_ls)
         json_before = json.loads(result_ls.output)
 
         mock_api_put(monkeypatch, 'v2/test-results/%s' % valid_data.test_result_id,
-                     '{"id":"%s", "name":"test-name before", "description":"",'
-                     '"qualityStatus":"PASSED"}' % valid_data.test_result_id)
+                     '{"id":"%s", "name":"test-name before", "description":"", "qualityStatus":"PASSED",'
+                     '"externalUrl":"","externalUrlLabel":""}' % valid_data.test_result_id)
         result = runner.invoke(results, ['put', valid_data.test_result_id],
                                input='{"name":"%s", "qualityStatus":"%s"}' % (
                                    json_before['name'], json_before['qualityStatus']))
@@ -36,6 +36,8 @@ class TestResultPut:
         assert json_result['name'] == json_before['name']
         assert json_result['description'] == ''
         assert json_result['qualityStatus'] == json_before['qualityStatus']
+        assert json_result['externalUrl'] == ''
+        assert json_result['externalUrlLabel'] == ''
 
         result_status = runner.invoke(status)
         assert 'result id: %s' % json_result['id'] in result_status.output
@@ -44,16 +46,19 @@ class TestResultPut:
         runner = CliRunner()
         test_name = generate_test_result_name()
         mock_api_put(monkeypatch, 'v2/test-results/%s' % valid_data.test_result_id,
-                     '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":"test description patch ",'
-                     '"qualityStatus":"FAILED"}' % test_name)
+                     '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":"test description put ",'
+                     '"qualityStatus":"FAILED","externalUrl":"http://url","externalUrlLabel":"external_lib"}' % test_name)
         result = runner.invoke(results,
                                ['put', valid_data.test_result_id, '--description', 'test description patch ',
-                                '--quality-status', 'FAILED', '--rename', test_name])
+                                '--quality-status', 'FAILED', '--rename', test_name, '--external-url', 'http://url',
+                                '--external-url-label', 'external_lib'])
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['name'] == test_name
-        assert json_result['description'] == 'test description patch '
+        assert json_result['description'] == 'test description put '
         assert json_result['qualityStatus'] == 'FAILED'
+        assert json_result['externalUrl'] == 'http://url'
+        assert json_result['externalUrlLabel'] == 'external_lib'
 
     def test_input_map(self, monkeypatch, valid_data):
         runner = CliRunner()
@@ -63,14 +68,17 @@ class TestResultPut:
         test_name = generate_test_result_name()
         mock_api_put(monkeypatch, 'v2/test-results/%s' % valid_data.test_result_id,
                      '{"id":"70ed01da-f291-4e29-b75c-1f7977edf252", "name":"%s", "description":"test description ",'
-                     '"qualityStatus":"PASSED"}' % test_name)
+                     '"qualityStatus":"PASSED","externalUrl":"http://url2","externalUrlLabel":"external_lib2"}' % test_name)
         result = runner.invoke(results, ['put'], input='{"name":"%s", "description":"test description ",'
-                                                       '"qualityStatus":"PASSED"}' % test_name)
+                                                       '"qualityStatus":"PASSED","externalUrl":"http://url2",'
+                                                       '"externalUrlLabel":"external_lib2"}' % test_name)
         assert_success(result)
         json_result = json.loads(result.output)
         assert json_result['name'] == test_name
         assert json_result['description'] == 'test description '
         assert json_result['qualityStatus'] == 'PASSED'
+        assert json_result['externalUrl'] == 'http://url2'
+        assert json_result['externalUrlLabel'] == 'external_lib2'
 
     def test_error_invalid_json(self, valid_data):
         runner = CliRunner()
@@ -103,5 +111,4 @@ class TestResultPut:
         runner = CliRunner()
         result = runner.invoke(results, ['put', '--quality-status', 'not_valid_quality'])
         assert result.exit_code == 2
-        assert re.compile(".*Error: Invalid value for [\"']--quality-status[\"']: invalid choice: not_valid_quality."
-                          " \(choose from PASSED, FAILED\).*", re.DOTALL).match(result.output) is not None
+        assert "Invalid value for '--quality-status': 'not_valid_quality' is not one of 'PASSED', 'FAILED'" in result.output

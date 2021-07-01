@@ -19,7 +19,11 @@ from neoload_cli_lib import running_tools, tools, rest_crud, user_data, hooks
 @click.option("-d", "--detached", is_flag=True, help="Doesn't wait the end of test")
 @click.option('--return-0', 'return_0', is_flag=True, default=False,
               help="return 0 when test is correctly launched, whatever the result of SLA")
-def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_vu, citrix_vu, return_0):
+@click.option('--external-url', 'external_url', help="URL to an external system, for example the CI job's link")
+@click.option('--external-url-label', 'external_url_label',
+              help="Label to describe the external URL, for example the CI name or job ID")
+def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_vu, citrix_vu, return_0, external_url,
+        external_url_label):
     """run a test"""
     rest_crud.set_current_command()
     if not name_or_id or name_or_id == "cur":
@@ -47,6 +51,7 @@ def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_
     user_data.set_meta(test_results.meta_key, post_result['resultId'])
     # Wait 5 seconds until the test result is created.
     time.sleep(5)
+    update_external_url(post_result['resultId'], external_url, external_url_label)
     if not detached:
         running_tools.wait(post_result['resultId'], not return_0)
     else:
@@ -66,3 +71,15 @@ def create_data(name, description, as_code, web_vu, sap_vu, citrix_vu):
     if citrix_vu is not None:
         query += '&reservationCitrixVUs=' + citrix_vu
     return query
+
+
+def update_external_url(result_id, external_url, external_url_label):
+    data = {}
+    if external_url is not None:
+        data['externalUrl'] = external_url
+    if external_url_label is not None:
+        data['externalUrlLabel'] = external_url_label
+    if len(data) != 0:
+        test_results.print_compatibility_warning_for_old_nlw(data)
+        if not user_data.is_version_lower_than('2.10.0'):
+            rest_crud.patch(test_results.get_end_point(result_id), data)

@@ -35,7 +35,7 @@ Run Performance test:
                 project --path simpledemo.yml upload
 
     # Run test
-    - script: neoload run --name Bamboo-${bamboo.buildNumber}
+    - script: neoload run --name "Bamboo pipeline performance regression test ${bamboo.buildNumber}" --external-url "${bamboo.resultsUrl}" --external-url-label "Bamboo build ${bamboo.buildNumber}"
 
     # Generate Test Report
     - script: neoload test-results junitsla

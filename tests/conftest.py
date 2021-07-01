@@ -55,7 +55,7 @@ def neoload_login(request, monkeypatch):
             or "No settings is stored" in result_status.output \
             or api_url not in result_status.output \
             or '*' * (len(token) - 3) + token[-3:] not in result_status.output:
-        mock_login_get_urls(monkeypatch)
+        mock_login_get_urls(monkeypatch, 'SaaS')
         cli_options = [token, '--url', api_url]
         if workspace and len(workspace) > 0:
             cli_options.extend(['--workspace', workspace])
