@@ -37,7 +37,7 @@ setup(
         'junit_xml',
         'termcolor',
         'coloredlogs',
-        'gitignore_parser',
+        'gitignore_parser>=0.0.8',
         'jinja2',
         'python-dateutil', # for 3.6 compatibility
         'tqdm',

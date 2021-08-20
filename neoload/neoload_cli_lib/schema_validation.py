@@ -13,7 +13,7 @@ import logging
 import hashlib
 import os
 from gitignore_parser import parse_gitignore
-from neoload_cli_lib.neoLoad_project import is_not_to_be_included
+from neoload_cli_lib.neoLoad_project import is_not_to_be_included,get_intrinsic_ignore_matcher
 
 YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
 __default_schema_url = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3/neoload-project/src/main/resources/as-code.latest.schema.json"
@@ -55,21 +55,23 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
 def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
     ignore_file = os.path.join(path, '.nlignore')
     nl_ignore_matcher = parse_gitignore(ignore_file) if os.path.exists(ignore_file) else None
+    intrinsic_ignore_matcher = get_intrinsic_ignore_matcher(path)
     first_time_check = True
     extensions = ['yml','yaml','json']
     any_errs = False
     for root, dirs, files in os.walk(path):
         for file in files:
             file_path = os.path.join(root, file)
-            (any_errs,first_time_check) = validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,any_errs,first_time_check,continue_on_error,ssl_cert)
+            (any_errs,first_time_check) = validate_yaml_dir_file(file_path,schema_spec,extensions,(intrinsic_ignore_matcher,nl_ignore_matcher),any_errs,first_time_check,continue_on_error,ssl_cert)
 
     if any_errs:
         raise ValueError('One or more errors in files underneath this directory.')
 
-def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,any_errs,first_time_check,continue_on_error,ssl_cert):
+def validate_yaml_dir_file(file_path,schema_spec,extensions,ignore_matchers,any_errs,first_time_check,continue_on_error,ssl_cert):
+    (intrinsic_ignore_matcher,nl_ignore_matcher) = ignore_matchers
 
     if any(filter(lambda ext,file_path=file_path: file_path.endswith("."+ext),extensions)) and \
-       not is_not_to_be_included(file_path, nl_ignore_matcher):
+       not is_not_to_be_included(file_path, intrinsic_ignore_matcher, nl_ignore_matcher):
         logging.debug("file_path: {}".format(file_path))
         try:
             validate_yaml(file_path, schema_spec, ssl_cert, check_schema=first_time_check)
