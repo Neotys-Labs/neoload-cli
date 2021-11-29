@@ -111,4 +111,4 @@ class TestResultPatch:
         runner = CliRunner()
         result = runner.invoke(results, ['patch', '--quality-status', 'not_valid_quality'])
         assert result.exit_code == 2
-        assert "Invalid value for \"--quality-status\": invalid choice: not_valid_quality. (choose from PASSED, FAILED)" in result.output
+        assert 'Invalid value for "--quality-status": invalid choice: not_valid_quality. (choose from PASSED, FAILED)' in result.output
