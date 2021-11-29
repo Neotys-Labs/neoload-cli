@@ -41,7 +41,7 @@ def load_from_file(file):
 @click.option('--external-url', 'external_url', help="URL to an external system, for example the CI job's link")
 @click.option('--external-url-label', 'external_url_label',
               help="Label to describe the external URL, for example the CI name or job ID")
-@click.option('--lock/--unlock', default=False, help="Protect a specific result to avoid automatic or accidental manual deletion")
+@click.option('--lock/--unlock', default=None, help="Protect a specific result to avoid automatic or accidental manual deletion")
 def cli(command, name, rename, description, quality_status, junit_file, file, filter, external_url, external_url_label, lock):
     """
     ls       # Lists test results                                            .
