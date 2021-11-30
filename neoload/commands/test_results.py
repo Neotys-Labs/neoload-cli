@@ -219,11 +219,11 @@ def create_json(name, description, quality_status, external_url, external_url_la
     if len(data) == 0 and sys.stdin.isatty():
         for field in ['name', 'description', 'qualityStatus', 'externalUrl', 'externalUrlLabel', 'isLocked']:
             if field == 'isLocked':
-                isLocked = tools.string_to_bool(input(field))
+                isLocked = tools.string_to_bool_json(input(field))
                 while(isLocked is None):
                     print("\n (Accepted value for true : )", tools.get_true_values())
                     print("\n (Accepted value for false : )", tools.get_false_values())
-                    isLocked = tools.string_to_bool(input(field))
+                    isLocked = tools.string_to_bool_json(input(field))
                 data[field] = isLocked
             else:
                 data[field] = input(field)

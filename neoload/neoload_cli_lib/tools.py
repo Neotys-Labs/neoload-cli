@@ -181,7 +181,7 @@ def system_exit(exit_process, apply_exit_code=True):
 def get_boolean_value_from_env(env_var, default=False):
     return os.getenv(env_var, str(default)).lower().strip() in __true_values
 
-def string_to_bool(str):
+def string_to_bool_json(str):
     if str in __true_values:
         return True
     if str in __false_values:
