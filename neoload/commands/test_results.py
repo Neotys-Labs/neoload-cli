@@ -201,11 +201,11 @@ def get_end_point(id_test: str = None, operation=''):
     slash_id_test = '' if id_test is None else '/' + id_test
     return rest_crud.base_endpoint_with_workspace() + __endpoint + slash_id_test + operation
 
-def prompt_is_locked(field):
+def prompt_boolean(field):
     is_locked = tools.string_to_bool_json(input(field))
     while is_locked is None :
-        print("\n (Accepted value for true : )", tools.get_true_values())
-        print("\n (Accepted value for false : )", tools.get_false_values())
+        print("\n Accepted values for true: ", tools.get_true_values())
+        print("\n Accepted values for false: ", tools.get_false_values())
         is_locked = tools.string_to_bool_json(input(field))
     return is_locked
 
@@ -226,7 +226,7 @@ def create_json(name, description, quality_status, external_url, external_url_la
     if len(data) == 0 and sys.stdin.isatty():
         for field in ['name', 'description', 'qualityStatus', 'externalUrl', 'externalUrlLabel', 'isLocked']:
             if field == 'isLocked':
-                data[field] = prompt_is_locked(field)
+                data[field] = prompt_boolean(field)
             else:
                 data[field] = input(field)
     return data
