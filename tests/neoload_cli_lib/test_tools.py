@@ -1,4 +1,5 @@
 import os
+from neoload.neoload_cli_lib.tools import string_to_bool_json
 
 from neoload_cli_lib import tools
 
@@ -81,3 +82,15 @@ class TestTools:
         mocks = {'TRAVIS': 'True'}
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.are_any_ci_env_vars_active() is True
+
+def test_string_to_boolean_json():
+    list_unknown_values = {'value1', '123', 'random'}
+
+    for unknow_value in list_unknown_values:
+        assert string_to_bool_json(unknow_value) is None
+
+    for true_value in tools.get_true_values():
+        assert string_to_bool_json(true_value) is True
+
+    for false_value in tools.get_false_values():
+        assert string_to_bool_json(false_value) is False

@@ -41,7 +41,8 @@ def load_from_file(file):
 @click.option('--external-url', 'external_url', help="URL to an external system, for example the CI job's link")
 @click.option('--external-url-label', 'external_url_label',
               help="Label to describe the external URL, for example the CI name or job ID")
-def cli(command, name, rename, description, quality_status, junit_file, file, filter, external_url, external_url_label):
+@click.option('--lock/--unlock', default=None, help="Protect a specific result to avoid automatic or accidental manual deletion")
+def cli(command, name, rename, description, quality_status, junit_file, file, filter, external_url, external_url_label, lock):
     """
     ls       # Lists test results                                            .
     summary  # Display a summary of the result : SLAs and statistics         .
@@ -83,7 +84,7 @@ def cli(command, name, rename, description, quality_status, junit_file, file, fi
         user_data.set_meta(meta_key, None)
     else:
         json_data = load_from_file(file) if file else create_json(rename, description, quality_status, external_url,
-                                                                  external_url_label)
+                                                                  external_url_label, lock)
         print_compatibility_warning_for_old_nlw(json_data)
 
         if command == "put":
@@ -200,8 +201,15 @@ def get_end_point(id_test: str = None, operation=''):
     slash_id_test = '' if id_test is None else '/' + id_test
     return rest_crud.base_endpoint_with_workspace() + __endpoint + slash_id_test + operation
 
+def prompt_boolean(field):
+    is_locked = tools.string_to_bool_json(input(field))
+    while is_locked is None :
+        print("\n Accepted values for true: ", tools.get_true_values())
+        print("\n Accepted values for false: ", tools.get_false_values())
+        is_locked = tools.string_to_bool_json(input(field))
+    return is_locked
 
-def create_json(name, description, quality_status, external_url, external_url_label):
+def create_json(name, description, quality_status, external_url, external_url_label, lock):
     data = {}
     if name is not None:
         data['name'] = name
@@ -213,9 +221,14 @@ def create_json(name, description, quality_status, external_url, external_url_la
         data['externalUrl'] = external_url
     if external_url_label is not None:
         data['externalUrlLabel'] = external_url_label
+    if lock is not None:
+        data['isLocked'] = lock
     if len(data) == 0 and sys.stdin.isatty():
-        for field in ['name', 'description', 'qualityStatus', 'externalUrl', 'externalUrlLabel']:
-            data[field] = input(field)
+        for field in ['name', 'description', 'qualityStatus', 'externalUrl', 'externalUrlLabel', 'isLocked']:
+            if field == 'isLocked':
+                data[field] = prompt_boolean(field)
+            else:
+                data[field] = input(field)
     return data
 
 
