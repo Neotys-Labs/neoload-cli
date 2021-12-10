@@ -4,12 +4,14 @@ import webbrowser
 from signal import signal, SIGINT
 
 from commands import logs_url, test_results
+from commands import run
 from neoload_cli_lib import tools, rest_crud,hooks
 
 __current_id = None
 __count = 0
 
 __last_status = ""
+__lock_bool = True # Qucik fix we needed global bool lock  to ensure unique lock at begin of running state
 
 
 def handler(signal_received, frame):
@@ -20,12 +22,12 @@ def handler(signal_received, frame):
             __count += 1
 
 
-def wait(results_id, exit_code_sla):
+def wait(results_id, exit_code_sla, data_lock): # Quick fix we needed to lock test when his state is running
     global __current_id
     __current_id = results_id
     signal(SIGINT, handler)
     header_status(results_id)
-    while display_status(results_id):
+    while display_status(results_id, data_lock): # use of data_lock for quick fix
         time.sleep(20)
 
     __current_id = None
@@ -41,9 +43,8 @@ def header_status(results_id):
         time.sleep(1)
         webbrowser.open_new_tab(url)
 
-
 # INIT, STARTING, RUNNING, TERMINATED
-def display_status(results_id):
+def display_status(results_id, data_lock): # Quick fix we needed to lock test when his state is running
     global __last_status
     res = rest_crud.get(test_results.get_end_point(results_id))
     status = res.get('status')
@@ -51,6 +52,9 @@ def display_status(results_id):
     if __last_status != status:
         print("Status: " + status)
         __last_status = status
+    if status in ["RUNNING", "TERMINATED"] and data_lock != {} : # use of data_lock for quick fix
+        run.patch_data(results_id, data_lock)
+        data_lock.clear() # after patch you never ever "patch lock" while running, so we delete data in order to never "patch lock" again in display_status
     if status == "RUNNING":
         display_statistics(results_id, res)
     if status == "TERMINATED":
