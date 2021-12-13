@@ -1,3 +1,4 @@
+import logging
 import time
 from urllib.parse import quote
 
@@ -15,7 +16,7 @@ from neoload_cli_lib import running_tools, tools, rest_crud, user_data, hooks
 @click.option("--as-code", 'as_code', help="Comma-separated as-code files to use for the test.")
 @click.option("--web-vu", 'web_vu', help="The number of Web Virtual Users to be reserved for the test.")
 @click.option("--sap-vu", 'sap_vu', help="The number of SAP Virtual Users to be reserved for the test.")
-@click.option("--cirix-vu", 'citrix_vu', help="The number of Citrix Virtual Users to be reserved for the test.")
+@click.option("--cirix-vu", 'citrix_vu', hidden = True, help="The number of Citrix Virtual Users to be reserved for the test.") # deprecated option
 @click.option("-d", "--detached", is_flag=True, help="Doesn't wait the end of test")
 @click.option('--return-0', 'return_0', is_flag=True, default=False,
               help="return 0 when test is correctly launched, whatever the result of SLA")
@@ -69,6 +70,7 @@ def create_data(name, description, as_code, web_vu, sap_vu, citrix_vu):
     if sap_vu is not None:
         query += '&reservationSAPVUs=' + sap_vu
     if citrix_vu is not None:
+        logging.getLogger().warning('WARNING: --cirix-vu is deprecated')
         query += '&reservationCitrixVUs=' + citrix_vu
     return query
 
