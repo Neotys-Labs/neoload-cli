@@ -55,7 +55,7 @@ def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_
     # Wait 5 seconds until the test result is created.
     time.sleep(5)
 
-    data_external_url = {} # datas with differents options to patch
+    data_external_url = {}
     prepare_external_url(data_external_url, external_url, external_url_label)
     patch_data(post_result['resultId'], data_external_url)
 
