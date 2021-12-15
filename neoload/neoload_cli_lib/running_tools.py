@@ -83,7 +83,7 @@ def display_statistics(results_id, json_summary):
 def format_delta(delta):
     hour, remaining_sec = divmod(delta.seconds, 3600)
     minute, sec = divmod(remaining_sec, 60)
-    return f'{delta.days + "d" if delta.days > 0 else ""}{hour:02d}:{minute:02d}:{sec:02d}'
+    return f'{str(delta.days) + "d" if delta.days > 0 else ""}{hour:02d}:{minute:02d}:{sec:02d}'
 
 
 def stop(results_id, force: bool, quit_option=False):

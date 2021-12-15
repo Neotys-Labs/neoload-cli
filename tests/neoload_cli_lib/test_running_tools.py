@@ -1,60 +1,57 @@
 import pytest
 import sys
+import ast
 from io import StringIO
 
 from urllib.parse import quote
-
-from neoload_cli_lib.running_tools import display_status, display_statistics
-from commands.run import cli as run
-
-from tests.helpers.test_utils import mock_api_get, mock_api_post, generate_test_result_name, quote
+from neoload_cli_lib import running_tools, rest_crud
+from tests.helpers.test_utils import mock_api_get, mock_api_patch
 from click.testing import CliRunner
 
+import neoload_cli_lib.user_data as user_data
 class TestRunningTools:
 
-    def test_display_status(self, monkeypatch):
-
-        #Test printed output
+    def test_display_status_init(self, monkeypatch):
+        mock_api_get( monkeypatch, "v2/test-results/any_id", '{"status": "INIT"}')
         capturedOutput = StringIO() # Create StringIO object
         sys.stdout = capturedOutput # Redirect stdout.
-        assert display_status(self.__mock_result_state_init(), data_lock = {}) is True # Call function and test returned value
+        assert running_tools.display_status("any_id", data_lock = {}) # Call function and test returned value
+        assert  "Status: INIT\n" == capturedOutput.getvalue() # Test print
         sys.stdout = sys.__stdout__ # Reset redirect.
-        assert  "Status: INIT" == capturedOutput.getvalue() # Test print
 
-        #Testing returned values
-        assert display_status(self.__mock_result_state_terminated(), data_lock = {}) is False 
+    def test_display_status_terminated(self, monkeypatch):
+        mock_api_get( monkeypatch, "v2/test-results/any_id", '{"status": "INIT"}')
+        assert running_tools.display_status("any_id", data_lock = {})
+    
+    def test_display_status_terminated_with_data(self, monkeypatch):
+        user_data.set_meta('version', '2.10.0') # Need to set version in order to patch
+        mock_api_get( monkeypatch, "v2/test-results/any_id", '{"status": "TERMINATED"}')
+        mock_api_patch(monkeypatch, "v2/test-results/any_id", '{"isLocked":"true"}')
+        data_lock = {'isLocked':'true'}
+        assert running_tools.display_status("any_id", data_lock) is False
+        assert data_lock == {}
 
-        assert  display_status(self.__mock_result_state_running(), data_lock = {'isLocked':'true'}) is True
+    def test_display_status_running(self, monkeypatch):
+        user_data.set_meta('version', '2.10.0') # Need to set version in order to patch
+        monkeypatch.setattr(rest_crud, 'get', lambda actual_endpoint: ast.literal_eval(self.__return_json(actual_endpoint)))
+        assert  running_tools.display_status("any_id", data_lock = {})
 
-        assert  display_status(self.__mock_result_state_terminated(), data_lock = {'isLocked':'true'}) is False
-
-        # if monkeypatch is not None:
-        #     # TODO To handle a success test with mocks, we need to be able to mock again GET with the
-        #     # TODO endpoint v2/test-results to return data (that could evolve until a "terminate" status...)
-        #     return
-        # runner = CliRunner()
-        # random_result_name = generate_test_result_name()
-        # if pytest.test_id is None:
-        #     pytest.test_id = '70ed01da-f291-4e29-b75c-1f7977edf252'
-        # mock_api_get(monkeypatch, 'v2/tests/%s' % pytest.test_id,
-        #              '{"id":"%s", "name":"test-name", "nextRunId":1}' % pytest.test_id)
-        # mock_api_post(monkeypatch, 'v2/tests/%s/start?testResultName=%s' % (pytest.test_id, quote(random_result_name)),
-        #               '{"resultId": "9f54dacd-e793-4553-9f16-d4cc7adba545"}')
-        # result_run = runner.invoke(run, ['--name', random_result_name,
-        #                                  '--as-code', 'default.yaml,slas/uat.yaml', '--description',
-        #                                  'A custom test description containing hashtags like #latest or #issueNum'
-        #                                  ])
-        # assert result_run.get('isLocked') is False
+    def test_display_status_running_with_data(self, monkeypatch):
+        user_data.set_meta('version', '2.10.0') # Need to set version in order to patch
+        monkeypatch.setattr(rest_crud, 'get', lambda actual_endpoint: ast.literal_eval(self.__return_json(actual_endpoint)))
+        mock_api_patch(monkeypatch, "v2/test-results/any_id", '{"isLocked":"true"}')
+        data_lock = {'isLocked':'true'}
+        assert  running_tools.display_status("any_id", data_lock)
+        assert data_lock == {}
 
     def test_wait(self):
-        # TODO add unit test or coverage for function wait from reunning tools... care there is time sleep 20 sec ...
+        # TODO add unit test or coverage for function wait from running tools... care there is time sleep 20 sec ...
         assert True
 
-    def __mock_result_state_init(self):
-        return None
-
-    def __mock_result_state_running(self):
-        return None
-
-    def __mock_result_state_terminated(self):
-        return None
+    def __return_json(self, actual_endpoint):
+        if actual_endpoint == "v2/test-results/any_id":
+            return '{"startDate": 1639586469, "duration":492829 , "status": "RUNNING"}'
+        elif actual_endpoint == "v2/test-results/any_id/statistics" :
+            return '{"totalRequestCountSuccess": 62758, "totalRequestCountFailure": 25, "totalRequestDurationAverage": 49.45262, "totalRequestCountPerSecond": 127.393074, "totalTransactionCountSuccess": 125501, "totalTransactionCountFailure": 15, "totalTransactionDurationAverage": 136.1283, "totalTransactionCountPerSecond": 254.6847, "totalIterationCountSuccess": 648, "totalIterationCountFailure": 0, "totalGlobalDownloadedBytes": 1036666537, "totalGlobalDownloadedBytesPerSecond": 2103501.5, "totalGlobalCountFailure": 25}'
+        else:
+            raise Exception('Endpoint NOT mocked : ' + actual_endpoint)
