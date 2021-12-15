@@ -5,9 +5,6 @@ from commands.logout import cli as logout
 from commands.run import prepare_lock, prepare_external_url, create_data
 from tests.helpers.test_utils import *
 
-
-@pytest.mark.results
-@pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
 class TestRun:
 
     def test_prepare_lock (self):
