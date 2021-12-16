@@ -24,7 +24,6 @@ class TestRunningTools:
         assert running_tools.display_status("any_id", data_lock = {})
     
     def test_display_status_terminated_with_data(self, monkeypatch):
-        user_data.set_meta('version', '2.10.0') # Need to set version in order to patch
         mock_api_get( monkeypatch, "v2/test-results/any_id", '{"status": "TERMINATED"}')
         mock_api_patch(monkeypatch, "v2/test-results/any_id", '{"isLocked":"true"}')
         data_lock = {'isLocked':'true'}
@@ -32,12 +31,10 @@ class TestRunningTools:
         assert data_lock == {}
 
     def test_display_status_running(self, monkeypatch):
-        user_data.set_meta('version', '2.10.0') # Need to set version in order to patch
         monkeypatch.setattr(rest_crud, 'get', lambda actual_endpoint: ast.literal_eval(self.__return_json(actual_endpoint)))
         assert  running_tools.display_status("any_id", data_lock = {})
 
     def test_display_status_running_with_data(self, monkeypatch):
-        user_data.set_meta('version', '2.10.0') # Need to set version in order to patch
         monkeypatch.setattr(rest_crud, 'get', lambda actual_endpoint: ast.literal_eval(self.__return_json(actual_endpoint)))
         mock_api_patch(monkeypatch, "v2/test-results/any_id", '{"isLocked":"true"}')
         data_lock = {'isLocked':'true'}
