@@ -440,11 +440,15 @@ As part of your testing, you should run the built-in test suite with the followi
 NOTE: for testing from Mac, please change the PYTHONPATH separators below to colons (:) instead of semicolons (;).
 
 ```
-PYTHONPATH="neoload;tests/helpers" pytest -v
-PYTHONPATH="neoload;tests/helpers" pytest -v -m "not slow"          # Skip slow tests that run tests
+pytest -v
+pytest -v -m "not slow"          # Skip slow tests that run tests
 
 # Run on a real Neoload. Mocks are disabled
-PYTHONPATH="neoload;tests/helpers" pytest -v --token <your_personal_token> --url https://neoload-api.saas.neotys.com/
+pytest -v --token <your_personal_token> --url https://neoload-api.saas.neotys.com/ --makelivecalls
+
+# Run integration tests. This will run scripts with real neoload commands and assert json output with jq.
+# This require at least 1 controller and 1 LG on the provided zone
+./tests/integration/runAllScripts.sh <your_personal_token> --url https://neoload-api.saas.neotys.com/ defaultzone
 ```
 
 Additionally, any contributions to the DSL validation functionality, such as on the JSON schema or the validate command, should execute the following tests locally before pushing to this repo:
