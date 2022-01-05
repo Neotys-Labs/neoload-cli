@@ -1,3 +1,4 @@
+import logging
 import time
 from urllib.parse import quote
 
@@ -15,15 +16,18 @@ from neoload_cli_lib import running_tools, tools, rest_crud, user_data, hooks
 @click.option("--as-code", 'as_code', help="Comma-separated as-code files to use for the test.")
 @click.option("--web-vu", 'web_vu', help="The number of Web Virtual Users to be reserved for the test.")
 @click.option("--sap-vu", 'sap_vu', help="The number of SAP Virtual Users to be reserved for the test.")
-@click.option("--cirix-vu", 'citrix_vu', help="The number of Citrix Virtual Users to be reserved for the test.")
+@click.option("--cirix-vu", 'citrix_vu', hidden = True, help="The number of Citrix Virtual Users to be reserved for the test.") # deprecated option
 @click.option("-d", "--detached", is_flag=True, help="Doesn't wait the end of test")
 @click.option('--return-0', 'return_0', is_flag=True, default=False,
               help="return 0 when test is correctly launched, whatever the result of SLA")
 @click.option('--external-url', 'external_url', help="URL to an external system, for example the CI job's link")
 @click.option('--external-url-label', 'external_url_label',
               help="Label to describe the external URL, for example the CI name or job ID")
+@click.option('--lock', is_flag=True, default=None,
+              help="Protect the result of this run to avoid automatic or accidental manual deletion")
+
 def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_vu, citrix_vu, return_0, external_url,
-        external_url_label):
+        external_url_label, lock):
     """run a test"""
     rest_crud.set_current_command()
     if not name_or_id or name_or_id == "cur":
@@ -51,9 +55,16 @@ def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_
     user_data.set_meta(test_results.meta_key, post_result['resultId'])
     # Wait 5 seconds until the test result is created.
     time.sleep(5)
-    update_external_url(post_result['resultId'], external_url, external_url_label)
+
+    data_external_url = {}
+    prepare_external_url(data_external_url, external_url, external_url_label)
+    patch_data(post_result['resultId'], data_external_url)
+
+    data_lock = {}
+    prepare_lock(data_lock, lock)
+
     if not detached:
-        running_tools.wait(post_result['resultId'], not return_0)
+        running_tools.wait(post_result['resultId'], not return_0, data_lock)
     else:
         tools.print_json(post_result)
 
@@ -69,16 +80,22 @@ def create_data(name, description, as_code, web_vu, sap_vu, citrix_vu):
     if sap_vu is not None:
         query += '&reservationSAPVUs=' + sap_vu
     if citrix_vu is not None:
+        logging.getLogger().warning('WARNING: --cirix-vu is deprecated')
         query += '&reservationCitrixVUs=' + citrix_vu
     return query
 
 
-def update_external_url(result_id, external_url, external_url_label):
-    data = {}
+def prepare_external_url(data, external_url, external_url_label):
     if external_url is not None:
         data['externalUrl'] = external_url
     if external_url_label is not None:
         data['externalUrlLabel'] = external_url_label
+
+def prepare_lock(data, lock):
+    if lock is not None:
+        data['isLocked'] = lock
+
+def patch_data(result_id, data):
     if len(data) != 0:
         test_results.print_compatibility_warning_for_old_nlw(data)
         if not user_data.is_version_lower_than('2.10.0'):
