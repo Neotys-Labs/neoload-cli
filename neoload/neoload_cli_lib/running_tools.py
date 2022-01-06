@@ -13,6 +13,17 @@ __count = 0
 __last_status = ""
 __lock_bool = True # Qucik fix we needed global bool lock  to ensure unique lock at begin of running state
 
+def __is_current_state_running(status):
+    return status == "RUNNING"
+
+def __is_current_state_terminated_and_not_unknown(status, quality_status):
+    # this mehtod represent when a test is terminated but not aborted
+    # this specific state is when the test is 'TERMINATED' but quality status is not 'UNKNOWN'
+    return status == "TERMINATED" and quality_status != "UNKNOWN"
+
+def __lock_result(results_id, data_lock):
+    run.patch_data(results_id, data_lock)
+    data_lock.clear() # after patch you never "patch lock" while running, so data_lock is delete to skip "patch lock" of the loop in display_status
 
 def handler(signal_received, frame):
     global __count
@@ -48,13 +59,16 @@ def display_status(results_id, data_lock): # Quick fix we needed to lock test wh
     global __last_status
     res = rest_crud.get(test_results.get_end_point(results_id))
     status = res.get('status')
+    quality_status = res.get('quality_status')
 
     if __last_status != status:
         print("Status: " + status)
         __last_status = status
-    if status in ["RUNNING", "TERMINATED"] and data_lock != {} : # use of data_lock for quick fix
-        run.patch_data(results_id, data_lock)
-        data_lock.clear() # after patch you never ever "patch lock" while running, so we delete data in order to never "patch lock" again in display_status
+    if data_lock != {}: #if data in data_lock we know that we want to lock our test result
+        if __is_current_state_running(status):
+            __lock_result(results_id, data_lock)
+        if __is_current_state_terminated_and_not_unknown(status, quality_status):
+            __lock_result(results_id, data_lock)
     if status == "RUNNING":
         display_statistics(results_id, res)
     if status == "TERMINATED":
