@@ -1,5 +1,6 @@
 import datetime
 import time
+from urllib.parse import quote
 import webbrowser
 from signal import signal, SIGINT
 
@@ -11,7 +12,6 @@ __current_id = None
 __count = 0
 
 __last_status = ""
-__lock_bool = True # Qucik fix we needed global bool lock  to ensure unique lock at begin of running state
 
 def __is_current_state_running(status):
     return status == "RUNNING"
@@ -33,12 +33,12 @@ def handler(signal_received, frame):
             __count += 1
 
 
-def wait(results_id, exit_code_sla, data_lock): # Quick fix we needed to lock test when his state is running
+def wait(results_id, exit_code_sla, data_lock): # data_lock is needed to lock result when test state is running
     global __current_id
     __current_id = results_id
     signal(SIGINT, handler)
     header_status(results_id)
-    while display_status(results_id, data_lock): # use of data_lock for quick fix
+    while display_status(results_id, data_lock):
         time.sleep(20)
 
     __current_id = None
@@ -55,16 +55,16 @@ def header_status(results_id):
         webbrowser.open_new_tab(url)
 
 # INIT, STARTING, RUNNING, TERMINATED
-def display_status(results_id, data_lock): # Quick fix we needed to lock test when his state is running
+def display_status(results_id, data_lock): 
     global __last_status
     res = rest_crud.get(test_results.get_end_point(results_id))
     status = res.get('status')
-    quality_status = res.get('quality_status')
+    quality_status = res.get('qualityStatus')
 
     if __last_status != status:
         print("Status: " + status)
         __last_status = status
-    if data_lock != {}: #if data in data_lock we know that we want to lock our test result
+    if data_lock != {}: #if there is data in data_lock we know that we want to lock our test result
         if __is_current_state_running(status):
             __lock_result(results_id, data_lock)
         if __is_current_state_terminated_and_not_unknown(status, quality_status):

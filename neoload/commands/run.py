@@ -66,6 +66,7 @@ def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_
     if not detached:
         running_tools.wait(post_result['resultId'], not return_0, data_lock)
     else:
+        patch_data(post_result['resultId'], data_lock)
         tools.print_json(post_result)
 
 
