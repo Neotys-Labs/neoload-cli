@@ -24,7 +24,7 @@ from neoload_cli_lib import running_tools, tools, rest_crud, user_data, hooks
 @click.option('--external-url-label', 'external_url_label',
               help="Label to describe the external URL, for example the CI name or job ID")
 @click.option('--lock', is_flag=True, default=None,
-              help="Protect the result of this run to avoid automatic or accidental manual deletion. If the test failed to start it won't lock unless you use option '-d/--detach'.")
+              help="Protect the result of this run to avoid automatic or accidental manual deletion. If the test failed to start it won't lock unless you use option '-d/--detached'.")
 
 def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_vu, citrix_vu, return_0, external_url,
         external_url_label, lock):
