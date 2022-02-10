@@ -60,7 +60,7 @@ def compress_project(nl_ignore_matcher, path, temp_zip):
 def upload_project(path, endpoint, save=None):
     filename = os.path.basename(path)
     if str(path).endswith(('.zip', '.yaml', '.yml')):
-        file = open(path, "b+r")
+        file = open(path, "br")
     else:
         filename += '.zip'
         file = zip_dir(path,save)
