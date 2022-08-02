@@ -48,7 +48,7 @@ def neoload_login(request, monkeypatch):
     makelivecalls = request.config.getoption('--makelivecalls')
     if makelivecalls:
         CliRunner().invoke(config, ["set", "status.resolvenames=True"])
-        CliRunner().invoke(config, ["set", "docker.zone=xWbV4"])
+        CliRunner().invoke(config, ["set", "docker.zone=kcNc7"])
 
     runner = CliRunner()
     result_status = runner.invoke(status)

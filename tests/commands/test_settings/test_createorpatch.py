@@ -1,5 +1,3 @@
-import time
-
 import pytest
 from click.testing import CliRunner
 from commands.test_settings import cli as settings
@@ -8,14 +6,18 @@ from commands.logout import cli as logout
 from tests.helpers.test_utils import *
 
 
-@pytest.mark.makelivecalls
 @pytest.mark.settings
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
 class TestCreateOrPatch:
+    @pytest.mark.makelivecalls
+    def test_pre_conditions_clear_status(self):
+        runner = CliRunner()
+        result_logout = runner.invoke(logout)
+        assert_success(result_logout)
+
+    @pytest.mark.makelivecalls
     def test_minimal(self):
         runner = CliRunner()
-        runner.invoke(settings, ['delete', 'test_name'])
-        runner.invoke(settings, ['use', 'None'])
         result_status = runner.invoke(status)
         assert 'settings id:' not in result_status.output
 
@@ -30,6 +32,7 @@ class TestCreateOrPatch:
         result_status = runner.invoke(status)
         assert 'settings id: %s' % json_result['id'] in result_status.output
 
+    @pytest.mark.makelivecalls
     def test_all_options(self):
         runner = CliRunner()
         result = runner.invoke(settings,
@@ -45,6 +48,9 @@ class TestCreateOrPatch:
         assert json_result['lgZoneIds']['defaultzone'] == 5
         assert json_result['lgZoneIds']['UdFyn'] == 1
         assert json_result['testResultNamingPattern'] == 'test_${runID}'
+
+        result = runner.invoke(settings, ['delete', 'test_name'])
+        assert_success(result)
 
     def test_error_invalid_json(self, valid_data):
         runner = CliRunner()

@@ -22,12 +22,12 @@ class TestStatusWithNames:
         results_use = runner.invoke(results, ['use','raw'])
         assert_success(results_use)
 
-        settings_use = runner.invoke(settings, ['use','180938f4-5749-493c-a341-cbe48d9f1a57'])
+        settings_use = runner.invoke(settings, ['use','e717b07c-16d9-4204-bb1e-0ad3ef2cfabd'])
         assert_success(settings_use)
 
         result_status2 = runner.invoke(status)
         assert_success(result_status2)
 
-        assert 'workspace id: 5fcaeff6430f780001e3fb3e (CLI)' in result_status2.output
-        assert 'result id: 44f1a611-bad3-451f-a7d5-9534cf62ee26 (raw)' in result_status2.output
-        assert 'settings id: 180938f4-5749-493c-a341-cbe48d9f1a57 (For Unit Tests Report Command (Do not remove))' in result_status2.output
+        assert 'workspace id: 5faa59f2c7851770df1de989 (CLI)' in result_status2.output
+        assert 'result id: 7419f98b-7f39-46da-a02f-f378f7aaec97 (raw)' in result_status2.output
+        assert 'settings id: e717b07c-16d9-4204-bb1e-0ad3ef2cfabd (For Unit Tests Report Command (DO NOT REMOVE))' in result_status2.output
