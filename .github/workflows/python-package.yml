@@ -48,7 +48,7 @@ jobs:
       matrix:
         python-version: ['3.6', '3.8']
     env:
-      zoneId: xWbV4
+      zoneId: kcNc7
       image_ctrl: "public.ecr.aws/neotys/neoload-controller:7.7.0"
       image_lg: "public.ecr.aws/neotys/neoload-loadgenerator:7.7.0"
       merge_to_trunk: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
@@ -91,13 +91,13 @@ jobs:
     - name: Test with pytest (unit / mocks)
       run: |
         PYTHONPATH="neoload" COVERAGE_FILE=.coverage.unit coverage3 run -m pytest
-    - name: "DISABLE FULL_TESTING_SINCE NLW UNAVAILABLE If-FullTesting: Test with pytest (live calls / integration)"
+    - name: "If-FullTesting: Test with pytest (live calls / integration)"
       if: ${{ env.merge_to_trunk == 'true' || env.integration_moment == 'true' || env.docker_files_changed == 'true' }}
       run: |
         neoload config set docker.controller.image=${{ env.image_ctrl }}
         neoload config set docker.lg.image=${{ env.image_lg }}
         neoload config set docker.zone=${{ env.zoneId }}
-#        PYTHONPATH="neoload" COVERAGE_FILE=.coverage.live coverage3 run -m pytest -v -x -m "makelivecalls" --makelivecalls --token ${{ secrets.NLWEB_TOKEN }} --url ${{ secrets.NLWEB_API_URL }} --workspace CLI
+        PYTHONPATH="neoload" COVERAGE_FILE=.coverage.live coverage3 run -m pytest -v -x -m "makelivecalls" --makelivecalls --token ${{ secrets.NLWEB_TOKEN }} --url ${{ secrets.NLWEB_API_URL }} --workspace CLI
     - name: Combine and Create Coverage Report
       run: |
         coverage3 combine

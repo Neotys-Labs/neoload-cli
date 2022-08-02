@@ -1,5 +1,3 @@
-import time
-
 import pytest
 from click.testing import CliRunner
 from commands.test_settings import cli as settings
@@ -8,10 +6,10 @@ from commands.logout import cli as logout
 from tests.helpers.test_utils import *
 
 
-@pytest.mark.makelivecalls
 @pytest.mark.settings
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
 class TestCreateOrPatch:
+    @pytest.mark.makelivecalls
     def test_minimal(self):
         runner = CliRunner()
         runner.invoke(settings, ['delete', 'test_name'])
@@ -30,6 +28,7 @@ class TestCreateOrPatch:
         result_status = runner.invoke(status)
         assert 'settings id: %s' % json_result['id'] in result_status.output
 
+    @pytest.mark.makelivecalls
     def test_all_options(self):
         runner = CliRunner()
         result = runner.invoke(settings,
