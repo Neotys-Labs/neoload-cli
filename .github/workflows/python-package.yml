@@ -49,8 +49,8 @@ jobs:
         python-version: ['3.6', '3.8']
     env:
       zoneId: kcNc7
-      image_ctrl: "public.ecr.aws/neotys/neoload-controller:7.7.0"
-      image_lg: "public.ecr.aws/neotys/neoload-loadgenerator:7.7.0"
+      image_ctrl: "neotys/neoload-controller:8.2.1"
+      image_lg: "neotys/neoload-loadgenerator:8.2.1"
       merge_to_trunk: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       integration_moment: ${{ github.event_name == 'pull_request' || needs.diffs.outputs.workflow_change == 'true' }}
       docker_files_changed: ${{ needs.diffs.outputs.found_one == 'true' }}
@@ -69,17 +69,9 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: "If-FullTesting: Configure AWS Credentials" # https://docs.amazonaws.cn/en_us/AmazonECR/latest/public/public-service-quotas.html
-      if: ${{ env.merge_to_trunk == 'true' || env.integration_moment == 'true' || env.docker_files_changed == 'true' }}
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
     - name: "If-FullTesting: Pre-cache Images"
       if: ${{ env.merge_to_trunk == 'true' || env.integration_moment == 'true' || env.docker_files_changed == 'true' }}
       run: |
-        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
         docker pull ${{ env.image_ctrl }}
         docker pull ${{ env.image_lg }}
     - name: Install dependencies
