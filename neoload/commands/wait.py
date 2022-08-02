@@ -16,4 +16,4 @@ def cli(name_or_id, return_0):
 
     id_ = tools.get_id(name_or_id, test_results.__resolver)
 
-    running_tools.wait(id_, not return_0, data={})
+    running_tools.wait(id_, not return_0, data_lock={})
