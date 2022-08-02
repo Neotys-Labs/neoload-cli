@@ -13,11 +13,15 @@ user_paths:
 - name: simpledemo
   actions:
     steps:
-    - request:
-        url: http://sampledemo.neotys.com/
+    - transaction:
+        name: simpledemo_transaction
+        description: My First transaction
         sla_profile: simpledemo_sla
-    - delay: 1s
-
+        steps:
+        - request:
+            url: http://sampledemo.neotys.com/
+            sla_profile: simpledemo_sla
+        - delay: 1s
 populations:
 - name: simpledemo
   user_paths:
