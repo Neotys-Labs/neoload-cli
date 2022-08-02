@@ -1,3 +1,6 @@
+import platform
+import time
+
 import pytest
 from click.testing import CliRunner
 from commands.test_settings import cli as settings
@@ -9,6 +12,8 @@ from tests.helpers.test_utils import *
 @pytest.mark.settings
 @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
 class TestCreateOrPatch:
+    test_name = 'test_name_Python' + str(platform.python_version()) + '_' + str(round(time.time() * 1000))
+
     @pytest.mark.makelivecalls
     def test_pre_conditions_clear_status(self):
         runner = CliRunner()
@@ -21,10 +26,10 @@ class TestCreateOrPatch:
         result_status = runner.invoke(status)
         assert 'settings id:' not in result_status.output
 
-        result = runner.invoke(settings, ['createorpatch', 'test_name'])
+        result = runner.invoke(settings, ['createorpatch', self.test_name])
         assert_success(result)
         json_result = json.loads(result.output)
-        assert json_result['name'] == 'test_name'
+        assert json_result['name'] == self.test_name
         assert json_result['controllerZoneId'] == 'defaultzone'
         assert json_result['lgZoneIds'] == {'defaultzone': 1}
         assert json_result['nextRunId'] == 1
@@ -36,12 +41,12 @@ class TestCreateOrPatch:
     def test_all_options(self):
         runner = CliRunner()
         result = runner.invoke(settings,
-                               ['createorpatch', 'test_name', '--description', 'test description ',
+                               ['createorpatch', self.test_name, '--description', 'test description ',
                                 '--scenario', 'scenario name', '--zone', 'defaultzone',
                                 '--lgs', 'defaultzone:5,UdFyn:1', '--naming-pattern', 'test_${runID}'])
         assert_success(result)
         json_result = json.loads(result.output)
-        assert json_result['name'] == 'test_name'
+        assert json_result['name'] == self.test_name
         assert json_result['description'] == 'test description '
         assert json_result['scenarioName'] == 'scenario name'
         assert json_result['controllerZoneId'] == 'defaultzone'
@@ -49,7 +54,7 @@ class TestCreateOrPatch:
         assert json_result['lgZoneIds']['UdFyn'] == 1
         assert json_result['testResultNamingPattern'] == 'test_${runID}'
 
-        result = runner.invoke(settings, ['delete', 'test_name'])
+        result = runner.invoke(settings, ['delete', self.test_name])
         assert_success(result)
 
     def test_error_invalid_json(self, valid_data):

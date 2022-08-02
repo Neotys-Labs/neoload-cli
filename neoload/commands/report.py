@@ -210,7 +210,7 @@ def parse_source_data_spec(json_in, model, report_type, name):
     if report_type == "single":
         return get_single_report(name,model["components"],filter_spec["time_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
     elif report_type == "trends":
-        return get_trends_report(name,filter_spec["time_filter"],filter_spec["results_filter"],filter_spec["elements_filter"],filter_spec["exclude_filter"])
+        return get_trends_report(name,filter_spec["time_filter"],filter_spec["results_filter"],filter_spec["elements_filter"])
     else:
         tools.system_exit({'message': "No report_type named '" + report_type + "'.", 'code': 2})
 
@@ -493,7 +493,7 @@ def translate_time_part_to_seconds(total_duration_sec, part_spec):
     except Exception:
         raise ValueError("Value of filter timespan part '" + part_spec + "' is invalid.")
 
-def get_trends_report(name, time_filter, results_filter, elements_filter, exclude_filter):
+def get_trends_report(name, time_filter, results_filter, elements_filter):
     (arr_ids,arr_directives) = parse_results_filter(results_filter)
 
     (count_back,count_ahead) = get_trend_count_back_ahead(arr_directives)
