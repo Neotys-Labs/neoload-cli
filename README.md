@@ -91,6 +91,7 @@ neoload status          # Displays stored data
 ### Optionally Choose a workspace to work with
 ```
 Usage: neoload workspaces [OPTIONS] [[ls|use]] [NAME_OR_ID]
+Help: neoload workspaces --help
 neoload workspaces use "Default Workspace"
 ```
 Since Neoload Web 2.5 (August 2020), assets are scoped to workspaces.
@@ -99,19 +100,18 @@ The CLI allows you to choose your workspace at login or with the "use" sub-comma
 
 
 ### Setup resources in Neoload Web
-Run a test requires an infrastructure that is defined in Neoload Web Zones section [(see documentation how to manage zones)](https://www.neotys.com/documents/doc/nlweb/latest/en/html/#27521.htm#o39458)
+Run a test requires an infrastructure that is defined in Neoload Web Zones section [(see documentation how to manage zones)](https://www.neotys.com/documents/doc/nlweb/latest/en/html/#27521.htm)
 You must at least have either a dynamic or a static zone with one controller and one load generator. At First, you could add resources to the "Default zone" since the CLI use it by default.
 
-### Define a test settings
-Test settings are how to run a test, a sort of template. Tests are stored in Neoload Web.
+### Define a Test
+NeoLoad Web Tests contains the configuration of the test and the list of its Test Results. You can analyse transactions values over the latest Test Results to detect regressions.
 ```
-Usage: neoload test-settings [OPTIONS] [[ls|create|put|patch|delete|use]] [NAME]
+Usage: neoload test-settings [OPTIONS] [[ls|create|put|patch|delete|use|createorpatch]] [NAME]
+Help: neoload test-settings --help
 neoload test-settings --zone defaultzone --lgs 5 --scenario sanityScenario create NewTest1
 ```
-You must define :
- - Which scenario of the Neoload project to use
-
 You can optionally define :
+ - Which scenario of the Neoload project to use
  - The test-settings description
  - The controller and load generator's zone to use (defaultzone is set by default)
  - How many load generators to use for the zone (1 LG on the defaultzone is set by default)
@@ -128,6 +128,7 @@ See basic projects examples on github [tests/neoload_projects folder](https://gi
 To upload a NeoLoad project zip file or a standalone as code file into a test-settings
 ```
 Usage: neoload project [OPTIONS] [up|upload|meta] NAME_OR_ID
+Help: neoload project --help
 neoload project --path tests/neoload_projects/example_1/ upload
 ```
 You must specify in which test the project will be uploaded:
@@ -135,6 +136,7 @@ You must specify in which test the project will be uploaded:
    <pre><code>neoload test-settings use NewTest1</code></pre>
 * or by adding the name or id of the test to the project command
    <pre><code>neoload project --path tests/neoload_projects/example_1/ upload NewTest1</code></pre>
+:warning: If the Test has no scenario or a scenario that does not exist in the project, then the scenario "Custom" will be selected by default (10 VUs for 5 minutes).
 
 To Validate the syntax and schema of the as-code project yaml files
 ```
@@ -151,13 +153,16 @@ This command runs a test, it produces blocking, unbuffered output about test exe
 At the end, displays the summary and the SLA passed & failed.
 ```
 Usage: neoload run [OPTIONS] [NAME_OR_ID]
+Help: neoload run --help
 neoload run \         # Runs the currently used test-settings (see neoload status and neoload test-settings use)
      --as-code default.yaml,slas/uat.yaml \
+     --scenario scenario1
      --name "MyCustomTestName_${JOB_ID}" \
      --description "A custom test description containing hashtags like #latest or #issueNum"
 ```
  - detach option kick off a test and returns immediately. Logs are displayed in Neoload Web (follow the url).
  - as-code option specify as-code yaml files to use for the test. They should already be uploaded with the project.
+ - scenario option specify the scenario name to run. The scenario must be declared in an as-code yaml or in the project, or else it will be the NeoLoad Web Custom scenario (10 VUs 5 minutes).
  - Test result name and description can be customized to include CI specific details (e.g. CI job, build number...).
  - Reservations can be used with either the reservationID or a reservation duration and a number of Virtual users.
 
@@ -176,6 +181,7 @@ There is basic support in the NeoLoad CLI for viewing and exporting results.
 ### View results
 ```
 Usage: neoload test-results [OPTIONS] [[ls|summary|junitsla|put|patch|delete|use]] [NAME]
+Help: neoload test-results --help
 neoload test-results ls                 # Lists test results                                            .
 neoload test-results use                # Remember the test result you want to work on.                           .
 neoload test-results summary            # The Json result summary, with SLAs
@@ -211,6 +217,7 @@ The 'report' subcommand is intended to simplify not only common data exporting n
 ### Exporting Transaction CSV data
 ```
 Usage: neoload report [OPTIONS]
+Help: neoload report --help
 neoload report --template builtin:transactions-csv > temp.csv
 ```
 
@@ -285,6 +292,7 @@ NOTE: built-in reports produce a reduced-scope JSON data model and are therefore
 ## View zones
 ```
 neoload zones --human
+Help: neoload zones --help
 ```
 Display in a human-readable way the list of all static and dynamic zones registered on Neoload Web, and the resources attached (controllers and load generators).
 
@@ -317,6 +325,7 @@ docker.lg.default_count (default: 2).
 
 ```
 Usage: neoload docker [OPTIONS] [up|down|clean|forget|install|uninstall|status]
+Help: neoload docker --help
 
 
 neoload docker up / down         # start or delete container depend on configuration
@@ -343,6 +352,13 @@ NOTE: Docker CLI must be installed on the system using these commands. This will
  For local workstations, it is sufficient to install Docker Desktop or Docker for Mac.
 
 
+## CLI configuration
+```
+neoload config ls
+neoload config set docker.lg.default_count=1
+Help: neoload config --help
+```
+The configuration allow customization of CLI behavior. For now, the configuration is used by the docker command (see above).
 
 ## Continuous Testing Examples
 The main goal of the NeoLoad-CLI is to standardize the semantics of how load tests are executed across development, non-prod, and production environments.
