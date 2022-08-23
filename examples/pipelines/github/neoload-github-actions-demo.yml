@@ -1,0 +1,54 @@
+name: NeoLoad Github Action Test
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        required: true
+        description: 'NeoLoad Web Api Url'
+        default: 'https://neoload-api.saas.neotys.com/'
+      token:
+        required: true
+        description: 'NeoLoad Web Token'
+        default: 'specify_token_or_get_it_from_credentials'
+      zone_id:
+        required: true
+        description: 'Zone identifier'
+        default: 'defaultzone'
+
+jobs:
+  neoload_cli_demo:
+    name: NeoLoad CLI demo github action
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Install NeoLoad CLI"
+        run: pip3 install -U neoload
+
+      - name: "Get NeoLoad project"
+        run: >
+          rm -f *.yml;
+          wget https://raw.githubusercontent.com/guillaumebert/neoload-cli/master/tests/neoload_projects/simpledemo.yml
+
+      - name: "Prepare NeoLoad test"
+        run: >
+          neoload login --url ${{ github.event.inputs.api_url }} ${{ github.event.inputs.token }} \
+                  test-settings --zone ${{ github.event.inputs.zone_id }} --scenario 'simpledemo' createorpatch "My Github Test With CLI" \
+                  project --path simpledemo.yml upload
+
+      - name: "NeoLoad run test"
+        run: >
+          neoload run 
+          --external-url $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID 
+          --external-url-label "Github Action Run $GITHUB_RUN_NUMBER" 
+          --name "Github pipeline performance regression test - Github build #$GITHUB_RUN_NUMBER" 
+          --description "Example of CI performance regression job started from Github."
+          --return-0
+
+      - name: "Generate Test Report"
+        run: neoload test-results junitsla
+
+      - name: "Publish Test Report"
+        if: ${{ always() }}
+        uses: scacap/action-surefire-report@v1
+        with:
+          report_paths: junit-sla.xml
+          fail_on_test_failures: true
