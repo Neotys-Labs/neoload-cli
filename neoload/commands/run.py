@@ -25,9 +25,11 @@ from neoload_cli_lib import running_tools, tools, rest_crud, user_data, hooks
               help="Label to describe the external URL, for example the CI name or job ID")
 @click.option('--lock', is_flag=True, default=None,
               help="Protects the Test Result to avoid automatic or accidental manual deletion. In interactive mode (not detached), the Test Result won't be protected if the run fails to start.")
+@click.option("--reservation-id", 'reservation_id', help="The reservation identifier to use for the test that can be retrieved from the NeoLoad Web reservation calendar URL (if the reservation mode is enabled)")
+@click.option("--reservation-duration", 'reservation_duration', help="The duration (in seconds) of the reservation for the test (if the reservation mode is enabled)")
 
 def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_vu, citrix_vu, return_0, external_url,
-        external_url_label, lock):
+        external_url_label, lock, reservation_id, reservation_duration):
     """run a test"""
     rest_crud.set_current_command()
     if not name_or_id or name_or_id == "cur":
@@ -49,7 +51,7 @@ def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_
 
     # Sorry for that, post data are in the query string :'( :'(
     post_result = rest_crud.post(
-        test_settings.get_end_point(_id) + '/start?' + create_data(naming_pattern, description, as_code, web_vu, sap_vu, citrix_vu),
+        test_settings.get_end_point(_id) + '/start?' + create_data(naming_pattern, description, as_code, web_vu, sap_vu, citrix_vu, reservation_id, reservation_duration),
         {})
     user_data.set_meta(test_settings.meta_key, _id)
     user_data.set_meta(test_results.meta_key, post_result['resultId'])
@@ -70,7 +72,7 @@ def cli(name_or_id, scenario, detached, name, description, as_code, web_vu, sap_
         tools.print_json(post_result)
 
 
-def create_data(name, description, as_code, web_vu, sap_vu, citrix_vu):
+def create_data(name, description, as_code, web_vu, sap_vu, citrix_vu, reservation_id, reservation_duration):
     query = 'testResultName=' + quote(name)
     if description is not None:
         query += '&testResultDescription=' + quote(description)
@@ -83,6 +85,10 @@ def create_data(name, description, as_code, web_vu, sap_vu, citrix_vu):
     if citrix_vu is not None:
         logging.getLogger().warning('WARNING: --cirix-vu is deprecated')
         query += '&reservationCitrixVUs=' + citrix_vu
+    if reservation_id is not None:
+        query += '&reservationId=' + reservation_id
+    if reservation_duration is not None:
+        query += '&reservationDuration=' + reservation_duration
     return query
 
 

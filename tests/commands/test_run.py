@@ -29,7 +29,17 @@ class TestRun:
         web_vu = "10"
         sap_vu = "10"
         citrix_vu= "10"
-        create_data_query = create_data(name,description,as_code, web_vu, sap_vu, citrix_vu)
-        expected_query = "testResultName=result_13&testResultDescription=test_descript&asCode=0&reservationWebVUs=10&reservationSAPVUs=10&reservationCitrixVUs=10"
+        reservation_duration = "1200"
+        reservation_id = "resaId"
+        create_data_query = create_data(name, description, as_code, web_vu, sap_vu, citrix_vu, reservation_id,
+                                        reservation_duration)
+        expected_query = "testResultName=result_13&testResultDescription=test_descript&asCode=0&reservationWebVUs=10" \
+                         "&reservationSAPVUs=10&reservationCitrixVUs=10&reservationId=resaId&reservationDuration=1200"
+
+        assert (create_data_query == expected_query) is True
+
+    def test_create_data_empty(self):
+        create_data_query = create_data("resultname", None, None, None, None, None, None, None)
+        expected_query = "testResultName=resultname"
 
         assert (create_data_query == expected_query) is True
