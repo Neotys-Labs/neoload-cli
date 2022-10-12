@@ -216,9 +216,9 @@ The 'report' subcommand is intended to simplify not only common data exporting n
 
 ### Exporting Transaction CSV data
 ```
-Usage: neoload report [OPTIONS]
+Usage: neoload report [OPTIONS] [NAME]
 Help: neoload report --help
-neoload report --template builtin:transactions-csv > temp.csv
+neoload report --template builtin:transactions-csv "test_result_name_or_id" > temp.csv
 ```
 
 ### Filtering export data by timespan

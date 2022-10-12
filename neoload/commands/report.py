@@ -52,9 +52,10 @@ gprint = print
                 help="Specify which type of JSON data document to compile (default is 'single')")
 @click.argument("name", type=str, required=False)
 def cli(template, json_in, out_file, filter, report_type, name):
-    """Generate builtin or custom Jinja reports based on test results data
-    Example: neoload report --template builtin:transactions-csv
-    See more templates, examples, filters with "neoload report"
+    """\b
+Generate builtin or custom Jinja reports based on test results data\b
+Example: neoload report --template builtin:transactions-csv "test_result_name_or_id"\b
+See more templates, examples, filters with "neoload report"
     """
 
     rest_crud.set_current_command()
