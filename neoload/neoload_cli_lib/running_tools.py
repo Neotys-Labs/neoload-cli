@@ -1,6 +1,6 @@
 import datetime
+import logging
 import time
-from urllib.parse import quote
 import webbrowser
 from signal import signal, SIGINT
 
@@ -27,6 +27,7 @@ def __lock_result(results_id, data_lock):
 
 def handler(signal_received, frame):
     global __count
+    logging.debug("Ctrl+C is pressed or SIGINT is handled")
     if __current_id:
         inc = stop(__current_id, __count > 0, True)
         if inc:
