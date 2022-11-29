@@ -26,7 +26,7 @@ jobs:
       - name: "Get NeoLoad project"
         run: >
           rm -f *.yml;
-          wget https://raw.githubusercontent.com/Neotys-Labs/neoload-cli/master/tests/neoload_projects/simpledemo.yml
+          wget https://raw.githubusercontent.com/guillaumebert/neoload-cli/master/tests/neoload_projects/simpledemo.yml
 
       - name: "Prepare NeoLoad test"
         run: >
@@ -36,7 +36,7 @@ jobs:
 
       - name: "NeoLoad run test"
         run: >
-          neoload run 
+          neoload --batch run 
           --external-url $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID 
           --external-url-label "Github Action Run $GITHUB_RUN_NUMBER" 
           --name "Github pipeline performance regression test - Github build #$GITHUB_RUN_NUMBER" 

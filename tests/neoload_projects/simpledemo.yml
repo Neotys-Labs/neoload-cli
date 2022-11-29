@@ -19,7 +19,7 @@ user_paths:
         sla_profile: simpledemo_sla
         steps:
         - request:
-            url: http://sampledemo.neotys.com/
+            url: https://sampledemo.neotys.com/
             sla_profile: simpledemo_sla
         - delay: 1s
 populations:
@@ -37,4 +37,4 @@ scenarios:
       max_users: 20
       increment_users: 1
       increment_every: 2s
-      duration: 1m
+      duration: 1h
