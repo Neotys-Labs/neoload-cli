@@ -37,4 +37,4 @@ scenarios:
       max_users: 20
       increment_users: 1
       increment_every: 2s
-      duration: 1h
+      duration: 1m
