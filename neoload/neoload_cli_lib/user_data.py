@@ -13,7 +13,8 @@ __conf_name = "neoload-cli"
 __version = "1.0"
 __author = "neotys"
 __config_dir = appdirs.user_data_dir(__conf_name, __author, __version)
-CONFIG_FILE = os.path.join(__config_dir, "config.yaml")
+__local_file = ".neoload_cli.yaml"
+CONFIG_FILE = __local_file if os.path.exists(__local_file) else os.path.join(__config_dir, "config.yaml")
 __yaml_schema_file = os.path.join(__config_dir, "yaml_schema.json")
 
 __no_write = False
@@ -32,13 +33,15 @@ def get_user_data(throw=True):
     return instance
 
 
-def do_login(token, url, no_write, ssl_cert=''):
+def do_login(token, url, no_write, ssl_cert='', local_config=False):
     global __no_write
     __no_write = no_write
     if token is None:
         raise cli_exception.CliException('token is mandatory. please see neoload login --help.')
 
     __user_data_singleton = UserData.from_login(token, url)
+    if not __no_write:
+        __user_data_singleton.set_file(__local_file if local_config else CONFIG_FILE)
     __user_data_singleton.set_ssl_cert(ssl_cert)
     __compute_version_and_path()
     __save_user_data()
@@ -98,6 +101,7 @@ class UserData:
                 with open(CONFIG_FILE, "r") as stream:
                     load = yaml.load(stream, Loader=yaml.BaseLoader)
                     loaded = UserData(desc=load)
+                    loaded.file = CONFIG_FILE
                     UserData.__instance = loaded if loaded.token else None
 
         return UserData.__instance
@@ -112,6 +116,7 @@ class UserData:
     def __init__(self, token=None, url=None, desc=None):
         self.metadata = {}
         self.resolved_ids = {}
+        self.file = None
         if desc:
             self.__dict__.update(desc)
         else:
@@ -124,6 +129,8 @@ class UserData:
         for (key, value) in self.metadata.items():
             if value is not None:
                 metadata += key + ": " + str(value) + self.prettify_resolved(key, value) + "\n"
+        if self.file:
+            metadata += "\nThe configuration file is: " + os.path.realpath(self.file) + "\n"
         return "You are logged on " + self.url + " with token " + token + "\n\n" + metadata
 
     def prettify_resolved(self, key, value):
@@ -162,6 +169,9 @@ class UserData:
         if ssl_cert:
             self.metadata['ssl certificate'] = ssl_cert
 
+    def set_file(self, file):
+        self.file = file
+
 
 def get_ssl_cert():
     return tools.ssl_cert_to_verify(UserData.get_instance().metadata.get('ssl certificate'))
@@ -169,9 +179,12 @@ def get_ssl_cert():
 
 def __save_user_data():
     if not __no_write:
-        os.makedirs(__config_dir, exist_ok=True)
-        with open(CONFIG_FILE, "w") as stream:
-            yaml.dump(UserData.get_instance().__dict__, stream)
+        instance = UserData.get_instance()
+        dest_file = os.path.abspath(instance.file or CONFIG_FILE)
+        config_dir = os.path.dirname(dest_file)
+        os.makedirs(config_dir, exist_ok=True)
+        with open(dest_file, "w") as stream:
+            yaml.dump(instance.__dict__, stream)
 
 
 def set_meta(key, value):

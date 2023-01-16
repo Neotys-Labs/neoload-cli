@@ -13,7 +13,7 @@ from tests.helpers.test_utils import mock_login_get_urls
 
 
 __default_random_token = '12345678912345678901ae6d8af6abcdefabcdefabcdef'
-__default_api_url = 'https://neoload-web-api.neotys.perfreleng.org/'
+__default_api_url = 'https://neoload-api.saas.neotys.com'
 
 
 def pytest_addoption(parser):
