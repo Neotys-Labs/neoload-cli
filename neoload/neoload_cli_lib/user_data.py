@@ -105,9 +105,11 @@ class UserData:
     def from_login(token: str, url: str):
         UserData.__instance = UserData(token, url)
         return UserData.__instance
+
     @staticmethod
     def clean():
         UserData.__instance = None
+
     def __init__(self, token=None, url=None, desc=None):
         self.metadata = {}
         self.resolved_ids = {}
