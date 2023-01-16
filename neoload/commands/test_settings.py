@@ -12,9 +12,9 @@ from neoload_cli_lib.name_resolver import Resolver
 import logging
 
 __endpoint = "/tests"
-__resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace)
-
 meta_key = 'settings id'
+__resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace, meta_key)
+
 
 
 @click.command()

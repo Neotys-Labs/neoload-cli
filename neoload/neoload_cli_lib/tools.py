@@ -181,6 +181,7 @@ def system_exit(exit_process, apply_exit_code=True):
 def get_boolean_value_from_env(env_var, default=False):
     return os.getenv(env_var, str(default)).lower().strip() in __true_values
 
+
 def string_to_bool_json(str):
     if str in __true_values:
         return True
@@ -188,11 +189,14 @@ def string_to_bool_json(str):
         return False
     return None
 
+
 def get_true_values():
     return __true_values
 
+
 def get_false_values():
     return __false_values
+
 
 def is_user_interactive():
     return get_boolean_value_from_env(__nl_interactive_env_var, False) or config_global.get_attr("interactive", False)

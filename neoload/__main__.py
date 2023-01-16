@@ -5,7 +5,7 @@ import sys
 import click
 import coloredlogs
 
-from neoload_cli_lib import tools, rest_crud, cli_exception
+from neoload_cli_lib import tools, cli_exception
 from neoload_cli_lib.cli_exception import CliException
 
 import urllib3
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     try:
         cli()
     except CliException as ex:
-        print(ex.format_message(), file = sys.stderr)
+        print(ex.format_message(), file=sys.stderr)
     except Exception as ex:
         if cli_exception.CliException.is_debug():
             raise ex
