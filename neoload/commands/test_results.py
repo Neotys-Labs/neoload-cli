@@ -13,9 +13,8 @@ __operation_sla_global = "/slas/statistics"
 __operation_sla_test = "/slas/per-test"
 __operation_sla_interval = "/slas/per-interval"
 
-__resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace)
-
 meta_key = 'result id'
+__resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace, meta_key)
 
 
 def load_from_file(file):
@@ -41,8 +40,10 @@ def load_from_file(file):
 @click.option('--external-url', 'external_url', help="URL to an external system, for example the CI job's link")
 @click.option('--external-url-label', 'external_url_label',
               help="Label to describe the external URL, for example the CI name or job ID")
-@click.option('--lock/--unlock', default=None, help="Protects a specific Test Result to avoid automatic or accidental manual deletion.")
-def cli(command, name, rename, description, quality_status, junit_file, file, filter, external_url, external_url_label, lock):
+@click.option('--lock/--unlock', default=None,
+              help="Protects a specific Test Result to avoid automatic or accidental manual deletion.")
+def cli(command, name, rename, description, quality_status, junit_file, file, filter, external_url, external_url_label,
+        lock):
     """
     ls       # Lists test results                                            .
     summary  # Display a summary of the result : SLAs and statistics         .
@@ -201,13 +202,15 @@ def get_end_point(id_test: str = None, operation=''):
     slash_id_test = '' if id_test is None else '/' + id_test
     return rest_crud.base_endpoint_with_workspace() + __endpoint + slash_id_test + operation
 
+
 def prompt_boolean(field):
     is_locked = tools.string_to_bool_json(input(field))
-    while is_locked is None :
+    while is_locked is None:
         print("\n Accepted values for true: ", tools.get_true_values())
         print("\n Accepted values for false: ", tools.get_false_values())
         is_locked = tools.string_to_bool_json(input(field))
     return is_locked
+
 
 def create_json(name, description, quality_status, external_url, external_url_label, lock):
     data = {}
@@ -260,3 +263,7 @@ def exit_process(json_data, json_sla_global, json_sla_test, json_sla_interval):
         return {'message': "Test completed variably.", 'code': 0}
     else:
         return {'message': f'Unknown terminationReason: {term_reason}', 'code': 2}
+
+
+def get_resolver():
+    return __resolver
