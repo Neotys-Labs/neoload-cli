@@ -8,9 +8,15 @@ def trig(name, *args, **kwargs):
     if functions_to_trig:
         for function_to_trig in functions_to_trig:
             split = function_to_trig.split('.')
-            module = __import__(split[0])
+            module_str = split[0]
+            module = __import__(module_str)
             for comp in split[1:]:
-                module = getattr(module, comp)
+                module_str = module_str + '.' + comp
+                module2 = getattr(module, comp, None)
+                if module2 is None:
+                    __import__(module_str)
+                    module2 = getattr(module, comp)
+                module = module2
             module(*args, **kwargs)
 
 
