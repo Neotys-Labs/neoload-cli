@@ -1,3 +1,4 @@
+import junit_xml
 from junit_xml import TestSuite, TestCase
 
 from neoload_cli_lib.tools import print_color,__is_color_terminal
@@ -69,7 +70,7 @@ def print_result_junit(json_result, sla_json_test, sla_json_interval, sla_json_g
     for sla in sla_json_interval:
         junit_suites.append(__build_test_suite(json_result, __SLA_interval, sla))
     with open(junit_file_path, 'w') as stream:
-        TestSuite.to_file(stream, junit_suites, prettyprint=True)
+        junit_xml.to_xml_report_file(stream, junit_suites, prettyprint=True)
     print('Report written to file %s' % junit_file_path)
 
 
