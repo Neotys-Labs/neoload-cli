@@ -46,11 +46,11 @@ jobs:
     needs: diffs
     strategy:
       matrix:
-        python-version: ['3.6', '3.8']
+        python-version: ['3.11', '3.8']
     env:
       zoneId: kcNc7
-      image_ctrl: "neotys/neoload-controller:8.2.1"
-      image_lg: "neotys/neoload-loadgenerator:8.2.1"
+      image_ctrl: "neotys/neoload-controller:9.1"
+      image_lg: "neotys/neoload-loadgenerator:9.1"
       merge_to_trunk: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       integration_moment: ${{ github.event_name == 'pull_request' || needs.diffs.outputs.workflow_change == 'true' }}
       docker_files_changed: ${{ needs.diffs.outputs.found_one == 'true' }}
