@@ -19,7 +19,7 @@ Retry.parse_retry_after = lambda self, retry_after: custom_parse_retry_after(ret
 retry_strategy = Retry(
     total=10,
     status_forcelist=[429],
-    method_whitelist=["GET", "POST", "PUT", "PATCH", "DELETE"]
+    allowed_methods=["GET", "POST", "PUT", "PATCH", "DELETE"]
 )
 adapter = HTTPAdapter(max_retries=retry_strategy)
 http = requests.Session()

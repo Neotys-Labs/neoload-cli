@@ -46,7 +46,7 @@ class TestValidate:
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_success(self, datafiles):
-        return self.try_success(datafiles.listdir()[0])
+        self.try_success(datafiles.listdir()[0])
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_no_refresh(self, datafiles):
