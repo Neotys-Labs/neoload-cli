@@ -43,7 +43,7 @@ class TestReportTemplates:
         expected_file_path = 'tests/resources/report/expected_custom_report.html'
         runner = CliRunner()
         result_report = runner.invoke(report, ['--json-in', 'tests/resources/report/expected_report.json', '--template',
-                                               'tests/resources/jinja/sample-custom-report.html.j2', '--out-file',
+                                               'neoload/resources/jinja/sample-custom-report.html.j2', '--out-file',
                                                actual_file_path])
         assert_success(result_report)
         set_line_endings_to_lf(actual_file_path)
@@ -55,7 +55,7 @@ class TestReportTemplates:
         expected_file_path = 'tests/resources/report/expected_custom_report_filtered.html'
         runner = CliRunner()
         result_report = runner.invoke(report, ['--json-in', 'tests/resources/report/expected_report_filtered.json',
-                                               '--template', 'tests/resources/jinja/sample-custom-report.html.j2',
+                                               '--template', 'neoload/resources/jinja/sample-custom-report.html.j2',
                                                '--out-file', actual_file_path])
         assert_success(result_report)
         set_line_endings_to_lf(actual_file_path)
@@ -67,7 +67,7 @@ class TestReportTemplates:
         expected_file_path = 'tests/resources/report/expected_custom_transactions.csv'
         runner = CliRunner()
         result_report = runner.invoke(report, ['--json-in', 'tests/resources/report/expected_report.json', '--template',
-                                               'tests/resources/jinja/custom_transactions_export.j2', '--out-file',
+                                               'neoload/resources/jinja/custom_transactions_export.j2', '--out-file',
                                                actual_file_path])
         assert_success(result_report)
         set_line_endings_to_lf(actual_file_path)

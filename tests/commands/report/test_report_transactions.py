@@ -36,7 +36,7 @@ class TestReportTransactions:
             json_file = tf.name
             result = runner.invoke(report, ['--template','builtin:transactions','--out-file',json_file,'cur'])
             assert_success(result)
-            result = runner.invoke(report, ['--template','tests/resources/jinja/custom_transactions_export.j2','--json-in',json_file,'cur'])
+            result = runner.invoke(report, ['--template','neoload/resources/jinja/custom_transactions_export.j2','--json-in',json_file,'cur'])
             assert_success(result)
             assert 'User Path,' in result.output
 

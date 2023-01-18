@@ -50,7 +50,7 @@ class TestReportTrends:
             result = runner.invoke(report, [
                 '--type','trends',
                 '--json-in',json_file,
-                '--template','tests/resources/jinja/sample-trends-report.html.j2',
+                '--template','neoload/resources/jinja/sample-trends-report.html.j2',
                 __id
             ])
             assert '<html>' in result.output
