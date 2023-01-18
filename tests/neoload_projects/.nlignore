@@ -1,1 +1,3 @@
 .gitlab-ci.yml
+.cache/**
+.local/**

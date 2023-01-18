@@ -3,7 +3,7 @@ import tempfile
 import zipfile
 
 import logging
-from gitignore_parser import parse_gitignore
+import gitignorefile
 
 from neoload_cli_lib import rest_crud, tools, cli_exception
 import shutil
@@ -37,7 +37,7 @@ def zip_dir(path,save):
 
     # find and load .nlignore
     ignore_file = os.path.join(path, '.nlignore')
-    nl_ignore_matcher = parse_gitignore(ignore_file) if os.path.exists(ignore_file) else None
+    nl_ignore_matcher = gitignorefile.parse(ignore_file) if os.path.exists(ignore_file) else None
 
     compress_project(nl_ignore_matcher, path, file_stream)
 

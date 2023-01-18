@@ -12,7 +12,7 @@ from neoload_cli_lib.user_data import update_schema, get_yaml_schema, tools
 import logging
 import hashlib
 import os
-from gitignore_parser import parse_gitignore
+import  gitignorefile
 from neoload_cli_lib.neoLoad_project import is_not_to_be_included
 
 YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
@@ -54,7 +54,7 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
 
 def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
     ignore_file = os.path.join(path, '.nlignore')
-    nl_ignore_matcher = parse_gitignore(ignore_file) if os.path.exists(ignore_file) else None
+    nl_ignore_matcher =  gitignorefile.parse(ignore_file) if os.path.exists(ignore_file) else None
     first_time_check = True
     extensions = ['yml','yaml','json']
     any_errs = False
