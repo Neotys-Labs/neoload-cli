@@ -1,11 +1,12 @@
-from neoload_cli_lib import rest_crud,cli_exception
+from neoload_cli_lib import rest_crud, cli_exception, user_data
 
 
 class Resolver:
-    def __init__(self, endpoint, get_base_endpoint):
+    def __init__(self, endpoint, get_base_endpoint, meta_key):
         self.__endpoint = endpoint
         self.__get_base_endpoint = get_base_endpoint
         self.__map = {}
+        self.__meta_key = meta_key
 
     def __fill_map(self, ws, name=None):
         all_element = rest_crud.get_with_pagination(self.get_endpoint(), api_query_params=None)
@@ -17,6 +18,7 @@ class Resolver:
             ws_map[name_] = element['id']
             if name_ == name:
                 json = element
+        user_data.put_resolved_map(self.__meta_key, ws_map)
         return json
 
     def resolve_name(self, name, return_none=False):
@@ -42,7 +44,7 @@ class Resolver:
 
     def get_map(self):
         ws = str(rest_crud.get_workspace())
-        if len(self.__map) == 0:
+        if len(self.__map.get(ws, {})) == 0:
             self.__fill_map(ws)
         return self.__map[ws]
 

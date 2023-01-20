@@ -22,6 +22,7 @@ class TestStatusWithNames:
         results_use = runner.invoke(results, ['use','raw'])
         assert_success(results_use)
 
+        runner.invoke(settings, ['use'])
         settings_use = runner.invoke(settings, ['use','e717b07c-16d9-4204-bb1e-0ad3ef2cfabd'])
         assert_success(settings_use)
 

@@ -4,8 +4,8 @@ from neoload_cli_lib.name_resolver import Resolver
 
 
 __endpoint = "/workspaces"
-__resolver = Resolver(__endpoint, rest_crud.base_endpoint)
 meta_key = 'workspace id'
+__resolver = Resolver(__endpoint, rest_crud.base_endpoint, meta_key)
 
 
 @click.command()

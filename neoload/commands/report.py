@@ -18,6 +18,8 @@ import requests
 
 from datetime import datetime
 
+from neoload.commands import test_results
+
 requests.adapters.DEFAULT_RETRIES = 5
 MAX_RESULTS_WORKERS = 2
 MAX_ELEMENTS_WORKERS = 10
@@ -35,9 +37,9 @@ __operation_monitors = "/monitors"
 
 QUERY_CATEGORY_TRANSACTION = "category=TRANSACTION"
 
-__resolver = Resolver(__endpoint, rest_crud.base_endpoint_with_workspace)
 
 meta_key = 'result id'
+__resolver = test_results.get_resolver();
 gprint = print
 
 @click.command()
