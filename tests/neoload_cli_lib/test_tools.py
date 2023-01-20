@@ -83,6 +83,7 @@ class TestTools:
         monkeypatch.setattr(os, 'getenv', lambda var, default=None: mock_get_env(mocks, var, default))
         assert tools.are_any_ci_env_vars_active() is True
 
+
 def test_string_to_boolean_json():
     list_unknown_values = {'value1', '123', 'random'}
 

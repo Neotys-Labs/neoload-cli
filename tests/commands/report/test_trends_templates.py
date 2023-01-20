@@ -18,7 +18,7 @@ class TestTrendsTemplates:
             monkeypatch.setattr(tools, 'compute_version', lambda: '1.1.8')
         runner = CliRunner()
         result_report = runner.invoke(report, ['--json-in', 'tests/resources/report/expected_trends.json', '--template',
-                                               'tests/resources/jinja/sample-trends-report.html.j2', '--out-file',
+                                               'neoload/resources/jinja/sample-trends-report.html.j2', '--out-file',
                                                actual_file_path])
         assert_success(result_report)
         set_line_endings_to_lf(actual_file_path)
