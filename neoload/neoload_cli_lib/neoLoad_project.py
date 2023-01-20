@@ -9,7 +9,7 @@ from neoload_cli_lib import rest_crud, tools, cli_exception
 import shutil
 
 not_to_be_included = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/',
-                      'results/','.config/',
+                      'results/','.config/','.neoload_cli.yaml',
                       'comparative-summary/', 'reports/', '/recorded-artifacts/']
 
 
