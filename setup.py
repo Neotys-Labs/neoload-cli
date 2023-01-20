@@ -31,7 +31,7 @@ setup(
         'click>=7',
         'pyconfig',
         'appdirs',
-        'requests',
+        'requests>=2.25.1',
         'jsonschema',
         'PyYAML>=5',
         'junit_xml',
@@ -42,7 +42,7 @@ setup(
         'python-dateutil', # for 3.6 compatibility
         'tqdm',
         'requests_toolbelt',
-        'urllib3',
+        'urllib3>=1.26.5',
         'coloredlogs',
         'docker',
         'pyparsing',
