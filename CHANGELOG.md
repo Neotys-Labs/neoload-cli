@@ -1,5 +1,127 @@
 # Changelog
 
+## [Unreleased](https://github.com/Neotys-Labs/neoload-cli/tree/HEAD)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.10...HEAD)
+
+**Fixed bugs:**
+
+- AttributeError trying to run on local docker infrastructure [\#186](https://github.com/Neotys-Labs/neoload-cli/issues/186)
+
+**Closed issues:**
+
+- Report problem when several tests run in parallel [\#203](https://github.com/Neotys-Labs/neoload-cli/issues/203)
+- How to configure "local docker infrastructure" [\#183](https://github.com/Neotys-Labs/neoload-cli/issues/183)
+
+**Merged pull requests:**
+
+- Fix git parser for python 3.11 [\#212](https://github.com/Neotys-Labs/neoload-cli/pull/212) ([stephanemartin](https://github.com/stephanemartin))
+- fix templates path [\#211](https://github.com/Neotys-Labs/neoload-cli/pull/211) ([stephanemartin](https://github.com/stephanemartin))
+- Fix docker hook and uninported docker\_lib [\#210](https://github.com/Neotys-Labs/neoload-cli/pull/210) ([stephanemartin](https://github.com/stephanemartin))
+- Add conf to current directory [\#209](https://github.com/Neotys-Labs/neoload-cli/pull/209) ([stephanemartin](https://github.com/stephanemartin))
+- Fix cache of status and tests [\#208](https://github.com/Neotys-Labs/neoload-cli/pull/208) ([stephanemartin](https://github.com/stephanemartin))
+- fix tests for new version of python. [\#207](https://github.com/Neotys-Labs/neoload-cli/pull/207) ([stephanemartin](https://github.com/stephanemartin))
+- Revert bad commit "try github action" [\#206](https://github.com/Neotys-Labs/neoload-cli/pull/206) ([guillaumebert](https://github.com/guillaumebert))
+- Add logging debug when SIGINT is recieved [\#205](https://github.com/Neotys-Labs/neoload-cli/pull/205) ([stephanemartin](https://github.com/stephanemartin))
+- Improve documentation and fix example project [\#204](https://github.com/Neotys-Labs/neoload-cli/pull/204) ([guillaumebert](https://github.com/guillaumebert))
+- update README - add link to GitHub Action example [\#202](https://github.com/Neotys-Labs/neoload-cli/pull/202) ([patricealbaret](https://github.com/patricealbaret))
+
+## [1.3.10](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.10) (2022-09-16)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.9...1.3.10)
+
+**Documentation updates:**
+
+- Missing documentation [\#139](https://github.com/Neotys-Labs/neoload-cli/issues/139)
+
+**Closed issues:**
+
+- Issue running CLI fromJenkins [\#196](https://github.com/Neotys-Labs/neoload-cli/issues/196)
+
+**Merged pull requests:**
+
+- Add --reservation-id and --reservation-duration options to 'run' command [\#201](https://github.com/Neotys-Labs/neoload-cli/pull/201) ([GrayGoose](https://github.com/GrayGoose))
+- Update Readme and add Github actions pipeline example [\#200](https://github.com/Neotys-Labs/neoload-cli/pull/200) ([guillaumebert](https://github.com/guillaumebert))
+- Improve unit test stability : Add timestamp into test name [\#199](https://github.com/Neotys-Labs/neoload-cli/pull/199) ([guillaumebert](https://github.com/guillaumebert))
+
+## [1.3.9](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.9) (2022-08-02)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.8...1.3.9)
+
+**Closed issues:**
+
+- An unexpected error occurred during test run [\#193](https://github.com/Neotys-Labs/neoload-cli/issues/193)
+
+**Merged pull requests:**
+
+- Fix wait [\#198](https://github.com/Neotys-Labs/neoload-cli/pull/198) ([guillaumebert](https://github.com/guillaumebert))
+- Add transaction in SimpleDemo project [\#195](https://github.com/Neotys-Labs/neoload-cli/pull/195) ([guillaumebert](https://github.com/guillaumebert))
+- remove write option on project file. [\#194](https://github.com/Neotys-Labs/neoload-cli/pull/194) ([stephanemartin](https://github.com/stephanemartin))
+- Doc review [\#192](https://github.com/Neotys-Labs/neoload-cli/pull/192) ([guillaumebert](https://github.com/guillaumebert))
+
+## [1.3.8](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.8) (2022-01-14)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.7...1.3.8)
+
+**Merged pull requests:**
+
+- Featuregroup/load 25592 [\#190](https://github.com/Neotys-Labs/neoload-cli/pull/190) ([Hakim-Neotys](https://github.com/Hakim-Neotys))
+- Featuregroup/load 25592 [\#189](https://github.com/Neotys-Labs/neoload-cli/pull/189) ([Hakim-Neotys](https://github.com/Hakim-Neotys))
+
+## [1.3.7](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.7) (2022-01-05)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.6...1.3.7)
+
+**Merged pull requests:**
+
+- Lock at running/terminated state with quick fix and test coverage + F… [\#187](https://github.com/Neotys-Labs/neoload-cli/pull/187) ([Hakim-Neotys](https://github.com/Hakim-Neotys))
+
+## [1.3.6](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.6) (2021-12-06)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.5...1.3.6)
+
+**Merged pull requests:**
+
+- Fix save option for project upload [\#185](https://github.com/Neotys-Labs/neoload-cli/pull/185) ([stephanemartin](https://github.com/stephanemartin))
+- Load 25091 [\#184](https://github.com/Neotys-Labs/neoload-cli/pull/184) ([Hakim-Neotys](https://github.com/Hakim-Neotys))
+
+## [1.3.5](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.5) (2021-07-01)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.4...1.3.5)
+
+**Closed issues:**
+
+- Crash when creating csv file [\#174](https://github.com/Neotys-Labs/neoload-cli/issues/174)
+
+**Merged pull requests:**
+
+- Topic external url [\#177](https://github.com/Neotys-Labs/neoload-cli/pull/177) ([guillaumebert](https://github.com/guillaumebert))
+
+## [1.3.4](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.4) (2021-04-21)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.3...1.3.4)
+
+**Fixed bugs:**
+
+- Fix report pathing and re-run tests [\#175](https://github.com/Neotys-Labs/neoload-cli/pull/175) ([paulsbruce](https://github.com/paulsbruce))
+
+**Documentation updates:**
+
+- Auto-generate CHANGELOG after tag 1.3.2 [\#169](https://github.com/Neotys-Labs/neoload-cli/pull/169) ([github-actions[bot]](https://github.com/apps/github-actions))
+
+**Closed issues:**
+
+- Issue on client docker initialization when client is not installed [\#170](https://github.com/Neotys-Labs/neoload-cli/issues/170)
+
+**Merged pull requests:**
+
+- The releases on pypi should occur only on master or on tags contains '.dev' [\#173](https://github.com/Neotys-Labs/neoload-cli/pull/173) ([guillaumebert](https://github.com/guillaumebert))
+- Fix Issue on client docker initialization when client is not installed [\#171](https://github.com/Neotys-Labs/neoload-cli/pull/171) ([stephanemartin](https://github.com/stephanemartin))
+
+## [1.3.3](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.3) (2021-04-15)
+
+[Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.2...1.3.3)
+
 ## [1.3.2](https://github.com/Neotys-Labs/neoload-cli/tree/1.3.2) (2021-04-07)
 
 [Full Changelog](https://github.com/Neotys-Labs/neoload-cli/compare/1.3.1...1.3.2)
