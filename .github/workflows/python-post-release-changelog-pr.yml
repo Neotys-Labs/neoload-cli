@@ -14,7 +14,7 @@ jobs:
       new_branch_name: CHANGELOG-${{ github.event.inputs.tag }}
     #if: ${{ !contains(github.ref, 'rc') && !contains(github.ref, 'dev') }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         ref: refs/heads/master
@@ -32,7 +32,7 @@ jobs:
 
     - uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.7
+        ruby-version: 3.2
     - name: Update Changelog for Dist
       run: |
         gem install github_changelog_generator
@@ -60,7 +60,7 @@ jobs:
         pr_draft: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Archive Changelog
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       if: always()
       with:
         name: CHANGELOG
