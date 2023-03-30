@@ -45,10 +45,11 @@ jobs:
 
       - name: "Generate Test Report"
         run: neoload test-results junitsla
+        run: neoload test-results --junit-file $(Common.TestResultsDirectory)/junit-sla.xml junitsla
 
       - name: "Publish Test Report"
         if: ${{ always() }}
         uses: scacap/action-surefire-report@v1
         with:
-          report_paths: junit-sla.xml
+          report_paths: $(Common.TestResultsDirectory)/junit-sla.xml
           fail_on_test_failures: true
