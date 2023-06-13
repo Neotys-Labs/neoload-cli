@@ -20,6 +20,9 @@ jobs:
     name: NeoLoad CLI demo github action
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout local code
+        uses: actions/checkout@v3
+
       - name: "Install NeoLoad CLI"
         run: pip3 install -U neoload
 
