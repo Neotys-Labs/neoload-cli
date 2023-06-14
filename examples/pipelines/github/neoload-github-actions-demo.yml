@@ -44,6 +44,7 @@ jobs:
           --return-0
 
       - name: "Generate Test Report"
+        if: ${{ always() }}
         run: neoload test-results junitsla
 
       - name: "Publish Test Report"
