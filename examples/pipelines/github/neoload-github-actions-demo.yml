@@ -44,12 +44,15 @@ jobs:
           --return-0
 
       - name: "Generate Test Report"
+        id: report
         if: ${{ always() }}
         run: neoload test-results junitsla
 
       - name: "Publish Test Report"
-        if: ${{ always() }}
+        if: steps.report.outcome == 'success'
         uses: scacap/action-surefire-report@v1
         with:
           report_paths: junit-sla.xml
           fail_on_test_failures: true
+
+
