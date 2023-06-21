@@ -34,7 +34,7 @@ class TestReportJsonOutput:
 
         with open('tests/resources/report/actual_report.json', 'w', newline='\n') as f:
             f.write(json.dumps(json_data, indent=2))
-        assert filecmp.cmp(datafiles.listdir()[0], 'tests/resources/report/actual_report.json') is True, "Json output for the report (file tests/resources/report/actual_report.json) is not the one expected (file tests/resources/report/expected_report.json)"
+        assert filecmp.cmp(datafiles / 'expected_report.json', 'tests/resources/report/actual_report.json') is True, "Json output for the report (file tests/resources/report/actual_report.json) is not the one expected (file tests/resources/report/expected_report.json)"
 
     @pytest.mark.datafiles('tests/resources/report/expected_report_filtered.json')
     @pytest.mark.skip(reason="This unit test fails since modifications on report command after 1.3.0")
@@ -53,7 +53,7 @@ class TestReportJsonOutput:
 
         with open('tests/resources/report/actual_report_filtered.json', 'w', newline='\n') as f:
             f.write(json.dumps(json_data, indent=2))
-        assert filecmp.cmp(datafiles.listdir()[0], 'tests/resources/report/actual_report_filtered.json') is True, "Json output for the report (file tests/resources/report/actual_report_filtered.json) is not the one expected (file tests/resources/report/expected_report_filtered.json)"
+        assert filecmp.cmp(datafiles / 'expected_report_filtered.json', 'tests/resources/report/actual_report_filtered.json') is True, "Json output for the report (file tests/resources/report/actual_report_filtered.json) is not the one expected (file tests/resources/report/expected_report_filtered.json)"
 
     def __return_json(self, endpoint):
         if endpoint == 'v3/workspaces/5f689c3f0860270001606902/test-results/c6ae22a9-9868-4966-8b1e-8439b985e792':
@@ -146,7 +146,7 @@ class TestReportJsonOutput:
 
         with open('tests/resources/report/raw_actual_report.json', 'w', newline='\n') as f:
             f.write(json.dumps(json_data, indent=2))
-        assert filecmp.cmp(datafiles.listdir()[0], 'tests/resources/report/raw_actual_report.json') is True, "Json output for the report (file tests/resources/report/raw_actual_report.json) is not the one expected (file tests/resources/report/raw_expected_report.json)"
+        assert filecmp.cmp(datafiles / 'raw_expected_report.json', 'tests/resources/report/raw_actual_report.json') is True, "Json output for the report (file tests/resources/report/raw_actual_report.json) is not the one expected (file tests/resources/report/raw_expected_report.json)"
 
     def __return_raw_json(self, endpoint):
         if endpoint == 'v3/workspaces/5f689c3f0860270001606902/test-results/1c393548-1e78-4632-8dd1-b661fb6cd043':

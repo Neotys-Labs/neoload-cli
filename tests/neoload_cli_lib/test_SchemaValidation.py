@@ -8,31 +8,31 @@ class TestSchemaValidation:
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_success(self, datafiles):
-        yaml_file_path = datafiles.listdir()[0]
+        yaml_file_path = datafiles / 'default.yaml'
         schema_validation.validate_yaml(yaml_file_path, __schema_url__)
 
     @pytest.mark.datafiles('tests/neoload_projects/broken_yaml.yaml')
     def test_broken_yaml(self, datafiles):
-        yaml_file_path = datafiles.listdir()[0]
+        yaml_file_path = datafiles / 'broken_yaml.yaml'
         with pytest.raises(Exception) as context:
             schema_validation.validate_yaml(yaml_file_path, __schema_url__)
         assert 'This is not a valid yaml file' in str(context.value)
 
     @pytest.mark.datafiles('tests/neoload_projects/empty.yaml')
     def test_empty(self, datafiles):
-        yaml_file_path = datafiles.listdir()[0]
+        yaml_file_path = datafiles / 'empty.yaml'
         with pytest.raises(Exception) as context:
             schema_validation.validate_yaml(yaml_file_path, __schema_url__)
         assert 'Empty file' in str(context.value)
 
     @pytest.mark.datafiles('tests/neoload_projects/invalid_to_schema.yaml')
     def test_invalid_to_schema(self, datafiles):
-        yaml_file_path = datafiles.listdir()[0]
+        yaml_file_path = datafiles / 'invalid_to_schema.yaml'
         with pytest.raises(Exception) as context:
             schema_validation.validate_yaml(yaml_file_path, __schema_url__)
         assert schema_validation.YAML_NOT_CONFIRM_MESSAGE in str(context.value)
 
-    def test_no_file(self, datafiles):
+    def test_no_file(self):
         with pytest.raises(Exception) as context:
             schema_validation.validate_yaml('/invalid/yaml/file_path', __schema_url__)
         assert 'Unable to open file /invalid/yaml/file_path:' in str(context.value)

@@ -14,7 +14,7 @@ class TestUpload:
     @pytest.mark.datafiles('tests/neoload_projects/example_1.zip')
     @pytest.mark.usefixtures("neoload_login")  # it's like @Before on the neoload_login function
     def test_upload(self, monkeypatch, datafiles, valid_data):
-        zip_path = datafiles.listdir()[0]
+        zip_path = datafiles / 'example_1.zip'
         runner = CliRunner()
         mock_api_post_binary(monkeypatch, 'v2/tests/%s/project' % valid_data.test_settings_id, 200,
                              '{"projectId":"5e5fc0102cc4f82e5d9e18d4", "projectName":"NeoLoad-CLI-example-2_0",'
@@ -62,7 +62,7 @@ class TestUpload:
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1.zip')
     def test_upload_with_save(self, monkeypatch, datafiles):
-        source_path = datafiles.listdir()[0]
+        source_path = datafiles / 'example_1.zip'
 
         file = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
         basename = file.name

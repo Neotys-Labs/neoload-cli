@@ -46,11 +46,11 @@ class TestValidate:
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_success(self, datafiles):
-        self.try_success(datafiles.listdir()[0])
+        self.try_success(datafiles / 'default.yaml')
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_no_refresh(self, datafiles):
-        file_path = datafiles.listdir()[0]
+        file_path = datafiles / 'default.yaml'
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path)])
         assert 'Yaml file is valid' in str(result.output)
@@ -58,7 +58,7 @@ class TestValidate:
 
     @pytest.mark.datafiles('tests/neoload_projects/invalid_to_schema.yaml')
     def test_error(self, datafiles):
-        file_path = datafiles.listdir()[0]
+        file_path = datafiles / 'invalid_to_schema.yaml'
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path), '--refresh'])
         assert schema_validation.YAML_NOT_CONFIRM_MESSAGE in str(result.output)
@@ -67,7 +67,7 @@ class TestValidate:
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     @mock.patch('requests.get', mock.Mock(return_value=mock.Mock(text="<!DOCTYPE html><html>invalid resource</html>")))
     def test_bad_schema(self, datafiles):
-        file_path = datafiles.listdir()[0]
+        file_path = datafiles / 'default.yaml'
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path), '--schema-url', 'https://www.neotys.com/', '--refresh'])
         assert 'Error: This is not a valid json schema' in str(result.output)
@@ -83,7 +83,7 @@ class TestValidate:
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     @mock.patch('requests.get', mock.Mock(side_effect=Exception("Failed to establish a new connection")))
     def test_bad_schema_url(self, datafiles):
-        file_path = datafiles.listdir()[0]
+        file_path = datafiles / 'default.yaml'
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path), '--schema-url', 'http://invalid.fr', '--refresh'])
         assert 'Could not obtain schema definition' in str(result.output)
@@ -109,7 +109,7 @@ class TestValidate:
         # now run the actual function test and capture if failed
         err_msg = None
         try:
-            self.try_success(datafiles.listdir()[0])
+            self.try_success(datafiles / 'default.yaml')
         except Exception as err:
             err_msg = "err: {}".format(err)
 
@@ -124,8 +124,8 @@ class TestValidate:
         'resources/as-code.latest.schema.json'
     )
     def test_single_with_prior_schema(self, datafiles):
-        datafiles_ascode = list(filter(lambda f: '.yaml' in f.strpath, datafiles.listdir()))[0]
-        datafiles_schema = list(filter(lambda f: '.json' in f.strpath, datafiles.listdir()))[0]
+        datafiles_ascode = datafiles / 'default.yaml'
+        datafiles_schema = datafiles / 'as-code.latest.schema.json'
 
         (l, r) = self.preserve_schema()
 
@@ -151,7 +151,6 @@ class TestValidate:
         assert err_msg == None, err_msg
 
     @pytest.mark.slow
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_dir_with_no_prior_schema(self):
         (l, r) = self.preserve_schema()
 
@@ -179,7 +178,7 @@ class TestValidate:
         # now run the actual function test and capture if failed
         err_msg = None
         try:
-            file_path = datafiles.listdir()[0]
+            file_path = datafiles / 'as-code.latest.schema.json'
             orig_mtime = os.path.getmtime(l)
             time.sleep(1)
             result = self.try_dir_with_schema(file_path) # should modify the schema file
