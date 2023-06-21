@@ -100,7 +100,7 @@ The CLI allows you to choose your workspace at login or with the "use" sub-comma
 
 
 ### Setup resources in Neoload Web
-Run a test requires an infrastructure that is defined in Neoload Web Zones section [(see documentation how to manage zones)](https://www.neotys.com/documents/doc/nlweb/latest/en/html/#27521.htm)
+Run a test requires an infrastructure that is defined in Neoload Web Zones section [(see documentation how to manage zones)](https://documentation.tricentis.com/nlweb/latest/en/content/reference_guide/resources_zones.htm)
 You must at least have either a dynamic or a static zone with one controller and one load generator. At First, you could add resources to the "Default zone" since the CLI use it by default.
 
 ### Define a Test
