@@ -37,12 +37,12 @@ class TestTrendsJsonOutput:
             f.write(json.dumps(json_data, indent=2))
 
         msg = ""
-        statinfo = os.stat(datafiles.listdir()[0])
+        statinfo = os.stat(datafiles / 'expected_trends.json')
         msg += "{}".format({ 'statinfo': statinfo, 'st_size': statinfo.st_size })
         statinfo = os.stat('tests/resources/report/actual_trends.json')
         msg += "{}".format({ 'statinfo': statinfo, 'st_size': statinfo.st_size })
 
-        assert filecmp.cmp(datafiles.listdir()[0],
+        assert filecmp.cmp(datafiles / 'expected_trends.json',
                            'tests/resources/report/actual_trends.json') is True, "Json output for the report (file tests/resources/report/actual_trends.json) is not the one expected (file tests/resources/report/expected_trends.json)" + msg
 
     def __return_json(self, endpoint):

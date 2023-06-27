@@ -125,7 +125,7 @@ class TestReadme:
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_validate(self, datafiles):
-        file_path = datafiles.listdir()[0]
+        file_path = datafiles / 'default.yaml'
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path), '--refresh'])
         assert_success(result)
