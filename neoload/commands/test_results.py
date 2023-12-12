@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+import re
 
 import click
 
@@ -221,8 +222,14 @@ def create_json(name, description, quality_status, external_url, external_url_la
     if quality_status is not None:
         data['qualityStatus'] = quality_status
     if external_url is not None:
-        data['externalUrl'] = external_url
-    if external_url_label is not None:
+        match = re.match(r'\[(.*)\]\((.*)\)', external_url)
+        if match:
+            data['externalUrl'] = match.group(2)
+            data['externalUrlLabel'] = match.group(1)
+        else:
+            data['externalUrl'] = external_url
+            data['externalUrlLabel'] = ''
+    else:
         data['externalUrlLabel'] = external_url_label
     if lock is not None:
         data['isLocked'] = lock
