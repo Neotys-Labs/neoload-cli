@@ -38,7 +38,7 @@ def load_from_file(file):
 @click.option('--file', type=click.File('r'), help="Json file with the data to be sent to the API.")
 @click.option('--filter',
               help="Filter test results by fields. Mostly used filters are : name, scenario, project, status.")
-@click.option('--external-url', 'external_url', help="URL to an external system, for example the CI job's link")
+@click.option('--external-url', 'external_url', help="URL to an external system, for example the CI job's link, you can also use markdown format [label](url)")
 @click.option('--external-url-label', 'external_url_label',
               help="Label to describe the external URL, for example the CI name or job ID")
 @click.option('--lock/--unlock', default=None,
