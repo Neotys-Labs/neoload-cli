@@ -1,5 +1,6 @@
 import logging
 import time
+import re
 from urllib.parse import quote
 
 import click
@@ -100,7 +101,7 @@ def prepare_external_url(data, external_url, external_url_label):
             data['externalUrlLabel'] = match.group(1)
         else:
             data['externalUrl'] = external_url
-            data['externalUrlLabel'] = ''
+            data['externalUrlLabel'] = external_url_label
     else:
         data['externalUrlLabel'] = external_url_label
 
