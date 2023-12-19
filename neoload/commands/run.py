@@ -94,8 +94,14 @@ def create_data(name, description, as_code, web_vu, sap_vu, citrix_vu, reservati
 
 def prepare_external_url(data, external_url, external_url_label):
     if external_url is not None:
-        data['externalUrl'] = external_url
-    if external_url_label is not None:
+        match = re.match(r'\[(.*)\]\((.*)\)', external_url)
+        if match:
+            data['externalUrl'] = match.group(2)
+            data['externalUrlLabel'] = match.group(1)
+        else:
+            data['externalUrl'] = external_url
+            data['externalUrlLabel'] = ''
+    else:
         data['externalUrlLabel'] = external_url_label
 
 def prepare_lock(data, lock):
