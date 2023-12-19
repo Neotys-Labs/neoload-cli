@@ -1,5 +1,6 @@
 import logging
 import time
+import re
 from urllib.parse import quote
 
 import click
