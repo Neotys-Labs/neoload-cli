@@ -898,7 +898,12 @@ def get_elements_data(result_id, base_col, time_binding, include_points, statist
     procedure = lambda el: (
         get_perf_time(), get_element_data(el, result_id, time_binding, include_points, statistics_list, use_txn_raw))
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_ELEMENTS_WORKERS) as executor:
+    max_workers = MAX_ELEMENTS_WORKERS
+    try:
+        max_workers = int(os.getenv('NL_MAX_WORKERS', MAX_ELEMENTS_WORKERS))
+    except ValueError:
+        logging.warning(f'NL_MAX_WORKERS environment variable is not an integer. Use default {MAX_ELEMENTS_WORKERS}')
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         translate = {executor.submit(procedure, el): el for el in base_col}
         for future in concurrent.futures.as_completed(translate):
             orig = translate[future]
