@@ -214,6 +214,8 @@ The 'report' subcommand is intended to simplify not only common data exporting n
  templating capabilities over a standard, correlated data model. In contrast to the test-results
  subcommand, 'report' can be used to generate as well as transform test result data.
 
+:warning: The 'report' subcommand can be **slow** (several hours) on results with a lots of transactions or monitors.
+
 ### Exporting Transaction CSV data
 ```
 Usage: neoload report [OPTIONS] [NAME]
@@ -288,6 +290,20 @@ neoload report --json-in ~/Downloads/temp.json \
 
 NOTE: built-in reports produce a reduced-scope JSON data model and are therefore faster
  that exporting all test data for various templates and output specs.
+
+### Work with big results
+
+Big results for the CLI means several hundreds of transactions, with several LGs and last several hours.
+
+The 'report' subcommand get a lot of data from NeoLoad Web API, it is not recommended to use with big results
+because it could take several hours to complete and may fail.
+
+The 'report' subcommand gets all "values" and the "timeseries points" of all statistics from NLW API for each transaction and monitor: \
+it makes 2 API calls per transaction and 1 API call per monitor to NLW API. 10 calls are made in parallel
+(can be configured with env variable `NL_MAX_WORKERS`). \
+In NeoLoad Web SaaS, the rate limit of 300 calls per minute may be reached, the CLI will adapt and slow down.
+
+To see which API calls are made, you can use the debug option: `neoload --debug report`
 
 ## View zones
 ```
