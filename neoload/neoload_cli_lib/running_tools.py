@@ -6,26 +6,30 @@ from signal import signal, SIGINT
 
 from commands import logs_url, test_results
 from commands import run
-from neoload_cli_lib import tools, rest_crud,hooks
+from neoload_cli_lib import tools, rest_crud, hooks, logs_tools
 
 __current_id = None
 __count = 0
-
+nbur = 0
 __last_status = ""
+
 
 def __is_current_state_running(status):
     return status == "RUNNING"
+
 
 def __is_current_state_terminated_and_not_unknown(status, quality_status):
     # this mehtod represent when a test is terminated but not aborted
     # this specific state is when the test is 'TERMINATED' but quality status is not 'UNKNOWN'
     return status == "TERMINATED" and quality_status != "UNKNOWN"
 
+
 def __lock_result(results_id, data_lock):
     run.patch_data(results_id, data_lock)
-    data_lock.clear() # after patch you never "patch lock" while running, so data_lock is delete to skip "patch lock" of the loop in display_status
+    data_lock.clear()  # after patch you never "patch lock" while running, so data_lock is delete to skip "patch lock" of the loop in display_status
 
-def handler(signal_received, frame):
+
+def handler():
     global __count
     logging.debug("Ctrl+C is pressed or SIGINT is handled")
     if __current_id:
@@ -34,13 +38,14 @@ def handler(signal_received, frame):
             __count += 1
 
 
-def wait(results_id, exit_code_sla, data_lock): # data_lock is needed to lock result when test state is running
+def wait(results_id, exit_code_sla, data_lock):  # data_lock is needed to lock result when test state is running
     global __current_id
     __current_id = results_id
     signal(SIGINT, handler)
     header_status(results_id)
-    while display_status(results_id, data_lock):
-        time.sleep(20)
+    displayed_lines = []
+    while display_status(displayed_lines, results_id, data_lock):
+        time.sleep(1)
 
     __current_id = None
     hooks.trig("test.stop")
@@ -56,22 +61,27 @@ def header_status(results_id):
         webbrowser.open_new_tab(url)
 
 # INIT, STARTING, RUNNING, TERMINATED
-def display_status(results_id, data_lock): 
+
+
+def display_status(displayed_lines, results_id, data_lock):
     global __last_status
     res = rest_crud.get(test_results.get_end_point(results_id))
     status = res.get('status')
     quality_status = res.get('qualityStatus')
-
+    global nbur
     if __last_status != status:
         print("Status: " + status)
         __last_status = status
-    if data_lock != {}: #if there is data in data_lock we know that we want to lock our test result
+    if data_lock != {}:  # if there is data in data_lock we know that we want to lock our test result
         if __is_current_state_running(status):
             __lock_result(results_id, data_lock)
         if __is_current_state_terminated_and_not_unknown(status, quality_status):
             __lock_result(results_id, data_lock)
     if status == "RUNNING":
-        display_statistics(results_id, res)
+        logs_tools.display_logs(displayed_lines, results_id)
+        if nbur % 20 == 0:
+            display_statistics(results_id, res)
+        nbur += 1
     if status == "TERMINATED":
         return False
 

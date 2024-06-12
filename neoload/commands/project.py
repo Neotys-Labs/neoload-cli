@@ -1,4 +1,5 @@
 import os
+import zipfile
 
 import click
 
@@ -35,8 +36,50 @@ def cli(command, name_or_id, path, save):
 #TODO: spider through all YAML (as-code files)
 #TODO: fix validate to recurse through all includes; create unique file list map (avoid recursive references)
 
-def upload(path, settings_id, save):
-    neoLoad_project.upload_project(path, get_endpoint(settings_id), save)
+
+def extract_nlp_from_zip(zip_path, extract_to='.'):
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        for file in zip_ref.namelist():
+            if file.endswith('.nlp'):
+                zip_ref.extract(file, extract_to)
+                return os.path.join(extract_to, file)
+
+
+def upload(path, settings_id, endpoint):
+    if path.endswith('.zip'):
+        nlp_file_path = extract_nlp_from_zip(path)
+        if not nlp_file_path:
+            print(f"Error: No .nlp file found in the zip archive {path}.")
+    else:
+        nlp_file_found = False
+        nlp_file_path = None
+
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                print(f"Inspecting file: {file}")
+                if file.endswith(".nlp"):
+                    nlp_file_path = os.path.join(root, file)
+                    nlp_file_found = True
+                    break
+            if nlp_file_found:
+                break
+
+        if not nlp_file_found:
+            print(f"Error: No .nlp file found in the directory {path}.")
+
+    if not os.path.exists(nlp_file_path):
+        print(f"Error: The file {nlp_file_path} does not exist.")
+
+    with open(nlp_file_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            if 'project.password.hash=' in line:
+                val = line.split('project.password.hash=')[1].strip()
+                endpoint = get_endpoint(settings_id)
+                if val:
+                    print("Your project has a password, please go here to enter your password: " + "https://neoload.saas.neotys.com/#!test-settings/" + settings_id)
+                    neoLoad_project.upload_project(path, endpoint)
+                else:
+                    neoLoad_project.upload_project(path, endpoint)
 
 
 def meta_data(setting_id):

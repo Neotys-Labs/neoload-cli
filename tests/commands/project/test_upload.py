@@ -68,13 +68,13 @@ class TestUpload:
         basename = file.name
 
         try:  # negative test case
-            neoLoad_project.zip_dir(source_path, basename + ".bad")
+            neoLoad_project.zip_tes(source_path, basename + ".bad")
             assert False, "Bad extension should have been rejected, but wasn't"
         except:
             pass
 
         os.remove(basename)
-        neoLoad_project.zip_dir(source_path, basename)
+        neoLoad_project.zip_tes(source_path, basename)
         exists = os.path.exists(basename)
         os.remove(basename)  # pre-emptive cleanup
 
