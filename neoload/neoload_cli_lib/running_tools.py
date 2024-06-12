@@ -6,11 +6,11 @@ from signal import signal, SIGINT
 
 from commands import logs_url, test_results
 from commands import run
-from neoload_cli_lib import tools, rest_crud,hooks
+from neoload_cli_lib import tools, rest_crud,hooks, logs_tools
 
 __current_id = None
 __count = 0
-
+nbur = 0
 __last_status = ""
 
 def __is_current_state_running(status):
@@ -39,8 +39,9 @@ def wait(results_id, exit_code_sla, data_lock): # data_lock is needed to lock re
     __current_id = results_id
     signal(SIGINT, handler)
     header_status(results_id)
-    while display_status(results_id, data_lock):
-        time.sleep(20)
+    displayed_lines=[]
+    while display_status(displayed_lines, results_id, data_lock):
+        time.sleep(1)
 
     __current_id = None
     hooks.trig("test.stop")
@@ -56,12 +57,12 @@ def header_status(results_id):
         webbrowser.open_new_tab(url)
 
 # INIT, STARTING, RUNNING, TERMINATED
-def display_status(results_id, data_lock): 
+def display_status(displayed_lines, results_id, data_lock):
     global __last_status
     res = rest_crud.get(test_results.get_end_point(results_id))
     status = res.get('status')
     quality_status = res.get('qualityStatus')
-
+    global nbur
     if __last_status != status:
         print("Status: " + status)
         __last_status = status
@@ -71,7 +72,11 @@ def display_status(results_id, data_lock):
         if __is_current_state_terminated_and_not_unknown(status, quality_status):
             __lock_result(results_id, data_lock)
     if status == "RUNNING":
-        display_statistics(results_id, res)
+        logs_tools.display_logs(displayed_lines, results_id)
+        if nbur == 5:
+           display_statistics(results_id, res)
+           nbur = 0
+        nbur+=1
     if status == "TERMINATED":
         return False
 

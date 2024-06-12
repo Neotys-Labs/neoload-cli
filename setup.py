@@ -43,7 +43,6 @@ setup(
         'tqdm',
         'requests_toolbelt',
         'urllib3>=1.26.5',
-        'coloredlogs',
         'docker',
         'pyparsing',
         'simplejson',
