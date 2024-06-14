@@ -8,12 +8,12 @@ def display_logs(displayed_lines, results_id):
     res = rest_crud.get(test_results.get_end_point(results_id, "/logs"))
     if res:
         for entry in res:
-            content = entry['content']
-            translated = dicotrad.get(content, content)
-            log_line = f"{format_time(entry['timestamp']) + translated}"
-            if log_line not in displayed_lines:
-                print(log_line)
-                displayed_lines.append(log_line)
+            if entry not in displayed_lines:
+                content = entry['content']
+                translated = dicotrad.get(content, content)
+                log_line_translated = f"{format_time(entry['timestamp'])} {translated}"
+                print(log_line_translated)
+                displayed_lines.append(entry)
 
 
 def format_time(timestamp):
