@@ -73,7 +73,9 @@ def display_status(displayed_lines, results_id, data_lock):
             __lock_result(results_id, data_lock)
     if status == "RUNNING":
         display_statistics(results_id, res)
-        logs_tools.display_logs(displayed_lines, results_id)
+        workspace = rest_crud.get_workspace()
+        if workspace is not None:
+            logs_tools.display_logs(displayed_lines, results_id)
         if nbsecond % 20 == 0:
             display_statistics(results_id, res)
         nbsecond += 1
