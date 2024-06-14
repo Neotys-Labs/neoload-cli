@@ -6,11 +6,11 @@ from signal import signal, SIGINT
 
 from commands import logs_url, test_results
 from commands import run
-from neoload_cli_lib import tools, rest_crud,hooks, logs_tools
+from neoload_cli_lib import tools, rest_crud, hooks, logs_tools
 
 __current_id = None
 __count = 0
-nbur = 0
+nbsecond = 0
 __last_status = ""
 
 def __is_current_state_running(status):
@@ -62,7 +62,7 @@ def display_status(displayed_lines, results_id, data_lock):
     res = rest_crud.get(test_results.get_end_point(results_id))
     status = res.get('status')
     quality_status = res.get('qualityStatus')
-    global nbur
+    global nbsecond
     if __last_status != status:
         print("Status: " + status)
         __last_status = status
@@ -72,11 +72,11 @@ def display_status(displayed_lines, results_id, data_lock):
         if __is_current_state_terminated_and_not_unknown(status, quality_status):
             __lock_result(results_id, data_lock)
     if status == "RUNNING":
+        display_statistics(results_id, res)
         logs_tools.display_logs(displayed_lines, results_id)
-        if nbur == 5:
-           display_statistics(results_id, res)
-           nbur = 0
-        nbur+=1
+        if nbsecond % 20 == 0:
+            display_statistics(results_id, res)
+        nbsecond += 1
     if status == "TERMINATED":
         return False
 
