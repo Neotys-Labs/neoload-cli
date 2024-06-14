@@ -11,7 +11,7 @@ def cli(name):
     """get logs url of a test result managed by NeoLoad Web"""
     workspace = rest_crud.get_workspace()
     if workspace is None:
-        print("You have not defined a work pase please use: neoload workspace use 'your workspace'")
+        print("You have not defined a workspace please use: neoload workspaces use 'your workspace'")
         return
     results_id = test_results.get_id_by_name_or_id(name)
     displayed_lines = []
