@@ -21,32 +21,32 @@ class TestRunningTools:
         mock_api_get(monkeypatch, "v3/workspaces/5e3acde2e860a132744ca916/test-results/any_id", '{"status": "INIT"}')
         capturedOutput = StringIO()  # Create StringIO object
         sys.stdout = capturedOutput  # Redirect stdout.
-        assert running_tools.display_status("any_id", data_lock={})  # Call function and test returned value
+        assert running_tools.display_status([], "any_id", data_lock={})  # Call function and test returned value
         assert "Status: INIT\n" == capturedOutput.getvalue()  # Test print
         sys.stdout = sys.__stdout__  # Reset redirect.
 
     def test_display_status_terminated(self, monkeypatch):
         mock_api_get(monkeypatch, "v3/workspaces/5e3acde2e860a132744ca916/test-results/any_id", '{"status": "INIT"}')
-        assert running_tools.display_status("any_id", data_lock={})
+        assert running_tools.display_status([], "any_id", data_lock={})
 
     def test_display_status_terminated_with_data(self, monkeypatch):
         mock_api_get(monkeypatch, "v3/workspaces/5e3acde2e860a132744ca916/test-results/any_id", '{"status": "TERMINATED"}')
         mock_api_patch(monkeypatch, "v3/workspaces/5e3acde2e860a132744ca916/test-results/any_id", '{"isLocked":"true"}')
         data_lock = {'isLocked': 'true'}
-        assert running_tools.display_status("any_id", data_lock) is False
+        assert running_tools.display_status([], "any_id", data_lock) is False
         assert data_lock == {}
 
     def test_display_status_running(self, monkeypatch):
         monkeypatch.setattr(rest_crud, 'get',
                             lambda actual_endpoint: ast.literal_eval(self.__return_json(actual_endpoint)))
-        assert running_tools.display_status("any_id", data_lock={})
+        assert running_tools.display_status([], "any_id", data_lock={})
 
     def test_display_status_running_with_data(self, monkeypatch):
         monkeypatch.setattr(rest_crud, 'get',
                             lambda actual_endpoint: ast.literal_eval(self.__return_json(actual_endpoint)))
         mock_api_patch(monkeypatch, "v3/workspaces/5e3acde2e860a132744ca916/test-results/any_id", '{"isLocked":"true"}')
         data_lock = {'isLocked': 'true'}
-        assert running_tools.display_status("any_id", data_lock)
+        assert running_tools.display_status([], "any_id", data_lock)
         assert data_lock == {}
 
     def test_wait(self):
