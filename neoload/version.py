@@ -1,1 +1,1 @@
-__version__ = "None"
+__version__ = None
