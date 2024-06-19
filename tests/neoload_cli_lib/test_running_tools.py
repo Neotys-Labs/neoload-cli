@@ -46,8 +46,14 @@ class TestRunningTools:
                             lambda actual_endpoint: ast.literal_eval(self.__return_json(actual_endpoint)))
         mock_api_patch(monkeypatch, "v3/workspaces/5e3acde2e860a132744ca916/test-results/any_id", '{"isLocked":"true"}')
         data_lock = {'isLocked': 'true'}
+        capturedOutput = StringIO()  # Create StringIO object
+        sys.stdout = capturedOutput  # Redirect stdout.
         assert running_tools.display_status([], "any_id", data_lock)
         assert data_lock == {}
+        assert "00:08:12\t Err[25], LGs[--]\t VUs:--\t BPS[2103501.5]\t RPS:--\t avg(rql): 49.45262\n" in capturedOutput.getvalue()
+        assert "10.07.18 02:02:40 PM Lock controller kos\n" in capturedOutput.getvalue()
+        assert "10.07.18 02:02:43 PM Load generators preparation\n" in capturedOutput.getvalue()
+        sys.stdout = sys.__stdout__  # Reset redirect.
 
     def test_wait(self):
         # TODO add unit test or coverage for function wait from running tools... care there is time sleep 20 sec ...
@@ -58,5 +64,7 @@ class TestRunningTools:
             return '{"startDate": 1639586469, "duration":492829 , "status": "RUNNING"}'
         elif actual_endpoint == "v3/workspaces/5e3acde2e860a132744ca916/test-results/any_id/statistics":
             return '{"totalRequestCountSuccess": 62758, "totalRequestCountFailure": 25, "totalRequestDurationAverage": 49.45262, "totalRequestCountPerSecond": 127.393074, "totalTransactionCountSuccess": 125501, "totalTransactionCountFailure": 15, "totalTransactionDurationAverage": 136.1283, "totalTransactionCountPerSecond": 254.6847, "totalIterationCountSuccess": 648, "totalIterationCountFailure": 0, "totalGlobalDownloadedBytes": 1036666537, "totalGlobalDownloadedBytesPerSecond": 2103501.5, "totalGlobalCountFailure": 25}'
+        elif actual_endpoint == "v3/workspaces/5e3acde2e860a132744ca916/test-results/any_id/logs":
+            return '[{"content": "Lock controller kos","timestamp": 1531224160013,"type": "workflow"}, {"content": "GETTING_AVAILABLE_LGS","timestamp": 1531224163007,"type": "workflow"}]'
         else:
             raise Exception('Endpoint NOT mocked : ' + actual_endpoint)
