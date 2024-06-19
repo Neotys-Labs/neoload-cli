@@ -16,7 +16,7 @@ def mock_response(monkeypatch):
 
     monkeypatch.setattr(rest_crud, 'get', mock_get)
 
-@pytest.mark.usefixtures("mock_response")
+@pytest.mark.usefixtures("mock_response", "neoload_login")
 def test_display_logs(capfd):
     displayed_lines = []
     results_id = "test_results_id"
