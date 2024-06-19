@@ -1,3 +1,7 @@
+import datetime
+import os
+import time
+
 import pytest
 from types import SimpleNamespace
 from _pytest.main import Session
@@ -14,6 +18,11 @@ from tests.helpers.test_utils import mock_login_get_urls
 
 __default_random_token = '12345678912345678901ae6d8af6abcdefabcdefabcdef'
 __default_api_url = 'https://neoload-api.saas.neotys.com'
+
+# set the testing timezone to US/Pacific
+os.environ['TZ'] = 'US/Pacific'
+time.tzset()
+FAKE_NOW_DATETIME = datetime.datetime(2023, 12, 25, 17, 5, 55)
 
 
 def pytest_addoption(parser):
@@ -86,3 +95,22 @@ def monkeypatch(request, monkeypatch):
     token = request.config.getoption('--token')
     # Disable mocks when a specific token is provided
     return monkeypatch if token is __default_random_token else None
+
+
+@pytest.fixture
+def patch_datetime_now(monkeypatch):
+
+    class MyDatetime(datetime.datetime):
+        @classmethod
+        def utcnow(cls):
+            return FAKE_NOW_DATETIME
+
+        @classmethod
+        def now(cls, tz=None):
+            return FAKE_NOW_DATETIME
+
+        @classmethod
+        def today(cls):
+            return FAKE_NOW_DATETIME
+
+    monkeypatch.setattr(datetime, 'datetime', MyDatetime)
