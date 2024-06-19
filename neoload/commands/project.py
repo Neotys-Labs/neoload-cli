@@ -46,7 +46,7 @@ def extract_nlp_from_zip(zip_path, extract_to='.'):
 
 
 def upload(path, settings_id, endpoint):
-    if path.endswith('.zip'):
+    if str(path).endswith('.zip'):
         nlp_file_path = extract_nlp_from_zip(path)
         if not nlp_file_path:
             print(f"Error: No .nlp file found in the zip archive {path}.")
