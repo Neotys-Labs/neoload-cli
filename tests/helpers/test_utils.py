@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from requests import Response
 from neoload_cli_lib import rest_crud, user_data
 
@@ -94,11 +94,11 @@ def __return_response(actual_endpoint, expected_endpoint, http_code, json_result
 
 
 def generate_test_settings_name():
-    return 'Test settings CLI %s' % datetime.now(UTC).strftime('%b %d %H:%M:%S.%f')[:-3]
+    return 'Test settings CLI %s' % datetime.now(timezone.utc).strftime('%b %d %H:%M:%S.%f')[:-3]
 
 
 def generate_test_result_name():
-    return 'Test result CLI %s' % datetime.now(UTC).strftime('%b %d %H:%M:%S.%f')[:-3]
+    return 'Test result CLI %s' % datetime.now(timezone.utc).strftime('%b %d %H:%M:%S.%f')[:-3]
 
 
 def mock_login_get_urls(monkeypatch, version='2.5.0'):
