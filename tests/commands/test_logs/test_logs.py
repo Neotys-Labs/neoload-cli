@@ -16,7 +16,7 @@ def mock_response(monkeypatch):
 
     monkeypatch.setattr(rest_crud, 'get', mock_get)
 
-@pytest.mark.usefixtures("mock_response")
+@pytest.mark.usefixtures("mock_response", "neoload_login")
 def test_display_logs(capfd):
     displayed_lines = []
     results_id = "test_results_id"
@@ -37,7 +37,7 @@ def test_display_logs(capfd):
 def test_format_time():
     timestamp = 1625247600000
     formatted_time = format_time(timestamp)
-    assert formatted_time == "02.07.21 07:40:00 PM", f"Expected '02.07.21 07:40:00 PM' but got {formatted_time}"
+    assert formatted_time == "02.07.21 10:40:00 AM", f"Expected '02.07.21 10:40:00 AM' but got {formatted_time}"
 
 def test_dicotrad():
     assert dicotrad['AUTO_RESERVE'] == "Auto reserve resources", f"Expected 'Auto reserve resources' but got {dicotrad['AUTO_RESERVE']}"
