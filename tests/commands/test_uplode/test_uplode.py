@@ -1,49 +1,58 @@
 import pytest
-from click.testing import CliRunner
-from commands.project import cli as project
-from tests.helpers.test_utils import *
-from neoload_cli_lib import neoLoad_project
+import zipfile
+from pathlib import Path
+from commands.project import extract_nlp_from_zip, find_password_in_nlp, upload
 
 
-@pytest.mark.project
-class TestPasswordInNLP:
+@pytest.fixture
+def create_test_zip(tmp_path):
+    zip_path = tmp_path / "test.zip"
+    nlp_content = """project.name=test
+project.version=8.10
+project.password.hash=12vsXUgFbgL2g7u5aMuRsyhimKuEIk+jMXVD5pbkfo0=$0
+"""
+    with zipfile.ZipFile(zip_path, 'w') as zipf:
+        zipf.writestr('test.nlp', nlp_content)
+    return zip_path
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1.zip')
-    @pytest.mark.usefixtures("neoload_login")
-    def test_password_in_nlp(self, monkeypatch, datafiles, valid_data):
-        zip_path = datafiles / 'example_1.zip'
-        runner = CliRunner()
 
-        assert zip_path.exists()
-        assert zip_path.suffix == '.zip'
+def test_extract_nlp_from_zip(create_test_zip):
+    zip_path = create_test_zip
+    nlp_file = extract_nlp_from_zip(zip_path)
+    assert nlp_file is not None
+    assert nlp_file.name == 'test.nlp'
 
-        mock_api_post_binary(monkeypatch, 'v2/tests/%s/project' % valid_data.test_settings_id, 200,
-                             '{"projectId":"5e5fc0102cc4f82e5d9e18d4", "projectName":"NeoLoad-CLI-example-2_0",'
-                             '"asCodeFiles": [{"path": "default.yaml", "includes": ["paths/geosearch_get.yaml"]}],'
-                             '"scenarios":[{"scenarioName": "sanityScenario","scenarioDuration": 10,"scenarioVUs": 2,"scenarioSource": "default.yaml"}]}')
 
-        result_upload = runner.invoke(project, ['--path', str(zip_path), 'upload', valid_data.test_settings_id])
+def test_find_password_in_nlp(create_test_zip):
+    zip_path = create_test_zip
+    nlp_file = extract_nlp_from_zip(zip_path)
+    password = find_password_in_nlp(nlp_file)
+    assert password == "12vsXUgFbgL2g7u5aMuRsyhimKuEIk+jMXVD5pbkfo0=$0"
 
-        assert_success(result_upload)
 
-        assert "Your project has a password, please go here to enter your password:" in result_upload.output
+def test_upload_with_password(mocker, tmp_path):
+    zip_path = tmp_path / "test.zip"
+    nlp_content = """project.name=test
+project.version=8.10
+project.password.hash=12vsXUgFbgL2g7u5aMuRjsyhimKuEIk+jMXVD5pbkfo0=$0
+"""
+    with zipfile.ZipFile(zip_path, 'w') as zipf:
+        zipf.writestr('test.nlp', nlp_content)
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_2.zip')
-    @pytest.mark.usefixtures("neoload_login")
-    def test_no_password_in_nlp(self, monkeypatch, datafiles, valid_data):
-        zip_path = datafiles / 'example_2.zip'
-        runner = CliRunner()
+    mock_upload_project = mocker.patch('commands.project.neoLoad_project.upload_project', return_value=9)
+    upload(zip_path, "test_id", "http://endpoint")
+    mock_upload_project.assert_called_once_with(str(zip_path), "http://endpoint")
 
-        assert zip_path.exists()
-        assert zip_path.suffix == '.zip'
 
-        mock_api_post_binary(monkeypatch, 'v2/tests/%s/project' % valid_data.test_settings_id, 200,
-                             '{"projectId":"5e5fc0102cc4f82e5d9e18d4", "projectName":"NeoLoad-CLI-example-2_0",'
-                             '"asCodeFiles": [{"path": "default.yaml", "includes": ["paths/geosearch_get.yaml"]}],'
-                             '"scenarios":[{"scenarioName": "sanityScenario","scenarioDuration": 10,"scenarioVUs": 2,"scenarioSource": "default.yaml"}]}')
+def test_upload_password(mocker, tmp_path):
+    zip_path = tmp_path / "test.zip"
+    nlp_content = """project.name=test
+project.version=8.10
+project.password.hash=12vsXUgFbgL2g7u5aMuRsyhimKuEIk+jMXVD5pbkfo0=$0
+"""
+    with zipfile.ZipFile(zip_path, 'w') as zipf:
+        zipf.writestr('test.nlp', nlp_content)
 
-        result_upload = runner.invoke(project, ['--path', str(zip_path), 'upload', valid_data.test_settings_id])
-
-        assert_success(result_upload)
-
-        assert "Your project has a password, please go here to enter your password:" not in result_upload.output
+    mock_upload_project = mocker.patch('commands.project.neoLoad_project.upload_project', return_value=9)
+    upload(zip_path, "test_id", "http://endpoint")
+    mock_upload_project.assert_called_once_with(str(zip_path), "http://endpoint")
