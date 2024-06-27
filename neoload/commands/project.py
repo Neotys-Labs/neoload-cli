@@ -29,9 +29,11 @@ def cli(command, name_or_id, path, save):
 def extract_nlp_from_zip(zip_path):
     extract_path = zip_path.parent
     with zipfile.ZipFile(zip_path, 'r') as zipf:
-        nlp_filename = 'test.nlp'
-        zipf.extract(nlp_filename, extract_path)
-    return Path(extract_path / nlp_filename)
+        for file_name in zipf.namelist():
+            if file_name.endswith('.nlp'):
+                zipf.extract(file_name, extract_path)
+                return Path(extract_path / file_name)
+    return None
 
 
 def find_password_in_nlp(nlp_file_path):
@@ -44,30 +46,23 @@ def find_password_in_nlp(nlp_file_path):
 
 def upload(path, settings_id, endpoint):
     path = Path(path)
+    nlp_file_path = None
+
     if path.suffix == '.zip':
         nlp_file_path = extract_nlp_from_zip(path)
-        if not nlp_file_path.exists():
-            print(f"Error: No .nlp file found in the zip archive {path}.")
-            return
     else:
-        nlp_file_found = False
-        nlp_file_path = None
         for root, dirs, files in os.walk(path):
             for file in files:
                 if file.endswith(".nlp"):
                     nlp_file_path = Path(root) / file
-                    nlp_file_found = True
                     break
-            if nlp_file_found:
+            if nlp_file_path:
                 break
-        if not nlp_file_found:
-            print(f"Error: No .nlp file found in the directory {path}.")
-            return
-    if not nlp_file_path.exists():
-        print(f"Error: The file {nlp_file_path} does not exist.")
-        return
 
-    password = find_password_in_nlp(nlp_file_path)
+    password = None
+    if nlp_file_path and nlp_file_path.exists():
+        password = find_password_in_nlp(nlp_file_path)
+
     if password:
         print(f"Password found: {password}")
         print("Your project has a password, please enter your password here: " +
