@@ -1,6 +1,7 @@
 import os
 import zipfile
 import click
+from commands import test_settings
 from pathlib import Path
 from neoload_cli_lib import user_data, tools, rest_crud, neoLoad_project
 
