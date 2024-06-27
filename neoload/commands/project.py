@@ -1,6 +1,7 @@
 import os
 import zipfile
 import click
+import urllib.parse as urlparse
 from commands import test_settings
 from pathlib import Path
 from neoload_cli_lib import user_data, tools, rest_crud, neoLoad_project
@@ -69,11 +70,12 @@ def upload(path, settings_id, save):
     password = None
     if nlp_file_path and nlp_file_path.exists():
         password = find_password_in_nlp(nlp_file_path)
+        os.remove(nlp_file_path)
 
     if password:
         print(f"Password found: {password}")
         print("Your project has a password, please enter your password here: " +
-              "https://neoload.saas.neotys.com/#!test-settings/" + settings_id)
+              urlparse.urljoin(user_data.get_user_data().get_frontend_url(), "/#!test-settings/" + settings_id))
 
     # Always call the upload_project method
     neoLoad_project.upload_project(path, get_endpoint(settings_id), save)
