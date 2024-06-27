@@ -44,7 +44,7 @@ def find_password_in_nlp(nlp_file_path):
     return None
 
 
-def upload(path, settings_id, endpoint):
+def upload(path, settings_id, save):
     path = Path(path)
     nlp_file_path = None
 
@@ -69,7 +69,7 @@ def upload(path, settings_id, endpoint):
               "https://neoload.saas.neotys.com/#!test-settings/" + settings_id)
 
     # Always call the upload_project method
-    neoLoad_project.upload_project(str(path), endpoint)
+    neoLoad_project.upload_project(path, get_endpoint(settings_id), save)
 
 
 def meta_data(setting_id):
