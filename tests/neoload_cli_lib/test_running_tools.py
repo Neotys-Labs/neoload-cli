@@ -47,8 +47,8 @@ class TestRunningTools:
         assert running_tools.display_status([], "any_id", data_lock)
         assert data_lock == {}
         assert "19697d16:39:28/00:08:12\t Err[25], LGs[--]\t VUs:--\t BPS[2103501.5]\t RPS:--\t avg(rql): 49.45262\n" in capturedOutput.getvalue()
-        assert "10.07.18 02:02:40 AM Lock controller kos\n" in capturedOutput.getvalue()
-        assert "10.07.18 02:02:43 AM Load generators preparation\n" in capturedOutput.getvalue()
+        assert "10.07.18 02:02:40 PM Lock controller kos\n" in capturedOutput.getvalue()
+        assert "10.07.18 02:02:43 PM Load generators preparation\n" in capturedOutput.getvalue()
         sys.stdout = sys.__stdout__  # Reset redirect.
 
     def test_wait(self):
