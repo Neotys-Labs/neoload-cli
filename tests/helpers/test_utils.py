@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone
 from requests import Response
 from neoload_cli_lib import rest_crud, user_data
+from datetime import timezone
 
 
 def assert_success(result):
