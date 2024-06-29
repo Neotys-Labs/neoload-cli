@@ -1,6 +1,8 @@
 import os
 import zipfile
 import click
+import urllib.parse as urlparse
+from commands import test_settings
 from pathlib import Path
 from neoload_cli_lib import user_data, tools, rest_crud, neoLoad_project
 
@@ -13,6 +15,7 @@ from neoload_cli_lib import user_data, tools, rest_crud, neoLoad_project
               help="Path to a (non-existent) file ending in .zip to preserve what was uploaded")
 @click.argument("name_or_id", type=str, required=False)
 def cli(command, name_or_id, path, save):
+    """Upload and list scenario from settings"""
     rest_crud.set_current_command()
     if not name_or_id or name_or_id == "cur":
         name_or_id = user_data.get_meta(test_settings.meta_key)
@@ -44,6 +47,11 @@ def find_password_in_nlp(nlp_file_path):
     return None
 
 
+#TODO: pre-validate with 'neoload validate' functionality, but..
+#TODO: provide a --skip-validation option
+#TODO: spider through all YAML (as-code files)
+#TODO: fix validate to recurse through all includes; create unique file list map (avoid recursive references)
+
 def upload(path, settings_id, save):
     path = Path(path)
     nlp_file_path = None
@@ -62,11 +70,12 @@ def upload(path, settings_id, save):
     password = None
     if nlp_file_path and nlp_file_path.exists():
         password = find_password_in_nlp(nlp_file_path)
+        os.remove(nlp_file_path)
 
     if password:
         print(f"Password found: {password}")
         print("Your project has a password, please enter your password here: " +
-              "https://neoload.saas.neotys.com/#!test-settings/" + settings_id)
+              urlparse.urljoin(user_data.get_user_data().get_frontend_url(), "/#!test-settings/" + settings_id))
 
     # Always call the upload_project method
     neoLoad_project.upload_project(path, get_endpoint(settings_id), save)

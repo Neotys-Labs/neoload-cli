@@ -40,8 +40,8 @@ project.password.hash=12vsXUgFbgL2g7u5aMuRjsyhimKuEIk+jMXVD5pbkfo0=$0
         zipf.writestr('test.nlp', nlp_content)
 
     mock_upload_project = mocker.patch('commands.project.neoLoad_project.upload_project', return_value=9)
-    upload(zip_path, "test_id", "http://endpoint")
-    mock_upload_project.assert_called_once_with(str(zip_path), "http://endpoint")
+    upload(zip_path, "test_id", "pathToSave/file.zip")
+    mock_upload_project.assert_called_once_with(zip_path, 'v2/tests/test_id/project', 'pathToSave/file.zip')
 
 
 def test_upload_password(mocker, tmp_path):
@@ -54,5 +54,5 @@ project.password.hash=12vsXUgFbgL2g7u5aMuRsyhimKuEIk+jMXVD5pbkfo0=$0
         zipf.writestr('test.nlp', nlp_content)
 
     mock_upload_project = mocker.patch('commands.project.neoLoad_project.upload_project', return_value=9)
-    upload(zip_path, "test_id", "http://endpoint")
-    mock_upload_project.assert_called_once_with(str(zip_path), "http://endpoint")
+    upload(zip_path, "test_id", "pathToSave/file.zip")
+    mock_upload_project.assert_called_once_with(zip_path, 'v2/tests/test_id/project', 'pathToSave/file.zip')
