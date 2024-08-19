@@ -35,6 +35,7 @@ __operation_elements = "/elements"
 __operation_monitors = "/monitors"
 
 QUERY_CATEGORY_TRANSACTION = "category=TRANSACTION"
+CONTROLLER_MONITORS_ROOT = ['Controller', 'Contrôleur']
 
 meta_key = 'result id'
 __resolver = test_results.get_resolver();
@@ -458,7 +459,8 @@ def fill_single_ext_data(__id, components, data):
 
 def fill_single_controller_points(__id, components, data):
     if components['controller_points']:
-        data['controller_points'] = get_mon_datas(__id, lambda m: m['path'][0] == 'Controller', data['monitors'], True)
+        data['controller_points'] = get_mon_datas(__id, lambda m: m['path'][0] in CONTROLLER_MONITORS_ROOT,
+                                                  data['monitors'], True)
 
 
 # examples
