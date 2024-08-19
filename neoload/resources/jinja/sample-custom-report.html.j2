@@ -12,7 +12,7 @@
 {% with title=summary.name %}{% include 'common/header.j2' %}{% endwith %}
 
 <script type="text/javascript">
-window.ctrl_user_load = {{ controller_points | selectattr('name','equalto', 'User Load') | map(attribute='points') | first | tojson }};
+window.ctrl_user_load = {{ controller_points | selectattr('name','in', ['User Load', 'Charge Utilisateurs']) | map(attribute='points') | first | tojson }};
 window.all_requests = {{ all_requests | selectattr('type','equalto', 'ALL_REQUESTS') | map(attribute='points') | first | tojson }};
 </script>
 
