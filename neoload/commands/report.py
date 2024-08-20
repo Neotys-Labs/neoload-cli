@@ -258,35 +258,43 @@ def can_raw_transactions_data():
     return False if user_data.is_version_lower_than('2.6.0') else True
 
 
-def should_raw_transactions_data(__id, time_filter):
-    if time_filter is not None and can_raw_transactions_data():
-        # look for the transaction with the smallest number of iterations, but that has raw data
+def is_not_all_transactions(element):
+    return element.get('elementId') != 'all-transactions'
 
+
+def should_raw_transactions_data(__id, time_binding):
+    if rest_crud.get_workspace() is None:
+        logging.warning("No Workspace defined. For better performance, please define one before the report: neoload workspace use 'Default Workspace'")
         # grab all transactions list
         json_elements_transactions = rest_crud.get(
             get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
-        txns = []
+        values = []
         for el in json_elements_transactions:
             if el['type'] != 'TRANSACTION':
                 continue
             # grab count of this transaction and only add if there are iterations
             json_values = rest_crud.get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/values")
             if json_values['count'] > 0:
-                txns.append({
-                    'id': el['id'],
+                values.append({
+                    'elementId': el['id'],
                     'count': json_values['count']
                 })
+            break
+    else:
+        values = rest_crud.get(get_end_point(__id, __operation_elements) + "/values?" + QUERY_CATEGORY_TRANSACTION)
+    transaction_with_max_count = max(filter(is_not_all_transactions, values), key=lambda el: el['count'], default=None)
+    if time_binding is not None and "from_secs" in time_binding and can_raw_transactions_data() and transaction_with_max_count is not None:
+        tr_id = transaction_with_max_count.get('elementId')
+        try:
+            raw_points_length = len(
+                rest_crud.get(f"{get_end_point(__id, __operation_elements)}/{tr_id}/raw?format=JSON"))
+        except cli_exception.CliException as ex:
+            logging.error(ex.format_message())
+            raw_points_length = 0
+        gprint(f"Will {'' if raw_points_length > 0 else 'not '}use raw data because time filter enabled and transaction {tr_id} has {raw_points_length} raw data")
+        return raw_points_length > 0
 
-        # sort ascending by count (smallest number of iterations produces smallest amount of data)
-        txns = sorted(txns, key=lambda el: el['count'])
-        for el in txns:
-            this_raw_count = len(
-                rest_crud.get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/raw?format=JSON"))
-            if this_raw_count > 0:
-                logging.debug("use_raw[1]: True")
-                return True
-
-    logging.debug("use_raw[1]: False")
+    logging.debug("Will not use raw data because: no time filter or NLW not compatible or no transaction has raw data")
     return False
 
 
@@ -346,11 +354,9 @@ def get_single_report(name, components=None, time_filter=None, elements_filter=N
 
     statistics_list = get_standard_statistics_list()
 
-    use_txn_raw = should_raw_transactions_data(__id, time_filter)
+    fill_single_requests(__id, elements_filter, time_binding, statistics_list, components, data)
 
-    fill_single_requests(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data)
-
-    fill_single_transactions(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data)
+    fill_single_transactions(__id, elements_filter, time_binding, statistics_list, components, data)
 
     fill_single_monitors(__id, components, data)
 
@@ -407,7 +413,7 @@ def fill_single_events(__id, components, data):
         data['events'] = rest_crud.get(get_end_point(__id, __operation_events))
 
 
-def fill_single_requests(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data):
+def fill_single_requests(__id, elements_filter, time_binding, statistics_list, components, data):
     if components['all_requests']:
         gprint("Getting all-request data...")
 
@@ -422,13 +428,13 @@ def fill_single_requests(__id, elements_filter, time_binding, statistics_list, u
             json_elements_all_requests = json_elements_all_requests + json_elements_all_requests_preserve
 
         json_elements_all_requests = get_elements_data(__id, json_elements_all_requests, time_binding, True,
-                                                       statistics_list, use_txn_raw)
+                                                       statistics_list, False)
 
         data['all_requests'] = json_elements_all_requests[0] if json_elements_all_requests is not None and len(
             json_elements_all_requests) > 0 else {},
 
 
-def fill_single_transactions(__id, elements_filter, time_binding, statistics_list, use_txn_raw, components, data):
+def fill_single_transactions(__id, elements_filter, time_binding, statistics_list, components, data):
     if components['transactions']:
         gprint("Getting transactions...")
 
@@ -437,6 +443,7 @@ def fill_single_transactions(__id, elements_filter, time_binding, statistics_lis
         if not elements_filter is None:
             json_elements_transactions = filter_elements(json_elements_transactions, elements_filter)
 
+        use_txn_raw = should_raw_transactions_data(__id, time_binding)
         json_elements_transactions = get_elements_data(__id, json_elements_transactions, time_binding, True,
                                                        statistics_list, use_txn_raw)
 
