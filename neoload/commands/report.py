@@ -264,7 +264,25 @@ def is_not_all_transactions(element):
 
 
 def should_raw_transactions_data(__id, time_binding):
-    values = rest_crud.get(get_end_point(__id, __operation_elements) + "/values?" + QUERY_CATEGORY_TRANSACTION)
+    if rest_crud.get_workspace() is None:
+        logging.warning("No Workspace defined. For better performance, please define one before the report: neoload workspace use 'Default Workspace'")
+        # grab all transactions list
+        json_elements_transactions = rest_crud.get(
+            get_end_point(__id, __operation_elements) + "?" + QUERY_CATEGORY_TRANSACTION)
+        values = []
+        for el in json_elements_transactions:
+            if el['type'] != 'TRANSACTION':
+                continue
+            # grab count of this transaction and only add if there are iterations
+            json_values = rest_crud.get(get_end_point(__id, __operation_elements) + "/" + el['id'] + "/values")
+            if json_values['count'] > 0:
+                values.append({
+                    'elementId': el['id'],
+                    'count': json_values['count']
+                })
+            break
+    else:
+        values = rest_crud.get(get_end_point(__id, __operation_elements) + "/values?" + QUERY_CATEGORY_TRANSACTION)
     transaction_with_max_count = max(filter(is_not_all_transactions, values), key=lambda el: el['count'], default=None)
     if time_binding is not None and "from_secs" in time_binding and can_raw_transactions_data() and transaction_with_max_count is not None:
         tr_id = transaction_with_max_count.get('elementId')
