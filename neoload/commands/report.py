@@ -35,7 +35,7 @@ __operation_elements = "/elements"
 __operation_monitors = "/monitors"
 
 QUERY_CATEGORY_TRANSACTION = "category=TRANSACTION"
-CONTROLLER_MONITORS_ROOT = ['Controller', 'Contrôleur']
+CONTROLLER_MONITORS_ROOT = ['Controller', 'Contrôleur', 'JMeter']
 
 meta_key = 'result id'
 __resolver = test_results.get_resolver();
