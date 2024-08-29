@@ -422,6 +422,14 @@ neoload wait cur
 
 [An example for Jenkins pipeline is found here.](examples/pipelines/jenkins/Jenkinsfile_slafails)
 
+## Troubleshooting
+### Windows and non UTF-8 characters
+Windows use default encoding as ASCII, but the NeoLoad CLI needs UTF-8 encoding.\
+Before running some commands like `neoload report` on windows, you need to set environment variable `set PYTHONUTF8=1`\
+More info [here](https://docs.python.org/3/using/windows.html#utf-8-mode) and [here](https://docs.python.org/3/library/os.html#utf8-mode).
+Note that with Python 3.15, no need to do that anymore [PEP 686 – Make UTF-8 mode default](https://peps.python.org/pep-0686/)
+
+
 ## Packaging the CLI with Build Agents
 Many of the above CI examples include a step to explicitly install the NeoLoad CLI as part of the
 build steps. However, if you want the CLI baked into some build agent directly so that it

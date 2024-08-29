@@ -224,7 +224,7 @@ def parse_source_data_spec(json_in, model, report_type, name):
 
 def process_final_output(template, template_text, json_data):
     if template_text is None or template_text == "":
-        return json.dumps(json_data)
+        return json.dumps(json_data, ensure_ascii=False)
     else:
         dirname = os.path.dirname(os.path.abspath(template))
         loader = jinja2.FileSystemLoader(searchpath=dirname)
