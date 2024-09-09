@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
@@ -64,9 +64,9 @@ jobs:
         echo "merge_to_trunk: ${{ env.merge_to_trunk }}"
         echo "integration_moment: ${{ env.integration_moment }}"
         echo "docker_files_changed: ${{ env.docker_files_changed }}"
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: "If-FullTesting: Pre-cache Images"
@@ -103,7 +103,7 @@ jobs:
       if: failure()
       run: zip -r tests.zip tests/
     - name: Upload Test Folder on failure
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: test-folder ${{ matrix.node-version }}
