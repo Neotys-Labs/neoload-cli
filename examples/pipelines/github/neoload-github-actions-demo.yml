@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout local code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: "Install NeoLoad CLI"
         run: pip3 install -U neoload
