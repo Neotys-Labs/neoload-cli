@@ -68,7 +68,7 @@ jobs:
                        --web-vu 5 \
                        --as-code default.yaml,slas/uat.yaml \
                        --name "Azure pipeline performance regression task $(Build.BuildNumber)" \
-                       --external-url "$(Build.BuildUri)" \
+                       --external-url "$(Build.Repository.Uri)" \
                        --external-url-label "Azure CI build $(Build.BuildNumber)" \
                        --description "Azure result description" \
                        "My Azure Test With CLI"
