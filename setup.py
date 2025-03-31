@@ -16,7 +16,7 @@ setup(
             'neoload=neoload.__main__:cli'
         ]
     },
-    setup_requires=['setuptools_scm==5.0.1'],
+    setup_requires=['setuptools_scm==8.2.0'],
     use_scm_version={
         'write_to': 'neoload/version.py',
         'write_to_template': '__version__ = "{version}"',

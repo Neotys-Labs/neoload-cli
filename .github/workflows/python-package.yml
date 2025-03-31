@@ -76,7 +76,7 @@ jobs:
         docker pull ${{ env.image_lg }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
         python -m pip install .
         python -m pip install coverage
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
