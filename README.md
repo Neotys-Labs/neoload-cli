@@ -1,4 +1,4 @@
-# NeoLoad CLI [![Build Status](https://github.com/Neotys-Labs/neoload-cli/workflows/Python%20package/badge.svg?branch=master)](https://github.com/Neotys-Labs/neoload-cli/actions?query=workflow%3A%22Python+package%22+branch%3A%22master%22)
+# NeoLoad CLI [![Python package](https://github.com/Neotys-Labs/neoload-cli/actions/workflows/python-package.yml/badge.svg?branch=master)](https://github.com/Neotys-Labs/neoload-cli/actions/workflows/python-package.yml)
 
 ## Overview
 
