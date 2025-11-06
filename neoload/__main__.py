@@ -18,7 +18,7 @@ plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
 sys.stdout = sys.__stdout__
 
 
-class NeoLoadCLI(click.MultiCommand):
+class NeoLoadCLI(click.Group):
     def list_commands(self, ctx):
         """Dynamically get the list of commands."""
         rv = []
