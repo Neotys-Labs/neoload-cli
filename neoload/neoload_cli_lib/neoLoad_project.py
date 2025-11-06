@@ -6,10 +6,9 @@ import logging
 import gitignorefile
 
 from neoload_cli_lib import rest_crud, tools, cli_exception
-import shutil
 
 not_to_be_included = ['recorded-requests/', 'recorded-responses/', 'recorded-screenshots/', '.git/', '.svn/',
-                      'results/','.config/','.neoload_cli.yaml',
+                      'results/', '.config/', '.neoload_cli.yaml',
                       'comparative-summary/', 'reports/', '/recorded-artifacts/']
 
 
@@ -65,7 +64,10 @@ def upload_project(path, endpoint, save=None):
         filename += '.zip'
         file = zip_dir(path,save)
 
-    display_project(rest_crud.post_binary_files_storage(endpoint, file, filename))
+    response = rest_crud.post_binary_files_storage(endpoint, file, filename)
+    display_project(response)
+    file.close()
+
 
 def display_project(res):
     if 299 > res.status_code > 199:
