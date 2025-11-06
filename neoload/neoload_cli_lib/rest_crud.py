@@ -9,7 +9,7 @@ from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 from tqdm import tqdm
 
 from neoload_cli_lib import user_data, cli_exception, tools
-from version import __version__
+from version_manager import __version__
 
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry

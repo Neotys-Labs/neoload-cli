@@ -6,10 +6,10 @@ import sys
 import click
 from click import ClickException
 from termcolor import cprint
+from version_manager import __version__
 
 from neoload_cli_lib import rest_crud, user_data, config_global, filtering
 
-from version import __version__
 
 __regex_id = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 __regex_mongodb_id = re.compile('[a-f\\d]{24}', re.IGNORECASE)
