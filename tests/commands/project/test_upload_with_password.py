@@ -1,7 +1,7 @@
 import pytest
 import zipfile
 from pathlib import Path
-from commands.project import extract_nlp_from_zip, find_password_in_nlp, upload
+from commands.project import has_password_in_zip_project, find_password_in_nlp, upload
 
 
 @pytest.fixture
@@ -18,14 +18,14 @@ project.password.hash=12vsXUgFbgL2g7u5aMuRsyhimKuEIk+jMXVD5pbkfo0=$0
 
 def test_extract_nlp_from_zip(create_test_zip):
     zip_path = create_test_zip
-    nlp_file = extract_nlp_from_zip(zip_path)
+    nlp_file = has_password_in_zip_project(zip_path)
     assert nlp_file is not None
     assert nlp_file.name == 'test.nlp'
 
 
 def test_find_password_in_nlp(create_test_zip):
     zip_path = create_test_zip
-    nlp_file = extract_nlp_from_zip(zip_path)
+    nlp_file = has_password_in_zip_project(zip_path)
     password = find_password_in_nlp(nlp_file)
     assert password == "12vsXUgFbgL2g7u5aMuRsyhimKuEIk+jMXVD5pbkfo0=$0"
 
