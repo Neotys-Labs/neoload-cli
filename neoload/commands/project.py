@@ -28,23 +28,29 @@ def cli(command, name_or_id, path, save):
     user_data.set_meta(test_settings.meta_key, name_or_id)
     rest_crud.set_current_sub_command(command)
 
-
-def extract_nlp_from_zip(zip_path):
-    extract_path = zip_path.parent
-    with zipfile.ZipFile(zip_path, 'r') as zipf:
-        for file_name in zipf.namelist():
+def has_password_in_zip_project(zip_path) -> bool:
+    with zipfile.ZipFile(zip_path, 'r') as zip_file:
+        for file_name in zip_file.namelist():
             if file_name.endswith('.nlp'):
-                zipf.extract(file_name, extract_path)
-                return Path(extract_path / file_name)
-    return None
+                with zip_file.open(file_name, 'r') as nlp_file:
+                    return has_password_in_nlp(nlp_file)
+    return False
 
 
-def find_password_in_nlp(nlp_file_path):
-    with open(nlp_file_path, 'r', encoding='utf-8') as file:
-        for line in file:
-            if 'project.password.hash=' in line:
-                return line.split('project.password.hash=')[1].strip()
-    return None
+def has_password_in_folder_project(folder_path) -> bool:
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith(".nlp"):
+                with open(Path(root) / file, 'rb') as nlp_file:
+                    return has_password_in_nlp(nlp_file)
+    return False
+
+
+def has_password_in_nlp(nlp_file) -> bool:
+    for line in nlp_file:
+        if b'project.password.hash=' in line:
+            return True
+    return False
 
 
 #TODO: pre-validate with 'neoload validate' functionality, but..
@@ -54,27 +60,9 @@ def find_password_in_nlp(nlp_file_path):
 
 def upload(path, settings_id, save):
     path = Path(path)
-    nlp_file_path = None
-
-    if path.suffix == '.zip':
-        nlp_file_path = extract_nlp_from_zip(path)
-    else:
-        for root, dirs, files in os.walk(path):
-            for file in files:
-                if file.endswith(".nlp"):
-                    nlp_file_path = Path(root) / file
-                    break
-            if nlp_file_path:
-                break
-
-    password = None
-    if nlp_file_path and nlp_file_path.exists():
-        password = find_password_in_nlp(nlp_file_path)
-        os.remove(nlp_file_path)
-
-    if password:
-        print(f"Password found: {password}")
-        print("Your project has a password, please enter your password here: " +
+    has_password = has_password_in_zip_project(path) if path.suffix == '.zip' else has_password_in_folder_project(path)
+    if has_password:
+        print("Your project has a password, please make sure your password is set in the test: " +
               urlparse.urljoin(user_data.get_user_data().get_frontend_url(), "/#!test-settings/" + settings_id))
 
     # Always call the upload_project method
