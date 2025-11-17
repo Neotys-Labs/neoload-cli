@@ -11,3 +11,5 @@ htmlcov/
 build/
 dist/
 neoload/version.py
+venv/
+.venv/
