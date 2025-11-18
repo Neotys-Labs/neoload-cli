@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+import re
 
 import click
 
@@ -37,7 +38,7 @@ def load_from_file(file):
 @click.option('--file', type=click.File('r'), help="Json file with the data to be sent to the API.")
 @click.option('--filter',
               help="Filter test results by fields. Mostly used filters are : name, scenario, project, status.")
-@click.option('--external-url', 'external_url', help="URL to an external system, for example the CI job's link")
+@click.option('--external-url', 'external_url', help="URL to an external system, for example the CI job's link, you can also use markdown format [label](url)")
 @click.option('--external-url-label', 'external_url_label',
               help="Label to describe the external URL, for example the CI name or job ID")
 @click.option('--lock/--unlock', default=None,
@@ -221,8 +222,14 @@ def create_json(name, description, quality_status, external_url, external_url_la
     if quality_status is not None:
         data['qualityStatus'] = quality_status
     if external_url is not None:
-        data['externalUrl'] = external_url
-    if external_url_label is not None:
+        match = re.match(r'\[(.*)\]\((.*)\)', external_url)
+        if match:
+            data['externalUrl'] = match.group(2)
+            data['externalUrlLabel'] = match.group(1)
+        else:
+            data['externalUrl'] = external_url
+            data['externalUrlLabel'] = ''
+    else:
         data['externalUrlLabel'] = external_url_label
     if lock is not None:
         data['isLocked'] = lock
