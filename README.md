@@ -2,13 +2,13 @@
 
 ## Overview
 
-This command-line interface helps you launch and observe performance tests on the Neotys Web Platform. Since NeoLoad is very flexible to many deployment models (SaaS, self-hosted, cloud or local containers, etc.), configuration and test execution parameters depend on your licensing and infrastructure provisioning options.
+This command-line interface helps you launch and observe performance tests on the NeoLoad Web Platform. Since NeoLoad is very flexible to many deployment models (SaaS, self-hosted, cloud or local containers, etc.), configuration and test execution parameters depend on your licensing and infrastructure provisioning options.
 
 
 | Property | Value |
 | ----------------    | ----------------   |
 | Maturity | Stable |
-| Author | Neotys |
+| Author | Tricentis |
 | License           | [BSD 2-Clause "Simplified"](https://github.com/Neotys-Labs/neoload-cli/blob/master/LICENSE) |
 | NeoLoad Licensing | License FREE edition, or Enterprise edition, or Professional |
 | Supported versions | Tested with NeoLoad Web from version [2.3.2](https://neoload.saas.neotys.com)
@@ -303,7 +303,7 @@ it makes 2 API calls per transaction and 1 API call per monitor to NLW API. 10 c
 (can be configured with env variable `NL_MAX_WORKERS`). \
 In NeoLoad Web SaaS, the rate limit of 300 calls per minute may be reached, the CLI will adapt and slow down.
 
-To see which API calls are made, you can use the debug option: `neoload --debug report`
+To see which NeoLoad Web API calls are made, you can set the neoload-cli log level to debug: `neoload --debug report`
 
 ## View zones
 ```
@@ -314,7 +314,7 @@ Display in a human-readable way the list of all static and dynamic zones registe
 
 ## Create local docker infrastructure to run a test [EXPERIMENTAL]
 
-***WARNING: Docker features are not officially supported by Neotys as they rely heavily on your own Docker setup and environment. This command is only for local/dev test scenarios to simplify infrastructure requirements.***
+***WARNING: Docker features are not officially supported by Tricentis as they rely heavily on your own Docker setup and environment. This command is only for local/dev test scenarios to simplify infrastructure requirements.***
 
 In certain environments, such as on a local dev workstation or in a Docker-in-Docker CI build node, it is useful
  to "bring your own infrastructure". In other words, when you don't already have a controller and load generators
@@ -439,6 +439,9 @@ neoload wait cur
 [An example for Jenkins pipeline is found here.](examples/pipelines/jenkins/Jenkinsfile_slafails)
 
 ## Troubleshooting
+### Set debug log level
+`neoload --debug ...` to show verbose logs of neoload-cli
+
 ### Windows and non UTF-8 characters
 Windows use default encoding as ASCII, but the NeoLoad CLI needs UTF-8 encoding.\
 Before running some commands like `neoload report` on windows, you need to set environment variable `set PYTHONUTF8=1`\
@@ -498,7 +501,7 @@ Additionally, any contributions to the DSL validation functionality, such as on 
 ```
 This command executes a number of NEGATIVE tests to prove that changes to the JSON schema or validation process produce failures when their input is malformed in very specific ways (common mistakes).
 
-### Release Process (managed by Neotys team)
+### Release Process (managed by Tricentis NeoLoad team)
 
 #### Auto-generating Changelog
 
