@@ -13,10 +13,10 @@ Provide complete CLI coverage of the NeoLoad Web v4 API so that every server-sid
 ### Validated
 
 - v2/v3 API coverage: login, test-settings CRUD, test-results CRUD, run/wait/stop, project upload, zones listing, workspaces ls/use, logs, report generation, as-code validation, fastfail SLA monitoring, Docker helpers, config management
+- v4 API helper layer (v4_endpoints.py, v4_client.py) — additive, no changes to existing code — Validated in Phase 01: v4-foundation
 
 ### Active
 
-- [ ] v4 API helper layer (v4_endpoints.py, v4_client.py) — additive, no changes to existing code
 - [ ] v4 tests CRUD + scenarios
 - [ ] v4 results CRUD + sub-resources (contexts, elements, monitors, statistics, timeseries)
 - [ ] v4 test-executions (create, get, cancel, force-cancel, logs)
