@@ -23,11 +23,11 @@ Implement 5 new v4 command files: `v4_tests.py`, `v4_results.py`, `v4_test_execu
   - v4-results: `--name`, `--description`
   - v4-workspaces: `--name`
   - v4-zones: `--name`, `--description`, `--type` (STATIC/DYNAMIC/CLOUD)
-  - v4-test-executions create: `--test-id`, `--scenario`, `--zone-type`, `--duration` (full config still via `--file`)
+  - v4-test-executions create: `--test-id`, `--scenario`, `--zone-type`, `--duration` (full config still via `--file`). Note: `--scenario` writes to body as `scenarioName`; `--zone-type` writes as `zoneType`. These are pass-through flags — API server validates; CLI does not reject unknown fields.
 
 ### v4-test-executions: create
 - **D-04:** `create` subcommand has an optional `--wait` flag. Without `--wait`, it POSTs and immediately returns the testExecutionId JSON. With `--wait`, it polls `GET /v4/test-executions/{id}` until a terminal status is reached.
-- **D-05:** Terminal statuses for `--wait` exit code logic: exit 1 if status is `FAILED` or `TERMINATED`; exit 0 if status is `PASSED`, `UNKNOWN`, or any other value.
+- **D-05:** Terminal statuses for `--wait` exit code logic: exit 1 if step is `FAILED` or `CANCELLED` (the v4 API uses CANCELLED, not TERMINATED); exit 0 if `PASSED` or any other value. `FAIL_EXIT_STEPS = {'FAILED', 'CANCELLED'}`.
 
 ### v4-test-executions: logs
 - **D-06:** `logs` subcommand polls `GET /v4/results/{resultId}/logs?offset=N`, printing new log lines as they arrive. Continues polling until no more new lines are returned. Mirrors the behavior of the existing `neoload logs` command.
