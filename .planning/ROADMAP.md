@@ -20,12 +20,14 @@ Plans:
 **Goal:** v4 commands for tests, results, test-executions, workspaces, zones
 **Status:** Not Started
 **Depends on:** Phase 1
+**Plans:** 5 plans
 
-- v4-tests: ls, create, get, patch, delete, scenario-get, scenario-update
-- v4-results: ls, get, patch, delete, contexts, elements, monitors, statistics, timeseries, search-criteria
-- v4-test-executions: create, get, cancel, force-cancel, logs
-- v4-workspaces: ls, create, get, patch, delete, members-ls, members-add, members-remove, subscription
-- v4-zones: ls, create, get, patch, delete
+Plans:
+- [ ] 02-01-PLAN.md — v4-tests command (ls, create, get, patch, delete, scenario-get, scenario-update)
+- [ ] 02-02-PLAN.md — v4-results command (ls, get, patch, delete, contexts, elements, monitors, statistics, timeseries, search-criteria)
+- [ ] 02-03-PLAN.md — v4-test-executions command (create with --wait, get, cancel, force-cancel, logs)
+- [ ] 02-04-PLAN.md — v4-workspaces command (ls, create, get, patch, delete, members-ls/add/remove, subscription)
+- [ ] 02-05-PLAN.md — v4-zones command (ls, create, get, patch, delete)
 
 ### Phase 3: Analytics and Trends
 **Goal:** v4 commands for result analytics and test trends
