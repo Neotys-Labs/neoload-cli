@@ -624,27 +624,19 @@ Security enforcement not configured as disabled. Applying minimal ASVS review fo
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **terminal statuses for `--wait` polling: `step` vs expected values from D-05**
-   - What we know: `GetTestExecutionResponse.step` enum values are: `INITIALIZING`, `PREPARING_CONTROLLER`, `FAILED_TO_PREPARE_CONTROLLER`, `PREPARING_LGS`, `FAILED_TO_PREPARE_LGS`, `SENDING_PROJECT`, `FAILED`, `PREPARING_TEST`, `STARTING_TEST`, `STARTED_TEST`, `CANCELLED`.
-   - What's unclear: D-05 says exit 1 on `FAILED` or `TERMINATED`. `TERMINATED` is NOT a valid `step` value — it is a result status. Either the decision refers to the result status (requires a second GET on `/v4/results/{id}` after execution starts), or `TERMINATED` was intended to mean `CANCELLED`.
-   - Recommendation: Planner should decide: treat `CANCELLED` as the equivalent of `TERMINATED` (exit 1), or after `STARTED_TEST` step, poll `GET /v4/results/{id}` for the result status. Simplest: treat `CANCELLED` as exit-1 equivalent.
+   - **RESOLVED:** User confirmed CANCELLED is the v4 equivalent of TERMINATED (D-05 updated in CONTEXT.md). `FAIL_EXIT_STEPS = {'FAILED', 'CANCELLED'}`. Exit 0 on PASSED or any other value.
 
 2. **members-remove via URL-encoded query param**
-   - What we know: `DELETE /v4/workspaces/{workspaceId}/members?login=X` — `rest_crud.delete` does not accept params.
-   - What's unclear: Whether URL-encoding the login in the path string is safe for all login values (login might contain `@` or spaces).
-   - Recommendation: Use `urllib.parse.urlencode({'login': login})` to safely encode the query param: `rest_crud.delete(endpoint + '?' + urlencode({'login': login}))`. `urllib.parse` is stdlib.
+   - **RESOLVED:** Use `urllib.parse.urlencode({'login': login})` for safe encoding. Implemented in Plan 04 as `rest_crud.delete(endpoint + '?' + urlencode({'login': login}))`.
 
 3. **--scenario and --zone-type flags on test-executions create**
-   - What we know: D-03 lists `--scenario` and `--zone-type` as named flags for test-executions create. `TestExecutionInput` body schema only has: `testId`, `description`, `duration`, `name`, `reservationId`, `sapVu`, `webVu`. No `scenario` or `zoneType` fields.
-   - What's unclear: Where do `--scenario` and `--zone-type` go in the API request? They may not be valid API fields.
-   - Recommendation: D-03 may reflect intended convenience flags that are not yet in the spec, or they may map to test-settings patch operations before launch. The planner should either drop these flags from the initial implementation or clarify with the user. Safest: implement only fields present in `TestExecutionInput` and expose `--name`, `--description`, `--web-vu`, `--sap-vu`, `--duration`.
+   - **RESOLVED:** User confirmed these are pass-through flags (D-03 updated in CONTEXT.md). `--scenario` writes to body as `scenarioName`; `--zone-type` writes as `zoneType`. API server validates; CLI does not reject unknown fields. Implemented in Plan 03.
 
 4. **Zone patch subcommand uses PUT, not PATCH**
-   - What we know: Spec shows `PUT /v4/zones/{zoneId}` (full replace). There is no `PATCH /v4/zones/{zoneId}`. The `PATCH /v4/zones` endpoint patches ALL zones at once (collection-level).
-   - What's unclear: CONTEXT.md says the subcommand is called "patch" but the HTTP verb is PUT (full replace via `v4_replace`).
-   - Recommendation: Name the subcommand `patch` in the CLI (consistent with other resources) but use `v4_client.v4_replace` (PUT) internally. Document this in the command's help string.
+   - **RESOLVED:** Plan 05 uses `v4_client.v4_replace` (PUT) internally for the `patch` subcommand. Help text documents that this is a full replace (PUT) despite the subcommand name.
 
 ---
 
