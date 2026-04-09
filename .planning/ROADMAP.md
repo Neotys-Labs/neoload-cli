@@ -9,8 +9,8 @@
 **Plans:** 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — SUPERSEDED by 01-02-PLAN.md (has incorrect signatures and workspace model)
-- [ ] 01-02-PLAN.md — v4 endpoint helpers, HTTP client wrappers with auto-pagination and workspace injection
+- [x] 01-01-PLAN.md — SUPERSEDED by 01-02-PLAN.md (has incorrect signatures and workspace model)
+- [x] 01-02-PLAN.md — v4 endpoint helpers, HTTP client wrappers with auto-pagination and workspace injection
 
 - v4_endpoints.py: path builders, workspace query/body injection helpers
 - v4_client.py: thin wrappers over rest_crud using v4 paths
