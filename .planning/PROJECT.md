@@ -15,13 +15,16 @@ Provide complete CLI coverage of the NeoLoad Web v4 API so that every server-sid
 - v2/v3 API coverage: login, test-settings CRUD, test-results CRUD, run/wait/stop, project upload, zones listing, workspaces ls/use, logs, report generation, as-code validation, fastfail SLA monitoring, Docker helpers, config management
 - v4 API helper layer (v4_endpoints.py, v4_client.py) — additive, no changes to existing code — Validated in Phase 01: v4-foundation
 
+### Validated
+
+- v4 tests CRUD + scenarios — Validated in Phase 02: core-resources
+- v4 results CRUD + sub-resources (contexts, elements, monitors, statistics, timeseries) — Validated in Phase 02: core-resources
+- v4 test-executions (create/get/cancel/force-cancel/logs + --wait polling) — Validated in Phase 02: core-resources
+- v4 workspaces full CRUD + members management — Validated in Phase 02: core-resources
+- v4 zones full CRUD — Validated in Phase 02: core-resources
+
 ### Active
 
-- [ ] v4 tests CRUD + scenarios
-- [ ] v4 results CRUD + sub-resources (contexts, elements, monitors, statistics, timeseries)
-- [ ] v4 test-executions (create, get, cancel, force-cancel, logs)
-- [ ] v4 workspaces full CRUD + members management
-- [ ] v4 zones full CRUD
 - [ ] v4 analytics (element/monitor values, timeseries, percentiles, intervals, report)
 - [ ] v4 trends (get/patch, configuration CRUD, elements)
 - [ ] v4 events CRUD + error/statistics aggregation
@@ -77,4 +80,4 @@ Provide complete CLI coverage of the NeoLoad Web v4 API so that every server-sid
 | Exclude dashboards and UI preferences | CLI tool should not manage visual UI concepts | — Pending |
 
 ---
-*Last updated: 2026-04-09 after initial planning*
+*Last updated: 2026-04-09 — Phase 02 complete (core-resources: 5 commands, 81 tests)*
