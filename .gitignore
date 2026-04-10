@@ -13,3 +13,15 @@ dist/
 neoload/version.py
 venv/
 .venv/
+
+# Mutation testing / coverage tooling
+.mutmut-cache
+mutants/
+setup.cfg
+coverage.json
+
+# Testing agent workspace
+.testing-agent/
+
+# Generated test report artifacts
+tests/resources/report/actual_*
