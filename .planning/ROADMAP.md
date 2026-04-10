@@ -1,92 +1,38 @@
 # Roadmap — NeoLoad CLI v4 API Expansion
 
-## Milestone 1: Full v4 API Coverage
+## Milestones
 
-### Phase 1: v4 API Foundation
-**Goal:** Create the shared v4 helper package that all v4 commands depend on
-**Status:** Not Started
-**Depends on:** —
-**Plans:** 2 plans
+- ✅ **v1.0 Full v4 API Coverage** — Phases 1-9 (shipped 2026-04-10)
 
-Plans:
-- [x] 01-01-PLAN.md — SUPERSEDED by 01-02-PLAN.md (has incorrect signatures and workspace model)
-- [x] 01-02-PLAN.md — v4 endpoint helpers, HTTP client wrappers with auto-pagination and workspace injection
+## Phases
 
-- v4_endpoints.py: path builders, workspace query/body injection helpers
-- v4_client.py: thin wrappers over rest_crud using v4 paths
-- Unit tests for the helper layer
+<details>
+<summary>✅ v1.0 Full v4 API Coverage (Phases 1-9) — SHIPPED 2026-04-10</summary>
 
-### Phase 2: Core Resources
-**Goal:** v4 commands for tests, results, test-executions, workspaces, zones
-**Status:** Not Started
-**Depends on:** Phase 1
-**Plans:** 5 plans
+- [x] Phase 1: v4 API Foundation (2/2 plans) — completed 2026-04-09
+- [x] Phase 2: Core Resources (5/5 plans) — completed 2026-04-09
+- [x] Phase 3: Analytics and Trends (1/1 plan) — completed 2026-04-10
+- [x] Phase 4: Events and SLAs (1/1 plan) — completed 2026-04-10
+- [x] Phase 5: Operations (1/1 plan) — completed 2026-04-10
+- [x] Phase 6: Infrastructure (1/1 plan) — completed 2026-04-10
+- [x] Phase 7: License Management (1/1 plan) — completed 2026-04-10
+- [x] Phase 8: Users and Identity (1/1 plan) — completed 2026-04-10
+- [x] Phase 9: Test Coverage (1/1 plan) — completed 2026-04-10
 
-Plans:
-- [x] 02-01-PLAN.md — v4-tests command (ls, create, get, patch, delete, scenario-get, scenario-update)
-- [x] 02-02-PLAN.md — v4-results command (ls, get, patch, delete, contexts, elements, monitors, statistics, timeseries, search-criteria)
-- [x] 02-03-PLAN.md — v4-test-executions command (create with --wait, get, cancel, force-cancel, logs)
-- [x] 02-04-PLAN.md — v4-workspaces command (ls, create, get, patch, delete, members-ls/add/remove, subscription)
-- [x] 02-05-PLAN.md — v4-zones command (ls, create, get, patch, delete)
+Full details: `.planning/milestones/v1.0-ROADMAP.md`
 
-### Phase 3: Analytics and Trends
-**Goal:** v4 commands for result analytics and test trends
-**Status:** Not Started
-**Depends on:** Phase 2
+</details>
 
-- v4-analytics: element-values, element-timeseries, element-percentiles, monitor-values, monitor-timeseries, intervals CRUD, interval-generation, report
-- v4-trends: get, patch, config-get, config-put, config-patch, elements
+## Progress
 
-### Phase 4: Events and SLAs
-**Goal:** v4 commands for result events and SLA data
-**Status:** Not Started
-**Depends on:** Phase 2
-
-- v4-events: ls, create, get, patch, delete, errors, statistics, content
-- v4-slas: ls
-
-### Phase 5: Operations
-**Goal:** v4 commands for webhooks, SCM, reservations, deletion policies
-**Status:** Not Started
-**Depends on:** Phase 1
-
-- v4-webhooks: ls, create, get, patch, delete, validate
-- v4-scm-repositories: ls, create, get, patch, delete, refs, checkout, checkout-status
-- v4-reservations: ls, create, get, patch, delete
-- v4-deletion-policies: ls, create, get, patch, delete, dry-run
-
-### Phase 6: Infrastructure
-**Goal:** v4 commands for proxies, infrastructure providers, guaranteed resources
-**Status:** Not Started
-**Depends on:** Phase 1
-
-- v4-proxies: ls, create, patch, delete
-- v4-infrastructure-providers: ls, create, patch, delete
-- v4-guaranteed-resources: ls, create, patch, delete (per-workspace)
-
-### Phase 7: License Management
-**Goal:** v4 commands for license and lease operations
-**Status:** Not Started
-**Depends on:** Phase 1
-
-- v4-license: get, install, leases-ls, leases-create, leases-get, activation-request, deactivation-request, forced-release, release
-
-### Phase 8: Users and Identity
-**Goal:** v4 commands for user management, profile, sessions, settings, SSO, LDAP
-**Status:** Not Started
-**Depends on:** Phase 1
-
-- v4-users: ls, create, get, patch, delete, workspaces-ls, workspaces-add, workspaces-remove
-- v4-me: get, patch, password, tokens-ls, tokens-create, tokens-delete, features
-- v4-sessions: create, delete
-- v4-settings: get, patch, information, subscription
-- v4-sso: config-get, config-create, config-put, config-patch, config-delete, config-status, saml-idp-get, saml-idp-put, saml-idp-delete, saml-sp-metadata
-- v4-ldap: config-get, config-patch, entities-ls, entities-create, entities-patch, entities-delete, search-users, search-groups, search-user-groups
-
-### Phase 9: Test Coverage
-**Goal:** Unit tests for all v4 commands and helpers
-**Status:** Not Started
-**Depends on:** Phases 1-8
-
-- Tests for v4_endpoints and v4_client helpers
-- Tests for each v4 command module using existing mock pattern
+| Phase | Name | Milestone | Plans | Status | Completed |
+|-------|------|-----------|-------|--------|-----------|
+| 1 | v4 API Foundation | v1.0 | 2/2 | Complete | 2026-04-09 |
+| 2 | Core Resources | v1.0 | 5/5 | Complete | 2026-04-09 |
+| 3 | Analytics and Trends | v1.0 | 1/1 | Complete | 2026-04-10 |
+| 4 | Events and SLAs | v1.0 | 1/1 | Complete | 2026-04-10 |
+| 5 | Operations | v1.0 | 1/1 | Complete | 2026-04-10 |
+| 6 | Infrastructure | v1.0 | 1/1 | Complete | 2026-04-10 |
+| 7 | License Management | v1.0 | 1/1 | Complete | 2026-04-10 |
+| 8 | Users and Identity | v1.0 | 1/1 | Complete | 2026-04-10 |
+| 9 | Test Coverage | v1.0 | 1/1 | Complete | 2026-04-10 |
