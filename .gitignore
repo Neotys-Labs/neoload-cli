@@ -25,3 +25,4 @@ coverage.json
 
 # Generated test report artifacts
 tests/resources/report/actual_*
+tests/resources/report/raw_actual_*
