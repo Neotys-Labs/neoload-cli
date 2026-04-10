@@ -4,8 +4,9 @@ import pytest
 from click.testing import CliRunner
 from commands.test_results import cli as results
 from commands.logs_url import cli as logs_url
+from commands import logs_url as logs_url_mod
 from tests.helpers.test_utils import *
-from neoload_cli_lib import user_data
+from neoload_cli_lib import user_data, tools
 
 
 @pytest.mark.authentication
@@ -42,3 +43,27 @@ class TestLogsUrl:
         result = runner.invoke(logs_url)
         assert re.compile(".*Error: Missing argument [\"']NAME[\"'].*", re.DOTALL).match(result.output) is not None
         assert result.exit_code == 2
+
+    def test_logs_cur_uses_meta(self, monkeypatch):
+        """Line 25: get_endpoint with name='cur' reads from metadata."""
+        test_id = '70ed01da-f291-4e29-b75c-1f7977edf252'
+        user_data.set_meta('result id', test_id)
+
+        runner = CliRunner()
+        frontend_url = user_data.get_user_data().get_frontend_url()
+        result = runner.invoke(logs_url, ['cur'])
+        assert_success(result)
+        assert '#!result/%s/overview' % test_id in result.output
+
+    def test_logs_fallback_to_meta_required(self, monkeypatch):
+        """Line 31: when get_id returns None, get_meta_required is called."""
+        test_id = '70ed01da-f291-4e29-b75c-1f7977edf252'
+        user_data.set_meta('result id', test_id)
+
+        # Force tools.get_id to return None so the fallback (line 31) triggers
+        monkeypatch.setattr(tools, 'get_id', lambda name, resolver, is_id: None)
+
+        runner = CliRunner()
+        result = runner.invoke(logs_url, ['some-non-id-name'])
+        assert_success(result)
+        assert '#!result/%s/overview' % test_id in result.output

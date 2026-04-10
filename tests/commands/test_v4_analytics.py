@@ -52,6 +52,8 @@ class TestV4Analytics:
         assert result.exit_code == 0
         assert RESULT_ID in captured['ep']
         assert ELEMENT_ID in captured['ep']
+        assert 'results' in captured['ep']
+        assert 'elements' in captured['ep']
         assert 'timeseries' in captured['ep']
 
     def test_element_timeseries_missing_element_id(self, monkeypatch):
@@ -69,7 +71,10 @@ class TestV4Analytics:
         runner = CliRunner()
         result = runner.invoke(cli, ['element-percentiles', '--result-id', RESULT_ID, '--element-id', ELEMENT_ID])
         assert result.exit_code == 0
+        assert RESULT_ID in captured['ep']
         assert ELEMENT_ID in captured['ep']
+        assert 'results' in captured['ep']
+        assert 'elements' in captured['ep']
         assert 'percentiles' in captured['ep']
 
     def test_element_percentiles_missing_element_id(self, monkeypatch):
@@ -87,6 +92,8 @@ class TestV4Analytics:
         runner = CliRunner()
         result = runner.invoke(cli, ['monitor-values', '--result-id', RESULT_ID])
         assert result.exit_code == 0
+        assert RESULT_ID in captured['ep']
+        assert 'results' in captured['ep']
         assert 'monitors' in captured['ep']
         assert 'values' in captured['ep']
 
@@ -98,7 +105,10 @@ class TestV4Analytics:
         runner = CliRunner()
         result = runner.invoke(cli, ['monitor-timeseries', '--result-id', RESULT_ID, '--monitor-id', MONITOR_ID])
         assert result.exit_code == 0
+        assert RESULT_ID in captured['ep']
         assert MONITOR_ID in captured['ep']
+        assert 'results' in captured['ep']
+        assert 'monitors' in captured['ep']
         assert 'timeseries' in captured['ep']
 
     def test_monitor_timeseries_missing_monitor_id(self, monkeypatch):
@@ -116,8 +126,9 @@ class TestV4Analytics:
         runner = CliRunner()
         result = runner.invoke(cli, ['intervals-ls', '--result-id', RESULT_ID])
         assert result.exit_code == 0
-        assert 'intervals' in captured['ep']
         assert RESULT_ID in captured['ep']
+        assert 'results' in captured['ep']
+        assert 'intervals' in captured['ep']
 
     def test_intervals_create(self, monkeypatch):
         if monkeypatch is None:
@@ -128,6 +139,8 @@ class TestV4Analytics:
         body = json.dumps({'name': 'iv1'})
         result = runner.invoke(cli, ['intervals-create', '--result-id', RESULT_ID, '--file', '-'], input=body)
         assert result.exit_code == 0
+        assert RESULT_ID in captured['ep']
+        assert 'results' in captured['ep']
         assert 'intervals' in captured['ep']
         assert captured['data']['name'] == 'iv1'
 
@@ -176,6 +189,8 @@ class TestV4Analytics:
         body = json.dumps({'mode': 'auto'})
         result = runner.invoke(cli, ['interval-generation', '--result-id', RESULT_ID, '--file', '-'], input=body)
         assert result.exit_code == 0
+        assert RESULT_ID in captured['ep']
+        assert 'results' in captured['ep']
         assert 'interval-generation' in captured['ep']
 
     def test_report(self, monkeypatch):
@@ -187,4 +202,6 @@ class TestV4Analytics:
         body = json.dumps({'type': 'pdf'})
         result = runner.invoke(cli, ['report', '--result-id', RESULT_ID, '--file', '-'], input=body)
         assert result.exit_code == 0
+        assert RESULT_ID in captured['ep']
+        assert 'results' in captured['ep']
         assert 'report' in captured['ep']

@@ -72,3 +72,45 @@ class TestV4InjectWorkspace:
         with pytest.raises(cli_exception.CliException) as exc_info:
             v4_endpoints.v4_inject_workspace({'name': 'test'})
         assert 'No workspace set' in str(exc_info.value)
+
+
+@pytest.mark.usefixtures("neoload_login")
+class TestV4EndpointParametrized:
+
+    @pytest.mark.parametrize("segments,expected", [
+        (('tests',), 'v4/tests'),
+        (('tests', '123'), 'v4/tests/123'),
+        (('results', 'abc', 'elements'), 'v4/results/abc/elements'),
+        (('tests', '123', 'scenarios', '456'), 'v4/tests/123/scenarios/456'),
+    ])
+    def test_v4_endpoint_parametrized(self, segments, expected):
+        assert v4_endpoints.v4_endpoint(*segments) == expected
+
+    @pytest.mark.parametrize("workspace_id,data_in,expected_key", [
+        ('ws-aaa', {'name': 'alpha'}, 'workspaceId'),
+        ('ws-bbb', {'name': 'beta', 'extra': 1}, 'workspaceId'),
+        ('ws-ccc', {}, 'workspaceId'),
+    ])
+    def test_v4_inject_workspace_parametrized(self, monkeypatch, workspace_id, data_in, expected_key):
+        if monkeypatch is None:
+            return
+        monkeypatch.setattr(user_data, 'get_meta',
+                            lambda key: workspace_id if key == 'workspace id' else None)
+        result = v4_endpoints.v4_inject_workspace(data_in)
+        assert expected_key in result
+        assert result[expected_key] == workspace_id
+        # original dict must not be mutated
+        assert expected_key not in data_in
+
+    @pytest.mark.parametrize("workspace_id", [
+        'ws-111',
+        'ws-222',
+        'ws-333',
+    ])
+    def test_v4_workspace_params_parametrized(self, monkeypatch, workspace_id):
+        if monkeypatch is None:
+            return
+        monkeypatch.setattr(user_data, 'get_meta',
+                            lambda key: workspace_id if key == 'workspace id' else None)
+        result = v4_endpoints.v4_workspace_params()
+        assert result == {'workspaceId': workspace_id}

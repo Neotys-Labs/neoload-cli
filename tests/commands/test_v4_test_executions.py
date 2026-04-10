@@ -221,3 +221,153 @@ class TestV4TestExecutions:
         assert 'results' in captured.get('endpoint', '')
         assert 'my-result-id' in captured.get('endpoint', '')
         assert 'logs' in captured.get('endpoint', '')
+
+    def test_create_with_wait_no_exec_id(self, monkeypatch):
+        """create --wait: raises CliException when no id is in the response (line 55)."""
+        if monkeypatch is None:
+            return
+        # API returns response without 'id' key
+        monkeypatch.setattr(rest_crud, 'post',
+                            lambda endpoint, data: {'step': 'INITIALIZING'})
+        runner = CliRunner()
+        result = runner.invoke(cli, ['create', '--test-id', 'abc', '--wait'])
+        assert result.exit_code != 0
+
+    def test_cancel_with_body_response(self, monkeypatch):
+        """cancel <id>: when response has content, prints JSON body (line 73)."""
+        if monkeypatch is None:
+            return
+        body = json.dumps({'status': 'cancelling'}).encode()
+        mock_response = _make_response(202, body)
+        monkeypatch.setattr(rest_crud, 'delete', lambda endpoint: mock_response)
+        runner = CliRunner()
+        result = runner.invoke(cli, ['cancel', 'exec-id'])
+        assert result.exit_code == 0
+        output = json.loads(result.output)
+        assert output['status'] == 'cancelling'
+
+    def test_force_cancel_missing_id(self, monkeypatch):
+        """force-cancel without an id: raises CliException (line 80)."""
+        if monkeypatch is None:
+            return
+        runner = CliRunner()
+        result = runner.invoke(cli, ['force-cancel'])
+        assert result.exit_code != 0
+
+    def test_force_cancel_with_body_response(self, monkeypatch):
+        """force-cancel <id>: when response has content, prints JSON body (line 83)."""
+        if monkeypatch is None:
+            return
+        body = json.dumps({'status': 'force-cancelling'}).encode()
+        mock_response = _make_response(202, body)
+        monkeypatch.setattr(rest_crud, 'delete', lambda endpoint: mock_response)
+        runner = CliRunner()
+        result = runner.invoke(cli, ['force-cancel', 'exec-id'])
+        assert result.exit_code == 0
+        output = json.loads(result.output)
+        assert output['status'] == 'force-cancelling'
+
+    def test_logs_missing_id(self, monkeypatch):
+        """logs without an id: raises CliException (line 90)."""
+        if monkeypatch is None:
+            return
+        runner = CliRunner()
+        result = runner.invoke(cli, ['logs'])
+        assert result.exit_code != 0
+
+    def test_create_invalid_json_file(self, monkeypatch):
+        """create --file with invalid JSON: raises CliException (lines 101-104)."""
+        if monkeypatch is None:
+            return
+        monkeypatch.setattr(rest_crud, 'post',
+                            lambda endpoint, data: {'id': 'exec-1'})
+        runner = CliRunner()
+        result = runner.invoke(cli, ['create', '--file', '-'], input='not valid json{{{')
+        assert result.exit_code != 0
+
+    def test_create_with_all_flags(self, monkeypatch):
+        """create with all optional flags: all fields in body (lines 109/111/117/119/121/123)."""
+        if monkeypatch is None:
+            return
+        captured = {}
+
+        def mock_post(endpoint, data):
+            captured['data'] = data
+            return {'id': 'exec-1', 'step': 'INITIALIZING'}
+
+        monkeypatch.setattr(rest_crud, 'post', mock_post)
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            'create',
+            '--test-id', 'tid-1',
+            '--name', 'my-exec',
+            '--description', 'a description',
+            '--scenario', 'sc1',
+            '--zone-type', 'CLOUD',
+            '--web-vu', '10',
+            '--sap-vu', '5',
+            '--duration', '3600',
+            '--reservation-id', 'res-abc',
+        ])
+        assert result.exit_code == 0
+        d = captured['data']
+        assert d['testId'] == 'tid-1'
+        assert d['name'] == 'my-exec'
+        assert d['description'] == 'a description'
+        assert d['scenarioName'] == 'sc1'
+        assert d['zoneType'] == 'CLOUD'
+        assert d['webVu'] == 10
+        assert d['sapVu'] == 5
+        assert d['duration'] == 3600
+        assert d['reservationId'] == 'res-abc'
+
+    def test_wait_for_completion_polls_until_terminal(self, monkeypatch):
+        """_wait_for_completion: polls (sleeps) until terminal step, hitting line 139."""
+        if monkeypatch is None:
+            return
+        call_count = {'n': 0}
+
+        def mock_v4_get(*args):
+            call_count['n'] += 1
+            if call_count['n'] < 3:
+                return {'id': 'exec-1', 'step': 'INITIALIZING'}
+            return {'id': 'exec-1', 'step': 'STARTED_TEST'}
+
+        sleep_calls = []
+        monkeypatch.setattr(rest_crud, 'post',
+                            lambda endpoint, data: {'id': 'exec-1', 'step': 'INITIALIZING'})
+        monkeypatch.setattr(v4_client, 'v4_get', mock_v4_get)
+        monkeypatch.setattr(v4_te_module.time, 'sleep', lambda x: sleep_calls.append(x))
+        runner = CliRunner()
+        result = runner.invoke(cli, ['create', '--test-id', 'abc', '--wait'])
+        assert result.exit_code == 0
+        # Should have slept at least once before reaching terminal step
+        assert len(sleep_calls) >= 1
+
+    def test_logs_multiple_pages(self, monkeypatch):
+        """_poll_logs: fetches page 0, then page 1 when total > first page (lines 161-162)."""
+        if monkeypatch is None:
+            return
+        call_count = {'n': 0}
+
+        def mock_get(endpoint, params=None):
+            call_count['n'] += 1
+            if call_count['n'] == 1:
+                return {
+                    'items': [{'date': '2024-01-01', 'level': 'INFO', 'line': 'msg1'}],
+                    'total': 2,
+                }
+            # Second page: returns remaining item, total_fetched catches up
+            return {
+                'items': [{'date': '2024-01-01', 'level': 'INFO', 'line': 'msg2'}],
+                'total': 2,
+            }
+
+        monkeypatch.setattr(rest_crud, 'get', mock_get)
+        monkeypatch.setattr(v4_te_module.time, 'sleep', lambda x: None)
+        runner = CliRunner()
+        result = runner.invoke(cli, ['logs', 'result-multi'])
+        assert result.exit_code == 0
+        assert 'msg1' in result.output
+        assert 'msg2' in result.output
+        assert call_count['n'] == 2

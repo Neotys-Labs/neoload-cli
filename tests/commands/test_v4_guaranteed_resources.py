@@ -90,3 +90,40 @@ class TestV4GuaranteedResources:
         runner = CliRunner()
         result = runner.invoke(cli, ['ls'])
         assert result.exit_code != 0
+
+    def test_delete_with_body_response(self, monkeypatch):
+        """delete: when response has content (not 204/empty), prints JSON body (line 57)."""
+        if monkeypatch is None:
+            return
+        _mock_workspace(monkeypatch)
+        body = json.dumps({'deleted': True}).encode()
+        resp = _make_response(200, body)
+        resp._content = body
+        monkeypatch.setattr(rest_crud, 'delete', lambda ep: resp)
+        runner = CliRunner()
+        result = runner.invoke(cli, ['delete'])
+        assert result.exit_code == 0
+        output = json.loads(result.output)
+        assert output['deleted'] is True
+
+    def test_create_no_file(self, monkeypatch):
+        """create without --file: posts empty body dict (line 63 - _load_body returns {})."""
+        if monkeypatch is None:
+            return
+        _mock_workspace(monkeypatch)
+        captured = {}
+        monkeypatch.setattr(rest_crud, 'post',
+                            lambda ep, data: captured.update({'data': data}) or {'vus': 0})
+        runner = CliRunner()
+        result = runner.invoke(cli, ['create'])
+        assert result.exit_code == 0
+        assert captured['data'] == {}
+
+    def test_create_invalid_json_file(self, monkeypatch):
+        """create with invalid JSON file: raises CliException (lines 66-67)."""
+        if monkeypatch is None:
+            return
+        _mock_workspace(monkeypatch)
+        runner = CliRunner()
+        result = runner.invoke(cli, ['create', '--file', '-'], input='not{valid json')
+        assert result.exit_code != 0

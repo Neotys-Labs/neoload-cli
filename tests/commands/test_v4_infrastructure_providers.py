@@ -83,3 +83,36 @@ class TestV4InfrastructureProviders:
         runner = CliRunner()
         result = runner.invoke(cli, ['delete'])
         assert result.exit_code != 0
+
+    def test_delete_with_body_response(self, monkeypatch):
+        """delete: when response has non-empty content, prints JSON body (line 48)."""
+        if monkeypatch is None:
+            return
+        body = json.dumps({'deleted': True}).encode()
+        resp = _make_response(200, body)
+        monkeypatch.setattr(rest_crud, 'delete', lambda ep: resp)
+        runner = CliRunner()
+        result = runner.invoke(cli, ['delete', PROVIDER_ID])
+        assert result.exit_code == 0
+        output = json.loads(result.output)
+        assert output['deleted'] is True
+
+    def test_create_no_file(self, monkeypatch):
+        """create without --file: posts empty body dict (line 54 - _load_body returns {})."""
+        if monkeypatch is None:
+            return
+        captured = {}
+        monkeypatch.setattr(rest_crud, 'post',
+                            lambda ep, data: captured.update({'data': data}) or {'id': PROVIDER_ID})
+        runner = CliRunner()
+        result = runner.invoke(cli, ['create'])
+        assert result.exit_code == 0
+        assert captured['data'] == {}
+
+    def test_create_invalid_json_file(self, monkeypatch):
+        """create with invalid JSON file: raises CliException (lines 57-58)."""
+        if monkeypatch is None:
+            return
+        runner = CliRunner()
+        result = runner.invoke(cli, ['create', '--file', '-'], input='not{valid json')
+        assert result.exit_code != 0
