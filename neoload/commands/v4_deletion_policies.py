@@ -1,0 +1,79 @@
+import json
+import click
+from neoload_cli_lib import rest_crud, tools, cli_exception
+from neoload_cli_lib.v4 import v4_endpoints
+
+
+@click.command()
+@click.argument('command', type=click.Choice([
+    'ls', 'create', 'get', 'patch', 'delete', 'dry-run'
+], case_sensitive=False), required=False)
+@click.argument('deletion_policy_id', type=str, required=False)
+@click.option('--file', 'input_file', type=click.File('r'), help='JSON body file (for create, patch, dry-run)')
+def cli(command, deletion_policy_id, input_file):
+    """
+    ls        # List deletion policies in the current workspace             .
+    create    # Create a deletion policy (--file for JSON body)             .
+    get       # Get a deletion policy by ID                                 .
+    patch     # Update a deletion policy by ID (--file for JSON body)       .
+    delete    # Delete a deletion policy by ID                              .
+    dry-run   # Dry-run policy execution (POST /v4/deletion-policies/execution).
+    """
+    rest_crud.set_current_command()
+    if not command:
+        print("command is mandatory. Please see neoload v4-deletion-policies --help")
+        return
+    rest_crud.set_current_sub_command(command)
+
+    if command == 'ls':
+        params = v4_endpoints.v4_workspace_params()
+        tools.print_json(rest_crud.get(v4_endpoints.v4_endpoint('deletion-policies'), params))
+
+    elif command == 'create':
+        body = _load_body(input_file)
+        body = v4_endpoints.v4_inject_workspace(body)
+        tools.print_json(rest_crud.post(v4_endpoints.v4_endpoint('deletion-policies'), body))
+
+    elif command == 'get':
+        if not deletion_policy_id:
+            raise cli_exception.CliException('deletion_policy_id is required for get')
+        tools.print_json(rest_crud.get(
+            v4_endpoints.v4_endpoint('deletion-policies', deletion_policy_id)
+        ))
+
+    elif command == 'patch':
+        if not deletion_policy_id:
+            raise cli_exception.CliException('deletion_policy_id is required for patch')
+        body = _load_body(input_file)
+        tools.print_json(rest_crud.patch(
+            v4_endpoints.v4_endpoint('deletion-policies', deletion_policy_id), body
+        ))
+
+    elif command == 'delete':
+        if not deletion_policy_id:
+            raise cli_exception.CliException('deletion_policy_id is required for delete')
+        response = rest_crud.delete(
+            v4_endpoints.v4_endpoint('deletion-policies', deletion_policy_id)
+        )
+        if response.status_code == 204 or not response.content:
+            print('Deletion policy deleted.')
+        else:
+            tools.print_json(response.json())
+
+    elif command == 'dry-run':
+        body = _load_body(input_file)
+        body = v4_endpoints.v4_inject_workspace(body)
+        tools.print_json(rest_crud.post(
+            v4_endpoints.v4_endpoint('deletion-policies', 'execution'), body
+        ))
+
+
+def _load_body(input_file):
+    """Load JSON body from file, or return empty dict if no file provided."""
+    if not input_file:
+        return {}
+    try:
+        return json.load(input_file)
+    except json.JSONDecodeError as err:
+        raise cli_exception.CliException(
+            '%s\nThis command requires valid JSON input.' % str(err))
