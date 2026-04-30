@@ -143,7 +143,7 @@ def compute_hosts(lg_containers):
     hosts = {}
     for lg_container in lg_containers:
         lg_container.reload()  # refresh data after launch.
-        hosts[lg_container.name] = lg_container.attrs['NetworkSettings']['IPAddress']
+        hosts[lg_container.name] = lg_container.attrs['NetworkSettings'].get('IPAddress') or tools.find_attr('IPAddress', lg_container.attrs['NetworkSettings'])
     return hosts
 
 
