@@ -1,5 +1,5 @@
 import os
-from neoload.neoload_cli_lib.tools import string_to_bool_json
+from neoload.neoload_cli_lib.tools import string_to_bool_json, find_attr
 
 from neoload_cli_lib import tools
 
@@ -95,3 +95,9 @@ def test_string_to_boolean_json():
 
     for false_value in tools.get_false_values():
         assert string_to_bool_json(false_value) is False
+
+
+def test_find_attr_returns_nested_value_and_none_when_missing():
+    d = {'a':'f', 'b':{'c':'d','d':{'o':'r','e':'f','s':{'p','o'}},'g':'i'}}
+    assert find_attr('e',d) == 'f'
+    assert find_attr('z',d) is None

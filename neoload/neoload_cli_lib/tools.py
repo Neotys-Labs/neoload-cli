@@ -34,6 +34,16 @@ __ci_env_var_signatures = {
 
 __batch = False
 
+def find_attr(key: str, adict: dict):
+    stack = [adict]
+    while stack:
+        d = stack.pop()
+        if key in d:
+            return d[key]
+        for v in d.values():
+            if isinstance(v, dict):
+                stack.append(v)
+    return None
 
 def compute_version():
     if __version__ is not None:
