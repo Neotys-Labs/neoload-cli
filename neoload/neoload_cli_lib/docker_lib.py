@@ -143,7 +143,14 @@ def compute_hosts(lg_containers):
     hosts = {}
     for lg_container in lg_containers:
         lg_container.reload()  # refresh data after launch.
-        hosts[lg_container.name] = lg_container.attrs['NetworkSettings'].get('IPAddress') or tools.find_attr('IPAddress', lg_container.attrs['NetworkSettings'])
+        ip_address = lg_container.attrs['NetworkSettings'].get('IPAddress') or tools.find_attr(
+            'IPAddress', lg_container.attrs['NetworkSettings']
+        )
+        if not ip_address:
+            raise cli_exception.CliException(
+                "no IPAddress found for container " + lg_container.name
+            )
+        hosts[lg_container.name] = ip_address
     return hosts
 
 
