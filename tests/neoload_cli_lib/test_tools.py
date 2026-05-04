@@ -99,5 +99,5 @@ def test_string_to_boolean_json():
 
 def test_find_attr1():
     d = {'a':'f', 'b':{'c':'d','d':{'o':'r','e':'f','s':{'p','o'}},'g':'i'}}
-    assert find_attr('e',d) is 'f'
+    assert find_attr('e',d) == 'f'
     assert find_attr('z',d) is None
