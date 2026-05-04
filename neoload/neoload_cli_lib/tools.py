@@ -40,7 +40,7 @@ def find_attr(key :str, adict :dict):
         d = stack.pop()
         if key in d:
             return d[key]
-        for k, v in d.items():
+        for v in d.values():
             if isinstance(v, dict):
                 stack.append(v)
     return None
