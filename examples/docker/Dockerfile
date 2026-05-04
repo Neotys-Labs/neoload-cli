@@ -1,4 +1,4 @@
-FROM python:3.12.9-alpine
+FROM python:3.14.4-alpine
 
 ARG PYPI_VERSION
 
