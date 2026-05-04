@@ -97,7 +97,7 @@ def test_string_to_boolean_json():
         assert string_to_bool_json(false_value) is False
 
 
-def test_find_attr1():
+def test_find_attr_returns_nested_value_and_none_when_missing():
     d = {'a':'f', 'b':{'c':'d','d':{'o':'r','e':'f','s':{'p','o'}},'g':'i'}}
     assert find_attr('e',d) == 'f'
     assert find_attr('z',d) is None
