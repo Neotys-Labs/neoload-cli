@@ -34,7 +34,7 @@ __ci_env_var_signatures = {
 
 __batch = False
 
-def find_attr(key :str, adict :dict):
+def find_attr(key: str, adict: dict):
     stack = [adict]
     while stack:
         d = stack.pop()
