@@ -2,7 +2,7 @@
 
 ## Overview
 
-This command-line interface helps you launch and observe performance tests on the NeoLoad Web Platform. Since NeoLoad is very flexible to many deployment models (SaaS, self-hosted, cloud or local containers, etc.), configuration and test execution parameters depend on your licensing and infrastructure provisioning options.
+This command-line interface lets you launch and monitor performance tests on the NeoLoad Web platform. Because NeoLoad supports many deployment models (SaaS, self-hosted, cloud or local containers, etc.), the configuration and test execution parameters depend on your licensing and infrastructure setup.
 
 
 | Property | Value |
@@ -10,15 +10,15 @@ This command-line interface helps you launch and observe performance tests on th
 | Maturity | Stable |
 | Author | Tricentis |
 | License           | [BSD 2-Clause "Simplified"](https://github.com/Neotys-Labs/neoload-cli/blob/master/LICENSE) |
-| NeoLoad Licensing | License FREE edition, or Enterprise edition, or Professional |
-| Supported versions | Tested with NeoLoad Web from version [2.3.2](https://neoload.saas.neotys.com)
-| Download Binaries | See the [latest release on pypi](https://pypi.org/project/neoload)|
+| NeoLoad Licensing | FREE, Professional, or Enterprise edition |
+| Supported versions | Tested with NeoLoad Web from version [2.3.2](https://neoload.saas.neotys.com) |
+| Download Binaries | See the [latest release on PyPI](https://pypi.org/project/neoload) |
 
 ## TL;DR ... What
-The goal of this guide is to demonstrate how you can:
- 1. create API load tests using code (YAML)
+This guide shows you how to:
+ 1. create API load tests as code (YAML)
  2. run them from any environment
- 3. visualize test results in web dashboards
+ 3. visualize the test results in web dashboards
 
 ## TL;DR ... How
 ```
@@ -28,25 +28,25 @@ neoload login $NLW_TOKEN \
         project --path tests/neoload_projects/example_1 upload NewTest1 \
         run
 ```
-NOTE: For Windows command line, replace the '\\' multi-line separators above with '^'
+NOTE: On the Windows command line, replace the `\` line-continuation characters above with `^`.
 
 ## Contents
 
  - [Prerequisites](#prerequisites)
  - [Installation](#installation)
- - [Login to Neoload Web](#login-to-neoload-web)
+ - [Login to NeoLoad Web](#login-to-neoload-web)
  - [Setup a test](#setup-a-test)
-   - [Setup resources in Neoload Web](#setup-resources-in-neoload-web)
-   - [Define a test settings](#define-a-test-settings)
-   - [Upload a Neoload project](#upload-a-neoload-project)
-     - [Excluding files from the project upload] (#excluding-files-from-the-project-upload)
+   - [Setup resources in NeoLoad Web](#setup-resources-in-neoload-web)
+   - [Define a test](#define-a-test)
+   - [Upload a NeoLoad project](#upload-a-neoload-project)
+     - [Excluding files from the project upload](#excluding-files-from-the-project-upload)
  - [Run a test](#run-a-test)
    - [Stop a running test](#stop-a-running-test)
  - [Reporting](#reporting)
     - [View results](#view-results)
-    - [Exporting Transaction CSV data](#exporting-transaction-CSV-data)
+    - [Exporting Transaction CSV data](#exporting-transaction-csv-data)
  - [View zones](#view-zones)
- - [Create local docker infrastructure to run a test](#create-local-docker-infrastructure-to-run-a-test)
+ - [Create local Docker infrastructure to run a test](#create-local-docker-infrastructure-to-run-a-test)
  - [Continuous Testing Examples](#continuous-testing-examples)
    - [Support for fast-fail based on SLAs](#support-for-fast-fail-based-on-slas)
  - [Packaging the CLI with Build Agents](#packaging-the-cli-with-build-agents)
@@ -54,13 +54,13 @@ NOTE: For Windows command line, replace the '\\' multi-line separators above wit
  - [Contributing](#contributing)
 
 ## Prerequisites
-The CLI requires **Python3**
- - Download and install python3 for **Windows 10** from [Python.org](https://www.python.org/downloads/)
-    - Make sure you check the option 'Add Python to the environment variables' option
+The CLI requires **Python 3**.
+ - Download and install Python 3 for **Windows** from [Python.org](https://www.python.org/downloads/).
+    - Make sure you check the option *Add Python to the environment variables*.
     - Install pip: ```python -m pip install -U pip```
- - Download and install python3 for **Mac OS X** from [Python.org - Python3 on Mac OS X](https://docs.python-guide.org/starting/install3/osx/)
+ - Download and install Python 3 for **macOS** from [Python.org - Python 3 on macOS](https://docs.python-guide.org/starting/install3/osx/).
 
-Optional: Install Docker for hosting the test infra on your machine (this feature does not work with Docker for Windows).
+Optional: install Docker if you want to host the test infrastructure on your machine (this feature is not supported with Docker for Windows).
 
 ## Installation
 ```
@@ -68,153 +68,151 @@ pip3 install neoload
 neoload --help
 ```
 
-NOTE: if you receive SSL download errors when running the above command, you may also need to install sources using the following command:
+NOTE: if you receive SSL download errors when running the command above, you may also need to install the trusted root certificates with:
 ```
 pip3 install certifi
 ```
 
-## Login to Neoload Web
-NeoLoad CLI defaults to using the NeoLoad Web APIs for most operations. That's why you need to login.
+## Login to NeoLoad Web
+The NeoLoad CLI uses the NeoLoad Web APIs for most operations, so you must log in before running any commands.
 ```
 neoload login [TOKEN]
 neoload login --url http://your-onpremise-neoload-api.com/ --workspace "Default Workspace" your-token
 ```
-The CLI will connect by default to Neoload Web SaaS to lease license. \
-For self-hosted enterprise license, you must specify the Neoload Web **Api url** with --url. \
-\
-The CLI stores data locally like api url, token, the workspace ID and the test ID you are working on. **The commands can be chained !**
+By default, the CLI connects to NeoLoad Web SaaS to lease a license. \
+For a self-hosted Enterprise license, you must specify the NeoLoad Web **API URL** with `--url`.
+
+The CLI stores data locally, such as the API URL, token, workspace ID, and the test ID you are currently working on. **Commands can be chained!**
 ```
 neoload status          # Displays stored data
 ```
 
 ## Setup a test
-### Optionally Choose a workspace to work with
+### Optionally choose a workspace to work with
 ```
 Usage: neoload workspaces [OPTIONS] [[ls|use]] [NAME_OR_ID]
 Help: neoload workspaces --help
 neoload workspaces use "Default Workspace"
 ```
-Since Neoload Web 2.5 (August 2020), assets are scoped to workspaces.
-The CLI allows you to choose your workspace at login or with the "use" sub-command, otherwise the "Default Workspace" is used.\
-**/!\\** The zones are shared between workspaces.
+You can select your workspace at login or with the `use` sub-command. If no workspace is specified, the "Default Workspace" is used. \
+**/!\\** Zones are shared between workspaces.
 
 
-### Setup resources in Neoload Web
-Run a test requires an infrastructure that is defined in Neoload Web Zones section [(see documentation how to manage zones)](https://documentation.tricentis.com/nlweb/latest/en/content/reference_guide/resources_zones.htm)
-You must at least have either a dynamic or a static zone with one controller and one load generator. At First, you could add resources to the "Default zone" since the CLI use it by default.
+### Setup resources in NeoLoad Web
+Running a test requires an infrastructure defined in the NeoLoad Web *Zones* section ([see the documentation on how to manage zones](https://documentation.tricentis.com/nlweb/latest/en/content/reference_guide/resources_zones.htm)).
+At a minimum, you need either a dynamic or a static zone containing one controller and one load generator. The simplest approach is to add resources to the "Default zone", since the CLI uses it by default.
 
-### Define a Test
-NeoLoad Web Tests contains the configuration of the test and the list of its Test Results. You can analyse transactions values over the latest Test Results to detect regressions.
+### Define a test
+A NeoLoad Web test contains the test configuration and the list of its test results. You can analyze transaction values across the most recent test results to detect regressions.
 ```
 Usage: neoload test-settings [OPTIONS] [[ls|create|put|patch|delete|use|createorpatch]] [NAME]
 Help: neoload test-settings --help
 neoload test-settings --zone defaultzone --lgs 5 --scenario sanityScenario create NewTest1
 ```
-You can optionally define :
- - Which scenario of the Neoload project to use
- - The test-settings description
- - The controller and load generator's zone to use (defaultzone is set by default)
- - How many load generators to use for the zone (1 LG on the defaultzone is set by default)
- - Advanced users who already have several zones with available resources in it can write : ```--zone my_controller_zone --lgs lg_zoneA:2,lg_zoneB:3```
+You can optionally define:
+ - which scenario of the NeoLoad project to use
+ - the test-settings description
+ - the controller and load generator zone to use (defaults to `defaultzone`)
+ - how many load generators to use in the zone (defaults to 1 LG on `defaultzone`)
+ - advanced users with multiple zones that have available resources can use: ```--zone my_controller_zone --lgs lg_zoneA:2,lg_zoneB:3```
 
-To work with a specific test already created and be able to chain commands
+To work with an existing test and chain commands against it:
 ```
 neoload test-settings use NewTest1
 neoload test-settings use 4a5e7707-75c0-4106-bbd4-68962ac7f2b3
 ```
 
-### Upload a Neoload project
-See basic projects examples on github [tests/neoload_projects folder](https://github.com/Neotys-Labs/neoload-cli/tree/master/tests/neoload_projects)
-To upload a NeoLoad project zip file or a standalone as code file into a test-settings
+### Upload a NeoLoad project
+For basic project examples, see the [`tests/neoload_projects` folder on GitHub](https://github.com/Neotys-Labs/neoload-cli/tree/master/tests/neoload_projects).
+
+To upload a NeoLoad project (a ZIP file, a folder or a standalone as-code file) into a test-settings:
 ```
 Usage: neoload project [OPTIONS] [up|upload|meta] NAME_OR_ID
 Help: neoload project --help
 neoload project --path tests/neoload_projects/example_1/ upload
 ```
-You must specify in which test the project will be uploaded:
-* either by doing this command first
+You must indicate which test the project should be uploaded to, either by:
+* running this command first:
    <pre><code>neoload test-settings use NewTest1</code></pre>
-* or by adding the name or id of the test to the project command
+* or by appending the name or ID of the test to the `project` command:
    <pre><code>neoload project --path tests/neoload_projects/example_1/ upload NewTest1</code></pre>
-:warning: If the Test has no scenario or a scenario that does not exist in the project, then the scenario "Custom" will be selected by default (10 VUs for 5 minutes).
+:warning: If the test has no scenario, or if the configured scenario does not exist in the project, the "Custom" scenario is selected by default (10 VUs for 5 minutes).
 
-To Validate the syntax and schema of the as-code project yaml files
+To validate the syntax and schema of the as-code project YAML files:
 ```
 neoload validate sample_projects/example_1/default.yaml
 ```
 
 ### Excluding files from the project upload
-If you are uploading a project directory that contains non NeoLoad as-code YAML files (such as .gitlab-ci.yml) you will need to create a .nlignore file (exactly the same as .gitignore) that excludes these files from the project upload process so that NeoLoad Web does not parse them and fail them as if they should be the NeoLoad DSL.
+If you upload a project directory that contains YAML files which are not NeoLoad as-code (such as `.gitlab-ci.yml`), you must create a `.nlignore` file (using the same syntax as `.gitignore`) to exclude those files from the upload. Otherwise, NeoLoad Web will try to parse them as NeoLoad as-code files and fail.
 
-Please see Gitlab and Azure pipeline examples for more detail.
+For details, see the GitLab and Azure pipeline examples.
 
 ## Run a test
-This command runs a test, it produces blocking, unbuffered output about test execution process, including readout of current data points.
-At the end, displays the summary and the SLA passed & failed.
+This command runs a test. It produces blocking, unbuffered output describing the execution progress, including current data points.
+When the test completes, it displays a summary along with the SLAs that passed and failed.
 ```
 Usage: neoload run [OPTIONS] [NAME_OR_ID]
 Help: neoload run --help
-neoload run \         # Runs the currently used test-settings (see neoload status and neoload test-settings use)
+neoload run \         # Runs the currently selected test-settings (see neoload status and neoload test-settings use)
      --as-code default.yaml,slas/uat.yaml \
      --scenario scenario1
      --name "MyCustomTestName_${JOB_ID}" \
      --description "A custom test description containing hashtags like #latest or #issueNum"
 ```
- - detach option kick off a test and returns immediately. Logs are displayed in Neoload Web (follow the url).
- - as-code option specify as-code yaml files to use for the test. They should already be uploaded with the project.
- - scenario option specify the scenario name to run. The scenario must be declared in an as-code yaml or in the project, or else it will be the NeoLoad Web Custom scenario (10 VUs 5 minutes).
- - Test result name and description can be customized to include CI specific details (e.g. CI job, build number...).
- - Reservations can be used with either the reservationID or a reservation duration and a number of Virtual users.
+ - `--detached` starts the test and returns immediately. Logs are available in NeoLoad Web (follow the URL).
+ - `--as-code` specifies the as-code YAML files to use for the test. They must already be uploaded with the project.
+ - `--scenario` specifies the name of the scenario to run. The scenario must be declared either in an as-code YAML file or in the project; otherwise the NeoLoad Web "Custom" scenario is used (10 VUs for 5 minutes).
+ - The test result name and description can be customized to include CI-specific details (e.g. CI job, build number, etc.).
+ - Reservations can be used with either a reservation ID, or a reservation duration combined with a number of virtual users.
 
-If you are running in interactive console mode, the NeoLoad CLI will automatically open the system default browser to your live test results. \
-When hitting Ctrl+C, the CLI will try to stop the test gracefully
+When running in interactive console mode, the NeoLoad CLI automatically opens your system's default browser to display the live test results. \
+Pressing `Ctrl+C` causes the CLI to attempt to stop the test gracefully.
 
 ### Stop a running test
 ```
-neoload stop             # Send the stop signal to the test and wait until it ends.
+neoload stop             # Sends the stop signal to the test and waits until it ends.
 ```
 
 ## Reporting
 
-There is basic support in the NeoLoad CLI for viewing and exporting results.
+The NeoLoad CLI provides basic support for viewing and exporting test results.
 
 ### View results
 ```
 Usage: neoload test-results [OPTIONS] [[ls|summary|junitsla|put|patch|delete|use]] [NAME]
 Help: neoload test-results --help
-neoload test-results ls                 # Lists test results                                            .
-neoload test-results use                # Remember the test result you want to work on.                           .
-neoload test-results summary            # The Json result summary, with SLAs
-neoload test-results junitsla           # Output the summary in a JUnit xml file
+neoload test-results ls                 # Lists test results
+neoload test-results use                # Remembers the test result you want to work on.
+neoload test-results summary            # JSON result summary, including SLAs
+neoload test-results junitsla           # Outputs the summary as a JUnit XML file
 ```
-Metadata on a test can be modified after the test is complete, such as name, description, and status.\
+Test metadata such as name, description, and status can be modified after the test is complete.
 
-To filter test results based on project, scenario, or status:
+To filter test results by project, scenario, or status:
 ```
 neoload test-results --filter "project=MyProject;scenario=fullTest" ls
 neoload test-results --filter "status=TERMINATED|qualityStatus=FAILED" ls
 ```
-NOTE: you can use either a semicolon OR a pipe, but not both interchangeably in the same filter.
+NOTE: you can use either a semicolon or a pipe as the separator, but not both in the same filter.
 
-To work with a specific test result and be able to chain commands
+To select a specific test result so that subsequent commands can be chained against it:
 ```
 neoload test-results use 4a5e7707-75c0-4106-bbd4-68962ac7f2b3
 ```
 
-Detailed logs and results are available on Neoload Web. To get the url of the current result :
+Detailed logs and results are available on NeoLoad Web. To get the URL of the current result:
 ```
-neoload logs-url                        # The URL to the test in Neoload Web
+neoload logs-url                        # The URL of the test in NeoLoad Web
 ```
 
 ### The test-results vs. report subcommands
 
-The 'test-results' subcommand is intended for direct operational queries against high-level API data.
+The `test-results` subcommand is intended for direct operational queries against high-level API data.
 
-The 'report' subcommand is intended to simplify not only common data exporting needs, but also provide
- templating capabilities over a standard, correlated data model. In contrast to the test-results
- subcommand, 'report' can be used to generate as well as transform test result data.
+The `report` subcommand is intended to simplify common data exporting needs and to provide templating capabilities over a standard, correlated data model. Unlike `test-results`, the `report` subcommand can be used to both generate and transform test result data.
 
-:warning: The 'report' subcommand can be **slow** (several hours) on results with a lots of transactions or monitors.
+:warning: The `report` subcommand can be **slow** (up to several hours) on results that contain many transactions or monitors.
 
 ### Exporting Transaction CSV data
 ```
@@ -224,10 +222,9 @@ neoload report --template builtin:transactions-csv "test_result_name_or_id" > te
 ```
 
 ### Filtering export data by timespan
-In many load tests, ramp-up and spin-down time is considered irrelevant to calculate into aggregate statistics,
- such as how when warming up, systems may produce higher-than-expected latencies until a steady state is reached.
+In many load tests, the ramp-up and spin-down periods are not relevant to aggregate statistics. For example, while a system is warming up, it may produce higher-than-expected latencies until a steady state is reached.
 
-Therefore, the NeoLoad CLI allows for export of particular time ranges by providing a timespan filter.
+The NeoLoad CLI therefore lets you export specific time ranges by providing a timespan filter.
 
 ```
 neoload report --template builtin:transactions-csv --filter "timespan=5m-95%"
@@ -235,49 +232,39 @@ neoload report --template builtin:transactions-csv --filter "timespan=15%"
 neoload report --template builtin:transactions-csv --filter "timespan=-90%"
 ```
 
-Timespan format is [Time], then '-' representing to, then another [Time]. Time format can
- be either a human readable duration or percentage of overall test duration.
+The timespan format is `[Time]-[Time]`, where each `[Time]` is either a human-readable duration or a percentage of the total test duration.
 
-Human readable time duration format is hour|minute|second such as '1h5m30s' or a sub-portion such as '5m'.
+The human-readable duration format combines hours, minutes, and seconds, for example `1h5m30s` or just `5m`.
 
-Omitting the end [Time] segment will filter results beginning with the time specified to the end of the test.
+Omitting the end `[Time]` filters the results from the specified time to the end of the test.
 
-Similarly, ommiting the start [Time] segment will filter results beginning with the start of the test
- to the end time specified.
+Similarly, omitting the start `[Time]` filters the results from the beginning of the test to the specified end time.
 
 ### Filtering export data by element
-It is often useful to narrow analysis and statistics to a particular group of activities, such as
- Login processes across multiple workflows (user paths) or other common key business transactions.
+It is often useful to narrow analysis and statistics down to a specific group of activities, such as login processes across multiple workflows (user paths) or other key business transactions.
 
-Therefore, the NeoLoad CLI allows for exports of specific transcations whose name, parent, or User Path name
- matches specific values or patterns.
+The NeoLoad CLI therefore lets you export specific transactions whose name, parent, or user path name matches a given value or pattern.
 
 ```
 neoload report --template builtin:transactions-csv --filter "elements=Login"
 ```
-You can filter to specific transactions or requests by specifying 'elements' and then a pipe-delimited list
- of element GUIDs, full names, or partial name matches. This can also include python-compliant regular expressions.
+You can filter to specific transactions or requests by passing `elements` followed by a pipe-delimited list of element GUIDs, full names, or partial name matches. The values can also be Python-compatible regular expressions.
 
 ### Combining timespan and element filters
 ```
 neoload report --template builtin:transactions-csv --filter "timespan=50%-95%;elements=AddToCart"
 ```
-Both timespan and elements filters can be combined in order to get statistics for specific elements
- within a precise portion of the test duration. Per the example above, transaction data will be computed
- for elements that have 'AddToCart' somewhere in their name, user path, or parent element and calculate
- aggregates based on data starting from halfway through the test up to just about the very end.
+The timespan and elements filters can be combined to compute statistics for specific elements within a precise portion of the test. In the example above, the report includes elements that contain `AddToCart` in their name, user path, or parent element, and the aggregates are calculated from halfway through the test to almost the very end.
 
-### Exporting All Test Data and Using Custom Templates
+### Exporting all test data and using custom templates
 
-If you would like to use multiple templates to create separate output files for specific test data,
- you should dump the test result data using the standard JSON scheme first:
+If you want to use multiple templates to create separate output files for the same test data, dump the test result data first using the standard JSON schema:
 ```
 neoload report --out-file ~/Downloads/temp.json
 ```
-NOTE: by default, this queries all entity data in test results and may cause multiple API calls
- to occur depending on the structure of the user paths and monitoring data in the test result set.
+NOTE: by default, this queries all entity data for the test results and will trigger multiple API calls, depending on the structure of the user paths and monitoring data in the test result set.
 
-Then you can produce multiple output files from a single data snapshot:
+You can then produce multiple output files from a single data snapshot:
 ```
 neoload report --json-in ~/Downloads/temp.json \
                --template builtin:transactions-csv \
@@ -288,37 +275,32 @@ neoload report --json-in ~/Downloads/temp.json \
                --out-file ~/Downloads/temp.html
 ```
 
-NOTE: built-in reports produce a reduced-scope JSON data model and are therefore faster
- that exporting all test data for various templates and output specs.
+NOTE: built-in reports produce a reduced-scope JSON data model and are therefore faster than exporting all test data for various templates and output formats.
 
-### Work with big results
+### Working with large result sets
 
-Big results for the CLI means several hundreds of transactions, with several LGs and last several hours.
+In the context of the CLI, a "large result set" means several hundred transactions, with several load generators, running for several hours.
 
-The 'report' subcommand get a lot of data from NeoLoad Web API, it is not recommended to use with big results
-because it could take several hours to complete and may fail.
+The `report` subcommand retrieves a large amount of data from the NeoLoad Web API and is not recommended for large result sets, as it may take several hours to complete and can fail.
 
-The 'report' subcommand gets all "values" and the "timeseries points" of all statistics from NLW API for each transaction and monitor: \
-it makes 2 API calls per transaction and 1 API call per monitor to NLW API. 10 calls are made in parallel
-(can be configured with env variable `NL_MAX_WORKERS`). \
-In NeoLoad Web SaaS, the rate limit of 300 calls per minute may be reached, the CLI will adapt and slow down.
+The `report` subcommand fetches all the `values` and `timeseries points` for every statistic from the NeoLoad Web API, for each transaction and monitor. \
+It makes 2 API calls per transaction and 1 API call per monitor. Up to 10 calls run in parallel (configurable via the `NL_MAX_WORKERS` environment variable). \
+On NeoLoad Web SaaS, the rate limit of 300 calls per minute may be reached, in which case the CLI will adapt and slow down accordingly.
 
-To see which NeoLoad Web API calls are made, you can set the neoload-cli log level to debug: `neoload --debug report`
+To see which NeoLoad Web API calls are made, set the CLI log level to debug: `neoload --debug report`.
 
 ## View zones
 ```
 neoload zones --human
 Help: neoload zones --help
 ```
-Display in a human-readable way the list of all static and dynamic zones registered on Neoload Web, and the resources attached (controllers and load generators).
+Displays a human-readable list of all static and dynamic zones registered in NeoLoad Web, along with the resources attached to each (controllers and load generators).
 
-## Create local docker infrastructure to run a test [EXPERIMENTAL]
+## Create local Docker infrastructure to run a test [EXPERIMENTAL]
 
-***WARNING: Docker features are not officially supported by Tricentis as they rely heavily on your own Docker setup and environment. This command is only for local/dev test scenarios to simplify infrastructure requirements.***
+***WARNING: Docker features are not officially supported by Tricentis as they rely heavily on your local Docker setup and environment. This command is intended only for local/dev test scenarios, to simplify infrastructure requirements.***
 
-In certain environments, such as on a local dev workstation or in a Docker-in-Docker CI build node, it is useful
- to "bring your own infrastructure". In other words, when you don't already have a controller and load generators
- available in a zone, you can spin some up using Docker before the test starts. An example of an all-on-one approach:
+In certain environments, such as a local development workstation or a Docker-in-Docker CI build node, it is useful to "bring your own infrastructure". In other words, when no controller and load generators are already available in a zone, you can spin them up with Docker before the test starts. Here is an all-in-one example:
 
 ```
 neoload docker install
@@ -329,14 +311,13 @@ neoload login $NLW_TOKEN \
         run
 ```
 
-What the 'docker install' CLI add step in run command. This step is triggered when zone of controller the test-settings is same than docker.zone (default is defaultzone).
-When it is triggered, it launches one controller with number of LG test-settings in docker.zone.
-At the end of the run the containers are removed.
+`docker install` adds an extra step to the `run` command. This step is triggered when the controller zone defined in the test-settings matches `docker.zone` (default: `defaultzone`).
+When triggered, it launches one controller along with the number of load generators specified in the test-settings, inside `docker.zone`.
+The containers are removed at the end of the test.
 
 
-The docker container can be launched manually with neoload docker up command and removed with neoload docker down command.
-In this case the number of controller and lg is defined by configuration respectively docker.controller.default_count (default: 1) and
-docker.lg.default_count (default: 2).
+You can also launch the Docker containers manually with `neoload docker up` and remove them with `neoload docker down`.
+In this case, the number of controllers and load generators is taken from `docker.controller.default_count` (default: 1) and `docker.lg.default_count` (default: 2) respectively.
 
 
 ```
@@ -363,9 +344,7 @@ Configuration:
 
 ```
 
-NOTE: Docker CLI must be installed on the system using these commands. This will use
- the Docker daemon, however it is configured. In a Docker-in-Docker context, this is inferred.
- For local workstations, it is sufficient to install Docker Desktop or Docker for Mac.
+NOTE: the Docker CLI must be installed on the system for these commands to work. The CLI relies on whatever Docker daemon is configured. In a Docker-in-Docker context, this is detected automatically. On local workstations, installing Docker Desktop or Docker for Mac is sufficient.
 
 
 ## CLI configuration
@@ -374,29 +353,27 @@ neoload config ls
 neoload config set docker.lg.default_count=1
 Help: neoload config --help
 ```
-The configuration allow customization of CLI behavior. For now, the configuration is used by the docker command (see above).
+The configuration lets you customize the CLI's behavior. For now, it is only used by the `docker` command (see above).
 
 ## Continuous Testing Examples
-The main goal of the NeoLoad-CLI is to standardize the semantics of how load tests are executed across development, non-prod, and production environments.
-While the above instructions could be run from a contributor workstation, they can easily be translated to various continuous build and deployment orchestration environments, as exampled:
+The main goal of the NeoLoad CLI is to standardize how load tests are executed across development, non-prod, and production environments.
+The instructions above can be run from a contributor workstation, but they can also be easily translated to various continuous build and deployment platforms. Examples are provided for:
 
  - [Jenkins](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/jenkins)
- - [GitHub](https://github.com/Neotys-Labs/neoload-cli/blob/master/examples/pipelines/github/neoload-github-actions-demo.yml) 
+ - [GitHub](https://github.com/Neotys-Labs/neoload-cli/blob/master/examples/pipelines/github/neoload-github-actions-demo.yml)
  - [Azure DevOps](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/azure_devops)
- - [Gitlab](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/gitlab)
+ - [GitLab](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/gitlab)
  - [AWS](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/aws)
  - [Bamboo](https://github.com/Neotys-Labs/neoload-cli/tree/master/examples/pipelines/bamboo-specs)
- 
 
-NB: When chaining commands, the return code of the whole command is the return code of the **last command**. That's why you should not chain the two commands "run" and "test-results junitsla".
 
-NOTE: When combining NeoLoad projects and YAML-based pipeline declarations, please see [Excluding files from the project upload] (#excluding-files-from-the-project-upload) to ensure that unecessary artifacts aren't included in the project upload process.
+NB: when chaining commands, the return code of the whole chain is the return code of the **last command**. For that reason, you should not chain `run` with `test-results junitsla`.
+
+NOTE: when combining NeoLoad projects with YAML-based pipeline declarations, see [Excluding files from the project upload](#excluding-files-from-the-project-upload) to make sure unnecessary artifacts are not included in the upload.
 
 ### Support for fast-fail based on SLAs ###
 
-Not all tests succeed. Sometimes environments are down. Sometimes 3rd parties are surprisingly slow. You don't
-want to wait for your build pipelines to conduct the whole test duration if it's possible to identify these
-issues early. Applying proper SLAs to your tests allows you to monitor for errors and latency during the test.
+Not every test succeeds. Sometimes environments are down, sometimes third-party services are unexpectedly slow. When such issues can be detected early, you don't want your build pipeline to wait for the full test duration to fail. Applying proper SLAs to your tests lets you monitor errors and latency while the test is running.
 
 Consider the following SLA:
 
@@ -409,125 +386,119 @@ sla_profiles:
   - error-rate warn >= 5% fail >= 10% per test
 ```
 
-If you want to fail the pipeline if either of these thresholds are exceeded over a certain percent of their times,
-you must:
+To fail the pipeline as soon as either of these thresholds is exceeded beyond a given percentage of the time, you need to:
 
-- run the test in 'detached' mode to allow for non-blocking execution of a test
-- use the fastfail command to monitor for early signals to stop the test if SLAs are violated
-- finally wait for the test results
+- run the test in `--detached` mode so the test runs asynchronously
+- use the `fastfail` command to monitor for early SLA violations and stop the test if needed
+- finally, wait for the test results
 
-To run the test in detached mode:
+Run the test in detached mode:
 
 ```
 neoload run \
     --detached
 ```
 
-Then immediately afterwards, use the fastfail command:
+Then, immediately afterwards, run the `fastfail` command:
 ```
 neoload fastfail --max-failure 25 slas cur
 ```
 
-In the above example, '25' represents the percent of times where the SLA was violated, such as 'on a particular
-request with an SLA applied, 10 out of 50 times it was executed, the SLA failed'.
+In this example, `25` represents the percentage of evaluations in which the SLA was violated. For instance, if an SLA-protected request was executed 50 times and the SLA failed 10 of those times, that is a 20% failure rate.
 
-Finally, because the test was executed in non-blocking mode, you should wait for the final test result.
+Finally, because the test was started in non-blocking mode, you must wait for the final test result:
 ```
 neoload wait cur
 ```
 
-[An example for Jenkins pipeline is found here.](examples/pipelines/jenkins/Jenkinsfile_slafails)
+[See here for a Jenkins pipeline example.](examples/pipelines/jenkins/Jenkinsfile_slafails)
 
 ## Troubleshooting
 ### Set debug log level
-`neoload --debug ...` to show verbose logs of neoload-cli
+Use `neoload --debug ...` to show verbose logs from the neoload-cli.
 
-### Windows and non UTF-8 characters
-Windows use default encoding as ASCII, but the NeoLoad CLI needs UTF-8 encoding.\
-Before running some commands like `neoload report` on windows, you need to set environment variable `set PYTHONUTF8=1`\
-More info [here](https://docs.python.org/3/using/windows.html#utf-8-mode) and [here](https://docs.python.org/3/library/os.html#utf8-mode).
-Note that with Python 3.15, no need to do that anymore [PEP 686 – Make UTF-8 mode default](https://peps.python.org/pep-0686/)
+### Windows and non-UTF-8 characters
+Windows uses ASCII as the default encoding, but the NeoLoad CLI requires UTF-8. \
+Before running commands such as `neoload report` on Windows, you need to set the environment variable `set PYTHONUTF8=1`. \
+For more information, see [the Windows UTF-8 mode docs](https://docs.python.org/3/using/windows.html#utf-8-mode) and [the os module docs](https://docs.python.org/3/library/os.html#utf8-mode).
+Starting with Python 3.15, this is no longer necessary; see [PEP 686 – Make UTF-8 mode default](https://peps.python.org/pep-0686/).
 
 
 ## Packaging the CLI with Build Agents
-Many of the above CI examples include a step to explicitly install the NeoLoad CLI as part of the
-build steps. However, if you want the CLI baked into some build agent directly so that it
-is ready for use during a job, here's a Docker example:
+Many of the CI examples above install the NeoLoad CLI as one of the build steps. If you would rather bake the CLI directly into a build agent so it is ready to use during a job, see the following Docker example:
 
-For Docker builds [See the test harness Alpine-based Dockerfile](https://github.com/Neotys-Labs/neoload-cli/blob/master/examples/docker/Dockerfile)
+For Docker builds, [see the test harness Alpine-based Dockerfile](https://github.com/Neotys-Labs/neoload-cli/blob/master/examples/docker/Dockerfile).
 
 
 ## IDE Integrations
-Since most of what we do in an IDE is create/edit code, we're mostly interested in how to:
- - make it easy to write API tests in YAML (automatic syntax validation)
- - validate that tests do not contain unanticipated errors even at small scale
- - dry-run small (smoke) load tests locally so that code check-ins will work in CI/pipeline tests
+Most of the work done in an IDE is creating and editing code, so we are mainly interested in being able to:
+ - easily write API tests in YAML (with automatic syntax validation)
+ - validate that tests do not contain unexpected errors, even at small scale
+ - run small (smoke) load tests locally so that code check-ins will work in CI/pipeline tests
 
-Since the latter two cases are already covered by command-line semantics, our primary focus
-is to accelerate test authoring by providing NeoLoad as-code DSL (Domain-specific Language) validation
-and in some cases editor auto-complete.
+The last two cases are already covered by the CLI itself, so our primary focus for IDE integrations is to accelerate test authoring by providing validation for the NeoLoad as-code DSL (Domain-Specific Language), and, in some cases, editor auto-complete.
 
-Status of IDE / editor integrations
+Status of IDE / editor integrations:
 
  | IDE / Editor       | Syntax checks | Auto-complete | Setup steps
  |:------------------:|:-------------:|:-------------:|:----------------:|
- | Visual Studio Code |      [x]      |      [x]      | [see instructions](resources/ides/vscode_settings.json) |
- | PyCharm |      [x]      |      [x]      | Mark 'neoload' directory as "Sources Root" |
+ | Visual Studio Code |      [x]      |      [x]      | [See instructions](resources/ides/vscode_settings.json) |
+ | PyCharm            |      [x]      |      [x]      | Mark the `neoload` directory as "Sources Root" |
 
 ## Contributing
-Feel free to fork this repo, make changes, *test locally*, and create a pull request.
+Feel free to fork this repo, make your changes, *test locally*, and then open a pull request.
 
-### Local Verification
+### Local verification
 
 #### Tests
-As part of your testing, you should run the built-in test suite with the following command: \
-NOTE: for testing from Mac, please change the PYTHONPATH separators below to colons (:) instead of semicolons (;).
+As part of your testing, run the built-in test suite with the following commands. \
+NOTE: when testing on macOS, replace the semicolons (`;`) in `PYTHONPATH` with colons (`:`).
 
 ```
 pytest -v
-pytest -v -m "not slow"          # Skip slow tests that run tests
+pytest -v -m "not slow"          # Skip slow tests
 
-# Run on a real Neoload. Mocks are disabled
+# Run against a real NeoLoad instance. Mocks are disabled.
 pytest -v --token <your_personal_token> --url https://neoload-api.saas.neotys.com/ --makelivecalls
 
-# Run integration tests. This will run scripts with real neoload commands and assert json output with jq.
-# This require at least 1 controller and 1 LG on the provided zone
+# Run the integration tests. These execute scripts using real neoload commands and assert the JSON output with jq.
+# Requires at least 1 controller and 1 LG on the provided zone.
 ./tests/integration/runAllScripts.sh <your_personal_token> --url https://neoload-api.saas.neotys.com/ defaultzone
 ```
 
-Additionally, any contributions to the DSL validation functionality, such as on the JSON schema or the validate command, should execute the following tests locally before pushing to this repo:
+In addition, any contribution to the DSL validation functionality (for example, to the JSON schema or the `validate` command) should run the following tests locally before pushing:
 ```
 ./tests/neoload_projects/yaml_variants/validate_all.sh
 ```
-This command executes a number of NEGATIVE tests to prove that changes to the JSON schema or validation process produce failures when their input is malformed in very specific ways (common mistakes).
+This command runs a series of NEGATIVE tests that ensure changes to the JSON schema or validation process correctly produce failures when the input is malformed in specific, common ways.
 
-### Release Process (managed by Tricentis NeoLoad team)
+### Release process (managed by the Tricentis NeoLoad team)
 
-#### Auto-generating Changelog
+#### Auto-generating the changelog
 
-Before tagging a release, merged PRs should update the CHANGELOG.md via the following:
+Before tagging a release, merged PRs should update `CHANGELOG.md` using the following command:
 
 ```
 github_changelog_generator -u Neotys-Labs -p neoload-cli --token $GIT_CHANGELOG_GEN --exclude-tags-regex ".*(dev|rc).*" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
 ```
 
-This utility is a [Ruby-based GEM](https://github.com/github-changelog-generator/github-changelog-generator) that can be installed (also used in CI/Actions) as follows:
+This utility is a [Ruby-based gem](https://github.com/github-changelog-generator/github-changelog-generator) (also used in CI/Actions) that can be installed with:
 
 ```
 gem install github_changelog_generator
 ```
 
-#### Version management on pypi
-Suppose X, Y, Z and N are integers, versions will be named as following on pypi: \
-**Final release version = X.Y.Z** Example *1.4.0* Install it with ```pip install neoload``` \
-**Release candidate version = X.Y.ZrcN** Example *1.5.0rc1* for the next candidate version. Install it with ```pip install neoload --pre``` \
-**Development versions = X.Y.Z.devN** Example *1.4.0.dev1* for a development version based on the final release 1.4.0. Install it with ```pip install neoload==1.4.0.dev1```
+#### Version management on PyPI
+Given that X, Y, Z, and N are integers, versions on PyPI are named as follows: \
+**Final release version = X.Y.Z** — example: *1.4.0*. Install it with ```pip install neoload``` \
+**Release candidate version = X.Y.ZrcN** — example: *1.5.0rc1* for the next candidate version. Install it with ```pip install neoload --pre``` \
+**Development version = X.Y.Z.devN** — example: *1.4.0.dev1* for a development version based on the final release 1.4.0. Install it with ```pip install neoload==1.4.0.dev1```
 
-Release candidate version contains all features planned and in testing by Quality Assurance team.
+A release candidate version contains all the features planned for the release and is undergoing testing by the Quality Assurance team.
 
-Development versions may contains work not planned by R&D and not tested by Quality Assurance team. They should always be based on an official release, not on the next release.
+Development versions may contain work that is not planned by R&D and has not been tested by the Quality Assurance team. They should always be based on an official release, not on an upcoming one.
 
 **Increment policy:**
- - Minor version increment when major feature, for example new top-level command
- - Fix version increment when executable changes, for example fixing an existing feature, or update a subcommand to an existing top-level command or update options to an existing command
- - No release needed when the executable is not modified, for example when updating the following: automated CI tests, unit tests, README, Pipeline examples, report templates...
+ - Increment the minor version for a major feature, such as a new top-level command.
+ - Increment the patch version for executable changes, such as fixing an existing feature, updating a subcommand of an existing top-level command, or updating the options of an existing command.
+ - No release is needed when the executable is not modified, for example when only updating automated CI tests, unit tests, the README, pipeline examples, or report templates.
