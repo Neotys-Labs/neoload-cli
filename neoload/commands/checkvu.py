@@ -30,8 +30,39 @@ __yaml_extensions = (".yaml", ".yml")
 @click.option('--ssl-cert', default="",
               help="Path to SSL certificate or write False to disable certificate checking. "
                    "Used both for schema validation and the JAR download.")
+@click.option('--controller-overlay',
+              help="Path to a .properties file merged (additively) into conf/controller.properties inside the JAR "
+                   "work directory. Only the keys you set are overridden; everything else from the embedded file "
+                   "is kept. Useful for advanced network tuning (timeouts, TLS, …).",
+              metavar="PATH")
+@click.option('--agent-overlay',
+              help="Path to a .properties file merged (additively) into conf/agent.properties inside the JAR "
+                   "work directory. Advanced: used for Load Generator <-> Controller transport tuning.",
+              metavar="PATH")
+@click.option('--proxy',
+              help="Proxy for the test traffic in host:port format (e.g. myproxy.corp:8080). "
+                   "Applies to both HTTP and HTTPS test traffic. "
+                   "This is NOT used for NLWeb API calls.",
+              metavar="HOST:PORT")
+@click.option('--proxy-user',
+              help="Login for proxy authentication (optional).",
+              metavar="LOGIN")
+@click.option('--proxy-password',
+              help="Password for proxy authentication (optional). "
+                   "The environment variable CHECKVU_PROXY_PASSWORD takes precedence over this flag.",
+              metavar="PASSWORD")
+@click.option('--no-proxy',
+              help="Comma-separated list of hosts that bypass the proxy (e.g. localhost,internal.corp).",
+              metavar="HOST1,HOST2,...")
+@click.option('--keep-work', is_flag=True, default=False,
+              help="Keep the temporary work directory after the JAR exits instead of deleting it. "
+                   "Equivalent to setting CHECKVU_CLI_KEEP_WORK=1. "
+                   "Has no effect when CHECKVU_CLI_WORK_ROOT is already set.")
 @click.argument('project')
-def cli(jar_path, jar_url, java, user_path, schema_url, ssl_cert, project):
+def cli(jar_path, jar_url, java, user_path, schema_url, ssl_cert,
+        controller_overlay, agent_overlay,
+        proxy, proxy_user, proxy_password, no_proxy, keep_work,
+        project):
     """Runs a CheckVU on an as-code PROJECT using the headless CheckVU JAR.
     PROJECT is a path to an as-code yaml file. A single virtual user is executed
     to verify the project runs."""
@@ -46,6 +77,16 @@ def cli(jar_path, jar_url, java, user_path, schema_url, ssl_cert, project):
 
     resolved_jar = checkvu_runner.resolve_jar(jar_path, jar_url, ssl_cert)
 
-    command = checkvu_runner.build_command(java_executable, resolved_jar, project, user_path)
+    command = checkvu_runner.build_command(
+        java_executable, resolved_jar, project,
+        user_path=user_path,
+        controller_overlay=controller_overlay,
+        agent_overlay=agent_overlay,
+        proxy=proxy,
+        proxy_user=proxy_user,
+        proxy_password=proxy_password,
+        no_proxy=no_proxy,
+        keep_work=keep_work,
+    )
     exit_code = checkvu_runner.run_checkvu(command)
     sys.exit(exit_code)

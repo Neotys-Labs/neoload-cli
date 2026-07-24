@@ -39,6 +39,40 @@ class TestCheckvuRunner:
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml")
         assert command == ["java", "-jar", "checkvu.jar", "p.yaml"]
 
+    def test_build_command_overlays(self):
+        command = checkvu_runner.build_command(
+            "java", "checkvu.jar", "p.yaml",
+            controller_overlay="/tmp/ctrl.properties",
+            agent_overlay="/tmp/agent.properties",
+        )
+        assert command == [
+            "java", "-jar", "checkvu.jar",
+            "--controller-overlay", "/tmp/ctrl.properties",
+            "--agent-overlay", "/tmp/agent.properties",
+            "p.yaml",
+        ]
+
+    def test_build_command_proxy(self):
+        command = checkvu_runner.build_command(
+            "java", "checkvu.jar", "p.yaml",
+            proxy="proxy.corp:8080",
+            proxy_user="alice",
+            proxy_password="secret",
+            no_proxy="localhost,internal",
+        )
+        assert command == [
+            "java", "-jar", "checkvu.jar",
+            "--proxy", "proxy.corp:8080",
+            "--proxy-user", "alice",
+            "--proxy-password", "secret",
+            "--no-proxy", "localhost,internal",
+            "p.yaml",
+        ]
+
+    def test_build_command_keep_work(self):
+        command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml", keep_work=True)
+        assert command == ["java", "-jar", "checkvu.jar", "--keep-work", "p.yaml"]
+
     def test_resolve_jar_uses_explicit_path(self, tmp_path):
         jar = tmp_path / "checkvu.jar"
         jar.write_text("x")

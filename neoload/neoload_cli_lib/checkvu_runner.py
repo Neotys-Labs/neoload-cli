@@ -153,10 +153,27 @@ def download_jar(url, destination, ssl_cert=''):
     return destination
 
 
-def build_command(java, jar, project, user_path=None):
+def build_command(java, jar, project, user_path=None,
+                  controller_overlay=None, agent_overlay=None,
+                  proxy=None, proxy_user=None, proxy_password=None, no_proxy=None,
+                  keep_work=False):
     command = [java, "-jar", jar]
     if user_path:
         command.extend(["--user-path", user_path])
+    if controller_overlay:
+        command.extend(["--controller-overlay", controller_overlay])
+    if agent_overlay:
+        command.extend(["--agent-overlay", agent_overlay])
+    if proxy:
+        command.extend(["--proxy", proxy])
+    if proxy_user:
+        command.extend(["--proxy-user", proxy_user])
+    if proxy_password:
+        command.extend(["--proxy-password", proxy_password])
+    if no_proxy:
+        command.extend(["--no-proxy", no_proxy])
+    if keep_work:
+        command.append("--keep-work")
     command.append(project)
     return command
 
