@@ -79,22 +79,33 @@ def resolve_includes(entry_file_path, project_root=None, _visited=None):
         raise cli_exception.CliException('Infinite loop detected in includes for as code file: %s' % entry_file_path)
     _visited = _visited | {entry_file_path}
 
+    logging.debug("Loading as code file: %s" % entry_file_path)
     doc = parse_yaml_file(entry_file_path)
+    includes = doc.get('includes', [])
+    if includes:
+        logging.debug("%s declares %d include(s): %s" % (entry_file_path, len(includes), includes))
     resolved = []
-    for include in doc.get('includes', []):
+    for include in includes:
         include_path = include if os.path.isabs(include) else os.path.join(project_root, include)
         if not include_path.lower().endswith(('.yaml', '.yml', '.json')):
             raise cli_exception.CliException(
                 "The 'includes' field accepts only the following file extensions: 'yaml', 'yml' or 'json': %s" % include_path)
         if not os.path.exists(include_path):
             raise cli_exception.CliException('As code file not found: %s' % include_path)
+        logging.debug("Resolving include \"%s\" -> %s (referenced from %s)" % (include, include_path, entry_file_path))
         resolved.extend(resolve_includes(include_path, project_root, _visited))
     resolved.append(doc)
     return resolved
 
 
 def resolve_and_merge_project(entry_file_path):
-    return merge_projects(resolve_includes(entry_file_path))
+    resolved = resolve_includes(entry_file_path)
+    logging.debug("Resolved %d as code file(s) for %s: %s" % (
+        len(resolved), entry_file_path, [f.get('name', '<no name>') for f in resolved]))
+    merged = merge_projects(resolved)
+    counts = {field: len(merged[field]) for field in _MERGED_ARRAY_FIELDS if field in merged}
+    logging.debug("Merged project name=%s counts=%s" % (merged.get('name', '<no name>'), counts))
+    return merged
 
 
 def validate_project_object(project_object, schema_spec, ssl_cert='', check_schema=True, label=None):
