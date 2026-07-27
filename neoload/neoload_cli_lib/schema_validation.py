@@ -18,8 +18,86 @@ from neoload_cli_lib.neoLoad_project import is_not_to_be_included
 YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
 __default_schema_url = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3/neoload-project/src/main/resources/as-code.latest.schema.json"
 
+# Array-valued top-level as-code properties that get concatenated when merging
+# several project files together (mirrors neoload-legacy's
+# ConfigurationManager.mergeAsCodeProject, which does the same plain
+# concatenation for a resolved "includes:" tree).
+_MERGED_ARRAY_FIELDS = ['sla_profiles', 'variables', 'servers', 'user_paths', 'populations', 'scenarios']
 
-def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
+
+def parse_yaml_file(file_path):
+    try:
+        yaml_content = open(file_path)
+    except Exception as err:
+        raise cli_exception.CliException('Unable to open file %s:\n%s' % (file_path, str(err)))
+
+    try:
+        yaml_as_object = yaml.load(yaml_content, yaml.FullLoader)
+        if yaml_as_object is None:
+            raise cli_exception.CliException('Empty file: ' + str(file_path))
+    except ScannerError as err:
+        raise cli_exception.CliException('This is not a valid yaml file [{}] :\n{}'.format(file_path, err))
+
+    return yaml_as_object
+
+
+def merge_projects(projects):
+    merged = {}
+    for field in _MERGED_ARRAY_FIELDS:
+        items = [item for project in projects for item in project.get(field, [])]
+        if items:
+            merged[field] = items
+
+    project_settings = {}
+    for project in projects:
+        project_settings.update(project.get('project_settings', {}))
+    if project_settings:
+        merged['project_settings'] = project_settings
+
+    for project in projects:
+        if project.get('name'):
+            merged['name'] = project['name']
+
+    return merged
+
+
+def resolve_includes(entry_file_path, project_root=None, _visited=None):
+    """Recursively resolve "includes:" starting from entry_file_path, mirroring
+    neoload-legacy's ConfigurationManager.parseAsCodeFile: include paths are
+    resolved relative to project_root (not to the including file's own
+    directory), only "yaml"/"yml"/"json" files are accepted, and a file
+    currently being resolved on the same branch cannot be included again
+    (infinite loop detection). Returns an ordered list of parsed dicts
+    (includes first, entry file last) ready for merge_projects()."""
+    entry_file_path = os.path.abspath(entry_file_path)
+    if project_root is None:
+        project_root = os.path.dirname(entry_file_path)
+    if _visited is None:
+        _visited = set()
+
+    if entry_file_path in _visited:
+        raise cli_exception.CliException('Infinite loop detected in includes for as code file: %s' % entry_file_path)
+    _visited = _visited | {entry_file_path}
+
+    doc = parse_yaml_file(entry_file_path)
+    resolved = []
+    for include in doc.get('includes', []):
+        include_path = include if os.path.isabs(include) else os.path.join(project_root, include)
+        if not include_path.lower().endswith(('.yaml', '.yml', '.json')):
+            raise cli_exception.CliException(
+                "The 'includes' field accepts only the following file extensions: 'yaml', 'yml' or 'json': %s" % include_path)
+        if not os.path.exists(include_path):
+            raise cli_exception.CliException('As code file not found: %s' % include_path)
+        resolved.extend(resolve_includes(include_path, project_root, _visited))
+    resolved.append(doc)
+    return resolved
+
+
+def resolve_and_merge_project(entry_file_path):
+    return merge_projects(resolve_includes(entry_file_path))
+
+
+def validate_project_object(project_object, schema_spec, ssl_cert='', check_schema=True, label=None):
     json_schema = init_yaml_schema_with_checks(schema_spec,ssl_cert,check_schema)
     try:
         schema_as_object = json.loads(json_schema)
@@ -27,67 +105,60 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
         raise bad_as_code_exception.BadAsCodeSchemaException(
             'This is not a valid json schema [{}] :\n{}'.format(schema_spec, err))
 
-    try:
-        yaml_content = open(yaml_file_path)
-    except Exception as err:
-        raise cli_exception.CliException('Unable to open file %s:\n%s' % (yaml_file_path, str(err)))
-
-    try:
-        yaml_as_object = yaml.load(yaml_content, yaml.FullLoader)
-        if yaml_as_object is None:
-            raise cli_exception.CliException('Empty file: ' + str(yaml_file_path))
-    except ScannerError as err:
-        raise cli_exception.CliException('This is not a valid yaml file [{}] :\n{}'.format(yaml_file_path,err))
-
     validator_cls = jsonschema.validators.validator_for(schema_as_object, jsonschema.validators.Draft7Validator)
     logging.debug("Using JSON-Schema validator: %s" % validator_cls.__name__)
     v = validator_cls(schema_as_object)
     try:
-        v.validate(yaml_as_object)
+        v.validate(project_object)
     except jsonschema.SchemaError as err:
         raise cli_exception.CliException('This is not a valid json schema:\n%s' % str(err))
     except jsonschema.ValidationError as err:
         msgs = ""
-        for error in sorted(v.iter_errors(yaml_as_object), key=str):
+        for error in sorted(v.iter_errors(project_object), key=str):
             path = "\\".join(list(map(lambda x: str(x), error.path)))
             msgs += "\n" + (error.message if hasattr(error, 'message') else str(error)) + "\n\tat: " + path + "\n\tgot: \n" + (yaml.dump(error.instance) if hasattr(error, 'instance') else '') + "\n"
-        msgs = ("in file %s" % yaml_file_path) + msgs
+        msgs = ("in %s" % label if label else "") + msgs
         raise cli_exception.CliException(YAML_NOT_CONFIRM_MESSAGE + '\n' + msgs)
+
+
+def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
+    # Resolve and merge "includes:" into one complete in-memory project before
+    # validating, instead of validating this file in isolation.
+    merged_project = resolve_and_merge_project(yaml_file_path)
+    validate_project_object(merged_project, schema_spec, ssl_cert, check_schema, label="file %s" % yaml_file_path)
 
 
 def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
     ignore_file = os.path.join(path, '.nlignore')
     nl_ignore_matcher =  gitignorefile.parse(ignore_file) if os.path.exists(ignore_file) else None
-    first_time_check = True
     extensions = ['yml','yaml','json']
+
+    # Merge every yaml/yml/json project file found under the directory into a
+    # single in-memory project, then validate that merged project once -
+    # instead of validating each file (including included fragments that are
+    # never meant to be a complete project on their own) in isolation.
+    projects = []
     any_errs = False
     for root, dirs, files in os.walk(path):
         for file in files:
             file_path = os.path.join(root, file)
-            (any_errs,first_time_check) = validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,any_errs,first_time_check,continue_on_error,ssl_cert)
+            if not any(file_path.endswith("." + ext) for ext in extensions) or is_not_to_be_included(file_path, nl_ignore_matcher):
+                continue
+            logging.debug("file_path: {}".format(file_path))
+            try:
+                projects.append(parse_yaml_file(file_path))
+            except Exception as err:
+                any_errs = True
+                if continue_on_error:
+                    logging.error(str(err) + "\n")
+                else:
+                    raise err
 
     if any_errs:
         raise ValueError('One or more errors in files underneath this directory.')
 
-def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,any_errs,first_time_check,continue_on_error,ssl_cert):
-
-    if any(filter(lambda ext,file_path=file_path: file_path.endswith("."+ext),extensions)) and \
-       not is_not_to_be_included(file_path, nl_ignore_matcher):
-        logging.debug("file_path: {}".format(file_path))
-        try:
-            validate_yaml(file_path, schema_spec, ssl_cert, check_schema=first_time_check)
-        except ValueError as err:
-            any_errs = True
-            logging.error("INFOMSG:%s" % str(err))
-        except Exception as err:
-            any_errs = True
-            if continue_on_error and not isinstance(err, bad_as_code_exception.BadAsCodeSchemaException):
-                logging.error(str(err) + "\n")
-            else:
-                raise err
-        first_time_check = False
-
-    return (any_errs,first_time_check)
+    merged_project = merge_projects(projects)
+    validate_project_object(merged_project, schema_spec, ssl_cert, check_schema=True, label="directory %s" % path)
 
 
 def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
