@@ -7,7 +7,7 @@ import yaml
 from yaml.scanner import ScannerError
 
 from neoload_cli_lib import cli_exception, bad_as_code_exception
-from neoload_cli_lib.user_data import update_schema, get_yaml_schema, tools
+from neoload_cli_lib.user_data import update_schema, get_yaml_schema, get_yaml_schema_etag, tools
 
 import logging
 import hashlib
@@ -17,6 +17,7 @@ from neoload_cli_lib.neoLoad_project import is_not_to_be_included
 
 YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
 __default_schema_url = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3/neoload-project/src/main/resources/as-code.latest.schema.json"
+
 
 def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
     json_schema = init_yaml_schema_with_checks(schema_spec,ssl_cert,check_schema)
@@ -38,7 +39,9 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
     except ScannerError as err:
         raise cli_exception.CliException('This is not a valid yaml file [{}] :\n{}'.format(yaml_file_path,err))
 
-    v = jsonschema.validators.Draft7Validator(schema_as_object)
+    validator_cls = jsonschema.validators.validator_for(schema_as_object, jsonschema.validators.Draft7Validator)
+    logging.debug("Using JSON-Schema validator: %s" % validator_cls.__name__)
+    v = validator_cls(schema_as_object)
     try:
         v.validate(yaml_as_object)
     except jsonschema.SchemaError as err:
@@ -90,35 +93,52 @@ def validate_yaml_dir_file(file_path,schema_spec,extensions,nl_ignore_matcher,an
 def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
     json_schema = get_yaml_schema(False)
     if json_schema is not None:
-        logging.info('Loaded schema from disk.')
+        cached_etag = get_yaml_schema_etag()
+        if cached_etag:
+            logging.info('Loaded schema and ETag from disk cache.')
+        else:
+            logging.info('Loaded schema from disk cache (no ETag).')
+        logging.debug("Cached schema %s chars, etag=%s" % (len(json_schema), cached_etag or "none"))
     else:
         logging.warning('No prior cached schema on disk.')
-
-    if json_schema is not None:
-        logging.debug("Cached schema %s" %len(json_schema))
 
     if not check_schema:
         return json_schema
 
-    # even if there is something local, try checking if it's different from remote
     schema_spec_remote = __default_schema_url
     if schema_spec is None: schema_spec = schema_spec_remote
-    logging.debug("Getting remote schema %s" %schema_spec)
-    json_schema_spec = get_json_schema_by_spec(schema_spec,ssl_cert)
-    if json_schema_spec is not None:
-        logging.debug("Retrieved remote schema %s" %len(json_schema_spec))
+    logging.debug("Checking schema source for changes %s" %schema_spec)
 
-    # compare cached to spec/remote
     try:
-        logging.info('Comparing cached schema to remote schema')
-        hash_disk = "" if json_schema is None else hashlib.sha256(json_schema.encode()).hexdigest()
-        hash_spec = "" if json_schema_spec is None else hashlib.sha256(json_schema_spec.encode()).hexdigest()
-        if hash_disk != hash_spec:
-            logging.info('Cached schema differs from source!')
-            json_schema = json_schema_spec
-            update_schema(json_schema_spec)
+        if is_network_spec(schema_spec):
+            cached_etag = get_yaml_schema_etag() if json_schema is not None else None
+            json_schema_spec, response_etag, not_modified = get_network_schema_by_spec(schema_spec, ssl_cert, cached_etag)
+            if not_modified:
+                logging.info('Remote schema unchanged since last download (ETag match) - using cached schema.')
+            elif json_schema_spec is not None:
+                logging.debug("Retrieved remote schema %s chars, etag=%s" % (len(json_schema_spec), response_etag or "none"))
+                if response_etag:
+                    logging.info('Cached schema and ETag updated from remote source.')
+                else:
+                    logging.info('Cached schema updated from remote source (no ETag).')
+                json_schema = json_schema_spec
+                update_schema(json_schema_spec, response_etag)
+            else:
+                json_schema = None
         else:
-            logging.info('No differences between cached and remote schema.')
+            json_schema_spec = get_json_schema_by_spec(schema_spec, ssl_cert)
+            if json_schema_spec is not None:
+                logging.debug("Retrieved remote schema %s" %len(json_schema_spec))
+
+            logging.info('Comparing cached schema to remote schema')
+            hash_disk = "" if json_schema is None else hashlib.sha256(json_schema.encode()).hexdigest()
+            hash_spec = "" if json_schema_spec is None else hashlib.sha256(json_schema_spec.encode()).hexdigest()
+            if hash_disk != hash_spec:
+                logging.info('Cached schema differs from source!')
+                json_schema = json_schema_spec
+                update_schema(json_schema_spec)
+            else:
+                logging.info('No differences between cached and remote schema.')
     except Exception as err:
         logging.warning('Could not update schema cache {}\n{}'.format(schema_spec,err))
 
@@ -128,6 +148,29 @@ def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
     return json_schema
 
 
+def is_network_spec(schema_spec):
+    return type(schema_spec).__name__ != 'LocalPath' and '://' in str(schema_spec)
+
+
+def get_network_schema_by_spec(schema_spec, ssl_cert, cached_etag=None):
+    headers = {'If-None-Match': cached_etag} if cached_etag else {}
+    if cached_etag:
+        logging.info('Checking for schema updates (ETag) from network source %s' % schema_spec)
+    else:
+        logging.info('Downloading schema from network source %s' % schema_spec)
+    try:
+        response = requests.get(schema_spec, headers=headers, verify=tools.ssl_cert_to_verify(ssl_cert))
+    except Exception as err:
+        logging.warning('Could not obtain source schema {}\n{}'.format(schema_spec, err))
+        return None, cached_etag, False
+
+    if response.status_code == 304:
+        return None, cached_etag, True
+
+    etag = response.headers.get('ETag')
+    return response.text, etag if isinstance(etag, str) else None, False
+
+
 def get_json_schema_by_spec(schema_spec, ssl_cert):
     json_schema_spec = None
 
@@ -135,11 +178,7 @@ def get_json_schema_by_spec(schema_spec, ssl_cert):
         schema_spec = schema_spec.strpath
 
     if '://' in schema_spec:
-        try:
-            logging.info('Getting remote schema from network source %s' % schema_spec)
-            json_schema_spec = requests.get(schema_spec, verify=tools.ssl_cert_to_verify(ssl_cert)).text
-        except Exception as err:
-            logging.warning('Could not obtain source schema {}\n{}'.format(schema_spec,err))
+        json_schema_spec, _etag, _not_modified = get_network_schema_by_spec(schema_spec, ssl_cert)
     else:
         # if user passed in a local file as the --schema-url (for local version testing purposes too)
         schema_spec = os.path.abspath(schema_spec)
