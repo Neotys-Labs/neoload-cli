@@ -22,7 +22,8 @@ __default_schema_url = "https://raw.githubusercontent.com/Neotys-Labs/neoload-mo
 # several project files together (mirrors neoload-legacy's
 # ConfigurationManager.mergeAsCodeProject, which does the same plain
 # concatenation for a resolved "includes:" tree).
-_MERGED_ARRAY_FIELDS = ['sla_profiles', 'variables', 'servers', 'user_paths', 'populations', 'scenarios']
+_MERGED_ARRAY_FIELDS = ['sla_profiles', 'variables', 'servers', 'user_paths', 'populations', 'scenarios', 'frameworks']
+_MERGED_SPECIAL_FIELDS = set(_MERGED_ARRAY_FIELDS) | {'project_settings', 'name', 'includes'}
 
 
 def parse_yaml_file(file_path):
@@ -57,6 +58,14 @@ def merge_projects(projects):
     for project in projects:
         if project.get('name'):
             merged['name'] = project['name']
+
+    # Carry over any other/unrecognized top-level key too, so genuinely
+    # invalid content isn't silently dropped by the merge instead of being
+    # caught by the schema (e.g. root "additionalProperties: false").
+    for project in projects:
+        for key, value in project.items():
+            if key not in _MERGED_SPECIAL_FIELDS:
+                merged[key] = value
 
     return merged
 
@@ -161,11 +170,15 @@ def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
                 else:
                     raise err
 
-    if any_errs:
-        raise ValueError('One or more errors in files underneath this directory.')
-
+    # Validate the merged project (whatever was successfully parsed) before
+    # reporting per-file parse errors, so a schema-related failure (e.g. the
+    # schema itself being invalid) always surfaces on its own rather than
+    # being masked by unrelated parse errors elsewhere in the directory.
     merged_project = merge_projects(projects)
     validate_project_object(merged_project, schema_spec, ssl_cert, check_schema=True, label="directory %s" % path)
+
+    if any_errs:
+        raise ValueError('One or more errors in files underneath this directory.')
 
 
 def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
