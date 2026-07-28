@@ -50,7 +50,8 @@ user_paths:
         name: 01_Home
         steps:
         - request:
-            url: https://demowebshop.tricentis.com/
+            server: demowebshop
+            url: /
             assertions:
             - contains: Tricentis Demo Web Shop
         - think_time: 3s
@@ -60,7 +61,8 @@ user_paths:
         name: 02_Browse
         steps:
         - request:
-            url: https://demowebshop.tricentis.com/books
+            server: demowebshop
+            url: /books
             assertions:
             - contains: Books
         - think_time: 2s
@@ -70,7 +72,8 @@ user_paths:
         name: 03_AddToCart
         steps:
         - request:
-            url: https://demowebshop.tricentis.com/addproducttocart/catalog/${product_id}/1/${quantity}
+            server: demowebshop
+            url: /addproducttocart/catalog/${product_id}/1/${quantity}
             method: POST
             headers:
             - name: X-Requested-With
@@ -84,7 +87,8 @@ user_paths:
         name: 04_ViewCart
         steps:
         - request:
-            url: https://demowebshop.tricentis.com/cart
+            server: demowebshop
+            url: /cart
             assertions:
             - contains: Shopping cart
         - think_time: 2s
@@ -94,13 +98,15 @@ user_paths:
         name: 05_CheckoutAsGuest
         steps:
         - request:
-            url: https://demowebshop.tricentis.com/login/checkoutasguest?returnUrl=%2Fcart
+            server: demowebshop
+            url: /login/checkoutasguest?returnUrl=%2Fcart
             method: POST
             headers:
             - name: Content-Type
               value: application/x-www-form-urlencoded
         - request:
-            url: https://demowebshop.tricentis.com/onepagecheckout
+            server: demowebshop
+            url: /onepagecheckout
             assertions:
             - contains: Checkout
         - think_time: 3s
@@ -110,7 +116,8 @@ user_paths:
         name: 06_ViewDetails
         steps:
         - request:
-            url: https://demowebshop.tricentis.com/computing-and-internet
+            server: demowebshop
+            url: /computing-and-internet
             assertions:
             - contains: Computing and Internet
         - think_time: 2s
