@@ -39,7 +39,7 @@ def cli(jar_path, jar_url, java, user_path, schema_url, ssl_cert, project):
         raise cli_exception.CliException("Project file must be a yaml (\".yaml\", \".yml\") file: " + project)
     if not os.path.isfile(project):
         raise cli_exception.CliException("Project file not found: " + project)
-    print(schema_validation.validate_path(project, schema_url, ssl_cert))
+    print(schema_validation.validate_path(project, schema_url, ssl_cert), flush=True)
 
     java_executable = checkvu_runner.resolve_java(java)
     checkvu_runner.check_java_version(java_executable)
