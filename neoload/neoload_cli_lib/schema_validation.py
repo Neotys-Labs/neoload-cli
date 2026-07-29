@@ -149,33 +149,60 @@ def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
     nl_ignore_matcher =  gitignorefile.parse(ignore_file) if os.path.exists(ignore_file) else None
     extensions = ['yml','yaml','json']
 
-    # Merge every yaml/yml/json project file found under the directory into a
-    # single in-memory project, then validate that merged project once -
-    # instead of validating each file (including included fragments that are
-    # never meant to be a complete project on their own) in isolation.
-    projects = []
-    any_errs = False
+    all_files = []
     for root, dirs, files in os.walk(path):
+        # Never descend into hidden directories (.git, .github, .idea, ...) -
+        # they're tooling/CI config, never as-code project content.
+        dirs[:] = [d for d in dirs if not d.startswith('.')]
         for file in files:
-            file_path = os.path.join(root, file)
-            if not any(file_path.endswith("." + ext) for ext in extensions) or is_not_to_be_included(file_path, nl_ignore_matcher):
-                continue
-            logging.debug("file_path: {}".format(file_path))
-            try:
-                projects.append(parse_yaml_file(file_path))
-            except Exception as err:
-                any_errs = True
-                if continue_on_error:
-                    logging.error(str(err) + "\n")
-                else:
-                    raise err
+            file_path = os.path.abspath(os.path.join(root, file))
+            if any(file_path.endswith("." + ext) for ext in extensions) and not is_not_to_be_included(file_path, nl_ignore_matcher):
+                all_files.append(file_path)
 
-    # Validate the merged project (whatever was successfully parsed) before
-    # reporting per-file parse errors, so a schema-related failure (e.g. the
-    # schema itself being invalid) always surfaces on its own rather than
-    # being masked by unrelated parse errors elsewhere in the directory.
-    merged_project = merge_projects(projects)
-    validate_project_object(merged_project, schema_spec, ssl_cert, check_schema=True, label="directory %s" % path)
+    for file_path in all_files:
+        logging.debug("file_path: {}".format(file_path))
+
+    # A file is a fragment (not a standalone root project) if it gets pulled
+    # in by another file's "includes:" tree. The only correct way to tell is
+    # to actually resolve includes from every candidate as if it were a root -
+    # "includes:" paths are always relative to the resolving entry file's own
+    # directory (matching resolve_includes()/neoload-legacy semantics), not
+    # necessarily the fragment's own directory, so a nested fragment's own
+    # "includes:" can only be followed correctly from its true root. Whatever
+    # a candidate's resolution successfully sweeps in is marked as referenced;
+    # candidates that fail to resolve on their own (e.g. because they're a
+    # fragment whose includes only make sense from an ancestor's directory)
+    # simply contribute nothing here - any genuine parse/include errors still
+    # surface later when the real root is validated.
+    referenced = set()
+    any_errs = False
+    for file_path in all_files:
+        try:
+            resolved_paths = []
+            resolve_includes(file_path, _paths=resolved_paths)
+        except cli_exception.CliException:
+            continue
+        referenced.update(p for p in resolved_paths if p != file_path)
+
+    root_files = sorted(f for f in all_files if f not in referenced)
+
+    if not root_files:
+        raise cli_exception.CliException(
+            'No root as-code project file found underneath %s (every yaml/yml/json file found is referenced as an include).' % path)
+
+    for file_path in root_files:
+        logging.debug("Validating root project file: %s" % file_path)
+        try:
+            validate_yaml(file_path, schema_spec, ssl_cert, check_schema=True)
+        except Exception as err:
+            any_errs = True
+            # A schema-related failure always aborts immediately with its own
+            # message, instead of being logged-and-continued like a regular
+            # per-project validation failure.
+            if continue_on_error and not isinstance(err, bad_as_code_exception.BadAsCodeSchemaException):
+                logging.error(str(err) + "\n")
+            else:
+                raise err
 
     if any_errs:
         raise ValueError('One or more errors in files underneath this directory.')

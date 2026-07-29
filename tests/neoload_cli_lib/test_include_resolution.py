@@ -1,7 +1,19 @@
+import json
+
 import pytest
 
 import neoload_cli_lib.schema_validation as schema_validation
 from neoload_cli_lib import cli_exception
+
+_MINIMAL_SCHEMA = {
+    "type": "object",
+    "required": ["name"],
+    "additionalProperties": False,
+    "properties": {
+        "name": {"type": "string"},
+        "servers": {"type": "array"},
+    },
+}
 
 
 @pytest.mark.validation
@@ -74,3 +86,94 @@ class TestMergeProjects:
             {'name': 'p', 'totally_unexpected_key': 'oops'},
         ])
         assert merged['totally_unexpected_key'] == 'oops'
+
+
+@pytest.mark.validation
+class TestValidateYamlDir:
+
+    def test_ignores_hidden_directories(self, tmp_path):
+        schema_path = tmp_path / 'schema.json'
+        schema_path.write_text(json.dumps(_MINIMAL_SCHEMA))
+        projects_dir = tmp_path / 'projects'
+        projects_dir.mkdir()
+        (projects_dir / 'project.yaml').write_text('name: my-project\n')
+
+        # A GitHub Actions workflow (or any other tooling/CI yaml) sitting in
+        # a hidden directory must never be picked up as a project file.
+        workflows_dir = projects_dir / '.github' / 'workflows'
+        workflows_dir.mkdir(parents=True)
+        (workflows_dir / 'ci.yml').write_text('name: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n')
+
+        # Must not raise: the only real project file is valid, and .github/
+        # is never descended into.
+        schema_validation.validate_yaml_dir(str(projects_dir), str(schema_path))
+
+    def test_validates_independent_root_projects_separately(self, tmp_path):
+        # Keep the schema file itself outside the directory being validated -
+        # otherwise the directory walk would pick it up as just another
+        # ".json" file to validate as a project.
+        schema_path = tmp_path / 'schema.json'
+        schema_path.write_text(json.dumps(_MINIMAL_SCHEMA))
+        projects_dir = tmp_path / 'projects'
+        projects_dir.mkdir()
+
+        # project-a: a root file with an included fragment - the fragment
+        # must NOT be validated as if it were a complete project on its own.
+        project_a = projects_dir / 'project-a'
+        project_a.mkdir()
+        (project_a / 'root.yaml').write_text('name: project-a\nincludes:\n  - fragment.yaml\n')
+        (project_a / 'fragment.yaml').write_text('servers:\n  - name: s1\n')
+
+        # project-b: a second, entirely independent root project.
+        project_b = projects_dir / 'project-b'
+        project_b.mkdir()
+        (project_b / 'root.yaml').write_text('name: project-b\n')
+
+        # Must not raise: both roots are independently valid.
+        schema_validation.validate_yaml_dir(str(projects_dir), str(schema_path))
+
+    def test_a_failing_root_does_not_block_reporting_on_the_others(self, tmp_path):
+        schema_path = tmp_path / 'schema.json'
+        schema_path.write_text(json.dumps(_MINIMAL_SCHEMA))
+        projects_dir = tmp_path / 'projects'
+        projects_dir.mkdir()
+
+        (projects_dir / 'good.yaml').write_text('name: good-project\n')
+        (projects_dir / 'bad.yaml').write_text('not_name: bad-project\n')
+
+        with pytest.raises(ValueError, match='One or more errors'):
+            schema_validation.validate_yaml_dir(str(projects_dir), str(schema_path))
+
+    def test_no_root_found_in_empty_directory(self, tmp_path):
+        empty_dir = tmp_path / 'empty'
+        empty_dir.mkdir()
+
+        with pytest.raises(cli_exception.CliException, match='No root as-code project file found'):
+            schema_validation.validate_yaml_dir(str(empty_dir), str(tmp_path / 'unused-schema.json'))
+
+    def test_mutually_circular_includes_each_report_their_own_error(self, tmp_path):
+        # Neither file can be resolved as a root (each loops back into the
+        # other), so both remain candidates and each surfaces its own
+        # "infinite loop" error instead of one vague "no root found" message.
+        (tmp_path / 'a.yaml').write_text('name: a\nincludes:\n  - b.yaml\n')
+        (tmp_path / 'b.yaml').write_text('name: b\nincludes:\n  - a.yaml\n')
+
+        with pytest.raises(ValueError, match='One or more errors'):
+            schema_validation.validate_yaml_dir(str(tmp_path), str(tmp_path / 'unused-schema.json'))
+
+    def test_nested_fragment_include_resolves_relative_to_true_root(self, tmp_path):
+        # A fragment's own "includes:" is resolved relative to the true
+        # root's directory (matching resolve_includes() semantics), not the
+        # fragment's own directory - so it must still be recognized as a
+        # fragment, and its own nested include must not become a spurious
+        # root either.
+        schema_path = tmp_path / 'schema.json'
+        schema_path.write_text(json.dumps(_MINIMAL_SCHEMA))
+        project_dir = tmp_path / 'project'
+        (project_dir / 'sub').mkdir(parents=True)
+        (project_dir / 'root.yaml').write_text('name: p\nincludes:\n  - sub/fragment.yaml\n')
+        (project_dir / 'sub' / 'fragment.yaml').write_text('includes:\n  - sub/extra.yaml\n')
+        (project_dir / 'sub' / 'extra.yaml').write_text('servers:\n  - name: s1\n')
+
+        # Must not raise, and must only treat root.yaml as a root project.
+        schema_validation.validate_yaml_dir(str(project_dir), str(schema_path))
