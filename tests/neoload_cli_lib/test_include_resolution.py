@@ -35,6 +35,30 @@ class TestResolveIncludes:
             schema_validation.resolve_and_merge_project(datafiles / 'a.yaml')
         assert 'Infinite loop' in str(context.value)
 
+    def test_shared_include_is_merged_only_once(self, tmp_path):
+        # Diamond: a includes b and c, and both include d. That is not a
+        # cycle, so it must resolve - and d's content must appear exactly once
+        # in the merged project.
+        (tmp_path / 'a.yaml').write_text('name: a\nincludes:\n  - b.yaml\n  - c.yaml\n')
+        (tmp_path / 'b.yaml').write_text('includes:\n  - d.yaml\nservers:\n  - name: from_b\n')
+        (tmp_path / 'c.yaml').write_text('includes:\n  - d.yaml\nservers:\n  - name: from_c\n')
+        (tmp_path / 'd.yaml').write_text('servers:\n  - name: from_d\n')
+
+        merged = schema_validation.resolve_and_merge_project(tmp_path / 'a.yaml')
+        assert [server['name'] for server in merged['servers']] == ['from_d', 'from_b', 'from_c']
+
+    def test_detects_cycle_below_a_shared_include(self, tmp_path):
+        # Same diamond, but d includes c back: that closes a real cycle
+        # (c -> d -> c) and must still be reported.
+        (tmp_path / 'a.yaml').write_text('name: a\nincludes:\n  - b.yaml\n  - c.yaml\n')
+        (tmp_path / 'b.yaml').write_text('includes:\n  - d.yaml\n')
+        (tmp_path / 'c.yaml').write_text('includes:\n  - d.yaml\n')
+        (tmp_path / 'd.yaml').write_text('includes:\n  - c.yaml\n')
+
+        with pytest.raises(cli_exception.CliException) as context:
+            schema_validation.resolve_and_merge_project(tmp_path / 'a.yaml')
+        assert 'Infinite loop' in str(context.value)
+
     def test_rejects_non_yaml_include(self, tmp_path):
         (tmp_path / 'notes.txt').write_text('not a project file')
         entry = tmp_path / 'entry.yaml'

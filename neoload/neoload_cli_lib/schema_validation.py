@@ -66,16 +66,26 @@ def merge_projects(projects):
     return merged
 
 
-def resolve_includes(entry_file_path, project_root=None, _visited=None, _paths=None):
+def resolve_includes(entry_file_path, project_root=None, _ancestors=None, _paths=None, _resolved_once=None):
     entry_file_path = os.path.abspath(entry_file_path)
     if project_root is None:
         project_root = os.path.dirname(entry_file_path)
-    if _visited is None:
-        _visited = set()
+    # Files already pulled into this resolution, shared across the whole
+    # include tree: a file reachable through several different branches
+    # (a -> b -> d and a -> c -> d) must contribute its content exactly once.
+    if _resolved_once is None:
+        _resolved_once = set()
+    # Chain of files currently being resolved, i.e. only this branch's
+    # ancestors - so a file being reachable twice is fine, while a file
+    # including one of its own ancestors is a real cycle.
+    if _ancestors is None:
+        _ancestors = frozenset()
 
-    if entry_file_path in _visited:
+    if entry_file_path in _ancestors:
         raise cli_exception.CliException('Infinite loop detected in includes for as code file: %s' % entry_file_path)
-    _visited = _visited | {entry_file_path}
+    if entry_file_path in _resolved_once:
+        return []
+    _resolved_once.add(entry_file_path)
 
     doc = parse_yaml_file(entry_file_path)
     resolved = []
@@ -86,7 +96,8 @@ def resolve_includes(entry_file_path, project_root=None, _visited=None, _paths=N
                 "The 'includes' field accepts only the following file extensions: 'yaml' or 'yml': %s" % include_path)
         if not os.path.exists(include_path):
             raise cli_exception.CliException('As code file not found: %s' % include_path)
-        resolved.extend(resolve_includes(include_path, project_root, _visited, _paths))
+        resolved.extend(resolve_includes(include_path, project_root, _ancestors | {entry_file_path}, _paths,
+                                        _resolved_once))
     resolved.append(doc)
     if _paths is not None:
         _paths.append(entry_file_path)
