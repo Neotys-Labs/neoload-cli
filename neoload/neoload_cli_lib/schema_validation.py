@@ -18,10 +18,6 @@ from neoload_cli_lib.neoLoad_project import is_not_to_be_included
 YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
 __default_schema_url = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3/neoload-project/src/main/resources/as-code.latest.schema.json"
 
-# Array-valued top-level as-code properties that get concatenated when merging
-# several project files together (mirrors neoload-legacy's
-# ConfigurationManager.mergeAsCodeProject, which does the same plain
-# concatenation for a resolved "includes:" tree).
 _MERGED_ARRAY_FIELDS = ['sla_profiles', 'variables', 'servers', 'user_paths', 'populations', 'scenarios', 'frameworks']
 _MERGED_SPECIAL_FIELDS = set(_MERGED_ARRAY_FIELDS) | {'project_settings', 'name', 'includes'}
 
@@ -71,14 +67,6 @@ def merge_projects(projects):
 
 
 def resolve_includes(entry_file_path, project_root=None, _visited=None, _paths=None):
-    """Recursively resolve "includes:" starting from entry_file_path, mirroring
-    neoload-legacy's ConfigurationManager.parseAsCodeFile: include paths are
-    resolved relative to project_root (not to the including file's own
-    directory), only "yaml"/"yml"/"json" files are accepted, and a file
-    currently being resolved on the same branch cannot be included again
-    (infinite loop detection). Returns an ordered list of parsed dicts
-    (includes first, entry file last) ready for merge_projects(). When _paths
-    is provided, every resolved file path is appended to it in the same order."""
     entry_file_path = os.path.abspath(entry_file_path)
     if project_root is None:
         project_root = os.path.dirname(entry_file_path)
@@ -93,9 +81,9 @@ def resolve_includes(entry_file_path, project_root=None, _visited=None, _paths=N
     resolved = []
     for include in doc.get('includes', []):
         include_path = include if os.path.isabs(include) else os.path.join(project_root, include)
-        if not include_path.lower().endswith(('.yaml', '.yml', '.json')):
+        if not include_path.lower().endswith(('.yaml', '.yml')):
             raise cli_exception.CliException(
-                "The 'includes' field accepts only the following file extensions: 'yaml', 'yml' or 'json': %s" % include_path)
+                "The 'includes' field accepts only the following file extensions: 'yaml' or 'yml': %s" % include_path)
         if not os.path.exists(include_path):
             raise cli_exception.CliException('As code file not found: %s' % include_path)
         resolved.extend(resolve_includes(include_path, project_root, _visited, _paths))
@@ -147,7 +135,7 @@ def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
 def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
     ignore_file = os.path.join(path, '.nlignore')
     nl_ignore_matcher =  gitignorefile.parse(ignore_file) if os.path.exists(ignore_file) else None
-    extensions = ['yml','yaml','json']
+    extensions = ['yml','yaml']
 
     all_files = []
     for root, dirs, files in os.walk(path):
