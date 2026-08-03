@@ -403,7 +403,7 @@ Run the full test:
 neoload login $NLW_TOKEN \
      test-settings --zone defaultzone --lgs 1 createorpatch DemoWebShopTest \
      project --path examples/as-code-demo/default.yaml upload DemoWebShopTest \
-     run --as-code default.yaml --scenario DemoWebShop
+     run --scenario DemoWebShop
 ```
 
 ## Continuous Testing Examples
