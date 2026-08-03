@@ -44,11 +44,11 @@ class TestValidate:
         return result
 
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1')
     def test_success(self, datafiles):
         self.try_success(datafiles / 'default.yaml')
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1')
     def test_no_refresh(self, datafiles):
         file_path = datafiles / 'default.yaml'
         runner = CliRunner()
@@ -64,7 +64,7 @@ class TestValidate:
         assert schema_validation.YAML_NOT_CONFIRM_MESSAGE in str(result.output)
         assert result.exit_code == 1
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1')
     @mock.patch('requests.get', mock.Mock(return_value=mock.Mock(text="<!DOCTYPE html><html>invalid resource</html>")))
     def test_bad_schema(self, datafiles):
         file_path = datafiles / 'default.yaml'
@@ -80,7 +80,7 @@ class TestValidate:
         assert re.compile(".*Error: Missing argument [\"']FILE[\"'].*", re.DOTALL).match(result.output) is not None
         assert result.exit_code == 2
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1')
     @mock.patch('requests.get', mock.Mock(side_effect=Exception("Failed to establish a new connection")))
     def test_bad_schema_url(self, datafiles):
         file_path = datafiles / 'default.yaml'
@@ -102,7 +102,7 @@ class TestValidate:
         return runner.invoke(validate, [str(path), '--schema-url', url, '--refresh'])
 
     @pytest.mark.slow
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1')
     def test_single_with_no_prior_schema(self, datafiles):
         (l, r) = self.preserve_schema()
 
@@ -120,7 +120,7 @@ class TestValidate:
 
     @pytest.mark.slow
     @pytest.mark.datafiles(
-        'tests/neoload_projects/example_1/default.yaml',
+        'tests/neoload_projects/example_1',
         'resources/as-code.latest.schema.json'
     )
     def test_single_with_prior_schema(self, datafiles):

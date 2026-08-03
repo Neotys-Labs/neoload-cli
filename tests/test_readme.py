@@ -123,7 +123,7 @@ class TestReadme:
         assert_success(result_status)
         assert 'settings id: %s' % pytest.test_id in result_status.output
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1')
     def test_validate(self, datafiles):
         file_path = datafiles / 'default.yaml'
         runner = CliRunner()
