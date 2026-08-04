@@ -21,7 +21,8 @@ __default_api_url = 'https://neoload-api.saas.neotys.com'
 
 # set the testing timezone to US/Pacific
 os.environ['TZ'] = 'US/Pacific'
-time.tzset()
+if hasattr(time, 'tzset'):
+    time.tzset()
 FAKE_NOW_DATETIME = datetime.datetime(2023, 12, 25, 17, 5, 55)
 
 

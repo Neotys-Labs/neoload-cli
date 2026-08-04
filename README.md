@@ -174,6 +174,21 @@ Pressing `Ctrl+C` causes the CLI to attempt to stop the test gracefully.
 neoload stop             # Sends the stop signal to the test and waits until it ends.
 ```
 
+## CheckVU an as-code project
+This command runs a CheckVU on an as-code project: it executes a single virtual user to verify that the project runs. It is meant to support fast iteration on as-code projects (generate -> checkvu -> fix).
+
+It delegates to a standalone headless CheckVU JAR and streams the JAR's output and exit code directly.
+
+```
+Usage: neoload checkvu [OPTIONS] PROJECT
+Help: neoload checkvu --help
+neoload checkvu default.yaml
+neoload checkvu --user-path myUser default.yaml
+```
+ - `PROJECT` is a path to an as-code yaml file. The CLI validates it against the as-code schema first (same as `neoload validate`).
+ - The JAR is resolved in this order: `--jar-path <path>` in priority, then from `--jar-url <url>` (downloads and caches), then a previously cached JAR, then uses a default URL to download latest JAR.
+ - `--java` selects the java executable; by default `JAVA_HOME/bin/java` then `java` on the PATH. Java 21+ is required and verified before running.
+
 ## Reporting
 
 The NeoLoad CLI provides basic support for viewing and exporting test results.

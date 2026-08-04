@@ -151,3 +151,21 @@ def get_json_schema_by_spec(schema_spec, ssl_cert):
             raise bad_as_code_exception.BadAsCodeSchemaException('Could not load schema from provided file spec: %s' % schema_spec)
 
     return json_schema_spec
+
+
+def validate_path(file, schema_url, ssl_cert=''):
+    """Validates an as-code yaml file against the schema from NLCLI_FORCE_SCHEMA
+    or downloaded from given URL or from the defautl URL."""
+    force_schema = os.environ.get('NLCLI_FORCE_SCHEMA')
+    if force_schema is not None and len(force_schema) > 0:
+        schema_url = force_schema
+
+    path = os.path.abspath(file)
+    try:
+        if os.path.isdir(path):
+            validate_yaml_dir(path, schema_url, ssl_cert)
+            return 'All yaml files underneath the path provided are valid.'
+        validate_yaml(file, schema_url, ssl_cert)
+        return 'Yaml file is valid.'
+    except Exception as err:
+        raise cli_exception.CliException(str(err))
