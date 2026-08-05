@@ -81,6 +81,30 @@ class TestValidate:
         assert result.exit_code == 2
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    def test_as_code_schema_alias_works_like_schema_url(self, datafiles):
+        # -s/--as-code-schema is the new, documented name; --schema-url is a hidden,
+        # backward-compatible alias.
+        file_path = datafiles / 'default.yaml'
+        runner = CliRunner()
+        with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.') as vp:
+            result = runner.invoke(validate, [str(file_path), '-s', 'https://example.com/schema.json'])
+        assert result.exit_code == 0
+        assert vp.call_args.args[1] == 'https://example.com/schema.json'
+
+    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    def test_as_code_schema_wins_over_deprecated_schema_url_if_both_given(self, datafiles):
+        file_path = datafiles / 'default.yaml'
+        runner = CliRunner()
+        with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.') as vp:
+            result = runner.invoke(validate, [
+                str(file_path),
+                '-s', 'https://new.example/schema.json',
+                '--schema-url', 'https://legacy.example/schema.json',
+            ])
+        assert result.exit_code == 0
+        assert vp.call_args.args[1] == 'https://new.example/schema.json'
+
+    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     @mock.patch('requests.get', mock.Mock(side_effect=Exception("Failed to establish a new connection")))
     def test_bad_schema_url(self, datafiles):
         file_path = datafiles / 'default.yaml'
