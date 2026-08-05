@@ -393,6 +393,11 @@ The `BuyAsGuest` user path walks through a typical guest purchase:
 
 It uses two variables (`product_id`, `quantity`) and a single population (`GuestShoppers`)
 
+Run CheckVU against the project:
+```
+neoload checkvu examples/as-code-demo/default.yaml
+```
+
 Run the full test:
 ```
 neoload login $NLW_TOKEN \
