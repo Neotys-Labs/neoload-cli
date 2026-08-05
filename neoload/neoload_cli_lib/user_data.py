@@ -16,6 +16,7 @@ __config_dir = appdirs.user_data_dir(__conf_name, __author, __version)
 __local_file = ".neoload_cli.yaml"
 CONFIG_FILE = __local_file if os.path.exists(__local_file) else os.path.join(__config_dir, "config.yaml")
 __yaml_schema_file = os.path.join(__config_dir, "yaml_schema.json")
+__yaml_schema_etag_file = os.path.join(__config_dir, "yaml_schema.etag")
 
 __no_write = False
 
@@ -245,7 +246,15 @@ def __load_yaml_schema():
     return None
 
 
+def __load_yaml_schema_etag():
+    if os.path.exists(__yaml_schema_etag_file):
+        with open(__yaml_schema_etag_file, "r") as stream:
+            return stream.read() or None
+    return None
+
+
 __yaml_schema_singleton = __load_yaml_schema()
+__yaml_schema_etag_singleton = __load_yaml_schema_etag()
 
 
 def get_yaml_schema(throw=True):
@@ -254,9 +263,20 @@ def get_yaml_schema(throw=True):
     return __yaml_schema_singleton
 
 
-def update_schema(yaml_schema_as_json: str):
-    global __yaml_schema_singleton
+def get_yaml_schema_etag():
+    return __yaml_schema_etag_singleton
+
+
+def update_schema(yaml_schema_as_json: str, etag: str = None):
+    global __yaml_schema_singleton, __yaml_schema_etag_singleton
     __yaml_schema_singleton = yaml_schema_as_json
+    __yaml_schema_etag_singleton = etag
     os.makedirs(__config_dir, exist_ok=True)
     with open(__yaml_schema_file, "w") as stream:
         stream.write(__yaml_schema_singleton)
+    if etag:
+        with open(__yaml_schema_etag_file, "w") as stream:
+            stream.write(etag)
+    elif os.path.exists(__yaml_schema_etag_file):
+        # no etag for this schema source (e.g. a local file) - don't leave a stale one around
+        os.remove(__yaml_schema_etag_file)

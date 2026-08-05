@@ -44,11 +44,11 @@ class TestValidate:
         return result
 
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1')
     def test_success(self, datafiles):
         self.try_success(datafiles / 'default.yaml')
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1')
     def test_no_refresh(self, datafiles):
         file_path = datafiles / 'default.yaml'
         runner = CliRunner()
@@ -64,7 +64,7 @@ class TestValidate:
         assert schema_validation.YAML_NOT_CONFIRM_MESSAGE in str(result.output)
         assert result.exit_code == 1
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1')
     @mock.patch('requests.get', mock.Mock(return_value=mock.Mock(text="<!DOCTYPE html><html>invalid resource</html>")))
     def test_bad_schema(self, datafiles):
         file_path = datafiles / 'default.yaml'
@@ -82,29 +82,30 @@ class TestValidate:
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_as_code_schema_alias_works_like_schema_url(self, datafiles):
-        # -s/--as-code-schema is the new, documented name; --schema-url is a hidden,
-        # backward-compatible alias.
-        file_path = datafiles / 'default.yaml'
-        runner = CliRunner()
-        with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.') as vp:
-            result = runner.invoke(validate, [str(file_path), '-s', 'https://example.com/schema.json'])
-        assert result.exit_code == 0
-        assert vp.call_args.args[1] == 'https://example.com/schema.json'
+      # -s/--as-code-schema is the new, documented name; --schema-url is a hidden,
+      # backward-compatible alias.
+      file_path = datafiles / 'default.yaml'
+      runner = CliRunner()
+      with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.') as vp:
+        result = runner.invoke(validate, [str(file_path), '--as-code-schema', 'https://example.com/schema.json'])
+      assert result.exit_code == 0
+      assert vp.call_args.args[1] == 'https://example.com/schema.json'
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
     def test_as_code_schema_wins_over_deprecated_schema_url_if_both_given(self, datafiles):
-        file_path = datafiles / 'default.yaml'
-        runner = CliRunner()
-        with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.') as vp:
-            result = runner.invoke(validate, [
-                str(file_path),
-                '-s', 'https://new.example/schema.json',
-                '--schema-url', 'https://legacy.example/schema.json',
-            ])
-        assert result.exit_code == 0
-        assert vp.call_args.args[1] == 'https://new.example/schema.json'
+      file_path = datafiles / 'default.yaml'
+      runner = CliRunner()
+      with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.') as vp:
+        result = runner.invoke(validate, [
+          str(file_path),
+          '--as-code-schema', 'https://new.example/schema.json',
+          '--schema-url', 'https://legacy.example/schema.json',
+        ])
+      assert result.exit_code == 0
+      assert vp.call_args.args[1] == 'https://new.example/schema.json'
 
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+
+    @pytest.mark.datafiles('tests/neoload_projects/example_1')
     @mock.patch('requests.get', mock.Mock(side_effect=Exception("Failed to establish a new connection")))
     def test_bad_schema_url(self, datafiles):
         file_path = datafiles / 'default.yaml'
@@ -126,7 +127,7 @@ class TestValidate:
         return runner.invoke(validate, [str(path), '--schema-url', url, '--refresh'])
 
     @pytest.mark.slow
-    @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
+    @pytest.mark.datafiles('tests/neoload_projects/example_1')
     def test_single_with_no_prior_schema(self, datafiles):
         (l, r) = self.preserve_schema()
 
@@ -144,7 +145,7 @@ class TestValidate:
 
     @pytest.mark.slow
     @pytest.mark.datafiles(
-        'tests/neoload_projects/example_1/default.yaml',
+        'tests/neoload_projects/example_1',
         'resources/as-code.latest.schema.json'
     )
     def test_single_with_prior_schema(self, datafiles):

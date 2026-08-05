@@ -180,6 +180,8 @@ def build_command(java, jar, project_file, user_path=None,
 
 def run_checkvu(command):
     """Run the JAR, inheriting stdio so the CLI output is the JAR output, and return its exit code."""
+    sys.stdout.flush()
+    sys.stderr.flush()
     try:
         completed = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr, stdin=sys.stdin)
     except OSError as err:
