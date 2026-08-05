@@ -47,6 +47,8 @@ NOTE: On the Windows command line, replace the `\` line-continuation characters 
     - [Exporting Transaction CSV data](#exporting-transaction-csv-data)
  - [View zones](#view-zones)
  - [Create local Docker infrastructure to run a test](#create-local-docker-infrastructure-to-run-a-test)
+ - [Examples](#examples)
+   - [As-Code Demo Project](#as-code-demo-project)
  - [Continuous Testing Examples](#continuous-testing-examples)
    - [Support for fast-fail based on SLAs](#support-for-fast-fail-based-on-slas)
  - [Packaging the CLI with Build Agents](#packaging-the-cli-with-build-agents)
@@ -369,6 +371,35 @@ neoload config set docker.lg.default_count=1
 Help: neoload config --help
 ```
 The configuration lets you customize the CLI's behavior. For now, it is only used by the `docker` command (see above).
+
+## Examples
+
+### As-Code Demo Project
+
+[`examples/as-code-demo`](examples/as-code-demo) contains a NeoLoad As-Code YAML project that works out-of-the-box:
+no NeoLoad Web project, no manual scenario setup - just point NeoLoad at
+[`default.yaml`](examples/as-code-demo/default.yaml) and run.
+
+Target: [Tricentis Demo Web Shop](https://demowebshop.tricentis.com/) (nopCommerce demo).
+
+The `BuyAsGuest` user path walks through a typical guest purchase:
+
+1. Open the shop home page
+2. Browse a product category
+3. Add a product to the cart (quantity randomised per iteration via a variable)
+4. View the cart
+5. Check out as a guest
+6. View product details
+
+It uses two variables (`product_id`, `quantity`) and a single population (`GuestShoppers`)
+
+Run the full test:
+```
+neoload login $NLW_TOKEN \
+     test-settings --zone defaultzone --lgs 1 createorpatch DemoWebShopTest \
+     project --path examples/as-code-demo/default.yaml upload DemoWebShopTest \
+     run --scenario DemoWebShop
+```
 
 ## Continuous Testing Examples
 The main goal of the NeoLoad CLI is to standardize how load tests are executed across development, non-prod, and production environments.
