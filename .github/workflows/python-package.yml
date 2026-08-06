@@ -46,7 +46,7 @@ jobs:
     needs: diffs
     strategy:
       matrix:
-        python-version: ['3.11', '3.8']
+        python-version: ['3.11', '3.12', '3.13', '3.14']
     env:
       zoneId: kcNc7
       image_ctrl: "neotys/neoload-controller:9.1"
