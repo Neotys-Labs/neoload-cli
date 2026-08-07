@@ -376,9 +376,14 @@ The configuration lets you customize the CLI's behavior. For now, it is only use
 
 ### As-Code Demo Project
 
-[`examples/as-code-demo`](examples/as-code-demo) contains a NeoLoad As-Code YAML project that works out-of-the-box:
-no NeoLoad Web project, no manual scenario setup - just point NeoLoad at
-[`default.yaml`](examples/as-code-demo/default.yaml) and run.
+Create a starter NeoLoad As-Code YAML project with:
+
+```
+neoload new DemoWebShop
+```
+
+This scaffolds `DemoWebShop/default.yaml` from the bundled Demo Web Shop template —
+no NeoLoad Web project, no manual scenario setup.
 
 Target: [Tricentis Demo Web Shop](https://demowebshop.tricentis.com/) (nopCommerce demo).
 
@@ -395,14 +400,16 @@ It uses two variables (`product_id`, `quantity`) and a single population (`Guest
 
 Run CheckVU against the project:
 ```
-neoload checkvu examples/as-code-demo/default.yaml
+neoload new DemoWebShop
+neoload checkvu DemoWebShop/default.yaml
 ```
 
 Run the full test:
 ```
+neoload new DemoWebShop
 neoload login $NLW_TOKEN \
      test-settings --zone defaultzone --lgs 1 createorpatch DemoWebShopTest \
-     project --path examples/as-code-demo/default.yaml upload DemoWebShopTest \
+     project --path DemoWebShop/default.yaml upload DemoWebShopTest \
      run --scenario DemoWebShop
 ```
 
