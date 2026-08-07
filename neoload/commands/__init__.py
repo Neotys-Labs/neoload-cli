@@ -1,2 +1,2 @@
-__all__ = ["checkvu", "config", "docker", "fastfail", "login", "logout", "logs_url", "project", "run", "status", "stop", "test_results", "test_settings",
+__all__ = ["checkvu", "config", "docker", "fastfail", "login", "logout", "logs_url", "new", "project", "run", "status", "stop", "test_results", "test_settings",
            "validate", "wait", "workspaces", "zones", "report"]
