@@ -57,7 +57,7 @@ __yaml_extensions = (".yaml", ".yml")
                    "Equivalent to setting CHECKVU_CLI_KEEP_TEMP_WORK_DIR=1. "
                    "Has no effect when --work-dir is already set, since that directory is never auto-deleted.")
 @click.argument('project_file')
-def cli(engine_jar, java, user_path, as_code_schema,schema_url, ssl_cert,
+def cli(engine_jar, java, user_path, as_code_schema, ssl_cert,
         controller_properties, load_generator_properties,
         app_proxy, app_proxy_username, app_proxy_bypass, work_dir, keep_temp_work_dir,
         project_file):
