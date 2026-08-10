@@ -1,7 +1,6 @@
 import os
 import re
 
-import pytest
 from click.testing import CliRunner
 from commands.new import cli as new_cmd
 
