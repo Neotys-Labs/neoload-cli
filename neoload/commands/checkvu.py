@@ -19,12 +19,10 @@ __yaml_extensions = (".yaml", ".yml")
 @click.option('-u', '--user-path', help="Run only the specified user path. If omitted, all user paths in the file "
                                   "are executed sequentially. An unknown name fails and lists the user paths "
                                   "found in the file.", metavar="NAME")
-@click.option('-s', '--as-code-schema', default=None,
+@click.option('-s', '--as-code-schema', default=__default_schema_url, show_default=True,
               help="NeoLoad as-code schema (URL or local path) to validate PROJECT_FILE "
                    "against. Defaults to the schema published for this release on Github.",
               metavar="PATH|URL")
-@click.option('--schema-url', 'schema_url', default=None, hidden=True,
-              help="Deprecated alias for --as-code-schema, kept for backward compatibility.")
 @click.option('--ssl-cert', default="",
               help="Path to SSL certificate or write False to disable certificate checking. "
                    "Used both for schema validation and the JAR download.")
@@ -59,7 +57,7 @@ __yaml_extensions = (".yaml", ".yml")
                    "Equivalent to setting CHECKVU_CLI_KEEP_TEMP_WORK_DIR=1. "
                    "Has no effect when --work-dir is already set, since that directory is never auto-deleted.")
 @click.argument('project_file')
-def cli(engine_jar, java, user_path, as_code_schema, schema_url, ssl_cert,
+def cli(engine_jar, java, user_path, as_code_schema,schema_url, ssl_cert,
         controller_properties, load_generator_properties,
         app_proxy, app_proxy_username, app_proxy_bypass, work_dir, keep_temp_work_dir,
         project_file):
@@ -74,9 +72,6 @@ def cli(engine_jar, java, user_path, as_code_schema, schema_url, ssl_cert,
     Project root; colocated assets such as CSV files must live under that
     root.
     """
-    # -s/--as-code-schema takes priority over --schema-url (deprecated alias)
-    as_code_schema = as_code_schema or schema_url or __default_schema_url
-
     if not project_file.lower().endswith(__yaml_extensions):
         raise cli_exception.CliException("Project file must be a yaml (\".yaml\", \".yml\") file: " + project_file)
     if not os.path.isfile(project_file):

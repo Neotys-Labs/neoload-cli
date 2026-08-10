@@ -187,7 +187,7 @@ Help: neoload checkvu --help
 neoload checkvu default.yaml
 neoload checkvu -u myUser default.yaml
 ```
- - `PROJECT_FILE` is a path to an as-code yaml file. The CLI validates it against the as-code schema first (same as `neoload validate`), using `-s, --as-code-schema` to override the default schema. `--schema-url`.
+ - `PROJECT_FILE` is a path to an as-code yaml file. The CLI validates it against the as-code schema first (same as `neoload validate`), using `-s, --as-code-schema` to override the default schema.
  - `-e, --engine-jar <path-or-url>` resolves the CheckVU JAR: a local file path or a download URL. If omitted, a previously cached JAR is reused, otherwise a default URL is used to download the latest JAR.
  - `-j, --java` selects the java executable; by default `JAVA_HOME/bin/java` then `java` on the PATH. Java 21+ is required and verified before running.
  - `-w, --work-dir <path>` sets the directory used for engine files and logs. Defaults to a temporary directory deleted afterwards unless `--keep-temp-work-dir` is set; a directory you supply yourself is never deleted.

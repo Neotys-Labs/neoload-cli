@@ -194,8 +194,7 @@ class TestCheckvuCommand:
         vp.assert_called_once()
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1/default.yaml')
-    def test_deprecated_schema_url_alias_still_works(self, datafiles):
-        # --schema-url is hidden (not shown in --help) but must keep working.
+    def test_as_code_schema_overrides_default_schema(self, datafiles):
         runner = CliRunner()
         project = str(datafiles / 'default.yaml')
         with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.') as vp, \
@@ -203,6 +202,6 @@ class TestCheckvuCommand:
                 mock.patch.object(checkvu_runner, 'check_java_version', return_value=21), \
                 mock.patch.object(checkvu_runner, 'resolve_jar', return_value="checkvu.jar"), \
                 mock.patch('subprocess.run', return_value=mock.Mock(returncode=0)):
-            result = runner.invoke(checkvu, [project, "--schema-url", "https://legacy.example/schema.json"])
+            result = runner.invoke(checkvu, [project, "-s", "https://custom.example/schema.json"])
         assert result.exit_code == 0
-        assert vp.call_args.args[1] == "https://legacy.example/schema.json"
+        assert vp.call_args.args[1] == "https://custom.example/schema.json"
