@@ -4,7 +4,7 @@
 # Target : https://demowebshop.tricentis.com/  (nopCommerce demo)
 # Scenario:  add a product to the cart  ->  checkout as guest  ->  view details
 #
-# Out-of-the-box usage (via neoload-cli):
+# Out-of-the-box usage (via neoload-cli), from this project directory:
 #   Run the full test:
 #     neoload login $NLW_TOKEN \
 #          test-settings --zone defaultzone --lgs 1 createorpatch DemoWebShopTest \
