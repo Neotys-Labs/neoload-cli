@@ -21,6 +21,7 @@ class TestNew:
                 content = f.read()
             assert 'name: DemoWebShop' in content
             assert 'demowebshop.tricentis.com' in content
+            assert 'from this project directory' in content
 
     def test_fails_when_folder_already_exists(self, tmp_path):
         runner = CliRunner()

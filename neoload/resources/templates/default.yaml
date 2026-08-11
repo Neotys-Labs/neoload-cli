@@ -4,7 +4,7 @@
 # Target : https://demowebshop.tricentis.com/  (nopCommerce demo)
 # Scenario:  add a product to the cart  ->  checkout as guest  ->  view details
 #
-# Out-of-the-box usage (via neoload-cli):
+# Out-of-the-box usage (via neoload-cli), from this project directory:
 #   Run CheckVU against the project:
 #     neoload checkvu default.yaml
 #   Run the full test:
