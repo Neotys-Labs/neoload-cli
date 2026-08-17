@@ -13,7 +13,8 @@ __project_yaml_name = 'default.yaml'
 @click.argument('project_name')
 def cli(project_name):
     """Create a new as-code PROJECT_NAME folder with a demo yaml project."""
-    if not project_name or project_name.strip() != project_name or project_name in ('.', '..'):
+    project_name = project_name.strip()
+    if not project_name or project_name in ('.', '..'):
         raise cli_exception.CliException(f"Invalid project name: '{project_name}'.")
     if os.path.sep in project_name or (os.path.altsep and os.path.altsep in project_name):
         raise cli_exception.CliException(

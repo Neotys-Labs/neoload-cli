@@ -23,6 +23,14 @@ class TestNew:
             assert 'demowebshop.tricentis.com' in content
             assert 'from this project directory' in content
 
+    def test_trims_project_name(self, tmp_path):
+        runner = CliRunner()
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            result = runner.invoke(new_cmd, ['  my-demo  '])
+            assert result.exit_code == 0, result.output
+            assert "Project 'my-demo' created successfully." in result.output
+            assert os.path.isfile(os.path.join('my-demo', 'default.yaml'))
+
     def test_fails_when_folder_already_exists(self, tmp_path):
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
