@@ -10,7 +10,7 @@ MIN_JAVA_VERSION = 21
 
 # Default download URL pointing at the "latest" CheckVU JAR
 # TODO: set this once we have public jar url
-# use --jar-path or --jar-url for now
+# use --engine-jar for now
 DEFAULT_JAR_URL = ""
 
 CACHE_DIR_NAME = "checkvu"
@@ -86,25 +86,27 @@ def check_java_version(java):
             "or pass --java <path-to-java>.".format(MIN_JAVA_VERSION, java, major))
     return major
 
-# TODO cache invalidation according to project version ?
-def resolve_jar(jar_path=None, jar_url=None, ssl_cert=''):
-    """Resolves the CheckVU fat JAR.
-    Resolution order:
-      1. --jar-path (explicit local file)
-      2. --jar-url (explicit download URL) -> download + cache
-      3. cached JAR if exists
-      4. DEFAULT_JAR_URL -> download + cache
-      5. error
-    """
-    if jar_path:
-        if not os.path.isfile(jar_path):
-            raise cli_exception.CliException("CheckVU JAR not found at '{0}'.".format(jar_path))
-        return jar_path
+def is_url(spec):
+    return spec is not None and '://' in spec
 
+
+# TODO cache invalidation according to project version ?
+def resolve_jar(engine_jar=None, ssl_cert=''):
+    """Resolves the CheckVU fat JAR from --engine-jar (a local file, or a download URL).
+    Resolution order:
+      1. --engine-jar
+      2. cached JAR if exists
+      3. DEFAULT_JAR_URL -> download + cache
+      4. error
+    """
     cache_path = get_cached_jar_path()
 
-    if jar_url:
-        return download_jar(jar_url, cache_path, ssl_cert)
+    if engine_jar:
+        if is_url(engine_jar):
+            return download_jar(engine_jar, cache_path, ssl_cert)
+        if not os.path.isfile(engine_jar):
+            raise cli_exception.CliException("CheckVU JAR not found at '{0}'.".format(engine_jar))
+        return engine_jar
 
     if os.path.isfile(cache_path):
         return cache_path
@@ -113,9 +115,7 @@ def resolve_jar(jar_path=None, jar_url=None, ssl_cert=''):
         return download_jar(DEFAULT_JAR_URL, cache_path, ssl_cert)
 
     raise cli_exception.CliException(
-        "No CheckVU JAR available. Provide one with:\n"
-        "  - --jar-path <path-to-neoload-checkvu-cli.jar>, or\n"
-        "  - --jar-url <download-url>\n")
+        "No CheckVU JAR available. Provide one with --engine-jar <path-to-neoload-checkvu-cli.jar|download-url>.\n")
 
 
 def download_jar(url, destination, ssl_cert=''):
@@ -153,11 +153,28 @@ def download_jar(url, destination, ssl_cert=''):
     return destination
 
 
-def build_command(java, jar, project, user_path=None):
+def build_command(java, jar, project_file, user_path=None,
+                  controller_properties=None, load_generator_properties=None,
+                  app_proxy=None, app_proxy_username=None, app_proxy_bypass=None,
+                  work_dir=None, keep_temp_work_dir=False):
     command = [java, "-jar", jar]
     if user_path:
         command.extend(["--user-path", user_path])
-    command.append(project)
+    if controller_properties:
+        command.extend(["--controller-properties", controller_properties])
+    if load_generator_properties:
+        command.extend(["--load-generator-properties", load_generator_properties])
+    if app_proxy:
+        command.extend(["--app-proxy", app_proxy])
+    if app_proxy_username:
+        command.extend(["--app-proxy-username", app_proxy_username])
+    if app_proxy_bypass:
+        command.extend(["--app-proxy-bypass", app_proxy_bypass])
+    if work_dir:
+        command.extend(["--work-dir", work_dir])
+    if keep_temp_work_dir:
+        command.append("--keep-temp-work-dir")
+    command.append(project_file)
     return command
 
 

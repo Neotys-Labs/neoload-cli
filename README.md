@@ -182,14 +182,17 @@ This command runs a CheckVU on an as-code project: it executes a single virtual 
 It delegates to a standalone headless CheckVU JAR and streams the JAR's output and exit code directly.
 
 ```
-Usage: neoload checkvu [OPTIONS] PROJECT
+Usage: neoload checkvu [OPTIONS] PROJECT_FILE
 Help: neoload checkvu --help
 neoload checkvu default.yaml
-neoload checkvu --user-path myUser default.yaml
+neoload checkvu -u myUser default.yaml
 ```
- - `PROJECT` is a path to an as-code yaml file. The CLI validates it against the as-code schema first (same as `neoload validate`).
- - The JAR is resolved in this order: `--jar-path <path>` in priority, then from `--jar-url <url>` (downloads and caches), then a previously cached JAR, then uses a default URL to download latest JAR.
- - `--java` selects the java executable; by default `JAVA_HOME/bin/java` then `java` on the PATH. Java 21+ is required and verified before running.
+ - `PROJECT_FILE` is a path to an as-code yaml file. The CLI validates it against the as-code schema first (same as `neoload validate`), using `-s, --as-code-schema` to override the default schema.
+ - `-e, --engine-jar <path-or-url>` resolves the CheckVU JAR: a local file path or a download URL. If omitted, a previously cached JAR is reused, otherwise a default URL is used to download the latest JAR.
+ - `-j, --java` selects the java executable; by default `JAVA_HOME/bin/java` then `java` on the PATH. Java 21+ is required and verified before running.
+ - `-w, --work-dir <path>` sets the directory used for engine files and logs. Defaults to a temporary directory deleted afterwards unless `--keep-temp-work-dir` is set; a directory you supply yourself is never deleted.
+ - `--app-proxy`, `--app-proxy-username` and `--app-proxy-bypass` configure the proxy used for application traffic. The proxy password is set with `NEOLOAD_CHECK_VU_APP_PROXY_PASSWORD` environment variable instead so it never shows up in the process list or CI logs.
+ - `--controller-properties` and `--load-generator-properties` are advanced options to merge a `.properties` file into the JAR's embedded `controller.properties` / `agent.properties`.
 
 ## Reporting
 
