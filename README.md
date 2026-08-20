@@ -379,7 +379,7 @@ The configuration lets you customize the CLI's behavior. For now, it is only use
 Create a starter NeoLoad As-Code YAML project with:
 
 ```
-neoload new DemoWebShop
+neoload project create DemoWebShop
 ```
 
 This scaffolds `DemoWebShop/default.yaml` from the bundled Demo Web Shop template —
@@ -400,13 +400,13 @@ It uses two variables (`product_id`, `quantity`) and a single population (`Guest
 
 Run CheckVU against the project:
 ```
-neoload new DemoWebShop
+neoload project create DemoWebShop
 neoload checkvu DemoWebShop/default.yaml
 ```
 
 Run the full test:
 ```
-neoload new DemoWebShop
+neoload project create DemoWebShop
 neoload login $NLW_TOKEN \
      test-settings --zone defaultzone --lgs 1 createorpatch DemoWebShopTest \
      project --path DemoWebShop/default.yaml upload DemoWebShopTest \
