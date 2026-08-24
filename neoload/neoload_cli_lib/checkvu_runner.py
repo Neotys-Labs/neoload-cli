@@ -20,7 +20,7 @@ REDIRECT_TARGET = "direct-download"
 REDIRECT_FORMAT = "jar"
 REDIRECT_VERSION = "latest"
 
-# `os` query values match the CheckVU JAR filename suffixes (LOAD-38318).
+# `os` query values match the CheckVU JAR filename suffixes.
 OS_LINUX = "linux"
 OS_LINUX_ARM64 = "linux-arm64"
 OS_MAC = "mac"

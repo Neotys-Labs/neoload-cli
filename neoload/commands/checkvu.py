@@ -13,7 +13,7 @@ __yaml_extensions = (".yaml", ".yml")
 @click.option('-e', '--engine-jar', '--jar',
               help="Skip the latest-JAR download and run this CheckVU engine: a local patched file "
                    "(hotfix / air-gapped) or a download URL. If omitted, the latest JAR for this OS "
-                   "is downloaded from https://www.neotys.com/redirect/redirect.php and cached.",
+                   "is downloaded and cached.",
               metavar="PATH|URL")
 @click.option('-j', '--java', help="Path to the java executable to use. "
                             "Defaults to JAVA_HOME/bin/java, then java on the PATH.", metavar="PATH")
