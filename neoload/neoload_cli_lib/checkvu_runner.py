@@ -156,7 +156,7 @@ def download_jar(url, destination, ssl_cert=''):
 def build_command(java, jar, project_file, user_path=None,
                   controller_properties=None, load_generator_properties=None,
                   app_proxy=None, app_proxy_username=None, app_proxy_bypass=None,
-                  work_dir=None, keep_temp_work_dir=False):
+                  output=None, work_dir=None, keep_temp_work_dir=False):
     command = [java, "-jar", jar]
     if user_path:
         command.extend(["--user-path", user_path])
@@ -170,6 +170,8 @@ def build_command(java, jar, project_file, user_path=None,
         command.extend(["--app-proxy-username", app_proxy_username])
     if app_proxy_bypass:
         command.extend(["--app-proxy-bypass", app_proxy_bypass])
+    if output:
+        command.extend(["--output", output])
     if work_dir:
         command.extend(["--work-dir", work_dir])
     if keep_temp_work_dir:
