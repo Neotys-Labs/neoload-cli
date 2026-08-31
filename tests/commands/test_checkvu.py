@@ -75,6 +75,10 @@ class TestCheckvuRunner:
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml", work_dir="/tmp/scratch")
         assert command == ["java", "-jar", "checkvu.jar", "--work-dir", "/tmp/scratch", "p.yaml"]
 
+    def test_build_command_output(self):
+        command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml", output="/tmp/checkvu-out")
+        assert command == ["java", "-jar", "checkvu.jar", "--output", "/tmp/checkvu-out", "p.yaml"]
+
     @pytest.mark.parametrize("spec,expected", [
         ("https://example.com/checkvu.jar", True),
         ("http://example.com/checkvu.jar", True),

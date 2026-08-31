@@ -48,6 +48,12 @@ __yaml_extensions = (".yaml", ".yml")
 @click.option('--app-proxy-bypass',
               help="Comma-separated hosts that bypass --app-proxy (e.g. localhost,internal.corp).",
               metavar="HOSTS")
+@click.option('-o', '--output',
+              help="Directory that receives checkvu-result.json and the checkvu-content/ request and response "
+                   "dump. When omitted, nothing is written to disk and the console output is unchanged. "
+                   "Relative paths resolve from the current directory, not from PROJECT_FILE. The dump is not "
+                   "redacted: treat it as confidential.",
+              metavar="PATH")
 @click.option('-w', '--work-dir',
               help="Directory for engine scratch files and logs. Defaults to a temporary directory. "
                    "A directory you supply is never deleted.",
@@ -59,14 +65,15 @@ __yaml_extensions = (".yaml", ".yml")
 @click.argument('project_file')
 def cli(engine_jar, java, user_path, as_code_schema, ssl_cert,
         controller_properties, load_generator_properties,
-        app_proxy, app_proxy_username, app_proxy_bypass, work_dir, keep_temp_work_dir,
+        app_proxy, app_proxy_username, app_proxy_bypass, output, work_dir, keep_temp_work_dir,
         project_file):
     """  Validate the User Paths of a NeoLoad as-code Project locally.
 
     Runs each User Path once against the application and reports whether
     it completes without blocking errors. This is not a load test: no
     Population, no Scenario, no Result. Exits 0 when every User Path passes, 1
-    otherwise, and always writes a JSON output.
+    otherwise. Use --output to also write checkvu-result.json and the full
+    request and response dump to a directory.
 
     PROJECT_FILE is the as-code Project YAML file. Its parent directory is the
     Project root; colocated assets such as CSV files must live under that
@@ -91,6 +98,7 @@ def cli(engine_jar, java, user_path, as_code_schema, ssl_cert,
         app_proxy=app_proxy,
         app_proxy_username=app_proxy_username,
         app_proxy_bypass=app_proxy_bypass,
+        output=output,
         work_dir=work_dir,
         keep_temp_work_dir=keep_temp_work_dir,
     )
