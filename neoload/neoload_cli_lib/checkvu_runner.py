@@ -200,10 +200,11 @@ def is_url(spec):
 def resolve_jar(engine_jar=None, ssl_cert=""):
     """Resolves the CheckVU fat JAR.
 
-    Resolution order:
+    Resolution order (unchanged from the current 2026.3 behaviour):
       1. --jar / --engine-jar local file: skip download, run that JAR (hotfix).
       2. --jar / --engine-jar URL: download that URL into the cache (1 JAR).
-      3. redirect.php latest for this OS: follow redirect, cache 1 JAR, replace older.
+      3. a cached JAR, if one exists: reused as-is, no network call.
+      4. redirect.php latest for this OS, only when no JAR is cached yet.
     """
     if engine_jar:
         if is_url(engine_jar):
@@ -212,7 +213,16 @@ def resolve_jar(engine_jar=None, ssl_cert=""):
             raise cli_exception.CliException("CheckVU JAR not found at '{0}'.".format(engine_jar))
         return engine_jar
 
-    return download_jar(build_redirect_url(), ssl_cert)
+    cached = get_cached_jar_path()
+    if cached:
+        return cached
+
+    try:
+        return download_jar(build_redirect_url(), ssl_cert)
+    except cli_exception.CliException as err:
+        raise cli_exception.CliException(
+            "{0}\nNo cached JAR to fall back on. Provide one with --jar <path|url> "
+            "for an air-gapped or hotfix run.".format(err))
 
 
 def _keep_only_jar(cache_dir, keep_path):

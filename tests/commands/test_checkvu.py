@@ -194,13 +194,32 @@ class TestCheckvuRunner:
         assert result == "downloaded.jar"
         dl.assert_called_once_with("https://example.com/checkvu.jar", "")
 
-    def test_resolve_jar_uses_redirect_for_latest(self, tmp_path):
+    def test_resolve_jar_uses_redirect_for_latest_when_nothing_cached(self, tmp_path):
         redirect = checkvu_runner.build_redirect_url("linux")
         with mock.patch.object(checkvu_runner, "detect_os", return_value="linux"), \
+                mock.patch.object(checkvu_runner, "get_cached_jar_path", return_value=None), \
                 mock.patch.object(checkvu_runner, "download_jar", return_value="downloaded.jar") as dl:
             result = checkvu_runner.resolve_jar()
         assert result == "downloaded.jar"
         dl.assert_called_once_with(redirect, "")
+
+    def test_resolve_jar_reuses_cache_without_a_network_call(self, tmp_path):
+        cached = tmp_path / "checkvu_2026_3_0_linux.jar"
+        cached.write_bytes(b"PK\x03\x04cached")
+        with mock.patch.object(checkvu_runner, "get_cached_jar_path", return_value=str(cached)), \
+                mock.patch.object(checkvu_runner, "download_jar") as dl:
+            result = checkvu_runner.resolve_jar()
+        assert result == str(cached)
+        dl.assert_not_called()
+
+    def test_resolve_jar_download_failure_mentions_the_jar_option(self, tmp_path):
+        with mock.patch.object(checkvu_runner, "get_cached_jar_path", return_value=None), \
+                mock.patch.object(checkvu_runner, "download_jar",
+                                  side_effect=checkvu_runner.cli_exception.CliException(
+                                      "Failed to download the CheckVU JAR from 'https://...': 403")):
+            with pytest.raises(checkvu_runner.cli_exception.CliException) as err:
+                checkvu_runner.resolve_jar()
+        assert "--jar" in str(err.value)
 
     def test_cache_keeps_only_latest_jar(self, tmp_path):
         old = tmp_path / "checkvu_2026_2_0_linux.jar"
@@ -248,12 +267,14 @@ class TestCheckvuCommand:
         with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.'), \
                 mock.patch.object(checkvu_runner, 'resolve_java', return_value="java"), \
                 mock.patch.object(checkvu_runner, 'check_java_version', return_value=21), \
+                mock.patch.object(checkvu_runner, 'get_cached_jar_path', return_value=None), \
                 mock.patch.object(checkvu_runner, 'download_jar',
                                   side_effect=checkvu_runner.cli_exception.CliException(
                                       "Failed to download the CheckVU JAR")):
             result = runner.invoke(checkvu, [project])
         assert result.exit_code == 1
         assert "Failed to download the CheckVU JAR" in result.output
+        assert "--jar" in result.output
 
     def test_old_java_fails_before_run(self, tmp_path):
         runner = CliRunner()
