@@ -192,7 +192,7 @@ neoload checkvu -u myUser default.yaml
  - `-j, --java` selects the java executable; by default `JAVA_HOME/bin/java` then `java` on the PATH. Java 21+ is required and verified before running.
  - `-o, --output <path>` sets the directory that receives `checkvu-result.json` and the `checkvu-content/` request and response dump. When omitted, nothing is written to disk and only the console output is produced. Relative paths resolve from the current directory, not from `PROJECT_FILE`. The dump is not redacted, so treat it as confidential.
  - `-w, --work-dir <path>` sets the directory used for engine files and logs. Defaults to a temporary directory deleted afterwards unless `--keep-temp-work-dir` is set; a directory you supply yourself is never deleted.
- - `--app-proxy`, `--app-proxy-username` and `--app-proxy-bypass` configure the proxy used for application traffic. The proxy password is set with `NEOLOAD_CHECK_VU_APP_PROXY_PASSWORD` environment variable instead so it never shows up in the process list or CI logs.
+ - `--app-proxy`, `--app-proxy-username` and `--app-proxy-bypass` configure the proxy used for application traffic. The proxy password is set with `CHECKVU_CLI_APP_PROXY_PASSWORD` environment variable instead so it never shows up in the process list or CI logs.
  - `--controller-properties` and `--load-generator-properties` are advanced options to merge a `.properties` file into the JAR's embedded `controller.properties` / `agent.properties`.
 
 ## Reporting

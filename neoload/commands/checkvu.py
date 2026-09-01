@@ -42,7 +42,7 @@ __yaml_extensions = (".yaml", ".yml")
               metavar="HOST:PORT")
 @click.option('--app-proxy-username',
               help="Username for --app-proxy authentication (optional). The password is read from environment "
-                   "variable NEOLOAD_CHECK_VU_APP_PROXY_PASSWORD; there is no flag for it, so it is never "
+                   "variable CHECKVU_CLI_APP_PROXY_PASSWORD; there is no flag for it, so it is never "
                    "exposed in the process list or CI logs.",
               metavar="USERNAME")
 @click.option('--app-proxy-bypass',
