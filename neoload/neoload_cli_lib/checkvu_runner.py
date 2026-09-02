@@ -200,7 +200,7 @@ def is_url(spec):
 def resolve_jar(engine_jar=None, ssl_cert=""):
     """Resolves the CheckVU fat JAR.
 
-    Resolution order (unchanged from the current 2026.3 behaviour):
+    Resolution order:
       1. --jar / --engine-jar local file: skip download, run that JAR (hotfix).
       2. --jar / --engine-jar URL: download that URL into the cache (1 JAR).
       3. a cached JAR, if one exists: reused as-is, no network call.
