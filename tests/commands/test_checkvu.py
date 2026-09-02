@@ -8,6 +8,10 @@ from neoload_cli_lib import checkvu_runner
 import neoload_cli_lib.schema_validation as schema_validation
 
 
+def _java_jar(*rest):
+    return ["java"] + checkvu_runner.CHECKVU_VM_OPTIONS + ["-jar"] + list(rest)
+
+
 class TestCheckvuRunner:
     @pytest.mark.parametrize("output,expected", [
         ('openjdk version "21.0.2" 2024-01-16', 21),
@@ -33,11 +37,11 @@ class TestCheckvuRunner:
     def test_build_command(self):
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml",
                                                user_path="myUser")
-        assert command == ["java", "-jar", "checkvu.jar", "--user-path", "myUser", "p.yaml"]
+        assert command == _java_jar("checkvu.jar", "--user-path", "myUser", "p.yaml")
 
     def test_build_command_minimal(self):
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml")
-        assert command == ["java", "-jar", "checkvu.jar", "p.yaml"]
+        assert command == _java_jar("checkvu.jar", "p.yaml")
 
     def test_build_command_overlays(self):
         command = checkvu_runner.build_command(
@@ -45,12 +49,12 @@ class TestCheckvuRunner:
             controller_properties="/tmp/ctrl.properties",
             load_generator_properties="/tmp/agent.properties",
         )
-        assert command == [
-            "java", "-jar", "checkvu.jar",
+        assert command == _java_jar(
+            "checkvu.jar",
             "--controller-properties", "/tmp/ctrl.properties",
             "--load-generator-properties", "/tmp/agent.properties",
             "p.yaml",
-        ]
+        )
 
     def test_build_command_proxy(self):
         command = checkvu_runner.build_command(
@@ -59,25 +63,25 @@ class TestCheckvuRunner:
             app_proxy_username="alice",
             app_proxy_bypass="localhost,internal",
         )
-        assert command == [
-            "java", "-jar", "checkvu.jar",
+        assert command == _java_jar(
+            "checkvu.jar",
             "--app-proxy", "proxy.corp:8080",
             "--app-proxy-username", "alice",
             "--app-proxy-bypass", "localhost,internal",
             "p.yaml",
-        ]
+        )
 
     def test_build_command_keep_temp_work_dir(self):
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml", keep_temp_work_dir=True)
-        assert command == ["java", "-jar", "checkvu.jar", "--keep-temp-work-dir", "p.yaml"]
+        assert command == _java_jar("checkvu.jar", "--keep-temp-work-dir", "p.yaml")
 
     def test_build_command_work_dir(self):
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml", work_dir="/tmp/scratch")
-        assert command == ["java", "-jar", "checkvu.jar", "--work-dir", "/tmp/scratch", "p.yaml"]
+        assert command == _java_jar("checkvu.jar", "--work-dir", "/tmp/scratch", "p.yaml")
 
     def test_build_command_output(self):
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml", output="/tmp/checkvu-out")
-        assert command == ["java", "-jar", "checkvu.jar", "--output", "/tmp/checkvu-out", "p.yaml"]
+        assert command == _java_jar("checkvu.jar", "--output", "/tmp/checkvu-out", "p.yaml")
 
     @pytest.mark.parametrize("spec,expected", [
         ("https://example.com/checkvu.jar", True),
@@ -171,7 +175,7 @@ class TestCheckvuCommand:
                 mock.patch('subprocess.run', side_effect=fake_run):
             result = runner.invoke(checkvu, [project])
         assert result.exit_code == 0
-        assert recorded['command'] == ["java", "-jar", "checkvu.jar", project]
+        assert recorded['command'] == _java_jar("checkvu.jar", project)
 
     def test_nonzero_exit_code(self, tmp_path):
         runner = CliRunner()
