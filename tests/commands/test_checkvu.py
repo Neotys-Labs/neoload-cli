@@ -8,14 +8,26 @@ from neoload_cli_lib import checkvu_runner
 import neoload_cli_lib.schema_validation as schema_validation
 
 
+LINUX_JAR_NAME = "neoload-checkvu-cli-2026.3.0-linux.jar"
+MAC_ARM64_JAR_NAME = "neoload-checkvu-cli-2026.3.0-mac_arm64.jar"
+OLD_LINUX_JAR_NAME = "neoload-checkvu-cli-2026.2.0-linux.jar"
+FILES_TRICENTIS_DOWNLOAD_URL = (
+    "https://files.tricentis.com/index.php/s/oMXsYfIeE6tKOx3/download"
+)
+
+
+def _content_disposition(filename):
+    return 'attachment; filename*=UTF-8\'\'{0}; filename="{0}"'.format(filename)
+
+
 class FakeJarResponse:
-    def __init__(self, content=b"PK\x03\x04jar", filename="checkvu_2026_3_0_linux.jar",
+    def __init__(self, content=b"PK\x03\x04jar", filename=LINUX_JAR_NAME,
                  url=None, status_code=200):
         self.content = content
         self.status_code = status_code
-        self.url = url or ("https://cdn.example/" + filename)
+        self.url = url or FILES_TRICENTIS_DOWNLOAD_URL
         self.headers = {
-            "Content-Disposition": 'attachment; filename="{0}"'.format(filename),
+            "Content-Disposition": _content_disposition(filename),
             "content-length": str(len(content)),
         }
         self.iter_content_calls = 0
@@ -157,23 +169,24 @@ class TestCheckvuRunner:
             assert "checkvu-version" not in url
 
     def test_version_from_filename(self):
+        assert checkvu_runner.version_from_filename(LINUX_JAR_NAME) == "2026.3.0"
+        assert checkvu_runner.version_from_filename(MAC_ARM64_JAR_NAME) == "2026.3.0"
         assert checkvu_runner.version_from_filename("checkvu_2026_3_0_linux.jar") == "2026.3.0"
-        assert checkvu_runner.version_from_filename("checkvu_2026_3_0_win32_x64.jar") == "2026.3.0"
         assert checkvu_runner.version_from_filename("neoload-checkvu-cli.jar") is None
 
     def test_filename_from_response_content_disposition(self):
         response = mock.Mock(
-            headers={"Content-Disposition": 'attachment; filename="checkvu_2026_3_0_mac_arm64.jar"'},
+            headers={"Content-Disposition": _content_disposition(MAC_ARM64_JAR_NAME)},
             url="https://www.neotys.com/redirect/redirect.php?product=checkvu",
         )
-        assert checkvu_runner.filename_from_response(response) == "checkvu_2026_3_0_mac_arm64.jar"
+        assert checkvu_runner.filename_from_response(response) == MAC_ARM64_JAR_NAME
 
     def test_filename_from_response_final_url(self):
         response = mock.Mock(
             headers={},
-            url="https://cdn.example/documents/download/checkvu/v2026.3/checkvu_2026_3_0_linux.jar",
+            url=FILES_TRICENTIS_DOWNLOAD_URL,
         )
-        assert checkvu_runner.filename_from_response(response) == "checkvu_2026_3_0_linux.jar"
+        assert checkvu_runner.filename_from_response(response) == checkvu_runner.FALLBACK_JAR_NAME
 
     def test_resolve_jar_uses_explicit_local_path(self, tmp_path):
         jar = tmp_path / "checkvu.jar"
@@ -204,7 +217,7 @@ class TestCheckvuRunner:
         dl.assert_called_once_with(redirect, "")
 
     def test_resolve_jar_reuses_cache_without_a_network_call(self, tmp_path):
-        cached = tmp_path / "checkvu_2026_3_0_linux.jar"
+        cached = tmp_path / LINUX_JAR_NAME
         cached.write_bytes(b"PK\x03\x04cached")
         with mock.patch.object(checkvu_runner, "get_cached_jar_path", return_value=str(cached)), \
                 mock.patch.object(checkvu_runner, "download_jar") as dl:
@@ -222,21 +235,21 @@ class TestCheckvuRunner:
         assert "--jar" in str(err.value)
 
     def test_cache_keeps_only_latest_jar(self, tmp_path):
-        old = tmp_path / "checkvu_2026_2_0_linux.jar"
+        old = tmp_path / OLD_LINUX_JAR_NAME
         old.write_bytes(b"PK\x03\x04old")
-        response = FakeJarResponse(filename="checkvu_2026_3_0_linux.jar", content=b"PK\x03\x04new")
+        response = FakeJarResponse(filename=LINUX_JAR_NAME, content=b"PK\x03\x04new")
         with mock.patch.object(checkvu_runner, "get_cache_dir", return_value=str(tmp_path)), \
                 mock.patch.object(checkvu_runner.requests, "get", return_value=response):
             result = checkvu_runner.download_jar("https://www.neotys.com/redirect/redirect.php?os=linux")
-        assert result == str(tmp_path / "checkvu_2026_3_0_linux.jar")
+        assert result == str(tmp_path / LINUX_JAR_NAME)
         assert not old.exists()
-        assert (tmp_path / "checkvu_2026_3_0_linux.jar").read_bytes() == b"PK\x03\x04new"
-        assert [p.name for p in tmp_path.glob("*.jar")] == ["checkvu_2026_3_0_linux.jar"]
+        assert (tmp_path / LINUX_JAR_NAME).read_bytes() == b"PK\x03\x04new"
+        assert [p.name for p in tmp_path.glob("*.jar")] == [LINUX_JAR_NAME]
 
     def test_cache_reuses_same_filename_without_redownload(self, tmp_path):
-        cached = tmp_path / "checkvu_2026_3_0_linux.jar"
+        cached = tmp_path / LINUX_JAR_NAME
         cached.write_bytes(b"PK\x03\x04cached")
-        response = FakeJarResponse(filename="checkvu_2026_3_0_linux.jar", content=b"PK\x03\x04new")
+        response = FakeJarResponse(filename=LINUX_JAR_NAME, content=b"PK\x03\x04new")
         with mock.patch.object(checkvu_runner, "get_cache_dir", return_value=str(tmp_path)), \
                 mock.patch.object(checkvu_runner.requests, "get", return_value=response):
             result = checkvu_runner.download_jar("https://www.neotys.com/redirect/redirect.php?os=linux")
@@ -245,7 +258,7 @@ class TestCheckvuRunner:
         assert response.iter_content_calls == 0
 
     def test_download_rejects_non_jar_payload(self, tmp_path):
-        response = FakeJarResponse(filename="checkvu_2026_3_0_linux.jar", content=b"<html>nope</html>")
+        response = FakeJarResponse(filename=LINUX_JAR_NAME, content=b"<html>nope</html>")
         with mock.patch.object(checkvu_runner, "get_cache_dir", return_value=str(tmp_path)), \
                 mock.patch.object(checkvu_runner.requests, "get", return_value=response):
             with pytest.raises(checkvu_runner.cli_exception.CliException) as err:

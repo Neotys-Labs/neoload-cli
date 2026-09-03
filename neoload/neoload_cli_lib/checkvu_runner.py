@@ -34,7 +34,9 @@ FALLBACK_JAR_NAME = "checkvu.jar"
 __java_version_pattern = re.compile(r'version "(\d+)(?:\.(\d+))?')
 __content_disposition_filename = re.compile(
     r"filename\*?=(?:UTF-8\'\')?\"?([^\";]+)\"?", re.IGNORECASE)
-__jar_version_pattern = re.compile(r"checkvu_(\d+)_(\d+)_(\d+)_", re.IGNORECASE)
+__shipped_jar_version_pattern = re.compile(
+    r"neoload-checkvu-cli-(\d+)\.(\d+)\.(\d+)-", re.IGNORECASE)
+__legacy_jar_version_pattern = re.compile(r"checkvu_(\d+)_(\d+)_(\d+)_", re.IGNORECASE)
 __arm_machines = ("arm64", "aarch64")
 __x64_machines = ("x86_64", "amd64", "x64")
 
@@ -96,8 +98,10 @@ def build_redirect_url(os_name=None, version=REDIRECT_VERSION):
         version=latest
         format=jar
 
-    `os` matches the delivered JAR suffix (checkvu_<ver>_<os>.jar).
-    `version=latest` is resolved server-side; the CLI never pins a NeoLoad version.
+    `os` matches the redirect allowlist (linux, linux-arm64, mac, mac_arm64, win32_x64).
+    `version=latest` is resolved server-side; the CLI never pins a CheckVU version.
+    The 302 points at files.tricentis.com; the cached filename comes from the final
+    response Content-Disposition (e.g. neoload-checkvu-cli-2026.3.0-linux.jar).
     """
     if os_name is None:
         os_name = detect_os()
@@ -112,11 +116,13 @@ def build_redirect_url(os_name=None, version=REDIRECT_VERSION):
 
 
 def version_from_filename(filename):
-    """Read CheckVU version from a delivered filename such as checkvu_2026_3_0_linux.jar."""
-    match = __jar_version_pattern.search(os.path.basename(filename))
-    if match is None:
-        return None
-    return "{0}.{1}.{2}".format(match.group(1), match.group(2), match.group(3))
+    """Read CheckVU version from a delivered JAR filename, if present."""
+    base = os.path.basename(filename)
+    for pattern in (__shipped_jar_version_pattern, __legacy_jar_version_pattern):
+        match = pattern.search(base)
+        if match:
+            return "{0}.{1}.{2}".format(match.group(1), match.group(2), match.group(3))
+    return None
 
 
 def filename_from_response(response, fallback=FALLBACK_JAR_NAME):
@@ -241,10 +247,12 @@ def _is_jar_file(path):
 
 
 def download_jar(url, ssl_cert=""):
-    """Download the latest CheckVU JAR through redirect.php, cache a single file.
+    """Download a CheckVU JAR, follow redirects, and cache a single file.
 
-    Follows HTTP redirects. If the cache already holds the redirected filename
-    (same version), the body is not fetched again. Any other cached JAR is removed.
+    redirect.php answers 302; the JAR is served from files.tricentis.com. The cache
+    name is taken from the final response Content-Disposition, not from the redirect
+    Location (which has no .jar suffix). If that filename is already cached, the body
+    is skipped. Any other cached JAR in the directory is removed.
     """
     from tqdm import tqdm
     from neoload_cli_lib import tools
