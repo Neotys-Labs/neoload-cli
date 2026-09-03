@@ -19,6 +19,9 @@ __yaml_extensions = (".yaml", ".yml")
 @click.option('-u', '--user-path', help="Run only the specified user path. If omitted, all user paths in the file "
                                   "are executed sequentially. An unknown name fails and lists the user paths "
                                   "found in the file.", metavar="NAME")
+@click.option('--play-think-time', is_flag=True, default=False,
+              help="Play think times defined on pages and delays marked as think time. "
+                   "Disabled by default. Equivalent to setting CHECKVU_CLI_PLAY_THINK_TIME=1.")
 @click.option('-s', '--as-code-schema', default=__default_schema_url, show_default=True,
               help="NeoLoad as-code schema (URL or local path) to validate PROJECT_FILE "
                    "against. Defaults to the schema published for this release on Github.",
@@ -63,7 +66,7 @@ __yaml_extensions = (".yaml", ".yml")
                    "Equivalent to setting CHECKVU_CLI_KEEP_TEMP_WORK_DIR=1. "
                    "Has no effect when --work-dir is already set, since that directory is never auto-deleted.")
 @click.argument('project_file')
-def cli(engine_jar, java, user_path, as_code_schema, ssl_cert,
+def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert,
         controller_properties, load_generator_properties,
         app_proxy, app_proxy_username, app_proxy_bypass, output, work_dir, keep_temp_work_dir,
         project_file):
@@ -93,6 +96,7 @@ def cli(engine_jar, java, user_path, as_code_schema, ssl_cert,
     command = checkvu_runner.build_command(
         java_executable, resolved_jar, project_file,
         user_path=user_path,
+        play_think_time=play_think_time,
         controller_properties=controller_properties,
         load_generator_properties=load_generator_properties,
         app_proxy=app_proxy,

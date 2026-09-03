@@ -188,6 +188,7 @@ neoload checkvu default.yaml
 neoload checkvu -u myUser default.yaml
 ```
  - `PROJECT_FILE` is a path to an as-code yaml file. The CLI validates it against the as-code schema first (same as `neoload validate`), using `-s, --as-code-schema` to override the default schema.
+ - `--play-think-time` plays think times defined on pages and delays marked as think time. Disabled by default (same as the CheckVU advanced setting).
  - `-e, --engine-jar <path-or-url>` resolves the CheckVU JAR: a local file path or a download URL. If omitted, a previously cached JAR is reused, otherwise a default URL is used to download the latest JAR.
  - `-j, --java` selects the java executable; by default `JAVA_HOME/bin/java` then `java` on the PATH. Java 21+ is required and verified before running.
  - `-o, --output <path>` sets the directory that receives `checkvu-result.json` and the `checkvu-content/` request and response dump. When omitted, nothing is written to disk and only the console output is produced. Relative paths resolve from the current directory, not from `PROJECT_FILE`. The dump is not redacted, so treat it as confidential.
