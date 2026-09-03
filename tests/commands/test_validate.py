@@ -6,6 +6,7 @@ import pytest
 from click.testing import CliRunner
 from commands.validate import cli as validate
 from neoload_cli_lib.user_data import __yaml_schema_file as yaml_schema_file
+from neoload_cli_lib.user_data import __schema_cache_paths as schema_cache_paths
 from neoload_cli_lib import user_data
 import neoload_cli_lib.schema_validation as schema_validation
 import os
@@ -134,14 +135,15 @@ class TestValidate:
         try:
             result = self.try_dir_with_schema(datafiles_schema) # start with a known schema
 
-            orig_mtime = os.path.getmtime(l)
+            versioned_schema, _etag = schema_cache_paths('3.0')
+            if os.path.exists(versioned_schema):
+                os.remove(versioned_schema)
+            getattr(user_data, '__yaml_schema_by_key').pop('3.0', None)
+            getattr(user_data, '__yaml_schema_etag_by_key').pop('3.0', None)
             result = self.try_success(datafiles_ascode)
-            now_mtime = os.path.getmtime(l)
-
-            assert orig_mtime != now_mtime, 'The --refresh command did ' + \
-                'not actually update the file on disk! ' + \
-                'orig_mtime: {}, now_mtime: {}\nexit_code: {}\noutput: {}' \
-                    .format(orig_mtime,now_mtime,result.exit_code,result.output)
+            assert os.path.exists(versioned_schema), 'Default schemaVersion 3.0 did ' + \
+                'not write its versioned cache on disk!\nexit_code: {}\noutput: {}' \
+                    .format(result.exit_code, result.output)
         except Exception as err:
             err_msg = "err: {}".format(err)
 

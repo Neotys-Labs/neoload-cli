@@ -2,11 +2,11 @@ import click
 from neoload_cli_lib import cli_exception
 import neoload_cli_lib.schema_validation as schema_validation
 import os
-from neoload_cli_lib.schema_validation import __default_schema_url
 
 @click.command()
-@click.option('--schema-url', help="The URL (or local path) to the as-code schema. By default, use the one on Github",
-              metavar="URL", default=__default_schema_url, show_default=True)
+@click.option('--schema-url', help="The URL (or local path) to the as-code schema. "
+              "When omitted, download schemas/v<schemaVersion>/as-code.schema.json from neoload-models (v3).",
+              metavar="URL", default=None)
 @click.option('--refresh', is_flag=True, help="THIS OPTION IS NOW USELESS", hidden=True)
 @click.option('--ssl-cert', default="", help="Path to SSL certificate or write False to disable certificate checking")
 @click.argument('file')
