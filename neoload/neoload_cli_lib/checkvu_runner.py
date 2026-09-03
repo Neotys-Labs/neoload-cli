@@ -194,8 +194,10 @@ def run_checkvu(command):
     """Run the JAR, inheriting stdio so the CLI output is the JAR output, and return its exit code."""
     sys.stdout.flush()
     sys.stderr.flush()
+    # Emptied so it cannot override CHECKVU_VM_OPTIONS nor reach the Load Generator child.
+    env = dict(os.environ, JAVA_TOOL_OPTIONS="")
     try:
-        completed = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr, stdin=sys.stdin)
+        completed = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr, stdin=sys.stdin, env=env)
     except OSError as err:
         raise cli_exception.CliException("Failed to run CheckVU: {0}".format(str(err)))
     return completed.returncode

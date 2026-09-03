@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import pytest
@@ -82,6 +83,24 @@ class TestCheckvuRunner:
     def test_build_command_output(self):
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml", output="/tmp/checkvu-out")
         assert command == _java_jar("checkvu.jar", "--output", "/tmp/checkvu-out", "p.yaml")
+
+    def test_build_command_pins_jvm_options(self):
+        # Pins the literal values: _java_jar derives from the constant, so it cannot catch a change to it.
+        command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml")
+        assert command[:5] == [
+            "java", "-XX:TieredStopAtLevel=1", "-Xms256m", "-Xmx512m", "-XX:+UseSerialGC",
+        ]
+
+    def test_run_checkvu_empties_java_tool_options(self):
+        recorded = {}
+
+        def fake_run(command, *args, **kwargs):
+            recorded['env'] = kwargs.get('env')
+            return mock.Mock(returncode=0)
+
+        with mock.patch.dict(os.environ, {"JAVA_TOOL_OPTIONS": "-Xmx4g"}),                 mock.patch('subprocess.run', side_effect=fake_run):
+            assert checkvu_runner.run_checkvu(_java_jar("checkvu.jar", "p.yaml")) == 0
+        assert recorded['env']["JAVA_TOOL_OPTIONS"] == ""
 
     @pytest.mark.parametrize("spec,expected", [
         ("https://example.com/checkvu.jar", True),
