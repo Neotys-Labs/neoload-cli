@@ -35,6 +35,10 @@ class TestCheckvuRunner:
                                                user_path="myUser")
         assert command == ["java", "-jar", "checkvu.jar", "--user-path", "myUser", "p.yaml"]
 
+    def test_build_command_play_think_time(self):
+        command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml", play_think_time=True)
+        assert command == ["java", "-jar", "checkvu.jar", "--play-think-time", "p.yaml"]
+
     def test_build_command_minimal(self):
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml")
         assert command == ["java", "-jar", "checkvu.jar", "p.yaml"]
@@ -172,6 +176,24 @@ class TestCheckvuCommand:
             result = runner.invoke(checkvu, [project])
         assert result.exit_code == 0
         assert recorded['command'] == ["java", "-jar", "checkvu.jar", project]
+
+    def test_play_think_time_is_forwarded(self, tmp_path):
+        runner = CliRunner()
+        project = self._yaml_file(tmp_path)
+        recorded = {}
+
+        def fake_run(command, *args, **kwargs):
+            recorded['command'] = command
+            return mock.Mock(returncode=0)
+
+        with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.'), \
+                mock.patch.object(checkvu_runner, 'resolve_java', return_value="java"), \
+                mock.patch.object(checkvu_runner, 'check_java_version', return_value=21), \
+                mock.patch.object(checkvu_runner, 'resolve_jar', return_value="checkvu.jar"), \
+                mock.patch('subprocess.run', side_effect=fake_run):
+            result = runner.invoke(checkvu, [project, "--play-think-time"])
+        assert result.exit_code == 0
+        assert recorded['command'] == ["java", "-jar", "checkvu.jar", "--play-think-time", project]
 
     def test_nonzero_exit_code(self, tmp_path):
         runner = CliRunner()

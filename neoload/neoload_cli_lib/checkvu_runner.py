@@ -153,13 +153,15 @@ def download_jar(url, destination, ssl_cert=''):
     return destination
 
 
-def build_command(java, jar, project_file, user_path=None,
+def build_command(java, jar, project_file, user_path=None, play_think_time=False,
                   controller_properties=None, load_generator_properties=None,
                   app_proxy=None, app_proxy_username=None, app_proxy_bypass=None,
                   output=None, work_dir=None, keep_temp_work_dir=False):
     command = [java, "-jar", jar]
     if user_path:
         command.extend(["--user-path", user_path])
+    if play_think_time:
+        command.append("--play-think-time")
     if controller_properties:
         command.extend(["--controller-properties", controller_properties])
     if load_generator_properties:
