@@ -23,4 +23,6 @@ def get_resource_as_path(namespace, file):
     pkg_resources = _resources_module()
 
     logging.debug({'namespace': namespace, 'file': file})
-    return pkg_resources.as_file(pkg_resources.files(namespace).joinpath(file))
+    if hasattr(pkg_resources, 'files'):  # files and as_file are present from Python 3.9
+        return pkg_resources.as_file(pkg_resources.files(namespace).joinpath(file))
+    return pkg_resources.path(namespace, file)
