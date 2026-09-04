@@ -112,6 +112,36 @@ class TestVerifySignedByTricentis:
             jar_signature.verify_signed_by_tricentis(str(not_a_jar), "java")
         assert "not a readable JAR" in str(err.value)
 
+    def test_rejects_a_jar_a_second_signer_added_entries_to(self, tmp_path, jarsigner):
+        jar = jar_signed_by(tmp_path, "Tricentis GmbH")
+        with zipfile.ZipFile(jar, "a") as archive:
+            archive.writestr("META-INF/EVIL.SF", b"")
+            archive.writestr("META-INF/EVIL.RSA", signature_block("Evil Corp"))
+            archive.writestr("com/evil/Backdoor.class", b"")
+
+        with pytest.raises(jar_signature.JarSignatureError) as err:
+            jar_signature.verify_signed_by_tricentis(jar, "java")
+        assert "META-INF/EVIL.RSA" in str(err.value)
+
+    def test_rejects_a_second_signature_spelled_in_lowercase(self, tmp_path, jarsigner):
+        jar = jar_signed_by(tmp_path, "Tricentis GmbH")
+        with zipfile.ZipFile(jar, "a") as archive:
+            archive.writestr("meta-inf/evil.rsa", signature_block("Evil Corp"))
+
+        with pytest.raises(jar_signature.JarSignatureError) as err:
+            jar_signature.verify_signed_by_tricentis(jar, "java")
+        assert "meta-inf/evil.rsa" in str(err.value)
+
+    def test_rejects_a_jar_holding_the_signature_entry_twice(self, tmp_path, jarsigner):
+        """Java and Python could each read a different one of two same-named entries."""
+        jar = jar_signed_by(tmp_path, "Tricentis GmbH")
+        with zipfile.ZipFile(jar, "a") as archive:
+            archive.writestr(jar_signature.CMS_SIGNATURE_ENTRY, signature_block("Evil Corp"))
+
+        with pytest.raises(jar_signature.JarSignatureError) as err:
+            jar_signature.verify_signed_by_tricentis(jar, "java")
+        assert str(err.value).count(jar_signature.CMS_SIGNATURE_ENTRY) == 2
+
     def test_rejects_a_signature_block_that_is_not_cms(self, tmp_path, jarsigner):
         jar = jar_containing(tmp_path, b"garbage")
         with pytest.raises(jar_signature.JarSignatureError) as err:

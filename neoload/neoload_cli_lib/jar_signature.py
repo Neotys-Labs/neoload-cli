@@ -6,6 +6,7 @@ import zipfile
 from neoload_cli_lib import cli_exception, resources
 
 CMS_SIGNATURE_ENTRY = "META-INF/NEOLOAD_.RSA"
+SIGNATURE_BLOCK_SUFFIXES = (".RSA", ".DSA", ".EC")
 EXPECTED_ORGANIZATION = "Tricentis GmbH"
 CERTIFICATE_NAMESPACE = "resources.certs"
 TRUSTED_ROOT_KEYSTORE = "globalsign-code-signing-root-r45.jks"
@@ -18,6 +19,7 @@ def verify_signed_by_tricentis(jar_path, java_executable):
     """Raise JarSignatureError unless
      - jar signature is verified against trusted root
      - subject DN is Tricentis GmbH
+     - that signature is the only one the jar carries
     """
     try:
         archive = zipfile.ZipFile(jar_path)
@@ -26,6 +28,7 @@ def verify_signed_by_tricentis(jar_path, java_executable):
 
     with archive as jar:
         cms_signature = _read_cms_signature(jar)
+        _check_tricentis_is_the_only_signer(jar)
 
     _run_jarsigner(jar_path, java_executable)
     _check_signer_is_tricentis(cms_signature)
@@ -39,6 +42,25 @@ def _read_cms_signature(jar):
         raise JarSignatureError(
             "The CheckVU JAR is not signed: no signature block '{0}' found"
             .format(CMS_SIGNATURE_ENTRY))
+
+
+def _check_tricentis_is_the_only_signer(jar):
+    """Raise unless the Tricentis block is the only one.
+    """
+    blocks = [name for name in jar.namelist() if _is_signature_block(name)]
+    if blocks != [CMS_SIGNATURE_ENTRY]:
+        raise JarSignatureError(
+            "The CheckVU JAR must carry the Tricentis signature and nothing else, but holds {0}."
+            .format(", ".join(blocks)))
+
+
+def _is_signature_block(entry_name):
+    """Tell whether Java would read an entry as a signature block.
+    Based on conditions in JVM itself
+    """
+    directory, _, filename = entry_name.rpartition("/")
+    return (directory.upper() == "META-INF"
+            and filename.upper().endswith(SIGNATURE_BLOCK_SUFFIXES))
 
 
 def _run_jarsigner(jar_path, java_executable):
