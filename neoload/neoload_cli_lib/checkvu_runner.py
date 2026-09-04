@@ -4,7 +4,7 @@ import shutil
 import subprocess
 import sys
 
-from neoload_cli_lib import cli_exception, paths
+from neoload_cli_lib import cli_exception, jar_signature, paths
 
 MIN_JAVA_VERSION = 21
 
@@ -91,14 +91,25 @@ def is_url(spec):
 
 
 # TODO cache invalidation according to project version ?
-def resolve_jar(engine_jar=None, ssl_cert=''):
-    """Resolves the CheckVU fat JAR from --engine-jar (a local file, or a download URL).
+def resolve_jar(engine_jar=None, ssl_cert='', java_executable=None, verify_signature=True):
+    """Resolves the CheckVU fat JAR from --engine-jar (a local file, or a download URL)
+    and verifies its signature
     Resolution order:
       1. --engine-jar
       2. cached JAR if exists
       3. DEFAULT_JAR_URL -> download + cache
       4. error
     """
+    jar = _locate_jar(engine_jar, ssl_cert)
+    if verify_signature:
+        jar_signature.verify_signed_by_tricentis(jar, java_executable)
+    else:
+        print("WARNING: running '{0}' without verifying its Tricentis signature.".format(jar),
+              file=sys.stderr, flush=True)
+    return jar
+
+
+def _locate_jar(engine_jar, ssl_cert):
     cache_path = get_cached_jar_path()
 
     if engine_jar:

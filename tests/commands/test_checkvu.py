@@ -14,6 +14,12 @@ def _java_jar(*rest):
 
 
 class TestCheckvuRunner:
+    @pytest.fixture
+    def signature_checked(self):
+        with mock.patch.object(checkvu_runner.jar_signature,
+                               'verify_signed_by_tricentis') as verify:
+            yield verify
+
     @pytest.mark.parametrize("output,expected", [
         ('openjdk version "21.0.2" 2024-01-16', 21),
         ('java version "17.0.10" 2024-01-16 LTS', 17),
@@ -112,7 +118,7 @@ class TestCheckvuRunner:
     def test_is_url(self, spec, expected):
         assert checkvu_runner.is_url(spec) == expected
 
-    def test_resolve_jar_uses_explicit_local_path(self, tmp_path):
+    def test_resolve_jar_uses_explicit_local_path(self, tmp_path, signature_checked):
         jar = tmp_path / "checkvu.jar"
         jar.write_text("x")
         assert checkvu_runner.resolve_jar(engine_jar=str(jar)) == str(jar)
@@ -123,7 +129,7 @@ class TestCheckvuRunner:
             checkvu_runner.resolve_jar(engine_jar=str(missing))
         assert "not found" in str(err.value)
 
-    def test_resolve_jar_downloads_explicit_url(self, tmp_path):
+    def test_resolve_jar_downloads_explicit_url(self, tmp_path, signature_checked):
         cached = tmp_path / "cached.jar"
         with mock.patch.object(checkvu_runner, 'get_cached_jar_path', return_value=str(cached)), \
                 mock.patch.object(checkvu_runner, 'download_jar', return_value="downloaded.jar") as dl:
@@ -131,13 +137,13 @@ class TestCheckvuRunner:
         assert result == "downloaded.jar"
         dl.assert_called_once()
 
-    def test_resolve_jar_uses_cache(self, tmp_path):
+    def test_resolve_jar_uses_cache(self, tmp_path, signature_checked):
         cached = tmp_path / "cached.jar"
         cached.write_text("x")
         with mock.patch.object(checkvu_runner, 'get_cached_jar_path', return_value=str(cached)):
             assert checkvu_runner.resolve_jar() == str(cached)
 
-    def test_resolve_jar_downloads_when_no_cache(self, tmp_path):
+    def test_resolve_jar_downloads_when_no_cache(self, tmp_path, signature_checked):
         cached = tmp_path / "missing.jar"
         with mock.patch.object(checkvu_runner, 'get_cached_jar_path', return_value=str(cached)), \
                 mock.patch.object(checkvu_runner, 'download_jar', return_value="downloaded.jar") as dl, \
@@ -145,6 +151,18 @@ class TestCheckvuRunner:
             result = checkvu_runner.resolve_jar()
         assert result == "downloaded.jar"
         dl.assert_called_once()
+
+    def test_resolve_jar_verifies_the_jar_it_resolved(self, tmp_path, signature_checked):
+        jar = tmp_path / "checkvu.jar"
+        jar.write_text("x")
+        checkvu_runner.resolve_jar(engine_jar=str(jar), java_executable="java")
+        signature_checked.assert_called_once_with(str(jar), "java")
+
+    def test_resolve_jar_can_be_told_not_to_verify(self, tmp_path, signature_checked):
+        jar = tmp_path / "checkvu.jar"
+        jar.write_text("x")
+        checkvu_runner.resolve_jar(engine_jar=str(jar), verify_signature=False)
+        signature_checked.assert_not_called()
 
 
 @pytest.mark.validation
