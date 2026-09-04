@@ -303,11 +303,21 @@ def download_jar(url, ssl_cert=""):
             os.remove(partial_destination)
 
 
+# LOAD-39125: CheckVU CLI JVM flags. Passed on the java command line only — not JAVA_TOOL_OPTIONS
+# (the Load Generator child process would inherit them).
+CHECKVU_VM_OPTIONS = [
+    "-XX:TieredStopAtLevel=1",
+    "-Xms256m",
+    "-Xmx512m",
+    "-XX:+UseSerialGC",
+]
+
+
 def build_command(java, jar, project_file, user_path=None,
                   controller_properties=None, load_generator_properties=None,
                   app_proxy=None, app_proxy_username=None, app_proxy_bypass=None,
-                  work_dir=None, keep_temp_work_dir=False):
-    command = [java, "-jar", jar]
+                  output=None, work_dir=None, keep_temp_work_dir=False):
+    command = [java] + CHECKVU_VM_OPTIONS + ["-jar", jar]
     if user_path:
         command.extend(["--user-path", user_path])
     if controller_properties:
@@ -320,6 +330,8 @@ def build_command(java, jar, project_file, user_path=None,
         command.extend(["--app-proxy-username", app_proxy_username])
     if app_proxy_bypass:
         command.extend(["--app-proxy-bypass", app_proxy_bypass])
+    if output:
+        command.extend(["--output", output])
     if work_dir:
         command.extend(["--work-dir", work_dir])
     if keep_temp_work_dir:
@@ -332,8 +344,10 @@ def run_checkvu(command):
     """Run the JAR, inheriting stdio so the CLI output is the JAR output, and return its exit code."""
     sys.stdout.flush()
     sys.stderr.flush()
+    # Emptied so it cannot override CHECKVU_VM_OPTIONS nor reach the Load Generator child.
+    env = dict(os.environ, JAVA_TOOL_OPTIONS="")
     try:
-        completed = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr, stdin=sys.stdin)
+        completed = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr, stdin=sys.stdin, env=env)
     except OSError as err:
         raise cli_exception.CliException("Failed to run CheckVU: {0}".format(str(err)))
     return completed.returncode

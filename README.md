@@ -189,9 +189,10 @@ neoload checkvu -u myUser default.yaml
 ```
  - `PROJECT_FILE` is a path to an as-code yaml file. The CLI validates it against the as-code schema first (same as `neoload validate`), using `-s, --as-code-schema` to override the default schema.
  - `-e, --engine-jar, --jar <path-or-url>` skips the JAR resolution below and runs a local patched file (hotfix) or an explicit download URL. If omitted: reuse the single cached JAR if one exists (no network call); otherwise detect the OS, call `redirect.php` (`version=latest`), follow the 302 to `files.tricentis.com`, and cache the JAR under the filename from the final `Content-Disposition` (e.g. `neoload-checkvu-cli-2026.3.0-linux.jar`). Clear the cache directory to force a fresh download after a new CheckVU release.
- - `-j, --java` selects the java executable; by default `JAVA_HOME/bin/java` then `java` on the PATH. Java 21+ is required and verified before running.
+ - `-j, --java` selects the java executable; by default `JAVA_HOME/bin/java` then `java` on the PATH. Java 21+ is required and verified before running. The JAR is launched with `-XX:TieredStopAtLevel=1 -Xms256m -Xmx512m -XX:+UseSerialGC` to keep startup short, and `JAVA_TOOL_OPTIONS` is emptied for that process so these options always apply and do not reach the Load Generator it spawns.
+ - `-o, --output <path>` sets the directory that receives `checkvu-result.json` and the `checkvu-content/` request and response dump. When omitted, nothing is written to disk and only the console output is produced. Relative paths resolve from the current directory, not from `PROJECT_FILE`. The dump is not redacted, so treat it as confidential.
  - `-w, --work-dir <path>` sets the directory used for engine files and logs. Defaults to a temporary directory deleted afterwards unless `--keep-temp-work-dir` is set; a directory you supply yourself is never deleted.
- - `--app-proxy`, `--app-proxy-username` and `--app-proxy-bypass` configure the proxy used for application traffic. The proxy password is set with `NEOLOAD_CHECK_VU_APP_PROXY_PASSWORD` environment variable instead so it never shows up in the process list or CI logs.
+ - `--app-proxy`, `--app-proxy-username` and `--app-proxy-bypass` configure the proxy used for application traffic. The proxy password is set with `CHECKVU_CLI_APP_PROXY_PASSWORD` environment variable instead so it never shows up in the process list or CI logs.
  - `--controller-properties` and `--load-generator-properties` are advanced options to merge a `.properties` file into the JAR's embedded `controller.properties` / `agent.properties`.
 
 ## Reporting
@@ -379,9 +380,14 @@ The configuration lets you customize the CLI's behavior. For now, it is only use
 
 ### As-Code Demo Project
 
-[`examples/as-code-demo`](examples/as-code-demo) contains a NeoLoad As-Code YAML project that works out-of-the-box:
-no NeoLoad Web project, no manual scenario setup - just point NeoLoad at
-[`default.yaml`](examples/as-code-demo/default.yaml) and run.
+Create a starter NeoLoad As-Code YAML project with:
+
+```
+neoload project create DemoWebShop
+```
+
+This scaffolds `DemoWebShop/default.yaml` from the bundled Demo Web Shop template —
+no NeoLoad Web project, no manual scenario setup.
 
 Target: [Tricentis Demo Web Shop](https://demowebshop.tricentis.com/) (nopCommerce demo).
 
@@ -398,14 +404,16 @@ It uses two variables (`product_id`, `quantity`) and a single population (`Guest
 
 Run CheckVU against the project:
 ```
-neoload checkvu examples/as-code-demo/default.yaml
+neoload project create DemoWebShop
+neoload checkvu DemoWebShop/default.yaml
 ```
 
 Run the full test:
 ```
+neoload project create DemoWebShop
 neoload login $NLW_TOKEN \
      test-settings --zone defaultzone --lgs 1 createorpatch DemoWebShopTest \
-     project --path examples/as-code-demo/default.yaml upload DemoWebShopTest \
+     project --path DemoWebShop/default.yaml upload DemoWebShopTest \
      run --scenario DemoWebShop
 ```
 

@@ -8,7 +8,7 @@ import statistics
 import math
 import time
 
-from neoload_cli_lib import tools, rest_crud, user_data, displayer, cli_exception
+from neoload_cli_lib import tools, rest_crud, user_data, displayer, cli_exception, resources
 from dateutil.relativedelta import relativedelta
 
 import logging
@@ -163,19 +163,6 @@ def parse_filter_spec(filter_spec):
                 ret['include_filter'] = s[index_of_equals:]
 
     return ret
-
-
-def get_resource_as_string(namespace, file):
-    try:
-        import importlib.resources as pkg_resources
-    except ImportError:
-        # Try backported to PY<37 `importlib_resources`.
-        import importlib_resources as pkg_resources
-
-    logging.debug({'namespace': namespace, 'file': file})
-    if hasattr(pkg_resources, 'files'):  # files is present from Python 3.9
-        return pkg_resources.files(namespace).joinpath(file).read_text()
-    return pkg_resources.read_text(namespace, file)
 
 
 def split_path(path):
@@ -1131,11 +1118,11 @@ def unique(seq, idfun=None):
 
 
 def get_builtin_template_transaction_csv():
-    return get_resource_as_string('resources.jinja', 'builtin_transactions_csv.j2').strip()
+    return resources.get_resource_as_string('resources.jinja', 'builtin_transactions_csv.j2').strip()
 
 
 def get_builtin_template_console_summary():
-    return get_resource_as_string('resources.jinja', 'builtin_console_summary.j2').strip()
+    return resources.get_resource_as_string('resources.jinja', 'builtin_console_summary.j2').strip()
 
 
 def print_extended_help():
