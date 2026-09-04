@@ -10,9 +10,10 @@ from neoload_cli_lib.schema_validation import __default_schema_url
 __yaml_extensions = (".yaml", ".yml")
 
 @click.command()
-@click.option('-e', '--engine-jar',
-              help="CheckVU engine JAR to run: a local file, for air-gapped or pinned setups, or a download URL. "
-                   "Defaults to the cached JAR, otherwise the release URL for this version.",
+@click.option('-e', '--engine-jar', '--jar',
+              help="Skip the latest-JAR download and run this CheckVU engine: a local patched file "
+                   "(hotfix / air-gapped) or a download URL. If omitted, the latest JAR for this OS "
+                   "is downloaded and cached.",
               metavar="PATH|URL")
 @click.option('-j', '--java', help="Path to the java executable to use. "
                             "Defaults to JAVA_HOME/bin/java, then java on the PATH.", metavar="PATH")
