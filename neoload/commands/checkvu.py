@@ -26,6 +26,12 @@ __yaml_extensions = (".yaml", ".yml")
 @click.option('--ssl-cert', default="",
               help="Path to SSL certificate or write False to disable certificate checking. "
                    "Used both for schema validation and the JAR download.")
+@click.option('--unsafe-skip-jar-verification', is_flag=True, default=False,
+              help="Unsafe parameter. Set to true to "
+                   "run the CheckVU JAR without checking that it is signed by Tricentis. "
+                   "Intended for development purposes, and for runtimes that ship "
+                   "no jarsigner (in the JDK, not in the JRE, which the check needs), an that"
+                   "run a local, already verified jar.")
 @click.option('--controller-properties',
               help="Advanced. Path to controller.properties file merged additively into the Controller "
                    "configuration; only the keys you set are overridden, other embedded values are kept.",
@@ -63,7 +69,7 @@ __yaml_extensions = (".yaml", ".yml")
                    "Equivalent to setting CHECKVU_CLI_KEEP_TEMP_WORK_DIR=1. "
                    "Has no effect when --work-dir is already set, since that directory is never auto-deleted.")
 @click.argument('project_file')
-def cli(engine_jar, java, user_path, as_code_schema, ssl_cert,
+def cli(engine_jar, java, user_path, as_code_schema, ssl_cert, unsafe_skip_jar_verification,
         controller_properties, load_generator_properties,
         app_proxy, app_proxy_username, app_proxy_bypass, output, work_dir, keep_temp_work_dir,
         project_file):
@@ -88,7 +94,8 @@ def cli(engine_jar, java, user_path, as_code_schema, ssl_cert,
     java_executable = checkvu_runner.resolve_java(java)
     checkvu_runner.check_java_version(java_executable)
 
-    resolved_jar = checkvu_runner.resolve_jar(engine_jar, ssl_cert)
+    resolved_jar = checkvu_runner.resolve_jar(engine_jar, ssl_cert, java_executable,
+                                              verify_signature=not unsafe_skip_jar_verification)
 
     command = checkvu_runner.build_command(
         java_executable, resolved_jar, project_file,
