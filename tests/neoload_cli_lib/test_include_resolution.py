@@ -22,7 +22,7 @@ class TestResolveIncludes:
     @pytest.mark.datafiles('tests/neoload_projects/example_1')
     def test_resolves_and_merges_real_includes(self, datafiles):
         merged = schema_validation.resolve_and_merge_project(datafiles / 'default.yaml')
-        assert merged['name'] == 'NeoLoad-CLI-example-2_0'
+        assert merged['name'] == 'NeoLoad_CLI_example_2_0'
         # user_paths comes only from the included paths/geosearch_get.yaml file
         assert [up['name'] for up in merged['user_paths']] == ['ex_2_0_geosearch_get']
         # arrays declared directly in default.yaml are still present
