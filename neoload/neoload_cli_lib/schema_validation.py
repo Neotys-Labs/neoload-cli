@@ -19,8 +19,6 @@ YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
 __models_raw_root = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3"
 __compatibility_url = __models_raw_root + "/schemas/compatibility.json"
 __default_schema_version = "3.0"
-# Legacy URL kept so explicit --schema-url / NLCLI_FORCE_SCHEMA still work.
-__default_schema_url = __models_raw_root + "/neoload-project/src/main/resources/as-code.latest.schema.json"
 
 _MERGED_ARRAY_FIELDS = ['sla_profiles', 'variables', 'servers', 'user_paths', 'populations', 'scenarios', 'frameworks']
 _MERGED_SPECIAL_FIELDS = set(_MERGED_ARRAY_FIELDS) | {'project_settings', 'name', 'includes', 'schemaVersion'}
@@ -61,7 +59,7 @@ def merge_projects(projects):
 
     for project in projects:
         if 'schemaVersion' in project and project.get('schemaVersion') is not None:
-            merged['schemaVersion'] = normalize_schema_version(project['schemaVersion'])
+            merged['schemaVersion'] = project['schemaVersion']
 
     # Carry over any other/unrecognized top-level key too, so genuinely
     # invalid content isn't silently dropped by the merge instead of being
@@ -170,8 +168,6 @@ def resolve_schema_spec(project_object, schema_spec=None, ssl_cert=''):
 
 
 def validate_project_object(project_object, schema_spec, ssl_cert='', check_schema=True, label=None):
-    if project_object is not None and 'schemaVersion' in project_object and project_object.get('schemaVersion') is not None:
-        project_object['schemaVersion'] = normalize_schema_version(project_object['schemaVersion'])
     schema_spec, schema_key = resolve_schema_spec(project_object, schema_spec, ssl_cert)
     json_schema = init_yaml_schema_with_checks(schema_spec, ssl_cert, check_schema, schema_key=schema_key)
     try:
@@ -282,8 +278,6 @@ def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True, sc
     if not check_schema:
         return json_schema
 
-    if schema_spec is None:
-        schema_spec = __default_schema_url
     logging.debug("Checking schema source for changes %s" %schema_spec)
 
     try:

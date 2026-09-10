@@ -105,6 +105,35 @@ class TestSchemaValidation:
 
         assert any(url.endswith('schemas/v3.1/as-code.schema.json') for url in requested)
 
+    def test_numeric_schema_version_fails_as_not_a_string(self, tmp_path):
+        yaml_path = tmp_path / 'project.yaml'
+        yaml_path.write_text('name: foo\nschemaVersion: 3.1\n')
+        schema = json.dumps({
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": False,
+            "properties": {
+                "name": {"type": "string"},
+                "schemaVersion": {"type": "string", "const": "3.1"},
+            },
+        })
+
+        def fake_get(url, **kwargs):
+            response = mock.Mock(status_code=200)
+            response.headers.get.return_value = None
+            if url.endswith('compatibility.json'):
+                response.text = '{"3.0": {}, "3.1": {}}'
+            elif url.endswith('schemas/v3.1/as-code.schema.json'):
+                response.text = schema
+            else:
+                raise AssertionError('unexpected schema URL: %s' % url)
+            return response
+
+        with mock.patch('requests.get', side_effect=fake_get):
+            with pytest.raises(cli_exception.CliException) as context:
+                schema_validation.validate_yaml(str(yaml_path), None)
+        assert schema_validation.YAML_NOT_CONFIRM_MESSAGE in str(context.value)
+
     def _resolve(self, project):
         response = mock.Mock(status_code=200, text='{"3.0": {}, "3.1": {}}')
         response.headers.get.return_value = None
@@ -114,4 +143,4 @@ class TestSchemaValidation:
         return spec, key
 
 
-__schema_url__ = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3/neoload-project/src/main/resources/as-code.latest.schema.json"
+__schema_url__ = schema_validation.schema_url_for_version('3.0')

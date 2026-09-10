@@ -5,7 +5,8 @@ import os
 
 @click.command()
 @click.option('--schema-url', help="The URL (or local path) to the as-code schema. "
-              "When omitted, download schemas/v<schemaVersion>/as-code.schema.json from neoload-models (v3).",
+              "When omitted, download schemas/v<schemaVersion>/as-code.schema.json from neoload-models (v3). "
+              "If schemaVersion is absent, use schemas/v3.0/as-code.schema.json.",
               metavar="URL", default=None)
 @click.option('--refresh', is_flag=True, help="THIS OPTION IS NOW USELESS", hidden=True)
 @click.option('--ssl-cert', default="", help="Path to SSL certificate or write False to disable certificate checking")
