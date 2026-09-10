@@ -30,11 +30,10 @@ __yaml_extensions = (".yaml", ".yml")
               help="Path to SSL certificate or write False to disable certificate checking. "
                    "Used both for schema validation and the JAR download.")
 @click.option('--unsafe-skip-jar-verification', is_flag=True, default=False,
-              help="Unsafe parameter. Set to true to "
-                   "run the CheckVU JAR without checking that it is signed by Tricentis. "
-                   "Intended for development purposes, and for runtimes that ship "
-                   "no jarsigner (in the JDK, not in the JRE, which the check needs), an that"
-                   "run a local, already verified jar.")
+              help="Unsafe. Run the CheckVU JAR without checking that it is signed by Tricentis. "
+                   "Intended for development, and for runtimes that ship no jarsigner "
+                   "(jarsigner is in the JDK, not the JRE, and the check requires it) "
+                   "when running a local JAR that has already been verified.")
 @click.option('--controller-properties',
               help="Advanced. Path to controller.properties file merged additively into the Controller "
                    "configuration; only the keys you set are overridden, other embedded values are kept.",
@@ -87,6 +86,9 @@ def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert, 
     PROJECT_FILE is the as-code Project YAML file. Its parent directory is the
     Project root; colocated assets such as CSV files must live under that
     root.
+
+    A java executable is required to run the checkVU. Prefer a JDK over JRE so
+    that the CLI can check the JAR's integrity
     """
     if not project_file.lower().endswith(__yaml_extensions):
         raise cli_exception.CliException("Project file must be a yaml (\".yaml\", \".yml\") file: " + project_file)
