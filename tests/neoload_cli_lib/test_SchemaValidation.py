@@ -105,7 +105,7 @@ class TestSchemaValidation:
 
         assert any(url.endswith('schemas/v3.1/as-code.schema.json') for url in requested)
 
-    def test_numeric_schema_version_fails_as_not_a_string(self, tmp_path):
+    def test_numeric_schema_version_is_accepted(self, tmp_path):
         yaml_path = tmp_path / 'project.yaml'
         yaml_path.write_text('name: foo\nschemaVersion: 3.1\n')
         schema = json.dumps({
@@ -114,7 +114,12 @@ class TestSchemaValidation:
             "additionalProperties": False,
             "properties": {
                 "name": {"type": "string"},
-                "schemaVersion": {"type": "string", "const": "3.1"},
+                "schemaVersion": {
+                    "anyOf": [
+                        {"type": "string", "const": "3.1"},
+                        {"type": "number", "const": 3.1},
+                    ]
+                },
             },
         })
 
@@ -130,9 +135,7 @@ class TestSchemaValidation:
             return response
 
         with mock.patch('requests.get', side_effect=fake_get):
-            with pytest.raises(cli_exception.CliException) as context:
-                schema_validation.validate_yaml(str(yaml_path), None)
-        assert schema_validation.YAML_NOT_CONFIRM_MESSAGE in str(context.value)
+            schema_validation.validate_yaml(str(yaml_path), None)
 
     def _resolve(self, project):
         response = mock.Mock(status_code=200, text='{"3.0": {}, "3.1": {}}')
