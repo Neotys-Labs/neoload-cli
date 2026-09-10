@@ -48,7 +48,7 @@ class TestCheckvuRunner:
 
     def test_build_command_play_think_time(self):
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml", play_think_time=True)
-        assert command == ["java", "-jar", "checkvu.jar", "--play-think-time", "p.yaml"]
+        assert command == _java_jar("checkvu.jar", "--play-think-time", "p.yaml")
 
     def test_build_command_minimal(self):
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml")
@@ -234,7 +234,7 @@ class TestCheckvuCommand:
                 mock.patch('subprocess.run', side_effect=fake_run):
             result = runner.invoke(checkvu, [project, "--play-think-time"])
         assert result.exit_code == 0
-        assert recorded['command'] == ["java", "-jar", "checkvu.jar", "--play-think-time", project]
+        assert recorded['command'] == _java_jar("checkvu.jar", "--play-think-time", project)
 
     def test_nonzero_exit_code(self, tmp_path):
         runner = CliRunner()
