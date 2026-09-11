@@ -55,13 +55,14 @@ def _java_jar(*rest):
     return ["java"] + checkvu_runner.CHECKVU_VM_OPTIONS + ["-jar"] + list(rest)
 
 
-class TestCheckvuRunner:
-    @pytest.fixture
-    def signature_checked(self):
-        with mock.patch.object(checkvu_runner.jar_signature,
-                               'verify_signed_by_tricentis') as verify:
-            yield verify
+@pytest.fixture
+def signature_checked():
+    with mock.patch.object(checkvu_runner.jar_signature,
+                           'verify_signed_by_tricentis') as verify:
+        yield verify
 
+
+class TestCheckvuRunner:
     @pytest.mark.parametrize("output,expected", [
         ('openjdk version "21.0.2" 2024-01-16', 21),
         ('java version "17.0.10" 2024-01-16 LTS', 17),
@@ -253,7 +254,7 @@ class TestCheckvuRunner:
         assert result == "downloaded.jar"
         dl.assert_called_once_with(redirect, "")
 
-    def test_resolve_jar_reuses_cache_without_a_network_call(self, tmp_path):
+    def test_resolve_jar_reuses_cache_without_a_network_call(self, tmp_path, signature_checked):
         cached = tmp_path / LINUX_JAR_NAME
         cached.write_bytes(b"PK\x03\x04cached")
         with mock.patch.object(checkvu_runner, "get_cached_jar_path", return_value=str(cached)), \
@@ -352,7 +353,7 @@ class TestCheckvuCommand:
         assert run_mock.call_count == 1
         dl.assert_not_called()
 
-    def test_jar_option_skips_download(self, tmp_path):
+    def test_jar_option_skips_download(self, tmp_path, signature_checked):
         runner = CliRunner()
         project = self._yaml_file(tmp_path)
         jar = tmp_path / "patched.jar"
