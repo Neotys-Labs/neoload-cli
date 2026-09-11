@@ -2,6 +2,7 @@ import json
 from json import JSONDecodeError
 
 import jsonschema
+import regex as _regex
 import requests
 import yaml
 from yaml.scanner import ScannerError
@@ -24,7 +25,7 @@ _MERGED_SPECIAL_FIELDS = set(_MERGED_ARRAY_FIELDS) | {'project_settings', 'name'
 
 def parse_yaml_file(file_path):
     try:
-        yaml_content = open(file_path)
+        yaml_content = open(file_path, encoding='utf-8')
     except Exception as err:
         raise cli_exception.CliException('Unable to open file %s:\n%s' % (file_path, str(err)))
 
@@ -122,6 +123,14 @@ def validate_project_object(project_object, schema_spec, ssl_cert='', check_sche
 
     validator_cls = jsonschema.validators.validator_for(schema_as_object, jsonschema.validators.Draft7Validator)
     logging.debug("Using JSON-Schema validator: %s" % validator_cls.__name__)
+
+    def _unicode_pattern(validator, pattern, instance, schema):
+        if not isinstance(instance, str):
+            return
+        if not _regex.search(pattern, instance):
+            yield jsonschema.ValidationError(f"{instance!r} does not match {pattern!r}")
+
+    validator_cls = jsonschema.validators.extend(validator_cls, validators={"pattern": _unicode_pattern})
     v = validator_cls(schema_as_object)
     try:
         v.validate(project_object)
