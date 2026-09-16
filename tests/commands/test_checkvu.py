@@ -55,6 +55,13 @@ def _java_jar(*rest):
     return ["java"] + checkvu_runner.CHECKVU_VM_OPTIONS + ["-jar"] + list(rest)
 
 
+@pytest.fixture
+def signature_checked():
+    with mock.patch.object(checkvu_runner.jar_signature,
+                           'verify_signed_by_tricentis') as verify:
+        yield verify
+
+
 class TestCheckvuRunner:
     @pytest.mark.parametrize("output,expected", [
         ('openjdk version "21.0.2" 2024-01-16', 21),
@@ -219,7 +226,7 @@ class TestCheckvuRunner:
         )
         assert checkvu_runner.filename_from_response(response) == checkvu_runner.FALLBACK_JAR_NAME
 
-    def test_resolve_jar_uses_explicit_local_path(self, tmp_path):
+    def test_resolve_jar_uses_explicit_local_path(self, tmp_path, signature_checked):
         jar = tmp_path / "checkvu.jar"
         jar.write_text("x")
         with mock.patch.object(checkvu_runner, "download_jar") as dl:
@@ -232,13 +239,13 @@ class TestCheckvuRunner:
             checkvu_runner.resolve_jar(engine_jar=str(missing))
         assert "not found" in str(err.value)
 
-    def test_resolve_jar_downloads_explicit_url(self, tmp_path):
+    def test_resolve_jar_downloads_explicit_url(self, tmp_path, signature_checked):
         with mock.patch.object(checkvu_runner, "download_jar", return_value="downloaded.jar") as dl:
             result = checkvu_runner.resolve_jar(engine_jar="https://example.com/checkvu.jar")
         assert result == "downloaded.jar"
         dl.assert_called_once_with("https://example.com/checkvu.jar", "")
 
-    def test_resolve_jar_uses_redirect_for_latest_when_nothing_cached(self, tmp_path):
+    def test_resolve_jar_uses_redirect_for_latest_when_nothing_cached(self, tmp_path, signature_checked):
         redirect = checkvu_runner.build_redirect_url("linux")
         with mock.patch.object(checkvu_runner, "detect_os", return_value="linux"), \
                 mock.patch.object(checkvu_runner, "get_cached_jar_path", return_value=None), \
@@ -247,7 +254,7 @@ class TestCheckvuRunner:
         assert result == "downloaded.jar"
         dl.assert_called_once_with(redirect, "")
 
-    def test_resolve_jar_reuses_cache_without_a_network_call(self, tmp_path):
+    def test_resolve_jar_reuses_cache_without_a_network_call(self, tmp_path, signature_checked):
         cached = tmp_path / LINUX_JAR_NAME
         cached.write_bytes(b"PK\x03\x04cached")
         with mock.patch.object(checkvu_runner, "get_cached_jar_path", return_value=str(cached)), \
@@ -297,6 +304,18 @@ class TestCheckvuRunner:
         assert "did not return a JAR" in str(err.value)
         assert list(tmp_path.glob("*.jar")) == []
 
+    def test_resolve_jar_verifies_the_jar_it_resolved(self, tmp_path, signature_checked):
+        jar = tmp_path / "checkvu.jar"
+        jar.write_text("x")
+        checkvu_runner.resolve_jar(engine_jar=str(jar), java_executable="java")
+        signature_checked.assert_called_once_with(str(jar), "java")
+
+    def test_resolve_jar_can_be_told_not_to_verify(self, tmp_path, signature_checked):
+        jar = tmp_path / "checkvu.jar"
+        jar.write_text("x")
+        checkvu_runner.resolve_jar(engine_jar=str(jar), verify_signature=False)
+        signature_checked.assert_not_called()
+
 
 @pytest.mark.validation
 class TestCheckvuCommand:
@@ -334,7 +353,7 @@ class TestCheckvuCommand:
         assert run_mock.call_count == 1
         dl.assert_not_called()
 
-    def test_jar_option_skips_download(self, tmp_path):
+    def test_jar_option_skips_download(self, tmp_path, signature_checked):
         runner = CliRunner()
         project = self._yaml_file(tmp_path)
         jar = tmp_path / "patched.jar"

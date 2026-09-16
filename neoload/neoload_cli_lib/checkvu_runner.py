@@ -8,7 +8,7 @@ from urllib.parse import unquote, urlencode, urlparse
 
 import requests
 
-from neoload_cli_lib import cli_exception, paths
+from neoload_cli_lib import cli_exception, jar_signature, paths
 
 MIN_JAVA_VERSION = 21
 
@@ -203,8 +203,8 @@ def is_url(spec):
     return spec is not None and "://" in spec
 
 
-def resolve_jar(engine_jar=None, ssl_cert=""):
-    """Resolves the CheckVU fat JAR.
+def resolve_jar(engine_jar=None, ssl_cert="", java_executable=None, verify_signature=True):
+    """Resolves the CheckVU fat JAR and verifies its signature
 
     Resolution order:
       1. --jar / --engine-jar local file: skip download, run that JAR (hotfix).
@@ -212,6 +212,16 @@ def resolve_jar(engine_jar=None, ssl_cert=""):
       3. a cached JAR, if one exists: reused as-is, no network call.
       4. redirect.php latest for this OS, only when no JAR is cached yet.
     """
+    jar = _locate_jar(engine_jar, ssl_cert)
+    if verify_signature:
+        jar_signature.verify_signed_by_tricentis(jar, java_executable)
+    else:
+        print("WARNING: running '{0}' without verifying its Tricentis signature.".format(jar),
+          file=sys.stderr, flush=True)
+    return jar
+
+
+def _locate_jar(engine_jar, ssl_cert):
     if engine_jar:
         if is_url(engine_jar):
             return download_jar(engine_jar, ssl_cert)

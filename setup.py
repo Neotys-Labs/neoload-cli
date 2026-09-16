@@ -47,7 +47,9 @@ setup(
         'pyparsing',
         'simplejson',
         'colorama',
-        'importlib-resources'
+        'importlib-resources',
+        'cryptography>=40',
+        'asn1crypto>=1.5'
     ],
     tests_require=[
         "pytest",

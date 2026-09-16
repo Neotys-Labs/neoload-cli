@@ -30,6 +30,11 @@ __yaml_extensions = (".yaml", ".yml")
 @click.option('--ssl-cert', default="",
               help="Path to SSL certificate or write False to disable certificate checking. "
                    "Used both for schema validation and the JAR download.")
+@click.option('--unsafe-skip-jar-verification', is_flag=True, default=False,
+              help="Unsafe. Run the CheckVU JAR without checking that it is signed by Tricentis. "
+                   "Intended for development, and for runtimes that ship no jarsigner "
+                   "(jarsigner is in the JDK, not the JRE, and the check requires it) "
+                   "when running a local JAR that has already been verified.")
 @click.option('--controller-properties',
               help="Advanced. Path to controller.properties file merged additively into the Controller "
                    "configuration; only the keys you set are overridden, other embedded values are kept.",
@@ -67,7 +72,7 @@ __yaml_extensions = (".yaml", ".yml")
                    "Equivalent to setting CHECKVU_CLI_KEEP_TEMP_WORK_DIR=1. "
                    "Has no effect when --work-dir is already set, since that directory is never auto-deleted.")
 @click.argument('project_file')
-def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert,
+def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert, unsafe_skip_jar_verification,
         controller_properties, load_generator_properties,
         app_proxy, app_proxy_username, app_proxy_bypass, output, work_dir, keep_temp_work_dir,
         project_file):
@@ -82,6 +87,9 @@ def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert,
     PROJECT_FILE is the as-code Project YAML file. Its parent directory is the
     Project root; colocated assets such as CSV files must live under that
     root.
+
+    A java executable is required to run the checkVU. Prefer a JDK over JRE so
+    that the CLI can check the JAR's integrity
     """
     if not project_file.lower().endswith(__yaml_extensions):
         raise cli_exception.CliException("Project file must be a yaml (\".yaml\", \".yml\") file: " + project_file)
@@ -92,7 +100,8 @@ def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert,
     java_executable = checkvu_runner.resolve_java(java)
     checkvu_runner.check_java_version(java_executable)
 
-    resolved_jar = checkvu_runner.resolve_jar(engine_jar, ssl_cert)
+    resolved_jar = checkvu_runner.resolve_jar(engine_jar, ssl_cert, java_executable,
+                                              verify_signature=not unsafe_skip_jar_verification)
 
     command = checkvu_runner.build_command(
         java_executable, resolved_jar, project_file,
