@@ -1,0 +1,15 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://neotys.com/schemas/as-code/local-test",
+	"title": "Minimal as-code schema used as a local --schema-url source in tests",
+	"type": "object",
+	"minProperties": 1,
+	"properties": {
+		"name": { "type": "string" },
+		"schemaVersion": { "type": ["string", "number"] },
+		"includes": {
+			"type": "array",
+			"items": { "type": "string" }
+		}
+	}
+}

@@ -122,11 +122,11 @@ class TestValidate:
     @pytest.mark.slow
     @pytest.mark.datafiles(
         'tests/neoload_projects/example_1',
-        'resources/as-code.latest.schema.json'
+        'tests/resources/as-code.local.schema.json'
     )
     def test_single_with_prior_schema(self, datafiles):
         datafiles_ascode = datafiles / 'default.yaml'
-        datafiles_schema = datafiles / 'as-code.latest.schema.json'
+        datafiles_schema = datafiles / 'as-code.local.schema.json'
 
         (l, r) = self.preserve_schema()
 
@@ -169,7 +169,7 @@ class TestValidate:
         assert err_msg is None, err_msg
 
     @pytest.mark.slow
-    @pytest.mark.datafiles('resources/as-code.latest.schema.json')
+    @pytest.mark.datafiles('tests/resources/as-code.local.schema.json')
     def test_dir_with_schema_url_and_refresh(self, datafiles):
         (l,r) = self.preserve_schema()
 
@@ -180,7 +180,7 @@ class TestValidate:
         # now run the actual function test and capture if failed
         err_msg = None
         try:
-            file_path = datafiles / 'as-code.latest.schema.json'
+            file_path = datafiles / 'as-code.local.schema.json'
             orig_mtime = os.path.getmtime(l)
             time.sleep(1)
             result = self.try_dir_with_schema(file_path) # should modify the schema file
