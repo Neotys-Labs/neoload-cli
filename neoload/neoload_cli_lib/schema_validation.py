@@ -2,6 +2,7 @@ import json
 from json import JSONDecodeError
 
 import jsonschema
+import regex
 import requests
 import yaml
 from yaml.scanner import ScannerError
@@ -20,6 +21,35 @@ __default_schema_url = "https://raw.githubusercontent.com/Neotys-Labs/neoload-mo
 
 _MERGED_ARRAY_FIELDS = ['sla_profiles', 'variables', 'servers', 'user_paths', 'populations', 'scenarios', 'frameworks']
 _MERGED_SPECIAL_FIELDS = set(_MERGED_ARRAY_FIELDS) | {'project_settings', 'name', 'includes'}
+
+
+def _search(patrn, text):
+    """JSON Schema patterns are ECMA-262 regexes, which have Unicode property
+    escapes such as \\p{L}. Python's re rejects those ("bad escape \\p"), so
+    the as-code project_name pattern cannot be applied with it; the regex
+    module accepts them with the same syntax."""
+    return regex.search(patrn, text)
+
+
+def _pattern(validator, patrn, instance, schema):
+    if validator.is_type(instance, "string") and not _search(patrn, instance):
+        yield jsonschema.ValidationError("%r does not match %r" % (instance, patrn))
+
+
+def _pattern_properties(validator, patternProperties, instance, schema):
+    if not validator.is_type(instance, "object"):
+        return
+    for patrn, subschema in patternProperties.items():
+        for key, value in instance.items():
+            if _search(patrn, key):
+                yield from validator.descend(value, subschema, path=key, schema_path=patrn)
+
+
+def unicode_aware(validator_cls):
+    """Same validator, with the two regex keywords applied through the regex
+    module so a Unicode property escape does not blow up the whole run."""
+    return jsonschema.validators.extend(
+        validator_cls, {"pattern": _pattern, "patternProperties": _pattern_properties})
 
 
 def parse_yaml_file(file_path):
@@ -122,7 +152,7 @@ def validate_project_object(project_object, schema_spec, ssl_cert='', check_sche
 
     validator_cls = jsonschema.validators.validator_for(schema_as_object, jsonschema.validators.Draft7Validator)
     logging.debug("Using JSON-Schema validator: %s" % validator_cls.__name__)
-    v = validator_cls(schema_as_object)
+    v = unicode_aware(validator_cls)(schema_as_object)
     try:
         v.validate(project_object)
     except jsonschema.SchemaError as err:
