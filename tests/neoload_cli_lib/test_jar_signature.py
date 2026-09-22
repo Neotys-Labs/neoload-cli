@@ -69,6 +69,16 @@ def jar_containing(tmp_path, cms_signature):
     return str(jar)
 
 
+def assert_rejected_as_unofficial(error, jar):
+    """Every signature failure must end on the same verdict, after the technical details."""
+    message = str(error)
+    assert "Signature check details:" in message
+    assert "CheckVU did not run, for security reasons" in message
+    assert "is not an official CheckVU JAR" in message
+    assert jar in message
+    assert message.index("Signature check details:") < message.index("did not run")
+
+
 @pytest.fixture
 def jarsigner():
     """Mock jarsigner as returning exit 0 (success)"""
@@ -90,12 +100,14 @@ class TestVerifySignedByTricentis:
             jar_signature.verify_signed_by_tricentis(jar, "java")
         assert "unexpected party" in str(err.value)
         assert "Evil Corp" in str(err.value)
+        assert_rejected_as_unofficial(err.value, jar)
 
     def test_rejects_an_unsigned_jar(self, tmp_path, jarsigner):
         jar = jar_containing(tmp_path, None)
         with pytest.raises(jar_signature.JarSignatureError) as err:
             jar_signature.verify_signed_by_tricentis(jar, "java")
         assert "not signed" in str(err.value)
+        assert_rejected_as_unofficial(err.value, jar)
 
     def test_rejects_a_jar_jarsigner_refuses(self, tmp_path, jarsigner):
         jarsigner.return_value = mock.Mock(returncode=4, stdout="chain not validated")
@@ -104,6 +116,7 @@ class TestVerifySignedByTricentis:
             jar_signature.verify_signed_by_tricentis(jar, "java")
         assert "exited with code 4" in str(err.value)
         assert "chain not validated" in str(err.value)
+        assert_rejected_as_unofficial(err.value, jar)
 
     def test_rejects_a_file_that_is_not_a_jar(self, tmp_path, jarsigner):
         not_a_jar = tmp_path / "checkvu.jar"
@@ -111,6 +124,7 @@ class TestVerifySignedByTricentis:
         with pytest.raises(jar_signature.JarSignatureError) as err:
             jar_signature.verify_signed_by_tricentis(str(not_a_jar), "java")
         assert "not a readable JAR" in str(err.value)
+        assert_rejected_as_unofficial(err.value, str(not_a_jar))
 
     def test_rejects_a_jar_a_second_signer_added_entries_to(self, tmp_path, jarsigner):
         jar = jar_signed_by(tmp_path, "Tricentis GmbH")
@@ -122,6 +136,7 @@ class TestVerifySignedByTricentis:
         with pytest.raises(jar_signature.JarSignatureError) as err:
             jar_signature.verify_signed_by_tricentis(jar, "java")
         assert "META-INF/EVIL.RSA" in str(err.value)
+        assert_rejected_as_unofficial(err.value, jar)
 
     def test_rejects_a_second_signature_spelled_in_lowercase(self, tmp_path, jarsigner):
         jar = jar_signed_by(tmp_path, "Tricentis GmbH")
@@ -131,6 +146,7 @@ class TestVerifySignedByTricentis:
         with pytest.raises(jar_signature.JarSignatureError) as err:
             jar_signature.verify_signed_by_tricentis(jar, "java")
         assert "meta-inf/evil.rsa" in str(err.value)
+        assert_rejected_as_unofficial(err.value, jar)
 
     def test_rejects_a_jar_holding_the_signature_entry_twice(self, tmp_path, jarsigner):
         """Java and Python could each read a different one of two same-named entries."""
@@ -141,12 +157,23 @@ class TestVerifySignedByTricentis:
         with pytest.raises(jar_signature.JarSignatureError) as err:
             jar_signature.verify_signed_by_tricentis(jar, "java")
         assert str(err.value).count(jar_signature.CMS_SIGNATURE_ENTRY) == 2
+        assert_rejected_as_unofficial(err.value, jar)
 
     def test_rejects_a_signature_block_that_is_not_cms(self, tmp_path, jarsigner):
         jar = jar_containing(tmp_path, b"garbage")
         with pytest.raises(jar_signature.JarSignatureError) as err:
             jar_signature.verify_signed_by_tricentis(jar, "java")
         assert "Malformed JAR signature" in str(err.value)
+        assert_rejected_as_unofficial(err.value, jar)
+
+    def test_does_not_blame_the_jar_when_the_check_cannot_run(self, tmp_path, jarsigner):
+        """A missing or unusable jarsigner says nothing about the JAR itself."""
+        jar = jar_signed_by(tmp_path, "Tricentis GmbH")
+        jarsigner.side_effect = OSError("Permission denied")
+        with pytest.raises(jar_signature.JarVerificationUnavailableError) as err:
+            jar_signature.verify_signed_by_tricentis(jar, "java")
+        assert "Unable to run 'jarsigner'" in str(err.value)
+        assert "not an official CheckVU JAR" not in str(err.value)
 
     def test_verifies_strictly_against_the_root_shipped_with_the_package(self, tmp_path,
                                                                         jarsigner):
@@ -187,7 +214,8 @@ class TestLocateJarsigner:
     def test_fails_when_no_jdk_is_reachable(self, tmp_path):
         binaries = self._java_home(tmp_path)
         with mock.patch('shutil.which', return_value=None):
-            with pytest.raises(jar_signature.JarSignatureError) as err:
+            with pytest.raises(jar_signature.JarVerificationUnavailableError) as err:
                 jar_signature._locate_jarsigner(str(binaries / "java"))
 
         assert "JDK" in str(err.value)
+        assert "not an official CheckVU JAR" not in str(err.value)

@@ -15,12 +15,27 @@ class JarSignatureError(cli_exception.CliException):
     pass
 
 
+class JarVerificationUnavailableError(JarSignatureError):
+    """No verdict could be reached on the JAR, the check itself could not run."""
+    pass
+
+
 def verify_signed_by_tricentis(jar_path, java_executable):
     """Raise JarSignatureError unless
      - jar signature is verified against trusted root
      - subject DN is Tricentis GmbH
      - that signature is the only one the jar carries
     """
+    jarsigner = _locate_jarsigner(java_executable)
+    try:
+        _check_signature(jar_path, jarsigner)
+    except JarSignatureError as err:
+        if isinstance(err, JarVerificationUnavailableError):
+            raise
+        raise _rejected_as_unofficial(jar_path, err)
+
+
+def _check_signature(jar_path, jarsigner):
     try:
         archive = zipfile.ZipFile(jar_path)
     except (OSError, zipfile.BadZipFile) as err:
@@ -30,8 +45,25 @@ def verify_signed_by_tricentis(jar_path, java_executable):
         cms_signature = _read_cms_signature(jar)
         _check_tricentis_is_the_only_signer(jar)
 
-    _run_jarsigner(jar_path, java_executable)
+    _run_jarsigner(jar_path, jarsigner)
     _check_signer_is_tricentis(cms_signature)
+
+
+def _rejected_as_unofficial(jar_path, cause):
+    """Wrap a failed check into the message the user acts on.
+
+    The technical wording comes first and the verdict last, so that the line
+    the user reads right above the prompt is the one that matters, as in a
+    Python traceback.
+    """
+    details = "\n".join("  " + line for line in str(cause).splitlines())
+    return JarSignatureError(
+        "Signature check details:\n{0}\n\n"
+        "CheckVU did not run, for security reasons: '{1}' is not an official CheckVU JAR. "
+        "Either the file was modified after Tricentis released it, or it is not a CheckVU "
+        "JAR at all.\n"
+        "Download CheckVU again, or pass a JAR you trust with --jar."
+        .format(details, jar_path))
 
 
 def _read_cms_signature(jar):
@@ -40,7 +72,7 @@ def _read_cms_signature(jar):
         return jar.read(CMS_SIGNATURE_ENTRY)
     except KeyError:
         raise JarSignatureError(
-            "The CheckVU JAR is not signed: no signature block '{0}' found"
+            "The CheckVU JAR is not signed: no signature block '{0}' found."
             .format(CMS_SIGNATURE_ENTRY))
 
 
@@ -63,12 +95,10 @@ def _is_signature_block(entry_name):
             and filename.upper().endswith(SIGNATURE_BLOCK_SUFFIXES))
 
 
-def _run_jarsigner(jar_path, java_executable):
+def _run_jarsigner(jar_path, jarsigner):
     """Let the JDK verify the signature against the root shipped with this package.
     Verification is strict (validates whole cert chain, no unsigned entries, no
     modifications)"""
-    jarsigner = _locate_jarsigner(java_executable)
-
     with resources.get_resource_as_path(CERTIFICATE_NAMESPACE, TRUSTED_ROOT_KEYSTORE) as truststore:
         command = [jarsigner, "-verify", "-strict", "-keystore", str(truststore), jar_path]
         try:
@@ -78,7 +108,7 @@ def _run_jarsigner(jar_path, java_executable):
                                        universal_newlines=True,
                                        errors="replace")
         except OSError as err:
-            raise JarSignatureError(
+            raise JarVerificationUnavailableError(
                 "Unable to run '{0}' to verify the CheckVU JAR: {1}".format(jarsigner, err))
 
     if completed.returncode != 0:
@@ -101,7 +131,7 @@ def _locate_jarsigner(java_executable):
     if on_path:
         return on_path
 
-    raise JarSignatureError(
+    raise JarVerificationUnavailableError(
         "jarsigner is needed to verify the CheckVU JAR signature, but is neither next to "
         "'{0}' nor on the PATH. It ships with a JDK, not with a JRE. Point --java at a "
         "JDK, put one on the PATH, or run with --unsafe-skip-jar-verification to skip the check"
