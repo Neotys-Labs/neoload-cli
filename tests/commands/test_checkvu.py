@@ -1,3 +1,4 @@
+import logging
 import os
 from unittest import mock
 
@@ -391,6 +392,21 @@ class TestCheckvuCommand:
             result = runner.invoke(checkvu, [project])
         assert result.exit_code == 0
         assert recorded['command'] == _java_jar("checkvu.jar", project)
+
+    def test_debug_logs_the_resolved_jar_path(self, tmp_path, caplog):
+        runner = CliRunner()
+        project = self._yaml_file(tmp_path)
+        jar = os.path.abspath("checkvu.jar")
+        with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.'), \
+                mock.patch.object(checkvu_runner, 'resolve_java', return_value="java"), \
+                mock.patch.object(checkvu_runner, 'check_java_version', return_value=21), \
+                mock.patch.object(checkvu_runner, 'resolve_jar', return_value="checkvu.jar"), \
+                mock.patch('subprocess.run', return_value=mock.Mock(returncode=0)), \
+                caplog.at_level(logging.DEBUG):
+            result = runner.invoke(checkvu, [project])
+        assert result.exit_code == 0
+        assert any("Using CheckVU JAR at '{0}'".format(jar) in rec.getMessage()
+                   for rec in caplog.records)
 
     def test_play_think_time_is_forwarded(self, tmp_path):
         runner = CliRunner()
