@@ -7,7 +7,7 @@ import yaml
 from yaml.scanner import ScannerError
 
 from neoload_cli_lib import cli_exception, bad_as_code_exception
-from neoload_cli_lib.user_data import update_schema, get_yaml_schema, get_yaml_schema_etag, tools
+from neoload_cli_lib.user_data import update_schema, get_yaml_schema, get_yaml_schema_etag, tools, __yaml_schema_file
 
 import logging
 import hashlib
@@ -231,7 +231,9 @@ def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
             cached_etag = get_yaml_schema_etag() if json_schema is not None else None
             json_schema_spec, response_etag, not_modified = get_network_schema_by_spec(schema_spec, ssl_cert, cached_etag)
             if not_modified:
-                logging.info('Remote schema unchanged since last download (ETag match) - using cached schema.')
+                logging.debug(
+                    'Remote schema unchanged since last download (ETag match) - using cached schema at %s',
+                    __yaml_schema_file)
             elif json_schema_spec is not None:
                 logging.debug("Retrieved remote schema %s chars, etag=%s" % (len(json_schema_spec), response_etag or "none"))
                 if response_etag:
