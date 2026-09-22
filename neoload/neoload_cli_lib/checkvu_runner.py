@@ -271,6 +271,7 @@ def download_jar(url, ssl_cert=""):
     cache_dir = get_cache_dir()
     os.makedirs(cache_dir, exist_ok=True)
     partial_destination = None
+    print("Downloading CheckVU JAR from " + url + "\n", flush=True)
     try:
         with requests.get(url, stream=True, verify=verify, allow_redirects=True) as response:
             response.raise_for_status()
@@ -280,7 +281,6 @@ def download_jar(url, ssl_cert=""):
                 _keep_only_jar(cache_dir, destination)
                 return destination
 
-            print("Downloading CheckVU JAR from " + url + "\n")
             total_bytes = int(response.headers.get("content-length", 0))
             progress_bar = None
             if tools.is_user_interactive():
