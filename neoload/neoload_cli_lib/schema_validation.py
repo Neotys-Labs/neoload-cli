@@ -2,6 +2,7 @@ import json
 from json import JSONDecodeError
 
 import jsonschema
+import regex as _regex
 import requests
 import yaml
 from yaml.scanner import ScannerError
@@ -16,15 +17,17 @@ import  gitignorefile
 from neoload_cli_lib.neoLoad_project import is_not_to_be_included
 
 YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
-__default_schema_url = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3/neoload-project/src/main/resources/as-code.latest.schema.json"
+__models_raw_root = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3"
+__compatibility_url = __models_raw_root + "/schemas/compatibility.json"
+__default_schema_version = "3.0"
 
 _MERGED_ARRAY_FIELDS = ['sla_profiles', 'variables', 'servers', 'user_paths', 'populations', 'scenarios', 'frameworks']
-_MERGED_SPECIAL_FIELDS = set(_MERGED_ARRAY_FIELDS) | {'project_settings', 'name', 'includes'}
+_MERGED_SPECIAL_FIELDS = set(_MERGED_ARRAY_FIELDS) | {'project_settings', 'name', 'includes', 'schemaVersion'}
 
 
 def parse_yaml_file(file_path):
     try:
-        yaml_content = open(file_path)
+        yaml_content = open(file_path, encoding='utf-8')
     except Exception as err:
         raise cli_exception.CliException('Unable to open file %s:\n%s' % (file_path, str(err)))
 
@@ -54,6 +57,10 @@ def merge_projects(projects):
     for project in projects:
         if project.get('name'):
             merged['name'] = project['name']
+
+    for project in projects:
+        if 'schemaVersion' in project and project.get('schemaVersion') is not None:
+            merged['schemaVersion'] = project['schemaVersion']
 
     # Carry over any other/unrecognized top-level key too, so genuinely
     # invalid content isn't silently dropped by the merge instead of being
@@ -112,8 +119,58 @@ def resolve_and_merge_project(entry_file_path):
     return merge_projects(resolved)
 
 
+def normalize_schema_version(value):
+    """Return the schemaVersion contract as a string. Absent values default to 3.0."""
+    if value is None or value == '':
+        return __default_schema_version
+    if isinstance(value, bool):
+        raise cli_exception.CliException('Invalid schemaVersion: %s' % value)
+    if isinstance(value, int):
+        return '%s.0' % value
+    if isinstance(value, float):
+        if value == int(value):
+            return '%s.0' % int(value)
+        return str(value)
+    return str(value).strip()
+
+
+def schema_url_for_version(version):
+    return '%s/schemas/v%s/as-code.schema.json' % (__models_raw_root, version)
+
+
+def load_supported_schema_versions(ssl_cert=''):
+    """Supported versions are the keys of neoload-models schemas/compatibility.json (v3)."""
+    compatibility_json, _etag, _not_modified = get_network_schema_by_spec(__compatibility_url, ssl_cert)
+    if compatibility_json is None:
+        raise cli_exception.CliException(
+            'Could not load schema compatibility matrix from %s' % __compatibility_url)
+    try:
+        compatibility = json.loads(compatibility_json)
+    except JSONDecodeError as err:
+        raise cli_exception.CliException(
+            'Invalid schema compatibility matrix at %s:\n%s' % (__compatibility_url, err))
+    if not isinstance(compatibility, dict) or not compatibility:
+        raise cli_exception.CliException(
+            'Schema compatibility matrix at %s does not list any versions.' % __compatibility_url)
+    return compatibility
+
+
+def resolve_schema_spec(project_object, schema_spec=None, ssl_cert=''):
+    """Pick the GitHub schema URL from schemaVersion, unless the caller overrode it."""
+    if schema_spec is not None:
+        return schema_spec, None
+    version = normalize_schema_version((project_object or {}).get('schemaVersion'))
+    compatibility = load_supported_schema_versions(ssl_cert)
+    if version not in compatibility:
+        supported = ', '.join(sorted(compatibility.keys()))
+        raise cli_exception.CliException(
+            'Unsupported schemaVersion "%s". Supported versions: %s' % (version, supported))
+    return schema_url_for_version(version), version
+
+
 def validate_project_object(project_object, schema_spec, ssl_cert='', check_schema=True, label=None):
-    json_schema = init_yaml_schema_with_checks(schema_spec,ssl_cert,check_schema)
+    schema_spec, schema_key = resolve_schema_spec(project_object, schema_spec, ssl_cert)
+    json_schema = init_yaml_schema_with_checks(schema_spec, ssl_cert, check_schema, schema_key=schema_key)
     try:
         schema_as_object = json.loads(json_schema)
     except JSONDecodeError as err:
@@ -122,6 +179,14 @@ def validate_project_object(project_object, schema_spec, ssl_cert='', check_sche
 
     validator_cls = jsonschema.validators.validator_for(schema_as_object, jsonschema.validators.Draft7Validator)
     logging.debug("Using JSON-Schema validator: %s" % validator_cls.__name__)
+
+    def _unicode_pattern(validator, pattern, instance, schema):
+        if not isinstance(instance, str):
+            return
+        if not _regex.search(pattern, instance):
+            yield jsonschema.ValidationError(f"{instance!r} does not match {pattern!r}")
+
+    validator_cls = jsonschema.validators.extend(validator_cls, validators={"pattern": _unicode_pattern})
     v = validator_cls(schema_as_object)
     try:
         v.validate(project_object)
@@ -207,10 +272,10 @@ def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
         raise ValueError('One or more errors in files underneath this directory.')
 
 
-def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
-    json_schema = get_yaml_schema(False)
+def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True, schema_key=None):
+    json_schema = get_yaml_schema(False, schema_key=schema_key)
     if json_schema is not None:
-        cached_etag = get_yaml_schema_etag()
+        cached_etag = get_yaml_schema_etag(schema_key=schema_key)
         if cached_etag:
             logging.info('Loaded schema and ETag from disk cache.')
         else:
@@ -222,13 +287,11 @@ def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
     if not check_schema:
         return json_schema
 
-    schema_spec_remote = __default_schema_url
-    if schema_spec is None: schema_spec = schema_spec_remote
     logging.debug("Checking schema source for changes %s" %schema_spec)
 
     try:
         if is_network_spec(schema_spec):
-            cached_etag = get_yaml_schema_etag() if json_schema is not None else None
+            cached_etag = get_yaml_schema_etag(schema_key=schema_key) if json_schema is not None else None
             json_schema_spec, response_etag, not_modified = get_network_schema_by_spec(schema_spec, ssl_cert, cached_etag)
             if not_modified:
                 logging.info('Remote schema unchanged since last download (ETag match) - using cached schema.')
@@ -239,7 +302,7 @@ def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
                 else:
                     logging.info('Cached schema updated from remote source (no ETag).')
                 json_schema = json_schema_spec
-                update_schema(json_schema_spec, response_etag)
+                update_schema(json_schema_spec, response_etag, schema_key=schema_key)
             else:
                 json_schema = None
         else:
@@ -253,7 +316,7 @@ def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True):
             if hash_disk != hash_spec:
                 logging.info('Cached schema differs from source!')
                 json_schema = json_schema_spec
-                update_schema(json_schema_spec)
+                update_schema(json_schema_spec, schema_key=schema_key)
             else:
                 logging.info('No differences between cached and remote schema.')
     except Exception as err:
@@ -311,7 +374,7 @@ def get_json_schema_by_spec(schema_spec, ssl_cert):
 
 def validate_path(file, schema_url, ssl_cert=''):
     """Validates an as-code yaml file against the schema from NLCLI_FORCE_SCHEMA
-    or downloaded from given URL or from the defautl URL."""
+    or downloaded from given URL or from the schema matching schemaVersion."""
     force_schema = os.environ.get('NLCLI_FORCE_SCHEMA')
     if force_schema is not None and len(force_schema) > 0:
         schema_url = force_schema

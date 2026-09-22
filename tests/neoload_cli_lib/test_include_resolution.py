@@ -94,6 +94,13 @@ class TestMergeProjects:
         ])
         assert merged['name'] == 'root-project'
 
+    def test_root_schema_version_wins_over_include(self):
+        merged = schema_validation.merge_projects([
+            {'schemaVersion': '3.1'},
+            {'name': 'root-project', 'schemaVersion': '3.0'},
+        ])
+        assert merged['schemaVersion'] == '3.0'
+
     def test_merges_project_settings_across_files(self):
         merged = schema_validation.merge_projects([
             {'project_settings': {'dynatrace.enabled': True}},
