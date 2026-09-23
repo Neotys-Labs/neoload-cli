@@ -5,7 +5,6 @@ import click
 
 from neoload_cli_lib import checkvu_runner, cli_exception
 import neoload_cli_lib.schema_validation as schema_validation
-from neoload_cli_lib.schema_validation import __default_schema_url
 
 __yaml_extensions = (".yaml", ".yml")
 
@@ -23,9 +22,10 @@ __yaml_extensions = (".yaml", ".yml")
 @click.option('--play-think-time', is_flag=True, default=False,
               help="Play think times defined on pages and delays marked as think time. "
                    "Disabled by default. Equivalent to setting CHECKVU_CLI_PLAY_THINK_TIME=1.")
-@click.option('-s', '--as-code-schema', default=__default_schema_url, show_default=True,
-              help="NeoLoad as-code schema (URL or local path) to validate PROJECT_FILE "
-                   "against. Defaults to the schema published for this release on Github.",
+@click.option('-s', '--as-code-schema', default=None,
+              help="NeoLoad as-code schema (URL or local path) to validate PROJECT_FILE against. "
+                   "When omitted, download schemas/v<schemaVersion>/as-code.schema.json from neoload-models (v3). "
+                   "If schemaVersion is absent, use schemas/v3.0/as-code.schema.json.",
               metavar="PATH|URL")
 @click.option('--ssl-cert', default="",
               help="Path to SSL certificate or write False to disable certificate checking. "

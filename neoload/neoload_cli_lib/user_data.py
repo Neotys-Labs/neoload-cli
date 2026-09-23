@@ -18,6 +18,16 @@ CONFIG_FILE = __local_file if os.path.exists(__local_file) else os.path.join(__c
 __yaml_schema_file = os.path.join(__config_dir, "yaml_schema.json")
 __yaml_schema_etag_file = os.path.join(__config_dir, "yaml_schema.etag")
 
+
+def __schema_cache_paths(schema_key=None):
+    if not schema_key:
+        return __yaml_schema_file, __yaml_schema_etag_file
+    safe_key = re.sub(r'[^0-9A-Za-z._-]', '_', str(schema_key))
+    return (
+        os.path.join(__config_dir, "yaml_schema-%s.json" % safe_key),
+        os.path.join(__config_dir, "yaml_schema-%s.etag" % safe_key),
+    )
+
 __no_write = False
 
 
@@ -239,44 +249,64 @@ def get_meta_required(key):
     return get_user_data().metadata.get(key)
 
 
-def __load_yaml_schema():
-    if os.path.exists(__yaml_schema_file):
-        with open(__yaml_schema_file, "r") as stream:
+def __load_yaml_schema(schema_key=None):
+    schema_file, _etag_file = __schema_cache_paths(schema_key)
+    if os.path.exists(schema_file):
+        with open(schema_file, "r") as stream:
             return stream.read()
     return None
 
 
-def __load_yaml_schema_etag():
-    if os.path.exists(__yaml_schema_etag_file):
-        with open(__yaml_schema_etag_file, "r") as stream:
+def __load_yaml_schema_etag(schema_key=None):
+    _schema_file, etag_file = __schema_cache_paths(schema_key)
+    if os.path.exists(etag_file):
+        with open(etag_file, "r") as stream:
             return stream.read() or None
     return None
 
 
 __yaml_schema_singleton = __load_yaml_schema()
 __yaml_schema_etag_singleton = __load_yaml_schema_etag()
+__yaml_schema_by_key = {}
+__yaml_schema_etag_by_key = {}
 
 
-def get_yaml_schema(throw=True):
+def get_yaml_schema(throw=True, schema_key=None):
+    if schema_key:
+        if schema_key not in __yaml_schema_by_key:
+            __yaml_schema_by_key[schema_key] = __load_yaml_schema(schema_key)
+        schema = __yaml_schema_by_key[schema_key]
+        if schema is None and throw:
+            raise cli_exception.CliException("No yaml schema found. Please add --refresh option to download it first")
+        return schema
     if __yaml_schema_singleton is None and throw:
         raise cli_exception.CliException("No yaml schema found. Please add --refresh option to download it first")
     return __yaml_schema_singleton
 
 
-def get_yaml_schema_etag():
+def get_yaml_schema_etag(schema_key=None):
+    if schema_key:
+        if schema_key not in __yaml_schema_etag_by_key:
+            __yaml_schema_etag_by_key[schema_key] = __load_yaml_schema_etag(schema_key)
+        return __yaml_schema_etag_by_key[schema_key]
     return __yaml_schema_etag_singleton
 
 
-def update_schema(yaml_schema_as_json: str, etag: str = None):
+def update_schema(yaml_schema_as_json: str, etag: str = None, schema_key=None):
     global __yaml_schema_singleton, __yaml_schema_etag_singleton
+    schema_file, etag_file = __schema_cache_paths(schema_key)
+    os.makedirs(__config_dir, exist_ok=True)
+    with open(schema_file, "w") as stream:
+        stream.write(yaml_schema_as_json)
+    if etag:
+        with open(etag_file, "w") as stream:
+            stream.write(etag)
+    elif os.path.exists(etag_file):
+        # no etag for this schema source (e.g. a local file) - don't leave a stale one around
+        os.remove(etag_file)
+    if schema_key:
+        __yaml_schema_by_key[schema_key] = yaml_schema_as_json
+        __yaml_schema_etag_by_key[schema_key] = etag
+        return
     __yaml_schema_singleton = yaml_schema_as_json
     __yaml_schema_etag_singleton = etag
-    os.makedirs(__config_dir, exist_ok=True)
-    with open(__yaml_schema_file, "w") as stream:
-        stream.write(__yaml_schema_singleton)
-    if etag:
-        with open(__yaml_schema_etag_file, "w") as stream:
-            stream.write(etag)
-    elif os.path.exists(__yaml_schema_etag_file):
-        # no etag for this schema source (e.g. a local file) - don't leave a stale one around
-        os.remove(__yaml_schema_etag_file)
