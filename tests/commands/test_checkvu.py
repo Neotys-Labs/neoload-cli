@@ -79,6 +79,14 @@ class TestCheckvuRunner:
                 checkvu_runner.check_java_version("java")
         assert "requires Java 21" in str(err.value)
 
+    def test_check_java_version_too_recent(self):
+        completed = mock.Mock(stdout='openjdk version "25" 2025-09-16')
+        with mock.patch('subprocess.run', return_value=completed):
+            with pytest.raises(checkvu_runner.cli_exception.CliException) as err:
+                checkvu_runner.check_java_version("java")
+        assert "requires Java 21" in str(err.value)
+        assert "major version 25" in str(err.value)
+
     def test_check_java_version_ok(self):
         completed = mock.Mock(stdout='openjdk version "21.0.2" 2024-01-16')
         with mock.patch('subprocess.run', return_value=completed):
