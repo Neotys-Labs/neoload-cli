@@ -145,7 +145,7 @@ def resolve_java(java_option=None):
         return java_option
     java_home = os.environ.get("JAVA_HOME")
     if java_home:
-        candidate = os.path.join(java_home, "bin", "java")
+        candidate = os.path.join(java_home, "bin", "java.exe" if os.name == "nt" else "java")
         resolved = shutil.which(candidate) or (candidate if os.path.isfile(candidate) else None)
         if resolved:
             return resolved
