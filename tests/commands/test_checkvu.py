@@ -79,10 +79,33 @@ class TestCheckvuRunner:
                 checkvu_runner.check_java_version("java")
         assert "requires Java 21" in str(err.value)
 
+    def test_check_java_version_too_recent(self):
+        completed = mock.Mock(stdout='openjdk version "25" 2025-09-16')
+        with mock.patch('subprocess.run', return_value=completed):
+            with pytest.raises(checkvu_runner.cli_exception.CliException) as err:
+                checkvu_runner.check_java_version("java")
+        assert "requires Java 21" in str(err.value)
+        assert "major version 25" in str(err.value)
+
     def test_check_java_version_ok(self):
         completed = mock.Mock(stdout='openjdk version "21.0.2" 2024-01-16')
         with mock.patch('subprocess.run', return_value=completed):
             assert checkvu_runner.check_java_version("java") == 21
+
+    def test_resolve_java_prefers_java_home_over_path(self, tmp_path, monkeypatch):
+        java_home_bin = tmp_path / "jdk-21" / "bin"
+        java_home_bin.mkdir(parents=True)
+        java_home_java = java_home_bin / ("java.exe" if os.name == "nt" else "java")
+        java_home_java.write_text("")
+        monkeypatch.setenv("JAVA_HOME", str(tmp_path / "jdk-21"))
+        real_which = checkvu_runner.shutil.which
+
+        def which(cmd, *args, **kwargs):
+            return "/jdk-25/bin/java" if cmd == "java" else real_which(cmd, *args, **kwargs)
+
+        with mock.patch.object(checkvu_runner.shutil, 'which', side_effect=which):
+            resolved = checkvu_runner.resolve_java()
+        assert os.path.normcase(resolved) == os.path.normcase(str(java_home_java))
 
     def test_build_command(self):
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml",

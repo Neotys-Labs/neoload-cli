@@ -102,10 +102,10 @@ def _locate_jarsigner(java_executable):
         return on_path
 
     raise JarSignatureError(
-        "jarsigner is needed to verify the CheckVU JAR signature, but is neither next to "
-        "'{0}' nor on the PATH. It ships with a JDK, not with a JRE. Point --java at a "
-        "JDK, put one on the PATH, or run with --unsafe-skip-jar-verification to skip the check"
-        "(only if you use a local and already verified JAR)."
+        "You are using a JRE ('{0}') which does not provide JAR verification tools "
+        "(jarsigner is neither next to it nor on the PATH). Please use a JDK for improved "
+        "security to check that the JAR is made by Tricentis. Or add option "
+        "--unsafe-skip-jar-verification."
         .format(java_executable))
 
 def _check_signer_is_tricentis(cms_signature):

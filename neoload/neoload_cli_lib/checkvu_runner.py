@@ -10,7 +10,7 @@ import requests
 
 from neoload_cli_lib import cli_exception, jar_signature, paths
 
-MIN_JAVA_VERSION = 21
+REQUIRED_JAVA_VERSION = 21
 
 # Public download goes through www.neotys.com/redirect.php (same contract as
 # NeoLoad installer direct-download). CheckVU is not a CDN URL.
@@ -145,7 +145,7 @@ def resolve_java(java_option=None):
         return java_option
     java_home = os.environ.get("JAVA_HOME")
     if java_home:
-        candidate = os.path.join(java_home, "bin", "java")
+        candidate = os.path.join(java_home, "bin", "java.exe" if os.name == "nt" else "java")
         resolved = shutil.which(candidate) or (candidate if os.path.isfile(candidate) else None)
         if resolved:
             return resolved
@@ -153,9 +153,9 @@ def resolve_java(java_option=None):
     if found:
         return found
     raise cli_exception.CliException(
-        "No Java runtime found. CheckVU requires Java {0} or later.\n"
-        "Install a JDK {0}+ and either add it to your PATH, set JAVA_HOME, "
-        "or pass --java <path-to-java>.".format(MIN_JAVA_VERSION))
+        "No Java runtime found. CheckVU requires Java {0}.\n"
+        "Install a JDK {0} and either add it to your PATH, set JAVA_HOME, "
+        "or pass --java <path-to-java>.".format(REQUIRED_JAVA_VERSION))
 
 
 def parse_java_major_version(version_output):
@@ -171,7 +171,7 @@ def parse_java_major_version(version_output):
 
 
 def check_java_version(java):
-    """Runs `java -version` and enforces the minimum supported major version.
+    """Runs `java -version` and enforces the required major version.
     `java -version` writes to stderr, so we merge stderr into stdout to capture it.
     """
     try:
@@ -183,19 +183,19 @@ def check_java_version(java):
     except OSError as err:
         raise cli_exception.CliException(
             "Unable to run '{0}': {1}\n"
-            "Install a JDK {2}+ and either add it to your PATH, set JAVA_HOME, "
-            "or pass --java <path-to-java>.".format(java, str(err), MIN_JAVA_VERSION))
+            "Install a JDK {2} and either add it to your PATH, set JAVA_HOME, "
+            "or pass --java <path-to-java>.".format(java, str(err), REQUIRED_JAVA_VERSION))
 
     output = completed.stdout or ""
     major = parse_java_major_version(output)
     if major is None:
         raise cli_exception.CliException(
             "Could not determine the Java version from '{0} -version':\n{1}".format(java, output.strip()))
-    if major < MIN_JAVA_VERSION:
+    if major != REQUIRED_JAVA_VERSION:
         raise cli_exception.CliException(
-            "CheckVU requires Java {0} or later, but '{1}' reports major version {2}.\n"
-            "Install a JDK {0}+ and either add it to your PATH, set JAVA_HOME, "
-            "or pass --java <path-to-java>.".format(MIN_JAVA_VERSION, java, major))
+            "CheckVU requires Java {0}, but '{1}' reports major version {2}.\n"
+            "Install a JDK {0} and either add it to your PATH, set JAVA_HOME, "
+            "or pass --java <path-to-java>.".format(REQUIRED_JAVA_VERSION, java, major))
     return major
 
 
