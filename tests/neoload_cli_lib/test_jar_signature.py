@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import zipfile
 from unittest import mock
@@ -69,6 +70,22 @@ def jar_containing(tmp_path, cms_signature):
     return str(jar)
 
 
+INCONSISTENT_ENTRIES = 500
+
+JARSIGNER_INCONSISTENCIES = "\n".join(
+    ["jar verified, with signer errors.",
+     "",
+     "Error: ",
+     "This jar contains entries whose certificate chain is invalid.",
+     "",
+     "Warning: ",
+     "This JAR file contains internal inconsistencies:"]
+    + ["- Entry file{0}.xsd is signed in JarFile but is not signed in JarInputStream".format(i)
+       for i in range(INCONSISTENT_ENTRIES)]
+    + ["",
+       "Re-run with the -verbose and -certs options for more details."])
+
+
 def assert_rejected_as_unofficial(error, jar):
     """Every signature failure must end on the same verdict, after the technical details."""
     message = str(error)
@@ -117,6 +134,32 @@ class TestVerifySignedByTricentis:
         assert "exited with code 4" in str(err.value)
         assert "chain not validated" in str(err.value)
         assert_rejected_as_unofficial(err.value, jar)
+
+    def test_reports_the_signature_errors_without_the_whole_entry_list(self, tmp_path,
+                                                                       jarsigner):
+        """The CheckVU JAR lists about 21000 inconsistent entries, which bury the cause."""
+        jarsigner.return_value = mock.Mock(returncode=52, stdout=JARSIGNER_INCONSISTENCIES)
+        jar = jar_signed_by(tmp_path, "Tricentis GmbH")
+        with pytest.raises(jar_signature.JarSignatureError) as err:
+            jar_signature.verify_signed_by_tricentis(jar, "java")
+
+        message = str(err.value)
+        assert "certificate chain is invalid" in message
+        assert "internal inconsistencies" in message
+        assert "Re-run with the -verbose" in message
+        assert message.count("is signed in JarFile") == jar_signature.KEPT_ENTRY_LINES
+        assert ("... and {0} more entries"
+                .format(INCONSISTENT_ENTRIES - jar_signature.KEPT_ENTRY_LINES)) in message
+        assert_rejected_as_unofficial(err.value, jar)
+
+    def test_debug_log_keeps_the_jarsigner_output_untouched(self, tmp_path, jarsigner, caplog):
+        jarsigner.return_value = mock.Mock(returncode=52, stdout=JARSIGNER_INCONSISTENCIES)
+        jar = jar_signed_by(tmp_path, "Tricentis GmbH")
+        with caplog.at_level(logging.DEBUG), \
+                pytest.raises(jar_signature.JarSignatureError):
+            jar_signature.verify_signed_by_tricentis(jar, "java")
+
+        assert JARSIGNER_INCONSISTENCIES in caplog.text
 
     def test_rejects_a_file_that_is_not_a_jar(self, tmp_path, jarsigner):
         not_a_jar = tmp_path / "checkvu.jar"

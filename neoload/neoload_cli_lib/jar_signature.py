@@ -1,7 +1,9 @@
+import logging
 import os
 import shutil
 import subprocess
 import zipfile
+from itertools import groupby
 
 from neoload_cli_lib import cli_exception, resources
 
@@ -10,6 +12,7 @@ SIGNATURE_BLOCK_SUFFIXES = (".RSA", ".DSA", ".EC")
 EXPECTED_ORGANIZATION = "Tricentis GmbH"
 CERTIFICATE_NAMESPACE = "resources.certs"
 TRUSTED_ROOT_KEYSTORE = "globalsign-code-signing-root-r45.jks"
+KEPT_ENTRY_LINES = 3
 
 class JarSignatureError(cli_exception.CliException):
     pass
@@ -112,9 +115,35 @@ def _run_jarsigner(jar_path, jarsigner):
                 "Unable to run '{0}' to verify the CheckVU JAR: {1}".format(jarsigner, err))
 
     if completed.returncode != 0:
+        output = (completed.stdout or "").strip()
+        logging.debug("'%s' exited with code %s on '%s':\n%s",
+                      jarsigner, completed.returncode, jar_path, output)
         raise JarSignatureError(
             "The CheckVU JAR signature is not valid. '{0}' exited with code {1}:\n{2}"
-            .format(jarsigner, completed.returncode, (completed.stdout or "").strip()))
+            .format(jarsigner, completed.returncode, _without_entry_lists(output)))
+
+
+def _without_entry_lists(jarsigner_output):
+    """Keep what jarsigner says about the signature, drop what it repeats per entry.
+
+    When a jar carries internal inconsistencies jarsigner lists one line per entry.
+    The CheckVU JAR holds about 21000 of them, which buries the dozen lines that say
+    why the signature was refused. The untouched output goes to the debug log.
+    """
+    kept = []
+    for is_entry, group in groupby(jarsigner_output.splitlines(), key=_is_entry_line):
+        lines = list(group)
+        kept.extend(lines if not is_entry else lines[:KEPT_ENTRY_LINES])
+        hidden = len(lines) - KEPT_ENTRY_LINES
+        if is_entry and hidden > 0:
+            kept.append("... and {0} more entries, run with --debug for the full "
+                        "jarsigner output".format(hidden))
+    return "\n".join(kept)
+
+
+def _is_entry_line(line):
+    """Tell apart the per-entry lines, which jarsigner writes as a dash-prefixed list."""
+    return line.lstrip().startswith("-")
 
 
 def _locate_jarsigner(java_executable):
