@@ -1,3 +1,4 @@
+import logging
 import os
 from unittest import mock
 
@@ -327,6 +328,26 @@ class TestCheckvuRunner:
         assert "did not return a JAR" in str(err.value)
         assert list(tmp_path.glob("*.jar")) == []
 
+    def test_download_announces_the_url_before_fetching(self, tmp_path):
+        url = "https://www.neotys.com/redirect/redirect.php?os=linux"
+        response = FakeJarResponse()
+        call_order = []
+
+        def fake_get(*args, **kwargs):
+            call_order.append("get")
+            return response
+
+        def fake_print(*args, **kwargs):
+            call_order.append("print")
+            assert "Downloading CheckVU JAR from " + url in args[0]
+            assert kwargs.get("flush") is True
+
+        with mock.patch.object(checkvu_runner, "get_cache_dir", return_value=str(tmp_path)), \
+                mock.patch.object(checkvu_runner.requests, "get", side_effect=fake_get), \
+                mock.patch("builtins.print", side_effect=fake_print):
+            checkvu_runner.download_jar(url)
+        assert call_order[:2] == ["print", "get"]
+
     def test_resolve_jar_verifies_the_jar_it_resolved(self, tmp_path, signature_checked):
         jar = tmp_path / "checkvu.jar"
         jar.write_text("x")
@@ -414,6 +435,21 @@ class TestCheckvuCommand:
             result = runner.invoke(checkvu, [project])
         assert result.exit_code == 0
         assert recorded['command'] == _java_jar("checkvu.jar", project)
+
+    def test_debug_logs_the_resolved_jar_path(self, tmp_path, caplog):
+        runner = CliRunner()
+        project = self._yaml_file(tmp_path)
+        jar = os.path.abspath("checkvu.jar")
+        with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.'), \
+                mock.patch.object(checkvu_runner, 'resolve_java', return_value="java"), \
+                mock.patch.object(checkvu_runner, 'check_java_version', return_value=21), \
+                mock.patch.object(checkvu_runner, 'resolve_jar', return_value="checkvu.jar"), \
+                mock.patch('subprocess.run', return_value=mock.Mock(returncode=0)), \
+                caplog.at_level(logging.DEBUG):
+            result = runner.invoke(checkvu, [project])
+        assert result.exit_code == 0
+        assert any("Using CheckVU JAR at '{0}'".format(jar) in rec.getMessage()
+                   for rec in caplog.records)
 
     def test_play_think_time_is_forwarded(self, tmp_path):
         runner = CliRunner()
