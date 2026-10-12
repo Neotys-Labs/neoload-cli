@@ -33,6 +33,7 @@ setup(
         'appdirs',
         'requests>=2.25.1',
         'jsonschema',
+        'regex',
         'PyYAML>=5',
         'junit_xml',
         'termcolor',
