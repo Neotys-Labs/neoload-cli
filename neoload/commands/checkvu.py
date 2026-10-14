@@ -70,7 +70,9 @@ __yaml_extensions = (".yaml", ".yml")
 @click.option('--keep-temp-work-dir', is_flag=True, default=False,
               help="Keep the temporary work directory after the run instead of deleting it. "
                    "Equivalent to setting CHECKVU_CLI_KEEP_TEMP_WORK_DIR=1. "
-                   "Has no effect when --work-dir is already set, since that directory is never auto-deleted.")
+                   "Has no effect when --work-dir is already set, since that directory is never auto-deleted. "
+                   "After neoload login, a retained work directory contains the NeoLoad Web token in clear "
+                   "text in conf/controller.properties; treat it as confidential.")
 @click.argument('project_file')
 def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert, unsafe_skip_jar_verification,
         controller_properties, load_generator_properties,
