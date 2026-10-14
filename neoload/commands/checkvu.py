@@ -65,16 +65,12 @@ __yaml_extensions = (".yaml", ".yml")
               metavar="PATH")
 @click.option('-w', '--work-dir',
               help="Directory for engine scratch files and logs. Defaults to a temporary directory. "
-                   "A directory you supply is never deleted. After neoload login, conf/controller.properties "
-                   "in this directory contains the NeoLoad Web token in clear text. That file stays on disk "
-                   "when you pass --work-dir or --keep-temp-work-dir.",
+                   "A directory you supply is never deleted.",
               metavar="PATH")
 @click.option('--keep-temp-work-dir', is_flag=True, default=False,
               help="Keep the temporary work directory after the run instead of deleting it. "
                    "Equivalent to setting CHECKVU_CLI_KEEP_TEMP_WORK_DIR=1. "
-                   "Has no effect when --work-dir is already set, since that directory is never auto-deleted. "
-                   "The kept directory includes conf/controller.properties, which contains the NeoLoad Web "
-                   "token in clear text after neoload login.")
+                   "Has no effect when --work-dir is already set, since that directory is never auto-deleted.")
 @click.argument('project_file')
 def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert, unsafe_skip_jar_verification,
         controller_properties, load_generator_properties,
