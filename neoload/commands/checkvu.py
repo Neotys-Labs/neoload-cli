@@ -70,7 +70,9 @@ __yaml_extensions = (".yaml", ".yml")
 @click.option('--keep-temp-work-dir', is_flag=True, default=False,
               help="Keep the temporary work directory after the run instead of deleting it. "
                    "Equivalent to setting CHECKVU_CLI_KEEP_TEMP_WORK_DIR=1. "
-                   "Has no effect when --work-dir is already set, since that directory is never auto-deleted.")
+                   "Has no effect when --work-dir is already set, since that directory is never auto-deleted. "
+                   "After neoload login, a retained work directory contains the NeoLoad Web token in clear "
+                   "text in conf/controller.properties; treat it as confidential.")
 @click.argument('project_file')
 def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert, unsafe_skip_jar_verification,
         controller_properties, load_generator_properties,
@@ -103,18 +105,20 @@ def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert, 
     resolved_jar = checkvu_runner.resolve_jar(engine_jar, ssl_cert, java_executable,
                                               verify_signature=not unsafe_skip_jar_verification)
 
-    command = checkvu_runner.build_command(
-        java_executable, resolved_jar, project_file,
-        user_path=user_path,
-        play_think_time=play_think_time,
-        controller_properties=controller_properties,
-        load_generator_properties=load_generator_properties,
-        app_proxy=app_proxy,
-        app_proxy_username=app_proxy_username,
-        app_proxy_bypass=app_proxy_bypass,
-        output=output,
-        work_dir=work_dir,
-        keep_temp_work_dir=keep_temp_work_dir,
-    )
-    exit_code = checkvu_runner.run_checkvu(command)
+    with checkvu_runner.prepare_controller_properties(
+            controller_properties) as resolved_controller_properties:
+        command = checkvu_runner.build_command(
+            java_executable, resolved_jar, project_file,
+            user_path=user_path,
+            play_think_time=play_think_time,
+            controller_properties=resolved_controller_properties,
+            load_generator_properties=load_generator_properties,
+            app_proxy=app_proxy,
+            app_proxy_username=app_proxy_username,
+            app_proxy_bypass=app_proxy_bypass,
+            output=output,
+            work_dir=work_dir,
+            keep_temp_work_dir=keep_temp_work_dir,
+        )
+        exit_code = checkvu_runner.run_checkvu(command)
     sys.exit(exit_code)
