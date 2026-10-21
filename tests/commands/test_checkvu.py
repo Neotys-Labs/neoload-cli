@@ -120,6 +120,79 @@ class TestCheckvuRunner:
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml")
         assert command == _java_jar("checkvu.jar", "p.yaml")
 
+    def test_build_nlw_controller_properties_for_saas(self):
+        login_data = mock.Mock()
+        login_data.get_url.return_value = "https://neoload-api.saas.neotys.com"
+        login_data.get_token.return_value = "saas-token"
+
+        properties = checkvu_runner.build_nlw_controller_properties(login_data)
+
+        assert properties == {
+            "neoload.web.deployment.type": "SAAS",
+            "neoload.web.saas.secretToken": "saas-token",
+        }
+
+    def test_build_nlw_controller_properties_for_onpremise(self):
+        login_data = mock.Mock()
+        login_data.get_url.return_value = "https://nlw.company.test/"
+        login_data.get_token.return_value = "onprem-token"
+
+        properties = checkvu_runner.build_nlw_controller_properties(login_data)
+
+        assert properties == {
+            "neoload.web.deployment.type": "ONPREMISE",
+            "neoload.web.onpremise.url": "https://nlw.company.test/",
+            "neoload.web.onpremise.secretToken": "onprem-token",
+        }
+
+    def test_prepare_controller_properties_merges_overlay_and_cleans_up(self, tmp_path):
+        existing = tmp_path / "controller.properties"
+        existing.write_text("custom.property=value")
+        login_data = mock.Mock()
+        login_data.get_url.return_value = checkvu_runner.SAAS_API_URL
+        login_data.get_token.return_value = "current-token"
+
+        with mock.patch.object(checkvu_runner.user_data, "get_user_data",
+                               return_value=login_data):
+            with checkvu_runner.prepare_controller_properties(str(existing)) as generated:
+                generated_path = generated
+                with open(generated, encoding="utf-8") as stream:
+                    content = stream.read()
+                assert os.path.isfile(generated)
+
+        assert content == (
+            "custom.property=value\n"
+            "[Web]\n"
+            "neoload.web.deployment.type=SAAS\n"
+            "neoload.web.saas.secretToken=current-token\n"
+        )
+        assert existing.read_text() == "custom.property=value"
+        assert not os.path.exists(generated_path)
+
+    def test_prepare_controller_properties_keeps_overlay_without_login(self, tmp_path):
+        existing = tmp_path / "controller.properties"
+        existing.write_text("custom.property=value")
+
+        with mock.patch.object(checkvu_runner.user_data, "get_user_data",
+                               return_value=None):
+            with checkvu_runner.prepare_controller_properties(str(existing)) as resolved:
+                assert resolved == str(existing)
+
+        assert existing.is_file()
+
+    def test_prepare_controller_properties_rejects_missing_overlay_when_logged_in(self):
+        login_data = mock.Mock()
+        login_data.get_url.return_value = checkvu_runner.SAAS_API_URL
+        login_data.get_token.return_value = "token"
+
+        with mock.patch.object(checkvu_runner.user_data, "get_user_data",
+                               return_value=login_data):
+            with pytest.raises(checkvu_runner.cli_exception.CliException) as err:
+                with checkvu_runner.prepare_controller_properties("/does/not/exist.properties"):
+                    pass
+
+        assert "Controller properties file not found" in str(err.value)
+
     def test_build_command_overlays(self):
         command = checkvu_runner.build_command(
             "java", "checkvu.jar", "p.yaml",
@@ -342,6 +415,12 @@ class TestCheckvuRunner:
 
 @pytest.mark.validation
 class TestCheckvuCommand:
+    @pytest.fixture(autouse=True)
+    def no_saved_login(self):
+        with mock.patch.object(checkvu_runner.user_data, "get_user_data",
+                               return_value=None):
+            yield
+
     def _yaml_file(self, tmp_path):
         p = tmp_path / "project.yaml"
         p.write_text("name: test")
@@ -414,6 +493,40 @@ class TestCheckvuCommand:
             result = runner.invoke(checkvu, [project])
         assert result.exit_code == 0
         assert recorded['command'] == _java_jar("checkvu.jar", project)
+
+    def test_saved_saas_login_is_forwarded_in_temporary_controller_properties(self, tmp_path):
+        runner = CliRunner()
+        project = self._yaml_file(tmp_path)
+        login_data = mock.Mock()
+        login_data.get_url.return_value = checkvu_runner.SAAS_API_URL
+        login_data.get_token.return_value = "secret-token"
+        recorded = {}
+
+        def fake_run(command, *args, **kwargs):
+            recorded['command'] = command
+            properties_index = command.index("--controller-properties") + 1
+            recorded['properties_path'] = command[properties_index]
+            with open(recorded['properties_path'], encoding="utf-8") as stream:
+                recorded['properties'] = stream.read()
+            return mock.Mock(returncode=0)
+
+        with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.'), \
+                mock.patch.object(checkvu_runner, 'resolve_java', return_value="java"), \
+                mock.patch.object(checkvu_runner, 'check_java_version', return_value=21), \
+                mock.patch.object(checkvu_runner, 'resolve_jar', return_value="checkvu.jar"), \
+                mock.patch.object(checkvu_runner.user_data, 'get_user_data',
+                                  return_value=login_data), \
+                mock.patch('subprocess.run', side_effect=fake_run):
+            result = runner.invoke(checkvu, [project])
+
+        assert result.exit_code == 0
+        assert recorded['properties'] == (
+            "[Web]\n"
+            "neoload.web.deployment.type=SAAS\n"
+            "neoload.web.saas.secretToken=secret-token\n"
+        )
+        assert "secret-token" not in " ".join(recorded['command'])
+        assert not os.path.exists(recorded['properties_path'])
 
     def test_play_think_time_is_forwarded(self, tmp_path):
         runner = CliRunner()
