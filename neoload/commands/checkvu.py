@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -104,6 +105,7 @@ def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert, 
 
     resolved_jar = checkvu_runner.resolve_jar(engine_jar, ssl_cert, java_executable,
                                               verify_signature=not unsafe_skip_jar_verification)
+    logging.debug("Using CheckVU JAR at '%s'", os.path.abspath(resolved_jar))
 
     with checkvu_runner.prepare_controller_properties(
             controller_properties) as resolved_controller_properties:

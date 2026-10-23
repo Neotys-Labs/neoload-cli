@@ -1,7 +1,9 @@
+import logging
 import os
 import shutil
 import subprocess
 import zipfile
+from itertools import groupby
 
 from neoload_cli_lib import cli_exception, resources
 
@@ -10,8 +12,14 @@ SIGNATURE_BLOCK_SUFFIXES = (".RSA", ".DSA", ".EC")
 EXPECTED_ORGANIZATION = "Tricentis GmbH"
 CERTIFICATE_NAMESPACE = "resources.certs"
 TRUSTED_ROOT_KEYSTORE = "globalsign-code-signing-root-r45.jks"
+KEPT_ENTRY_LINES = 3
 
 class JarSignatureError(cli_exception.CliException):
+    pass
+
+
+class JarVerificationUnavailableError(JarSignatureError):
+    """No verdict could be reached on the JAR, the check itself could not run."""
     pass
 
 
@@ -21,6 +29,16 @@ def verify_signed_by_tricentis(jar_path, java_executable):
      - subject DN is Tricentis GmbH
      - that signature is the only one the jar carries
     """
+    jarsigner = _locate_jarsigner(java_executable)
+    try:
+        _check_signature(jar_path, jarsigner)
+    except JarSignatureError as err:
+        if isinstance(err, JarVerificationUnavailableError):
+            raise
+        raise _rejected_as_unofficial(jar_path, err)
+
+
+def _check_signature(jar_path, jarsigner):
     try:
         archive = zipfile.ZipFile(jar_path)
     except (OSError, zipfile.BadZipFile) as err:
@@ -30,8 +48,25 @@ def verify_signed_by_tricentis(jar_path, java_executable):
         cms_signature = _read_cms_signature(jar)
         _check_tricentis_is_the_only_signer(jar)
 
-    _run_jarsigner(jar_path, java_executable)
+    _run_jarsigner(jar_path, jarsigner)
     _check_signer_is_tricentis(cms_signature)
+
+
+def _rejected_as_unofficial(jar_path, cause):
+    """Wrap a failed check into the message the user acts on.
+
+    The technical wording comes first and the verdict last, so that the line
+    the user reads right above the prompt is the one that matters, as in a
+    Python traceback.
+    """
+    details = "\n".join("  " + line for line in str(cause).splitlines())
+    return JarSignatureError(
+        "Signature check details:\n{0}\n\n"
+        "CheckVU did not run, for security reasons: '{1}' is not an official CheckVU JAR. "
+        "Either the file was modified after Tricentis released it, or it is not a CheckVU "
+        "JAR at all.\n"
+        "Download CheckVU again, or pass a JAR you trust with --jar."
+        .format(details, jar_path))
 
 
 def _read_cms_signature(jar):
@@ -40,7 +75,7 @@ def _read_cms_signature(jar):
         return jar.read(CMS_SIGNATURE_ENTRY)
     except KeyError:
         raise JarSignatureError(
-            "The CheckVU JAR is not signed: no signature block '{0}' found"
+            "The CheckVU JAR is not signed: no signature block '{0}' found."
             .format(CMS_SIGNATURE_ENTRY))
 
 
@@ -63,12 +98,10 @@ def _is_signature_block(entry_name):
             and filename.upper().endswith(SIGNATURE_BLOCK_SUFFIXES))
 
 
-def _run_jarsigner(jar_path, java_executable):
+def _run_jarsigner(jar_path, jarsigner):
     """Let the JDK verify the signature against the root shipped with this package.
     Verification is strict (validates whole cert chain, no unsigned entries, no
     modifications)"""
-    jarsigner = _locate_jarsigner(java_executable)
-
     with resources.get_resource_as_path(CERTIFICATE_NAMESPACE, TRUSTED_ROOT_KEYSTORE) as truststore:
         command = [jarsigner, "-verify", "-strict", "-keystore", str(truststore), jar_path]
         try:
@@ -78,13 +111,39 @@ def _run_jarsigner(jar_path, java_executable):
                                        universal_newlines=True,
                                        errors="replace")
         except OSError as err:
-            raise JarSignatureError(
+            raise JarVerificationUnavailableError(
                 "Unable to run '{0}' to verify the CheckVU JAR: {1}".format(jarsigner, err))
 
     if completed.returncode != 0:
+        output = (completed.stdout or "").strip()
+        logging.debug("'%s' exited with code %s on '%s':\n%s",
+                      jarsigner, completed.returncode, jar_path, output)
         raise JarSignatureError(
             "The CheckVU JAR signature is not valid. '{0}' exited with code {1}:\n{2}"
-            .format(jarsigner, completed.returncode, (completed.stdout or "").strip()))
+            .format(jarsigner, completed.returncode, _without_entry_lists(output)))
+
+
+def _without_entry_lists(jarsigner_output):
+    """Keep what jarsigner says about the signature, drop what it repeats per entry.
+
+    When a jar carries internal inconsistencies jarsigner lists one line per entry.
+    The CheckVU JAR holds about 21000 of them, which buries the dozen lines that say
+    why the signature was refused. The untouched output goes to the debug log.
+    """
+    kept = []
+    for is_entry, group in groupby(jarsigner_output.splitlines(), key=_is_entry_line):
+        lines = list(group)
+        kept.extend(lines if not is_entry else lines[:KEPT_ENTRY_LINES])
+        hidden = len(lines) - KEPT_ENTRY_LINES
+        if is_entry and hidden > 0:
+            kept.append("... and {0} more entries, run with --debug for the full "
+                        "jarsigner output".format(hidden))
+    return "\n".join(kept)
+
+
+def _is_entry_line(line):
+    """Tell apart the per-entry lines, which jarsigner writes as a dash-prefixed list."""
+    return line.lstrip().startswith("-")
 
 
 def _locate_jarsigner(java_executable):
@@ -101,7 +160,7 @@ def _locate_jarsigner(java_executable):
     if on_path:
         return on_path
 
-    raise JarSignatureError(
+    raise JarVerificationUnavailableError(
         "You are using a JRE ('{0}') which does not provide JAR verification tools "
         "(jarsigner is neither next to it nor on the PATH). Please use a JDK for improved "
         "security to check that the JAR is made by Tricentis. Or add option "
