@@ -194,7 +194,17 @@ neoload checkvu -u myUser default.yaml
  - `-o, --output <path>` sets the directory that receives `checkvu-result.json` and the `checkvu-content/` request and response dump. When omitted, nothing is written to disk and only the console output is produced. Relative paths resolve from the current directory, not from `PROJECT_FILE`. The dump is not redacted, so treat it as confidential.
  - `-w, --work-dir <path>` sets the directory used for engine files and logs. Defaults to a temporary directory deleted afterwards unless `--keep-temp-work-dir` is set; a directory you supply yourself is never deleted.
  - `--app-proxy`, `--app-proxy-username` and `--app-proxy-bypass` configure the proxy used for application traffic. The proxy password is set with `CHECKVU_CLI_APP_PROXY_PASSWORD` environment variable instead so it never shows up in the process list or CI logs.
- - `--controller-properties` and `--load-generator-properties` are advanced options to merge a `.properties` file into the JAR's embedded `controller.properties` / `agent.properties`.
+ - `--controller-properties` and `--load-generator-properties` are advanced options to merge a `.properties` file into the JAR's embedded `controller.properties` / `agent.properties`. When CheckVU starts after `neoload login`, it reuses the saved URL and token through a temporary `[Web]` overlay: SaaS keys when the saved URL is the default SaaS API, and on-premise keys for any other URL. Those login keys win over the same keys in an explicit overlay. The temporary overlay is deleted after the run. If `--work-dir` or `--keep-temp-work-dir` retains the engine work directory, its merged `conf/controller.properties` also remains and contains the token in clear text; treat that directory as confidential.
+
+> [!IMPORTANT]
+> A **Secret Vault variable** is resolved by **NeoLoad Web**. CheckVU can use one only when the CLI already has a NeoLoad Web connection. [Log in to NeoLoad Web](#login-to-neoload-web) first, then run CheckVU:
+>
+> ```
+> neoload login [TOKEN]
+> neoload checkvu default.yaml
+> ```
+>
+> Without that connection, CheckVU cannot resolve the Secret Vault variable.
 
 ## Reporting
 

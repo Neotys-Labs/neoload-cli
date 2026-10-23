@@ -4,13 +4,16 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
+from contextlib import contextmanager
 from urllib.parse import unquote, urlencode, urlparse
 
 import requests
 
-from neoload_cli_lib import cli_exception, jar_signature, paths
+from neoload_cli_lib import cli_exception, jar_signature, paths, user_data
 
 REQUIRED_JAVA_VERSION = 21
+SAAS_API_URL = "https://neoload-api.saas.neotys.com/"
 
 # Public download goes through www.neotys.com/redirect.php (same contract as
 # NeoLoad installer direct-download). CheckVU is not a CDN URL.
@@ -311,6 +314,62 @@ def download_jar(url, ssl_cert=""):
     finally:
         if partial_destination and os.path.isfile(partial_destination):
             os.remove(partial_destination)
+
+
+def build_nlw_controller_properties(login_data):
+    """Build the controller properties used by CheckVU to reach NeoLoad Web."""
+    url = login_data.get_url()
+    token = login_data.get_token()
+    if url.rstrip("/") == SAAS_API_URL.rstrip("/"):
+        return {
+            "neoload.web.deployment.type": "SAAS",
+            "neoload.web.saas.secretToken": token,
+        }
+    return {
+        "neoload.web.deployment.type": "ONPREMISE",
+        "neoload.web.onpremise.url": url,
+        "neoload.web.onpremise.secretToken": token,
+    }
+
+
+def _escape_property_value(value):
+    return str(value).replace("\\", "\\\\").replace("\r", "\\r").replace("\n", "\\n")
+
+
+@contextmanager
+def prepare_controller_properties(controller_properties=None):
+    """Merge saved NeoLoad Web login details into a temporary controller overlay.
+
+    An explicit user overlay is copied first, then the current login values are
+    appended so they take precedence. Without saved login data, the original
+    overlay path is returned unchanged.
+    """
+    login_data = user_data.get_user_data(throw=False)
+    if login_data is None:
+        yield controller_properties
+        return
+
+    with tempfile.TemporaryDirectory(prefix="neoload-checkvu-") as temp_dir:
+        generated_path = os.path.join(temp_dir, "controller.properties")
+        if controller_properties:
+            if not os.path.isfile(controller_properties):
+                raise cli_exception.CliException(
+                    "Controller properties file not found: " + controller_properties)
+            shutil.copyfile(controller_properties, generated_path)
+
+        has_existing_content = (
+            os.path.isfile(generated_path) and os.path.getsize(generated_path) > 0
+        )
+        properties = build_nlw_controller_properties(login_data)
+        with open(generated_path, "a", encoding="utf-8") as stream:
+            if has_existing_content:
+                stream.write("\n")
+            stream.write("[Web]\n")
+            for key, value in properties.items():
+                stream.write("{0}={1}\n".format(key, _escape_property_value(value)))
+
+        yield generated_path
+
 
 # LOAD-39125: CheckVU CLI JVM flags. Passed on the java command line only — not JAVA_TOOL_OPTIONS
 # (the Load Generator child process would inherit them).
