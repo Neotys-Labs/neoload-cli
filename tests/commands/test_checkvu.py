@@ -1,5 +1,6 @@
 import logging
 import os
+import subprocess
 from unittest import mock
 
 import pytest
@@ -323,6 +324,33 @@ class TestCheckvuRunner:
         )
         assert checkvu_runner.filename_from_response(response) == checkvu_runner.FALLBACK_JAR_NAME
 
+    def test_parse_nlg_build(self):
+        assert checkvu_runner.parse_nlg_build(
+            "NeoLoad CheckVU CLI 2026.3.0;build=20260921-3747\nmore\n") == "3747"
+        assert checkvu_runner.parse_nlg_build("") is None
+        assert checkvu_runner.parse_nlg_build("not a version line") is None
+
+    def test_check_jar_build_accepts_expected_build(self):
+        completed = mock.Mock(stdout="NeoLoad CheckVU CLI 2026.3.0;build=20260921-3747\n")
+        with mock.patch("subprocess.run", return_value=completed) as run_mock, \
+                mock.patch("builtins.print") as printed:
+            assert checkvu_runner.check_jar_build("java", "checkvu.jar") == "3747"
+        run_mock.assert_called_once_with(
+            ["java", "-jar", "checkvu.jar", "--version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True)
+        printed.assert_not_called()
+
+    def test_check_jar_build_rejects_a_different_build(self):
+        completed = mock.Mock(stdout="NeoLoad CheckVU CLI 2026.3.0;build=20260921-1000\n")
+        with mock.patch("subprocess.run", return_value=completed):
+            with pytest.raises(checkvu_runner.cli_exception.CliException) as err:
+                checkvu_runner.check_jar_build("java", "checkvu.jar")
+        assert str(err.value) == (
+            "the JAR build version is not the correct one. Actual: "
+            "NeoLoad CheckVU CLI 2026.3.0;build=20260921-1000 expected build: 3747")
+
     def test_resolve_jar_uses_explicit_local_path(self, tmp_path, signature_checked):
         jar = tmp_path / "checkvu.jar"
         jar.write_text("x")
@@ -342,14 +370,18 @@ class TestCheckvuRunner:
         assert result == "downloaded.jar"
         dl.assert_called_once_with("https://example.com/checkvu.jar", "")
 
-    def test_resolve_jar_uses_redirect_for_latest_when_nothing_cached(self, tmp_path, signature_checked):
-        redirect = checkvu_runner.build_redirect_url("linux")
-        with mock.patch.object(checkvu_runner, "detect_os", return_value="linux"), \
-                mock.patch.object(checkvu_runner, "get_cached_jar_path", return_value=None), \
-                mock.patch.object(checkvu_runner, "download_jar", return_value="downloaded.jar") as dl:
-            result = checkvu_runner.resolve_jar()
-        assert result == "downloaded.jar"
-        dl.assert_called_once_with(redirect, "")
+    def test_resolve_jar_requires_a_cached_jar(self, tmp_path):
+        cache_dir = tmp_path / "checkvu"
+        with mock.patch.object(checkvu_runner, "get_cached_jar_path", return_value=None), \
+                mock.patch.object(checkvu_runner, "get_cache_dir", return_value=str(cache_dir)), \
+                mock.patch.object(checkvu_runner, "download_jar") as dl:
+            with pytest.raises(checkvu_runner.cli_exception.CliException) as err:
+                checkvu_runner.resolve_jar()
+        dl.assert_not_called()
+        assert cache_dir.is_dir()
+        message = str(err.value)
+        assert str(cache_dir) in message
+        assert checkvu_runner.CHECKVU_JAR_DOWNLOAD_URL in message
 
     def test_resolve_jar_reuses_cache_without_a_network_call(self, tmp_path, signature_checked):
         cached = tmp_path / LINUX_JAR_NAME
@@ -360,14 +392,14 @@ class TestCheckvuRunner:
         assert result == str(cached)
         dl.assert_not_called()
 
-    def test_resolve_jar_download_failure_mentions_the_jar_option(self, tmp_path):
+    def test_resolve_jar_missing_cache_mentions_the_folder(self, tmp_path):
+        cache_dir = tmp_path / "checkvu"
         with mock.patch.object(checkvu_runner, "get_cached_jar_path", return_value=None), \
-                mock.patch.object(checkvu_runner, "download_jar",
-                                  side_effect=checkvu_runner.cli_exception.CliException(
-                                      "Failed to download the CheckVU JAR from 'https://...': 403")):
+                mock.patch.object(checkvu_runner, "get_cache_dir", return_value=str(cache_dir)):
             with pytest.raises(checkvu_runner.cli_exception.CliException) as err:
                 checkvu_runner.resolve_jar()
-        assert "--jar" in str(err.value)
+        assert str(cache_dir) in str(err.value)
+        assert "CheckVU JAR" in str(err.value)
 
     def test_cache_keeps_only_latest_jar(self, tmp_path):
         old = tmp_path / OLD_LINUX_JAR_NAME
@@ -437,6 +469,11 @@ class TestCheckvuRunner:
 @pytest.mark.validation
 class TestCheckvuCommand:
     @pytest.fixture(autouse=True)
+    def jar_build_is_expected(self):
+        with mock.patch.object(checkvu_runner, "check_jar_build", return_value="3747") as checked:
+            yield checked
+
+    @pytest.fixture(autouse=True)
     def no_saved_login(self):
         with mock.patch.object(checkvu_runner.user_data, "get_user_data",
                                return_value=None):
@@ -447,20 +484,49 @@ class TestCheckvuCommand:
         p.write_text("name: test")
         return str(p)
 
-    def test_download_failure_is_reported(self, tmp_path):
+    def test_cached_jar_with_wrong_build_fails_before_run(self, tmp_path, jar_build_is_expected):
         runner = CliRunner()
         project = self._yaml_file(tmp_path)
+        jar_build_is_expected.side_effect = checkvu_runner.cli_exception.CliException(
+            "the JAR build version is not the correct one. Actual: "
+            "NeoLoad CheckVU CLI 2026.3.0;build=20260921-1000 expected build: 3747")
+        with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.'), \
+                mock.patch.object(checkvu_runner, 'resolve_java', return_value="java"), \
+                mock.patch.object(checkvu_runner, 'check_java_version', return_value=21), \
+                mock.patch.object(checkvu_runner, 'resolve_jar', return_value="checkvu.jar"), \
+                mock.patch('subprocess.run') as run_mock:
+            result = runner.invoke(checkvu, [project])
+        assert result.exit_code == 1
+        assert "Actual: NeoLoad CheckVU CLI 2026.3.0;build=20260921-1000" in result.output
+        run_mock.assert_not_called()
+        jar_build_is_expected.assert_called_once_with("java", "checkvu.jar")
+
+    def test_explicit_jar_skips_build_check(self, tmp_path, signature_checked, jar_build_is_expected):
+        runner = CliRunner()
+        project = self._yaml_file(tmp_path)
+        jar = tmp_path / "patched.jar"
+        jar.write_text("x")
+        with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.'), \
+                mock.patch.object(checkvu_runner, 'resolve_java', return_value="java"), \
+                mock.patch.object(checkvu_runner, 'check_java_version', return_value=21), \
+                mock.patch('subprocess.run', return_value=mock.Mock(returncode=0)):
+            result = runner.invoke(checkvu, [project, "--jar", str(jar)])
+        assert result.exit_code == 0
+        jar_build_is_expected.assert_not_called()
+
+    def test_missing_cached_jar_is_reported(self, tmp_path):
+        runner = CliRunner()
+        project = self._yaml_file(tmp_path)
+        cache_dir = tmp_path / "checkvu"
         with mock.patch.object(schema_validation, 'validate_path', return_value='Yaml file is valid.'), \
                 mock.patch.object(checkvu_runner, 'resolve_java', return_value="java"), \
                 mock.patch.object(checkvu_runner, 'check_java_version', return_value=21), \
                 mock.patch.object(checkvu_runner, 'get_cached_jar_path', return_value=None), \
-                mock.patch.object(checkvu_runner, 'download_jar',
-                                  side_effect=checkvu_runner.cli_exception.CliException(
-                                      "Failed to download the CheckVU JAR")):
+                mock.patch.object(checkvu_runner, 'get_cache_dir', return_value=str(cache_dir)):
             result = runner.invoke(checkvu, [project])
         assert result.exit_code == 1
-        assert "Failed to download the CheckVU JAR" in result.output
-        assert "--jar" in result.output
+        assert str(cache_dir) in result.output
+        assert checkvu_runner.CHECKVU_JAR_DOWNLOAD_URL in result.output
 
     def test_old_java_fails_before_run(self, tmp_path):
         runner = CliRunner()

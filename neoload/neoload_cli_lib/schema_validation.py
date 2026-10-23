@@ -17,7 +17,7 @@ import  gitignorefile
 from neoload_cli_lib.neoLoad_project import is_not_to_be_included
 
 YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
-__models_raw_root = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3"
+__models_raw_root = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/refs/tags/neoload-models-3.4.22"
 __compatibility_url = __models_raw_root + "/schemas/compatibility.json"
 __default_schema_version = "3.0"
 
@@ -139,7 +139,7 @@ def schema_url_for_version(version):
 
 
 def load_supported_schema_versions(ssl_cert=''):
-    """Supported versions are the keys of neoload-models schemas/compatibility.json (v3)."""
+    """Supported versions are the keys of neoload-models schemas/compatibility.json (tag 3.4.22)."""
     compatibility_json, _etag, _not_modified = get_network_schema_by_spec(__compatibility_url, ssl_cert)
     if compatibility_json is None:
         raise cli_exception.CliException(

@@ -33,8 +33,11 @@ SUPPORTED_OS = (OS_LINUX, OS_LINUX_ARM64, OS_MAC, OS_MAC_ARM64, OS_WIN32_X64)
 
 CACHE_DIR_NAME = "checkvu"
 FALLBACK_JAR_NAME = "checkvu.jar"
+CHECKVU_JAR_DOWNLOAD_URL = "https://github.com/Tricentis-NeoLoad/neoload-root/actions/runs/39966419452"
+EXPECTED_NLG_BUILD = "3747"
 
 __java_version_pattern = re.compile(r'version "(\d+)(?:\.(\d+))?')
+__nlg_build_pattern = re.compile(r"build=\d+-(\d+)")
 __content_disposition_filename = re.compile(
     r"filename\*?=(?:UTF-8\'\')?\"?([^\";]+)\"?", re.IGNORECASE)
 __shipped_jar_version_pattern = re.compile(
@@ -202,6 +205,43 @@ def check_java_version(java):
     return major
 
 
+def parse_nlg_build(version_output):
+    """Return the NLG build number from the first line of `java -jar … --version`.
+
+    Example: NeoLoad CheckVU CLI 2026.3.0;build=20260921-3747 -> 3747
+    """
+    lines = (version_output or "").splitlines()
+    if not lines:
+        return None
+    match = __nlg_build_pattern.search(lines[0])
+    if match is None:
+        return None
+    return match.group(1)
+
+
+def check_jar_build(java, jar):
+    """Run `java -jar <jar> --version` without printing it, and require the expected NLG build."""
+    try:
+        completed = subprocess.run(
+            [java, "-jar", jar, "--version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True)
+    except OSError as err:
+        raise cli_exception.CliException(
+            "Unable to read the CheckVU JAR version with '{0} -jar {1} --version': {2}".format(
+                java, jar, str(err)))
+
+    output = completed.stdout or ""
+    first_line = output.splitlines()[0].strip() if output.strip() else "unknown"
+    actual = parse_nlg_build(output)
+    if actual != EXPECTED_NLG_BUILD:
+        raise cli_exception.CliException(
+            "the JAR build version is not the correct one. Actual: {0} expected build: {1}".format(
+                first_line, EXPECTED_NLG_BUILD))
+    return actual
+
+
 def is_url(spec):
     return spec is not None and "://" in spec
 
@@ -213,7 +253,7 @@ def resolve_jar(engine_jar=None, ssl_cert="", java_executable=None, verify_signa
       1. --jar / --engine-jar local file: skip download, run that JAR (hotfix).
       2. --jar / --engine-jar URL: download that URL into the cache (1 JAR).
       3. a cached JAR, if one exists: reused as-is, no network call.
-      4. redirect.php latest for this OS, only when no JAR is cached yet.
+      4. otherwise: create the cache directory and fail, asking for the CheckVU JAR.
     """
     jar = _locate_jar(engine_jar, ssl_cert)
     if verify_signature:
@@ -236,12 +276,16 @@ def _locate_jar(engine_jar, ssl_cert):
     if cached:
         return cached
 
-    try:
-        return download_jar(build_redirect_url(), ssl_cert)
-    except cli_exception.CliException as err:
-        raise cli_exception.CliException(
-            "{0}\nNo cached JAR to fall back on. Provide one with --jar <path|url> "
-            "for an air-gapped or hotfix run.".format(err))
+    cache_dir = get_cache_dir()
+    os.makedirs(cache_dir, exist_ok=True)
+    raise cli_exception.CliException(
+        "CheckVU is not available in the cache directory.\n"
+        "Please copy the CheckVU JAR file of your corresponding OS into this folder:\n"
+        "{0}\n"
+        "The CheckVU JAR can be downloaded here:\n"
+        "{1}\n"
+        "You can also download NeoLoad installers from there.\n".format(
+            cache_dir, CHECKVU_JAR_DOWNLOAD_URL))
 
 
 def _keep_only_jar(cache_dir, keep_path):

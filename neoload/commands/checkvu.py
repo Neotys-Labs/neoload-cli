@@ -11,9 +11,9 @@ __yaml_extensions = (".yaml", ".yml")
 
 @click.command()
 @click.option('-e', '--engine-jar', '--jar',
-              help="Skip the latest-JAR download and run this CheckVU engine: a local patched file "
-                   "(hotfix / air-gapped) or a download URL. If omitted, the latest JAR for this OS "
-                   "is downloaded and cached.",
+              help="Run this CheckVU engine: a local JAR or a download URL. If omitted, the JAR "
+                   "already cached for this OS is used. If none is cached, the command fails and "
+                   "prints the folder where the CheckVU JAR must be copied.",
               metavar="PATH|URL")
 @click.option('-j', '--java', help="Path to the java executable to use. "
                             "Defaults to JAVA_HOME/bin/java, then java on the PATH.", metavar="PATH")
@@ -25,7 +25,7 @@ __yaml_extensions = (".yaml", ".yml")
                    "Disabled by default. Equivalent to setting CHECKVU_CLI_PLAY_THINK_TIME=1.")
 @click.option('-s', '--as-code-schema', default=None,
               help="NeoLoad as-code schema (URL or local path) to validate PROJECT_FILE against. "
-                   "When omitted, download schemas/v<schemaVersion>/as-code.schema.json from neoload-models (v3). "
+                   "When omitted, download schemas/v<schemaVersion>/as-code.schema.json from neoload-models tag 3.4.22. "
                    "If schemaVersion is absent, use schemas/v3.0/as-code.schema.json.",
               metavar="PATH|URL")
 @click.option('--ssl-cert', default="",
@@ -106,6 +106,8 @@ def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert, 
     resolved_jar = checkvu_runner.resolve_jar(engine_jar, ssl_cert, java_executable,
                                               verify_signature=not unsafe_skip_jar_verification)
     logging.debug("Using CheckVU JAR at '%s'", os.path.abspath(resolved_jar))
+    if not engine_jar:
+        checkvu_runner.check_jar_build(java_executable, resolved_jar)
 
     with checkvu_runner.prepare_controller_properties(
             controller_properties) as resolved_controller_properties:

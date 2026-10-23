@@ -4,7 +4,7 @@ import neoload_cli_lib.schema_validation as schema_validation
 @click.command()
 @click.option('-s', '--as-code-schema', default=None,
               help="NeoLoad as-code schema (URL or local path) to validate FILE against. "
-                   "When omitted, download schemas/v<schemaVersion>/as-code.schema.json from neoload-models (v3). "
+                   "When omitted, download schemas/v<schemaVersion>/as-code.schema.json from neoload-models tag 3.4.22. "
                    "If schemaVersion is absent, use schemas/v3.0/as-code.schema.json.",
               metavar="PATH|URL")
 @click.option('--schema-url', 'schema_url', default=None, hidden=True,
