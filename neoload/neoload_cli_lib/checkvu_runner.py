@@ -321,6 +321,7 @@ def build_nlw_controller_properties(login_data):
     url = login_data.get_url()
     token = login_data.get_token()
     if url.rstrip("/") == SAAS_API_URL.rstrip("/"):
+        # CheckVU treats only the US SaaS url as SaaS. The EU SaaS is still treated as on-premise by NeoLoad GUI.
         return {
             "neoload.web.deployment.type": "SAAS",
             "neoload.web.saas.secretToken": token,
