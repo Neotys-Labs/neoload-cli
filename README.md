@@ -509,19 +509,10 @@ Pipeline examples that install and run the NeoLoad CLI on a CI runner live in [`
 
 
 ## IDE Integrations
-Most of the work done in an IDE is creating and editing code, so we are mainly interested in being able to:
- - easily write API tests in YAML (with automatic syntax validation)
- - validate that tests do not contain unexpected errors, even at small scale
- - run small (smoke) load tests locally so that code check-ins will work in CI/pipeline tests
+Since NeoLoad 2026.3, the schema version can be declared directly in the as-code YAML file, and the schema can be declared with the `$schema` attribute. Editors that understand JSON Schema read those attributes and offer validation, completion, and field documentation while you edit the file.
 
-The last two cases are already covered by the CLI itself, so our primary focus for IDE integrations is to accelerate test authoring by providing validation for the NeoLoad as-code DSL (Domain-Specific Language), and, in some cases, editor auto-complete.
-
-Status of IDE / editor integrations:
-
- | IDE / Editor       | Syntax checks | Auto-complete | Setup steps
- |:------------------:|:-------------:|:-------------:|:----------------:|
- | Visual Studio Code |      [x]      |      [x]      | [See instructions](resources/ides/vscode_settings.json) |
- | PyCharm            |      [x]      |      [x]      | Mark the `neoload` directory as "Sources Root" |
+ - **Visual Studio Code and Cursor:** install the **YAML** extension from the marketplace.
+ - **JetBrains IDEs:** right-click the directory that contains the YAML files and mark it as **Sources Root**.
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for local verification, tests, and the release process.
