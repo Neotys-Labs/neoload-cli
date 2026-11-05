@@ -51,7 +51,7 @@ NOTE: On the Windows command line, replace the `\` line-continuation characters 
    - [As-Code Demo Project](#as-code-demo-project)
  - [Continuous Testing Examples](#continuous-testing-examples)
    - [Support for fast-fail based on SLAs](#support-for-fast-fail-based-on-slas)
- - [Packaging the CLI with Build Agents](#packaging-the-cli-with-build-agents)
+ - [Packaging the CLI with CI Runners](#packaging-the-cli-with-ci-runners)
  - [IDE Integrations](#ide-integrations)
  - [Contributing](CONTRIBUTING.md)
 
@@ -497,10 +497,15 @@ For more information, see [the Windows UTF-8 mode docs](https://docs.python.org/
 Starting with Python 3.15, this is no longer necessary; see [PEP 686 – Make UTF-8 mode default](https://peps.python.org/pep-0686/).
 
 
-## Packaging the CLI with Build Agents
-Many of the CI examples above install the NeoLoad CLI as one of the build steps. If you would rather bake the CLI directly into a build agent so it is ready to use during a job, see the following Docker example:
+## Packaging the CLI with CI Runners
+Pipeline examples that install and run the NeoLoad CLI on a CI runner live in [`examples/pipelines`](examples/pipelines):
 
-For Docker builds, [see the test harness Alpine-based Dockerfile](https://github.com/Neotys-Labs/neoload-cli/blob/master/examples/docker/Dockerfile).
+ - [Jenkins](examples/pipelines/jenkins)
+ - [GitHub Actions](examples/pipelines/github)
+ - [Azure DevOps](examples/pipelines/azure_devops)
+ - [GitLab](examples/pipelines/gitlab)
+ - [AWS CodeBuild](examples/pipelines/aws)
+ - [Bamboo](examples/pipelines/bamboo-specs)
 
 
 ## IDE Integrations
