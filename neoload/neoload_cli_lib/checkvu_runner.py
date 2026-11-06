@@ -379,6 +379,7 @@ CHECKVU_VM_OPTIONS = [
     "-Xms256m",
     "-Xmx512m",
     "-XX:+UseSerialGC",
+    "-XX:+ExitOnOutOfMemoryError",
 ]
 
 def build_command(java, jar, project_file, user_path=None, play_think_time=False,
