@@ -19,8 +19,8 @@ from tests.helpers.test_utils import mock_login_get_urls
 __default_random_token = '12345678912345678901ae6d8af6abcdefabcdefabcdef'
 __default_api_url = 'https://neoload-api.saas.neotys.com'
 
-# set the testing timezone to US/Pacific
-os.environ['TZ'] = 'US/Pacific'
+# set the testing timezone to America/Los_Angeles
+os.environ['TZ'] = 'America/Los_Angeles'
 if hasattr(time, 'tzset'):
     time.tzset()
 FAKE_NOW_DATETIME = datetime.datetime(2023, 12, 25, 17, 5, 55)
