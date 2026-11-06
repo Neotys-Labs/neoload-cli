@@ -15,14 +15,17 @@ This command-line interface lets you launch and monitor performance tests on the
 | Download Binaries | See the [latest release on PyPI](https://pypi.org/project/neoload) |
 
 ## TL;DR ... What
-This guide shows you how to:
- 1. create API load tests as code (YAML)
- 2. run them from any environment
- 3. visualize the test results in web dashboards
+This guide covers two flows.
+
+**1. Local design loop.** Clone [neoload-headless](https://github.com/Neotys-Labs/neoload-headless) and open it in your IDE, or in an AI editor such as Cursor or Claude, so the agent skills in that repository are available; setup steps are in [docs/setup.md](https://github.com/Neotys-Labs/neoload-headless/blob/main/docs/setup.md). From there, build a NeoLoad as-code project (YAML) with the assistant and/or the IDE, starting from application code, or have the AI open the application from its URL and browse it to design the test. Replay its user paths locally with `neoload checkvu` and fix the project until a single virtual user succeeds.
+
+**2. Run them from any environment.** From a CI/CD job, upload the designed project to NeoLoad Web, or commit it to Git and point NeoLoad Web at that repository. Run the test (`neoload docker` can deploy local controller and load-generator containers; this is experimental), then visualize the results in NeoLoad Web dashboards.
 
 ## TL;DR ... How
+Local design loop: follow [Set up the environment](https://github.com/Neotys-Labs/neoload-headless/blob/main/docs/setup.md) in neoload-headless (clone, Python, Java, and the editor or AI workspace).
+
+CI/CD run:
 ```
-pip3 install neoload
 neoload login $NLW_TOKEN \
         test-settings --zone $NLW_ZONE_DYNAMIC --lgs 5 --scenario sanityScenario createorpatch NewTest1 \
         project --path tests/neoload_projects/example_1 upload NewTest1 \
