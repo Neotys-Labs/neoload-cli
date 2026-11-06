@@ -1,0 +1,126 @@
+import logging
+import os
+import sys
+
+import click
+
+from neoload_cli_lib import checkvu_runner, cli_exception
+import neoload_cli_lib.schema_validation as schema_validation
+
+__yaml_extensions = (".yaml", ".yml")
+
+@click.command()
+@click.option('-e', '--engine-jar', '--jar',
+              help="Skip the latest-JAR download and run this CheckVU engine: a local patched file "
+                   "(hotfix / air-gapped) or a download URL. If omitted, the latest JAR for this OS "
+                   "is downloaded and cached.",
+              metavar="PATH|URL")
+@click.option('-j', '--java', help="Path to the java executable to use. "
+                            "Defaults to JAVA_HOME/bin/java, then java on the PATH.", metavar="PATH")
+@click.option('-u', '--user-path', help="Run only the specified user path. If omitted, all user paths in the file "
+                                  "are executed sequentially. An unknown name fails and lists the user paths "
+                                  "found in the file.", metavar="NAME")
+@click.option('--play-think-time', is_flag=True, default=False,
+              help="Play think times defined on pages and delays marked as think time. "
+                   "Disabled by default. Equivalent to setting CHECKVU_CLI_PLAY_THINK_TIME=1.")
+@click.option('-s', '--as-code-schema', default=None,
+              help="NeoLoad as-code schema (URL or local path) to validate PROJECT_FILE against. "
+                   "When omitted, download schemas/v<schemaVersion>/as-code.schema.json from neoload-models (v3). "
+                   "If schemaVersion is absent, use schemas/v3.0/as-code.schema.json.",
+              metavar="PATH|URL")
+@click.option('--ssl-cert', default="",
+              help="Path to SSL certificate or write False to disable certificate checking. "
+                   "Used both for schema validation and the JAR download.")
+@click.option('--unsafe-skip-jar-verification', is_flag=True, default=False,
+              help="Unsafe. Run the CheckVU JAR without checking that it is signed by Tricentis. "
+                   "Intended for development, and for runtimes that ship no jarsigner "
+                   "(jarsigner is in the JDK, not the JRE, and the check requires it) "
+                   "when running a local JAR that has already been verified.")
+@click.option('--controller-properties',
+              help="Advanced. Path to controller.properties file merged additively into the Controller "
+                   "configuration; only the keys you set are overridden, other embedded values are kept.",
+              metavar="PATH")
+@click.option('--load-generator-properties',
+              help="Advanced. Path to agent.properties file merged additively into the Load Generator "
+                   "configuration; only the keys you set are overridden.",
+              metavar="PATH")
+@click.option('--app-proxy',
+              help="Proxy used to reach the tested applications, as host:port (e.g. myproxy.corp:8080). "
+                   "Applies to both HTTP and HTTPS application traffic (User Path validation / Load Generator "
+                   "traffic). Not used for NeoLoad Web API calls. CheckVU CLI download proxy uses the standard "
+                   "HTTPS_PROXY, HTTP_PROXY and NO_PROXY variables instead.",
+              metavar="HOST:PORT")
+@click.option('--app-proxy-username',
+              help="Username for --app-proxy authentication (optional). The password is read from environment "
+                   "variable CHECKVU_CLI_APP_PROXY_PASSWORD; there is no flag for it, so it is never "
+                   "exposed in the process list or CI logs.",
+              metavar="USERNAME")
+@click.option('--app-proxy-bypass',
+              help="Comma-separated hosts that bypass --app-proxy (e.g. localhost,internal.corp).",
+              metavar="HOSTS")
+@click.option('-o', '--output',
+              help="Directory that receives checkvu-result.json and the checkvu-content/ request and response "
+                   "dump. When omitted, nothing is written to disk and the console output is unchanged. "
+                   "Relative paths resolve from the current directory, not from PROJECT_FILE. The dump is not "
+                   "redacted: treat it as confidential.",
+              metavar="PATH")
+@click.option('-w', '--work-dir',
+              help="Directory for engine scratch files and logs. Defaults to a temporary directory. "
+                   "A directory you supply is never deleted.",
+              metavar="PATH")
+@click.option('--keep-temp-work-dir', is_flag=True, default=False,
+              help="Keep the temporary work directory after the run instead of deleting it. "
+                   "Equivalent to setting CHECKVU_CLI_KEEP_TEMP_WORK_DIR=1. "
+                   "Has no effect when --work-dir is already set, since that directory is never auto-deleted. "
+                   "After neoload login, a retained work directory contains the NeoLoad Web token in clear "
+                   "text in conf/controller.properties; treat it as confidential.")
+@click.argument('project_file')
+def cli(engine_jar, java, user_path, play_think_time, as_code_schema, ssl_cert, unsafe_skip_jar_verification,
+        controller_properties, load_generator_properties,
+        app_proxy, app_proxy_username, app_proxy_bypass, output, work_dir, keep_temp_work_dir,
+        project_file):
+    """  Validate the User Paths of a NeoLoad as-code Project locally.
+
+    Runs each User Path once against the application and reports whether
+    it completes without blocking errors. This is not a load test: no
+    Population, no Scenario, no Result. Exits 0 when every User Path passes, 1
+    otherwise. Use --output to also write checkvu-result.json and the full
+    request and response dump to a directory.
+
+    PROJECT_FILE is the as-code Project YAML file. Its parent directory is the
+    Project root; colocated assets such as CSV files must live under that
+    root.
+
+    A java executable is required to run the checkVU. Prefer a JDK over JRE so
+    that the CLI can check the JAR's integrity
+    """
+    if not project_file.lower().endswith(__yaml_extensions):
+        raise cli_exception.CliException("Project file must be a yaml (\".yaml\", \".yml\") file: " + project_file)
+    if not os.path.isfile(project_file):
+        raise cli_exception.CliException("Project file not found: " + project_file)
+    print(schema_validation.validate_path(project_file, as_code_schema, ssl_cert), flush=True)
+
+    java_executable = checkvu_runner.resolve_java(java)
+    checkvu_runner.check_java_version(java_executable)
+
+    resolved_jar = checkvu_runner.resolve_jar(engine_jar, ssl_cert, java_executable,
+                                              verify_signature=not unsafe_skip_jar_verification)
+    logging.debug("Using CheckVU JAR at '%s'", os.path.abspath(resolved_jar))
+
+    with checkvu_runner.prepare_controller_properties(
+            controller_properties) as resolved_controller_properties:
+        command = checkvu_runner.build_command(
+            java_executable, resolved_jar, project_file,
+            user_path=user_path,
+            play_think_time=play_think_time,
+            controller_properties=resolved_controller_properties,
+            load_generator_properties=load_generator_properties,
+            app_proxy=app_proxy,
+            app_proxy_username=app_proxy_username,
+            app_proxy_bypass=app_proxy_bypass,
+            output=output,
+            work_dir=work_dir,
+            keep_temp_work_dir=keep_temp_work_dir,
+        )
+        exit_code = checkvu_runner.run_checkvu(command)
+    sys.exit(exit_code)

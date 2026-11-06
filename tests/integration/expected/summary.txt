@@ -14,7 +14,7 @@ PerIntervalSLA [avg-resp-time] PASSED on [simpledemo > Actions > /]
     "author": "Luke Skywalker",
     "terminationReason": "POLICY",
     "lgCount": 1,
-    "project": "NeoLoad-CLI-simpledemo",
+    "project": "NeoLoad_CLI_simpledemo",
     "scenario": "simpledemo",
     "status": "TERMINATED",
     "qualityStatus": "PASSED",

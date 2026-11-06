@@ -12,7 +12,7 @@ class TestProjectCreate:
             assert result.exit_code == 0, result.output
             assert "Project 'my-demo' created successfully." in result.output
             assert os.path.join('my-demo', 'default.yaml') in result.output
-            assert 'checkvu' not in result.output.lower()
+            assert f"neoload checkvu {os.path.join('my-demo', 'default.yaml')}" in result.output
 
             yaml_path = os.path.join('my-demo', 'default.yaml')
             assert os.path.isfile(yaml_path)

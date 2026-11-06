@@ -1,8 +1,10 @@
 from unittest import mock
 
+import logging
 import pytest
 
 import neoload_cli_lib.schema_validation as schema_validation
+from neoload_cli_lib.user_data import __yaml_schema_file as yaml_schema_file
 
 
 @pytest.mark.validation
@@ -57,3 +59,12 @@ class TestEtagCaching:
         assert content is None
         assert not_modified is False
         assert etag == '"abc"'
+
+    def test_etag_match_debug_log_includes_cached_schema_path(self, caplog):
+        with mock.patch.object(schema_validation, 'get_yaml_schema', return_value='{}'), \
+                mock.patch.object(schema_validation, 'get_yaml_schema_etag', return_value='"abc"'), \
+                mock.patch.object(schema_validation, 'get_network_schema_by_spec',
+                                  return_value=(None, '"abc"', True)), \
+                caplog.at_level(logging.DEBUG):
+            schema_validation.init_yaml_schema_with_checks('https://example.com/schema.json')
+        assert 'using cached schema at {0}'.format(yaml_schema_file) in caplog.text

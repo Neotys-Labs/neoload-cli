@@ -176,6 +176,36 @@ Pressing `Ctrl+C` causes the CLI to attempt to stop the test gracefully.
 neoload stop             # Sends the stop signal to the test and waits until it ends.
 ```
 
+## CheckVU an as-code project
+This command runs a CheckVU on an as-code project: it executes a single virtual user to verify that the project runs. It is meant to support fast iteration on as-code projects (generate -> checkvu -> fix).
+
+It delegates to a standalone headless CheckVU JAR and streams the JAR's output and exit code directly.
+
+```
+Usage: neoload checkvu [OPTIONS] PROJECT_FILE
+Help: neoload checkvu --help
+neoload checkvu default.yaml
+neoload checkvu -u myUser default.yaml
+```
+ - `PROJECT_FILE` is a path to an as-code yaml file. The CLI validates it against the as-code schema first (same as `neoload validate`), using `-s, --as-code-schema` to override the default schema.
+ - `--play-think-time` plays think times defined on pages and delays marked as think time. Disabled by default (same as the CheckVU advanced setting).
+ - `-e, --engine-jar, --jar <path-or-url>` skips the JAR resolution below and runs a local patched file (hotfix) or an explicit download URL. If omitted: reuse the single cached JAR if one exists (no network call); otherwise detect the OS, call `redirect.php` (`version=latest`), follow the 302 to `files.tricentis.com`, and cache the JAR under the filename from the final `Content-Disposition` (e.g. `neoload-checkvu-cli-2026.3.0-linux.jar`). Clear the cache directory to force a fresh download after a new CheckVU release.
+ - `-j, --java` selects the java executable; by default `JAVA_HOME/bin/java` then `java` on the PATH. Java 21 is required and verified before running (other major versions such as 25 are rejected). The JAR is launched with `-XX:TieredStopAtLevel=1 -Xms256m -Xmx512m -XX:+UseSerialGC` to keep startup short, and `JAVA_TOOL_OPTIONS` is emptied for that process so these options always apply and do not reach the Load Generator it spawns. Use a JDK rather than a JRE: the JDK provides `jarsigner`, which the CLI uses to check that the JAR is made by Tricentis. With a JRE the command stops with an error, unless you bypass the check using `--unsafe-skip-jar-verification`
+ - `-o, --output <path>` sets the directory that receives `checkvu-result.json` and the `checkvu-content/` request and response dump. When omitted, nothing is written to disk and only the console output is produced. Relative paths resolve from the current directory, not from `PROJECT_FILE`. The dump is not redacted, so treat it as confidential.
+ - `-w, --work-dir <path>` sets the directory used for engine files and logs. Defaults to a temporary directory deleted afterwards unless `--keep-temp-work-dir` is set; a directory you supply yourself is never deleted.
+ - `--app-proxy`, `--app-proxy-username` and `--app-proxy-bypass` configure the proxy used for application traffic. The proxy password is set with `CHECKVU_CLI_APP_PROXY_PASSWORD` environment variable instead so it never shows up in the process list or CI logs.
+ - `--controller-properties` and `--load-generator-properties` are advanced options to merge a `.properties` file into the JAR's embedded `controller.properties` / `agent.properties`. When CheckVU starts after `neoload login`, it reuses the saved URL and token through a temporary `[Web]` overlay: SaaS keys when the saved URL is the default SaaS API, and on-premise keys for any other URL. Those login keys win over the same keys in an explicit overlay. The temporary overlay is deleted after the run. If `--work-dir` or `--keep-temp-work-dir` retains the engine work directory, its merged `conf/controller.properties` also remains and contains the token in clear text; treat that directory as confidential.
+
+> [!IMPORTANT]
+> A **Secret Vault variable** is resolved by **NeoLoad Web**. CheckVU can use one only when the CLI already has a NeoLoad Web connection. [Log in to NeoLoad Web](#login-to-neoload-web) first, then run CheckVU:
+>
+> ```
+> neoload login [TOKEN]
+> neoload checkvu default.yaml
+> ```
+>
+> Without that connection, CheckVU cannot resolve the Secret Vault variable.
+
 ## Reporting
 
 The NeoLoad CLI provides basic support for viewing and exporting test results.
@@ -382,6 +412,12 @@ The `BuyAsGuest` user path walks through a typical guest purchase:
 6. View product details
 
 It uses two variables (`product_id`, `quantity`) and a single population (`GuestShoppers`)
+
+Run CheckVU against the project:
+```
+neoload project create DemoWebShop
+neoload checkvu DemoWebShop/default.yaml
+```
 
 Run the full test:
 ```

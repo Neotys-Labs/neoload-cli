@@ -116,3 +116,6 @@ def create_local_project(project_name):
 
     print(f"Project '{project_name}' created successfully.")
     print(f"  {yaml_path}")
+    print()
+    print("Next step: verify your project with CheckVU:")
+    print(f"  neoload checkvu {yaml_path}")
