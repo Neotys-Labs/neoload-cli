@@ -237,8 +237,9 @@ class TestCheckvuRunner:
     def test_build_command_pins_jvm_options(self):
         # Pins the literal values: _java_jar derives from the constant, so it cannot catch a change to it.
         command = checkvu_runner.build_command("java", "checkvu.jar", "p.yaml")
-        assert command[:5] == [
+        assert command[:6] == [
             "java", "-XX:TieredStopAtLevel=1", "-Xms256m", "-Xmx512m", "-XX:+UseSerialGC",
+            "-XX:+ExitOnOutOfMemoryError",
         ]
 
     def test_run_checkvu_empties_java_tool_options(self):
