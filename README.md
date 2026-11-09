@@ -15,14 +15,17 @@ This command-line interface lets you launch and monitor performance tests on the
 | Download Binaries | See the [latest release on PyPI](https://pypi.org/project/neoload) |
 
 ## TL;DR ... What
-This guide shows you how to:
- 1. create API load tests as code (YAML)
- 2. run them from any environment
- 3. visualize the test results in web dashboards
+This guide covers two flows.
+
+**1. Local design loop.** Clone [neoload-headless](https://github.com/Neotys-Labs/neoload-headless) and open it in your IDE, or in an AI editor such as Cursor or Claude, so the agent skills in that repository are available; setup steps are in [docs/setup.md](https://github.com/Neotys-Labs/neoload-headless/blob/main/docs/setup.md). From there, build a NeoLoad as-code project (YAML) with the assistant and/or the IDE, starting from application code, or have the AI open the application from its URL and browse it to design the test. Replay its user paths locally with `neoload checkvu` and fix the project until a single virtual user succeeds.
+
+**2. Run them from any environment.** From a CI/CD job, upload the designed project to NeoLoad Web, or commit it to Git and point NeoLoad Web at that repository. Run the test (`neoload docker` can deploy local controller and load-generator containers; this is experimental), then visualize the results in NeoLoad Web dashboards.
 
 ## TL;DR ... How
+Local design loop: follow [Set up the environment](https://github.com/Neotys-Labs/neoload-headless/blob/main/docs/setup.md) in neoload-headless (clone, Python, Java, and the editor or AI workspace).
+
+CI/CD run:
 ```
-pip3 install neoload
 neoload login $NLW_TOKEN \
         test-settings --zone $NLW_ZONE_DYNAMIC --lgs 5 --scenario sanityScenario createorpatch NewTest1 \
         project --path tests/neoload_projects/example_1 upload NewTest1 \
@@ -51,9 +54,9 @@ NOTE: On the Windows command line, replace the `\` line-continuation characters 
    - [As-Code Demo Project](#as-code-demo-project)
  - [Continuous Testing Examples](#continuous-testing-examples)
    - [Support for fast-fail based on SLAs](#support-for-fast-fail-based-on-slas)
- - [Packaging the CLI with Build Agents](#packaging-the-cli-with-build-agents)
+ - [Packaging the CLI with CI Runners](#packaging-the-cli-with-ci-runners)
  - [IDE Integrations](#ide-integrations)
- - [Contributing](#contributing)
+ - [Contributing](CONTRIBUTING.md)
 
 ## Prerequisites
 The CLI requires **Python 3**.
@@ -497,81 +500,22 @@ For more information, see [the Windows UTF-8 mode docs](https://docs.python.org/
 Starting with Python 3.15, this is no longer necessary; see [PEP 686 – Make UTF-8 mode default](https://peps.python.org/pep-0686/).
 
 
-## Packaging the CLI with Build Agents
-Many of the CI examples above install the NeoLoad CLI as one of the build steps. If you would rather bake the CLI directly into a build agent so it is ready to use during a job, see the following Docker example:
+## Packaging the CLI with CI Runners
+Pipeline examples that install and run the NeoLoad CLI on a CI runner live in [`examples/pipelines`](examples/pipelines):
 
-For Docker builds, [see the test harness Alpine-based Dockerfile](https://github.com/Neotys-Labs/neoload-cli/blob/master/examples/docker/Dockerfile).
+ - [Jenkins](examples/pipelines/jenkins)
+ - [GitHub Actions](examples/pipelines/github)
+ - [Azure DevOps](examples/pipelines/azure_devops)
+ - [GitLab](examples/pipelines/gitlab)
+ - [AWS CodeBuild](examples/pipelines/aws)
+ - [Bamboo](examples/pipelines/bamboo-specs)
 
 
 ## IDE Integrations
-Most of the work done in an IDE is creating and editing code, so we are mainly interested in being able to:
- - easily write API tests in YAML (with automatic syntax validation)
- - validate that tests do not contain unexpected errors, even at small scale
- - run small (smoke) load tests locally so that code check-ins will work in CI/pipeline tests
+Since NeoLoad 2026.3, the schema version can be declared directly in the as-code YAML file, and the schema can be declared with the `$schema` attribute. Editors that understand JSON Schema read those attributes and offer validation, completion, and field documentation while you edit the file.
 
-The last two cases are already covered by the CLI itself, so our primary focus for IDE integrations is to accelerate test authoring by providing validation for the NeoLoad as-code DSL (Domain-Specific Language), and, in some cases, editor auto-complete.
-
-Status of IDE / editor integrations:
-
- | IDE / Editor       | Syntax checks | Auto-complete | Setup steps
- |:------------------:|:-------------:|:-------------:|:----------------:|
- | Visual Studio Code |      [x]      |      [x]      | [See instructions](resources/ides/vscode_settings.json) |
- | PyCharm            |      [x]      |      [x]      | Mark the `neoload` directory as "Sources Root" |
+ - **Visual Studio Code and Cursor:** install the **YAML** extension from the marketplace.
+ - **JetBrains IDEs:** right-click the directory that contains the YAML files and mark it as **Sources Root**.
 
 ## Contributing
-Feel free to fork this repo, make your changes, *test locally*, and then open a pull request.
-
-### Local verification
-
-#### Tests
-As part of your testing, run the built-in test suite with the following commands. \
-NOTE: when testing on macOS, replace the semicolons (`;`) in `PYTHONPATH` with colons (`:`).
-
-```
-pytest -v
-pytest -v -m "not slow"          # Skip slow tests
-
-# Run against a real NeoLoad instance. Mocks are disabled.
-pytest -v --token <your_personal_token> --url https://neoload-api.saas.neotys.com/ --makelivecalls
-
-# Run the integration tests. These execute scripts using real neoload commands and assert the JSON output with jq.
-# Requires at least 1 controller and 1 LG on the provided zone.
-./tests/integration/runAllScripts.sh <your_personal_token> --url https://neoload-api.saas.neotys.com/ defaultzone
-```
-
-In addition, any contribution to the DSL validation functionality (for example, to the JSON schema or the `validate` command) should run the following tests locally before pushing:
-```
-./tests/neoload_projects/yaml_variants/validate_all.sh
-```
-This command runs a series of NEGATIVE tests that ensure changes to the JSON schema or validation process correctly produce failures when the input is malformed in specific, common ways.
-
-### Release process (managed by the Tricentis NeoLoad team)
-
-#### Auto-generating the changelog
-
-Before tagging a release, merged PRs should update `CHANGELOG.md` using the following command:
-
-```
-github_changelog_generator -u Neotys-Labs -p neoload-cli --token $GIT_CHANGELOG_GEN --exclude-tags-regex ".*(dev|rc).*" --add-sections '{"documentation":{"prefix":"**Documentation updates:**","labels":["documentation"]}}'
-```
-
-This utility is a [Ruby-based gem](https://github.com/github-changelog-generator/github-changelog-generator) (also used in CI/Actions) that can be installed with:
-
-```
-gem install github_changelog_generator
-```
-
-#### Version management on PyPI
-Given that X, Y, Z, and N are integers, versions on PyPI are named as follows: \
-**Final release version = X.Y.Z** — example: *1.4.0*. Install it with ```pip install neoload``` \
-**Release candidate version = X.Y.ZrcN** — example: *1.5.0rc1* for the next candidate version. Install it with ```pip install neoload --pre``` \
-**Development version = X.Y.Z.devN** — example: *1.4.0.dev1* for a development version based on the final release 1.4.0. Install it with ```pip install neoload==1.4.0.dev1```
-
-A release candidate version contains all the features planned for the release and is undergoing testing by the Quality Assurance team.
-
-Development versions may contain work that is not planned by R&D and has not been tested by the Quality Assurance team. They should always be based on an official release, not on an upcoming one.
-
-**Increment policy:**
- - Increment the minor version for a major feature, such as a new top-level command.
- - Increment the patch version for executable changes, such as fixing an existing feature, updating a subcommand of an existing top-level command, or updating the options of an existing command.
- - No release is needed when the executable is not modified, for example when only updating automated CI tests, unit tests, the README, pipeline examples, or report templates.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for local verification, tests, and the release process.
