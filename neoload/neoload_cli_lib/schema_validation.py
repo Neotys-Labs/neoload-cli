@@ -7,12 +7,11 @@ import requests
 import yaml
 from yaml.scanner import ScannerError
 
-from neoload_cli_lib import cli_exception, bad_as_code_exception
+from neoload_cli_lib import cli_exception, bad_as_code_exception, schema_error_report
 from neoload_cli_lib.user_data import update_schema, get_yaml_schema, get_yaml_schema_etag, tools, __yaml_schema_file
 
 import logging
 import hashlib
-import re
 import os
 import  gitignorefile
 from neoload_cli_lib.neoLoad_project import is_not_to_be_included
@@ -194,159 +193,11 @@ def validate_project_object(project_object, schema_spec, ssl_cert='', check_sche
     except jsonschema.SchemaError as err:
         raise cli_exception.CliException('This is not a valid json schema:\n%s' % str(err))
     except jsonschema.ValidationError:
-        errors = explain_validation_errors(v, project_object)
-        msgs = "\n" + "\n".join(errors) + "\n"
-        msgs = ("in %s" % label if label else "") + msgs
-        raise cli_exception.CliException(YAML_NOT_CONFIRM_MESSAGE + '\n' + msgs)
-
-
-_NAMED_COLLECTIONS = {'user_paths': 'user_path', 'variables': 'variable', 'servers': 'server',
-                      'populations': 'population', 'scenarios': 'scenario', 'sla_profiles': 'sla_profile'}
-_GOT_MAX_LENGTH = 160
-_MAX_PATHS_SHOWN = 4
-
-
-def _leaf_errors(error):
-    """Replace a oneOf/anyOf error by the errors of the alternative the author most likely meant.
-
-    A oneOf error only says "not valid under any of the given schemas" and lists the failures of every
-    alternative. The alternative that fails deepest in the document is the one whose shape matched the
-    most, so it holds the real mistake (an unexpected key, a bad value). When no alternative gets past the
-    level of the oneOf itself, none was recognised: keep the oneOf error and list the keys that were seen.
-    """
-    if not error.context:
-        yield error
-        return
-    branches = {}
-    for sub in error.context:
-        branches.setdefault(sub.relative_schema_path[0], []).append(sub)
-    best = max(branches.values(), key=lambda errs: (max(len(e.absolute_path) for e in errs), -len(errs)))
-    if max(len(e.absolute_path) for e in best) <= len(error.absolute_path):
-        yield error
-        return
-    for sub in best:
-        yield from _leaf_errors(sub)
-
-
-def _path_to_text(path):
-    text = ''
-    for part in path:
-        text += '[%s]' % part if isinstance(part, int) else ('.' if text else '') + str(part)
-    return text or '(root)'
-
-
-def _breadcrumb(instance, path):
-    """Name the steps leading to the error: transaction 'Login' > web_page 'Logon page' > request."""
-    crumbs = []
-    node = instance
-    previous = None
-    for part in path:
-        try:
-            node = node[part]
-        except (KeyError, IndexError, TypeError):
-            break
-        if isinstance(part, int) and previous in _NAMED_COLLECTIONS and isinstance(node, dict):
-            crumbs.append("%s '%s'" % (_NAMED_COLLECTIONS[previous], node.get('name', part)))
-        elif isinstance(part, str) and isinstance(node, dict) and previous is not None \
-                and isinstance(part, str) and part not in _NAMED_COLLECTIONS and part not in ('steps', 'actions', 'init', 'end'):
-            label = node.get('url') if part == 'request' else (node.get('name') or node.get('url'))
-            label = _truncate(str(label), 60) if label else label
-            crumbs.append("%s '%s'" % (part, label) if label else part)
-        previous = part
-    return ' > '.join(crumbs)
-
-
-def _abbreviate(paths, reference):
-    """Replace the leading path elements a path shares with the reference path by an ellipsis."""
-    ref = reference.split('.')
-    result = []
-    for path in paths:
-        parts = path.split('.')
-        shared = 0
-        while shared < min(len(parts), len(ref)) - 1 and parts[shared] == ref[shared]:
-            shared += 1
-        result.append(('...' if shared else '') + '.'.join(parts[shared:]) if shared else path)
-    return result
-
-
-def _truncate(text, length):
-    return text if len(text) <= length else text[:length] + '...'
-
-
-def _short_value(value):
-    text = yaml.dump(value, default_flow_style=True, width=10 ** 6).strip()
-    if text.endswith('\n...'):
-        text = text[:-4].strip()
-    text = text.replace('\n', ' ')
-    return text if len(text) <= _GOT_MAX_LENGTH else text[:_GOT_MAX_LENGTH] + '...'
-
-
-_UNEVALUATED = re.compile(r"^Unevaluated properties are not allowed \((.*) (?:was|were) unexpected\)$")
-
-
-def _is_unevaluated_artifact(leaf, error_paths):
-    """A property whose value is invalid is also reported as unevaluated by the schema keyword.
-
-    Report only the invalid value: it holds the real mistake. A genuinely unexpected key has no other
-    error at its own path and is kept.
-    """
-    match = _UNEVALUATED.match(leaf.message)
-    if not match:
-        return False
-    names = [n.strip().strip("'") for n in match.group(1).split(',')]
-    base = tuple(map(str, leaf.absolute_path))
-    return all(any(p[:len(base) + 1] == base + (n,) for p in error_paths) for n in names)
-
-
-def explain_validation_errors(validator, instance):
-    """One entry per real mistake: what is wrong, where (path and named steps), and the offending value."""
-    groups = {}
-    leaves = []
-    for error in sorted(validator.iter_errors(instance), key=lambda e: [str(p) for p in e.absolute_path]):
-        leaves.extend(_leaf_errors(error))
-    error_paths = [tuple(map(str, leaf.absolute_path)) for leaf in leaves]
-    for leaf in leaves:
-        if _is_unevaluated_artifact(leaf, error_paths):
-            continue
-        path = list(leaf.absolute_path)
-        message = leaf.message
-        if leaf.context or ('is not valid under any of the given schemas' in message):
-            # No alternative was recognised: show the value's keys, not the whole subtree.
-            if isinstance(leaf.instance, dict):
-                message = 'Unrecognised or invalid content, found the keys: %s' % ', '.join(map(str, leaf.instance))
-            else:
-                message = 'Invalid value %s' % _short_value(leaf.instance)
-            got = ''
-        else:
-            got = '\n\tgot: ' + _short_value(leaf.instance)
-        # The same mistake repeated on many steps (a key every generated request carries, say) is one
-        # finding with many places: group by message and by the key it is about (the last path element,
-        # or the container when the path ends with a list position).
-        named = [part for part in path if not isinstance(part, int)]
-        key = (named[-1] if named else '', message)
-        if key in groups:
-            groups[key]['paths'].append(_path_to_text(path))
-            continue
-        logging.debug("Validation error at %s:\n%s" % (_path_to_text(path), yaml.dump(leaf.instance)))
-        groups[key] = {'message': message, 'paths': [_path_to_text(path)], 'where': _breadcrumb(instance, path),
-                       'got': got}
-    explained = []
-    occurrences = 0
-    for group in groups.values():
-        paths = group['paths']
-        occurrences += len(paths)
-        lines = '%s\n\tat: %s' % (group['message'], paths[0])
-        if len(paths) > 1:
-            shown = ', '.join(_abbreviate(paths[1:_MAX_PATHS_SHOWN], paths[0]))
-            more = len(paths) - _MAX_PATHS_SHOWN
-            lines += '\n\talso at: %s%s' % (shown, (' and %d more' % more) if more > 0 else '')
-        if group['where']:
-            lines += '\n\tin: ' + group['where']
-        explained.append(lines + group['got'])
-    summary = '%d error(s)' % len(explained)
-    if occurrences != len(explained):
-        summary += ' (%d places)' % occurrences
-    return [summary] + explained
+        errors = list(v.iter_errors(project_object))
+        logging.debug("Raw validation errors:\n%s" % "\n".join(map(str, errors)))
+        report = schema_error_report.format_errors(errors, project_object)
+        raise cli_exception.CliException(
+            YAML_NOT_CONFIRM_MESSAGE + '\n' + ("in %s\n" % label if label else "") + report + "\n")
 
 
 def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
