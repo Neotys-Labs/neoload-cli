@@ -85,3 +85,12 @@ def test_offending_value_is_truncated():
 
 def test_valid_project_gives_no_errors():
     assert explain(project_with({"url": "/a"})) == ['0 error(s)']
+
+
+def test_same_mistake_on_many_steps_is_one_entry_with_all_the_places():
+    steps = [{"request": {"url": "/a%d" % i, "name": "x"}} for i in range(10)]
+    project = {"user_paths": [{"name": "Path", "actions": {"steps": [{"transaction": {"name": "T", "steps": steps}}]}}]}
+    errors = explain(project)
+    assert errors[0] == '1 error(s) (10 places)'
+    assert len(errors) == 2
+    assert 'and 6 more' in errors[1]

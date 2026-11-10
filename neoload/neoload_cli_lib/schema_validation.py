@@ -203,6 +203,7 @@ def validate_project_object(project_object, schema_spec, ssl_cert='', check_sche
 _NAMED_COLLECTIONS = {'user_paths': 'user_path', 'variables': 'variable', 'servers': 'server',
                       'populations': 'population', 'scenarios': 'scenario', 'sla_profiles': 'sla_profile'}
 _GOT_MAX_LENGTH = 160
+_MAX_PATHS_SHOWN = 4
 
 
 def _leaf_errors(error):
@@ -249,9 +250,14 @@ def _breadcrumb(instance, path):
         elif isinstance(part, str) and isinstance(node, dict) and previous is not None \
                 and isinstance(part, str) and part not in _NAMED_COLLECTIONS and part not in ('steps', 'actions', 'init', 'end'):
             label = node.get('url') if part == 'request' else (node.get('name') or node.get('url'))
+            label = _truncate(str(label), 60) if label else label
             crumbs.append("%s '%s'" % (part, label) if label else part)
         previous = part
     return ' > '.join(crumbs)
+
+
+def _truncate(text, length):
+    return text if len(text) <= length else text[:length] + '...'
 
 
 def _short_value(value):
@@ -281,8 +287,7 @@ def _is_unevaluated_artifact(leaf, error_paths):
 
 def explain_validation_errors(validator, instance):
     """One entry per real mistake: what is wrong, where (path and named steps), and the offending value."""
-    explained = []
-    seen = set()
+    groups = {}
     leaves = []
     for error in sorted(validator.iter_errors(instance), key=lambda e: [str(p) for p in e.absolute_path]):
         leaves.extend(_leaf_errors(error))
@@ -301,15 +306,33 @@ def explain_validation_errors(validator, instance):
             got = ''
         else:
             got = '\n\tgot: ' + _short_value(leaf.instance)
-        key = (tuple(map(str, path)), message)
-        if key in seen:
+        # The same mistake repeated on many steps (a key every generated request carries, say) is one
+        # finding with many places: group by message and by path with the list positions removed.
+        shape = tuple('[]' if isinstance(part, int) else str(part) for part in path)
+        key = (shape, message)
+        if key in groups:
+            groups[key]['paths'].append(_path_to_text(path))
             continue
-        seen.add(key)
-        where = _breadcrumb(instance, path)
         logging.debug("Validation error at %s:\n%s" % (_path_to_text(path), yaml.dump(leaf.instance)))
-        explained.append('%s\n\tat: %s%s%s' % (
-            message, _path_to_text(path), ('\n\tin: ' + where) if where else '', got))
-    return ['%d error(s)' % len(explained)] + explained
+        groups[key] = {'message': message, 'paths': [_path_to_text(path)], 'where': _breadcrumb(instance, path),
+                       'got': got}
+    explained = []
+    occurrences = 0
+    for group in groups.values():
+        paths = group['paths']
+        occurrences += len(paths)
+        lines = '%s\n\tat: %s' % (group['message'], paths[0])
+        if len(paths) > 1:
+            shown = ', '.join(paths[1:_MAX_PATHS_SHOWN])
+            more = len(paths) - _MAX_PATHS_SHOWN
+            lines += '\n\talso at: %s%s' % (shown, (' and %d more' % more) if more > 0 else '')
+        if group['where']:
+            lines += '\n\tin: ' + group['where']
+        explained.append(lines + group['got'])
+    summary = '%d error(s)' % len(explained)
+    if occurrences != len(explained):
+        summary += ' (%d places)' % occurrences
+    return [summary] + explained
 
 
 def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
