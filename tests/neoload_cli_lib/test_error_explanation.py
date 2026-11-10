@@ -94,3 +94,12 @@ def test_same_mistake_on_many_steps_is_one_entry_with_all_the_places():
     assert errors[0] == '1 error(s) (10 places)'
     assert len(errors) == 2
     assert 'and 6 more' in errors[1]
+
+
+def test_same_mistake_under_different_parents_is_merged_and_paths_are_abbreviated():
+    first = {"transaction": {"name": "A", "steps": [{"request": {"url": "/a", "name": "x"}}]}}
+    second = {"transaction": {"name": "B", "steps": [{"request": {"url": "/b", "name": "y"}}]}}
+    project = {"user_paths": [{"name": "Path", "actions": {"steps": [first, second]}}]}
+    errors = explain(project)
+    assert errors[0] == '1 error(s) (2 places)'
+    assert 'also at: ...steps[1].transaction.steps[0].request' in errors[1]

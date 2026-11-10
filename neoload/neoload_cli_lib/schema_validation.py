@@ -256,6 +256,19 @@ def _breadcrumb(instance, path):
     return ' > '.join(crumbs)
 
 
+def _abbreviate(paths, reference):
+    """Replace the leading path elements a path shares with the reference path by an ellipsis."""
+    ref = reference.split('.')
+    result = []
+    for path in paths:
+        parts = path.split('.')
+        shared = 0
+        while shared < min(len(parts), len(ref)) - 1 and parts[shared] == ref[shared]:
+            shared += 1
+        result.append(('...' if shared else '') + '.'.join(parts[shared:]) if shared else path)
+    return result
+
+
 def _truncate(text, length):
     return text if len(text) <= length else text[:length] + '...'
 
@@ -307,9 +320,10 @@ def explain_validation_errors(validator, instance):
         else:
             got = '\n\tgot: ' + _short_value(leaf.instance)
         # The same mistake repeated on many steps (a key every generated request carries, say) is one
-        # finding with many places: group by message and by path with the list positions removed.
-        shape = tuple('[]' if isinstance(part, int) else str(part) for part in path)
-        key = (shape, message)
+        # finding with many places: group by message and by the key it is about (the last path element,
+        # or the container when the path ends with a list position).
+        named = [part for part in path if not isinstance(part, int)]
+        key = (named[-1] if named else '', message)
         if key in groups:
             groups[key]['paths'].append(_path_to_text(path))
             continue
@@ -323,7 +337,7 @@ def explain_validation_errors(validator, instance):
         occurrences += len(paths)
         lines = '%s\n\tat: %s' % (group['message'], paths[0])
         if len(paths) > 1:
-            shown = ', '.join(paths[1:_MAX_PATHS_SHOWN])
+            shown = ', '.join(_abbreviate(paths[1:_MAX_PATHS_SHOWN], paths[0]))
             more = len(paths) - _MAX_PATHS_SHOWN
             lines += '\n\talso at: %s%s' % (shown, (' and %d more' % more) if more > 0 else '')
         if group['where']:
