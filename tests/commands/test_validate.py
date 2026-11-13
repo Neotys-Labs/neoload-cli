@@ -15,10 +15,6 @@ import shutil
 
 @pytest.mark.validation
 class TestValidate:
-    @classmethod
-    def setUpClass(cls):
-        shutil.rmtree(user_data.__config_dir)
-
     def preserve_schema(self):
         # archive existing and put it back afterwards
         local_schema_filepath = yaml_schema_file

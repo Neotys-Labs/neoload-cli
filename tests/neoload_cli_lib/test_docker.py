@@ -1,4 +1,3 @@
-import tempfile
 import unittest
 from unittest import mock
 
@@ -91,7 +90,6 @@ class TestMethods(unittest.TestCase):
 
 
 
-    @mock.patch('neoload_cli_lib.config_global.get_config_file', mock.Mock(return_value=tempfile.gettempdir() + "/" + next(tempfile._get_candidate_names())))
     def test_docker_install_hooks(self):
         config_global.reset()
 
@@ -111,7 +109,6 @@ class TestMethods(unittest.TestCase):
 
 
 
-    @mock.patch('neoload_cli_lib.config_global.get_config_file', mock.Mock(return_value=tempfile.gettempdir() + "/" + next(tempfile._get_candidate_names())))
     @mock.patch('neoload_cli_lib.user_data.get_user_data', mock.Mock(return_value=UserData(desc={'url': "http://MyUrl", 'token': "mytoken"})))
     @mock.patch('neoload_cli_lib.docker_lib.get_zone', mock.Mock(side_effect=lambda k: {'defaultzone': {'type': 'STATIC'}}.get(k, 'unhandled request %s' % k)))
     @mock.patch('neoload_cli_lib.docker_lib.max_number', mock.Mock(return_value=5))
@@ -146,7 +143,6 @@ class TestMethods(unittest.TestCase):
         assert docker_lib.get_setting(docker_lib.DOCKER_LAUNCHED) == ['lg-6-test-machine', 'lg-7-test-machine', 'ctrl-6-test-machine']
 
 
-    @mock.patch('neoload_cli_lib.config_global.get_config_file', mock.Mock(return_value=tempfile.gettempdir() + "/" + next(tempfile._get_candidate_names())))
     def test_docker_down(self):
         mock_client = mock.MagicMock(spec=docker.DockerClient)
         docker_lib.set_client(mock_client)
@@ -168,8 +164,6 @@ class TestMethods(unittest.TestCase):
         assert i == 2
         client_mock.containers.list.assert_has_calls([mock.call(all=True)])
 
-    @mock.patch('neoload_cli_lib.config_global.get_config_file',
-                mock.Mock(return_value=tempfile.gettempdir() + "/" + next(tempfile._get_candidate_names())))
     @mock.patch('commands.zones.get_zones', mock.Mock(
         return_value=[{'id': 'aze', 'type': 'STATIC', 'loadgenerators': [], 'controllers': []},
                       {'id': 'toto', 'type': 'DYNAMIC'}]))
