@@ -1,7 +1,10 @@
 import datetime
 import os
+import shutil
+import tempfile
 import time
 
+import appdirs
 import pytest
 from types import SimpleNamespace
 from _pytest.main import Session
@@ -9,6 +12,17 @@ from click.testing import CliRunner
 
 import sys
 sys.path.append('neoload')
+
+# Isolate the tests from the user's configuration
+# config directory is computed from appdirs.user_data_dir() at import time
+# We redirect and import here, conftest is guaranteed to be imported first
+# The directory is removed at the end of the session.
+TEST_CONFIG_DIR = tempfile.mkdtemp(prefix='neoload-cli-tests-')
+appdirs.user_data_dir = lambda *args, **kwargs: TEST_CONFIG_DIR
+
+from neoload_cli_lib import user_data
+
+user_data.CONFIG_FILE = os.path.join(TEST_CONFIG_DIR, 'config.yaml')
 
 from commands.login import cli as login
 from commands.status import cli as status
@@ -47,6 +61,10 @@ def pytest_sessionstart(session: Session):
     """
     CliRunner().invoke(config, ["set", "status.resolvenames=False"])
     CliRunner().invoke(login, ["xxxxx", '--url', "bad_url"])
+
+
+def pytest_unconfigure(config):
+    shutil.rmtree(TEST_CONFIG_DIR, ignore_errors=True)
 
 
 @pytest.fixture
