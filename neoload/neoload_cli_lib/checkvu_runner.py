@@ -380,6 +380,8 @@ CHECKVU_VM_OPTIONS = [
     "-Xmx512m",
     "-XX:+UseSerialGC",
     "-XX:+ExitOnOutOfMemoryError",
+    # LOAD-41825 / CVE-2026-114938 (Java4Shell): disable HotSpot Base64 decode intrinsic
+    "-XX:-UseBASE64Intrinsics",
 ]
 
 def build_command(java, jar, project_file, user_path=None, play_think_time=False,
