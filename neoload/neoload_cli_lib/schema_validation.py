@@ -7,8 +7,8 @@ import requests
 import yaml
 from yaml.scanner import ScannerError
 
-from neoload_cli_lib import cli_exception, bad_as_code_exception
-from neoload_cli_lib.user_data import update_schema, get_yaml_schema, get_yaml_schema_etag, tools
+from neoload_cli_lib import cli_exception, bad_as_code_exception, schema_error_report
+from neoload_cli_lib.user_data import update_schema, get_yaml_schema, get_yaml_schema_etag, tools, __yaml_schema_file
 
 import logging
 import hashlib
@@ -192,13 +192,12 @@ def validate_project_object(project_object, schema_spec, ssl_cert='', check_sche
         v.validate(project_object)
     except jsonschema.SchemaError as err:
         raise cli_exception.CliException('This is not a valid json schema:\n%s' % str(err))
-    except jsonschema.ValidationError as err:
-        msgs = ""
-        for error in sorted(v.iter_errors(project_object), key=str):
-            path = "\\".join(list(map(lambda x: str(x), error.path)))
-            msgs += "\n" + (error.message if hasattr(error, 'message') else str(error)) + "\n\tat: " + path + "\n\tgot: \n" + (yaml.dump(error.instance) if hasattr(error, 'instance') else '') + "\n"
-        msgs = ("in %s" % label if label else "") + msgs
-        raise cli_exception.CliException(YAML_NOT_CONFIRM_MESSAGE + '\n' + msgs)
+    except jsonschema.ValidationError:
+        errors = list(v.iter_errors(project_object))
+        logging.debug("Raw validation errors:\n%s" % "\n".join(map(str, errors)))
+        report = schema_error_report.format_errors(errors, project_object)
+        raise cli_exception.CliException(
+            YAML_NOT_CONFIRM_MESSAGE + '\n' + ("in %s\n" % label if label else "") + report + "\n")
 
 
 def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
@@ -294,7 +293,9 @@ def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True, sc
             cached_etag = get_yaml_schema_etag(schema_key=schema_key) if json_schema is not None else None
             json_schema_spec, response_etag, not_modified = get_network_schema_by_spec(schema_spec, ssl_cert, cached_etag)
             if not_modified:
-                logging.info('Remote schema unchanged since last download (ETag match) - using cached schema.')
+                logging.debug(
+                    'Remote schema unchanged since last download (ETag match) - using cached schema at %s',
+                    __yaml_schema_file)
             elif json_schema_spec is not None:
                 logging.debug("Retrieved remote schema %s chars, etag=%s" % (len(json_schema_spec), response_etag or "none"))
                 if response_etag:
@@ -371,3 +372,20 @@ def get_json_schema_by_spec(schema_spec, ssl_cert):
 
     return json_schema_spec
 
+
+def validate_path(file, schema_url, ssl_cert=''):
+    """Validates an as-code yaml file against the schema from NLCLI_FORCE_SCHEMA
+    or downloaded from given URL or from the schema matching schemaVersion."""
+    force_schema = os.environ.get('NLCLI_FORCE_SCHEMA')
+    if force_schema is not None and len(force_schema) > 0:
+        schema_url = force_schema
+
+    path = os.path.abspath(file)
+    try:
+        if os.path.isdir(path):
+            validate_yaml_dir(path, schema_url, ssl_cert)
+            return 'All yaml files underneath the path provided are valid.'
+        validate_yaml(file, schema_url, ssl_cert)
+        return 'Yaml file is valid.'
+    except Exception as err:
+        raise cli_exception.CliException(str(err))

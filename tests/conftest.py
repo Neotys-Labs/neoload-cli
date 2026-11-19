@@ -1,7 +1,10 @@
 import datetime
 import os
+import shutil
+import tempfile
 import time
 
+import appdirs
 import pytest
 from types import SimpleNamespace
 from _pytest.main import Session
@@ -9,6 +12,17 @@ from click.testing import CliRunner
 
 import sys
 sys.path.append('neoload')
+
+# Isolate the tests from the user's configuration
+# config directory is computed from appdirs.user_data_dir() at import time
+# We redirect and import here, conftest is guaranteed to be imported first
+# The directory is removed at the end of the session.
+TEST_CONFIG_DIR = tempfile.mkdtemp(prefix='neoload-cli-tests-')
+appdirs.user_data_dir = lambda *args, **kwargs: TEST_CONFIG_DIR
+
+from neoload_cli_lib import user_data
+
+user_data.CONFIG_FILE = os.path.join(TEST_CONFIG_DIR, 'config.yaml')
 
 from commands.login import cli as login
 from commands.status import cli as status
@@ -19,9 +33,10 @@ from tests.helpers.test_utils import mock_login_get_urls
 __default_random_token = '12345678912345678901ae6d8af6abcdefabcdefabcdef'
 __default_api_url = 'https://neoload-api.saas.neotys.com'
 
-# set the testing timezone to US/Pacific
-os.environ['TZ'] = 'US/Pacific'
-time.tzset()
+# set the testing timezone to America/Los_Angeles
+os.environ['TZ'] = 'America/Los_Angeles'
+if hasattr(time, 'tzset'):
+    time.tzset()
 FAKE_NOW_DATETIME = datetime.datetime(2023, 12, 25, 17, 5, 55)
 
 
@@ -46,6 +61,10 @@ def pytest_sessionstart(session: Session):
     """
     CliRunner().invoke(config, ["set", "status.resolvenames=False"])
     CliRunner().invoke(login, ["xxxxx", '--url', "bad_url"])
+
+
+def pytest_unconfigure(config):
+    shutil.rmtree(TEST_CONFIG_DIR, ignore_errors=True)
 
 
 @pytest.fixture
