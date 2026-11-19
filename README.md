@@ -2,24 +2,18 @@
 
 ## Overview
 
-This command-line interface lets you launch and monitor performance tests on the NeoLoad Web platform. Because NeoLoad supports many deployment models (SaaS, self-hosted, cloud or local containers, etc.), the configuration and test execution parameters depend on your licensing and infrastructure setup.
+Load testing as code. Built by an AI agent or by hand, checked in seconds, run at any scale. \
+For developers, DevOps and performance engineers.
 
+## Why NeoLoad CLI
 
-| Property | Value |
-| ----------------    | ----------------   |
-| Maturity | Stable |
-| Author | Tricentis |
-| License           | [BSD 2-Clause "Simplified"](https://github.com/Neotys-Labs/neoload-cli/blob/master/LICENSE) |
-| NeoLoad Licensing | FREE, Professional, or Enterprise edition |
-| Supported versions | Tested with NeoLoad Web from version [2.3.2](https://neoload.saas.neotys.com) |
-| Download Binaries | See the [latest release on PyPI](https://pypi.org/project/neoload) |
+Let an AI agent build the test, end to end. Open [neoload-headless](https://github.com/Neotys-Labs/neoload-headless) repo in Claude Code or Cursor and describe your application. The agent reads your sources, or explores and records the running application itself. It writes the YAML, then checks and fixes it with neoload checkvu in an automatic loop until it passes. It asks you only what it cannot infer.
 
-## TL;DR ... What
-This guide covers two flows.
+Or write it yourself. NeoLoad tests are plain YAML files, versioned and reviewed with your application code. Your IDE validates and completes them as you type.
 
-**1. Local design loop.** Clone [neoload-headless](https://github.com/Neotys-Labs/neoload-headless) and open it in your IDE, or in an AI editor such as Cursor or Claude, so the agent skills in that repository are available; setup steps are in [docs/setup.md](https://github.com/Neotys-Labs/neoload-headless/blob/main/docs/setup.md). From there, build a NeoLoad as-code project (YAML) with the assistant and/or the IDE, starting from application code, or have the AI open the application from its URL and browse it to design the test. Replay its user paths locally with `neoload checkvu` and fix the project until a single virtual user succeeds.
+A local check loop in seconds. `neoload checkvu` replays your test with one virtual user on your machine, before you use any dedicated load generator.
 
-**2. Run them from any environment.** From a CI/CD job, upload the designed project to NeoLoad Web, or commit it to Git and point NeoLoad Web at that repository. Run the test (`neoload docker` can deploy local controller and load-generator containers; this is experimental), then visualize the results in NeoLoad Web dashboards.
+Same test, any scale. The YAML you check on your laptop runs unchanged from any CI/CD pipeline on NeoLoad Web, with SLAs that fail the build when performance regresses.
 
 ## TL;DR ... How
 Local design loop: follow [Set up the environment](https://github.com/Neotys-Labs/neoload-headless/blob/main/docs/setup.md) in neoload-headless (clone, Python, Java, and the editor or AI workspace).
