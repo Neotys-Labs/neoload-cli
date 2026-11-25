@@ -18,9 +18,10 @@ NeoLoad CLI 2026.3 is the design release. Write the test as YAML, prove it on yo
 **Same test, any scale.** The YAML you check on your laptop runs unchanged from any CI/CD pipeline on NeoLoad Web, with SLAs that fail the build when performance regresses.
 
 ## TL;DR ... How
-Local design loop: download the design workspace from the Tricentis Support Hub, then set up Python, Java, and the editor or AI workspace.
+- **Local design loop**
+Download the [design workspace from the Tricentis Support Hub](https://support-hub.tricentis.com/downloads.do?number=DOW0010273), then set up Python, Java, and the editor or AI workspace.
 
-CI/CD run:
+- **CI/CD run**
 ```
 neoload login $NLW_TOKEN \
         test-settings --zone $NLW_ZONE_DYNAMIC --lgs 5 --scenario sanityScenario createorpatch NewTest1 \
