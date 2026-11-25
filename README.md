@@ -5,6 +5,15 @@
 Load testing as code. Built by an AI agent or by hand, checked in seconds, run at any scale. \
 For developers, DevOps and performance engineers.
 
+| Property | Value |
+| ----------------    | ----------------   |
+| Maturity | Stable |
+| Author | Tricentis |
+| License           | [BSD 2-Clause "Simplified"](https://github.com/Neotys-Labs/neoload-cli/blob/master/LICENSE) |
+| NeoLoad Licensing | FREE, Professional, or Enterprise edition |
+| Supported versions | Tested with NeoLoad Web from version [2.3.2](https://neoload.saas.neotys.com) |
+| Download Binaries | See the [latest release on PyPI](https://pypi.org/project/neoload) |
+
 ## What's new in 2026.3
 
 NeoLoad CLI 2026.3 is the design release. Write the test as YAML, prove it on your machine with one virtual user, then run that same file at scale.
