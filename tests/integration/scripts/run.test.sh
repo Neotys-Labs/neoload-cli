@@ -44,7 +44,7 @@ assertJsonEquals '.controllerZoneId' "\"${zonewithresources}\""
 cmd='python neoload project --path tests/neoload_projects/simpledemo.yml upload'
 out=`eval $cmd`
 assertEquals "$?" '0'
-assertJsonEquals '.projectName' '"NeoLoad-CLI-simpledemo"'
+assertJsonEquals '.projectName' '"NeoLoad_CLI_simpledemo"'
 assertJsonEquals '.scenarios[0].scenarioName' '"simpledemo"'
 
 

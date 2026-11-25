@@ -66,6 +66,7 @@ class TestUpload:
 
         file = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
         basename = file.name
+        file.close()
 
         try:  # negative test case
             neoLoad_project.zip_dir(source_path, basename + ".bad")

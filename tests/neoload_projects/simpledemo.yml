@@ -1,4 +1,4 @@
-name: NeoLoad-CLI-simpledemo
+name: NeoLoad_CLI_simpledemo
 
 sla_profiles: # defaults for dev/qa systems; can be overridden by additional slas/uat...
 - name: simpledemo_sla
