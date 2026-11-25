@@ -5,18 +5,20 @@
 Load testing as code. Built by an AI agent or by hand, checked in seconds, run at any scale. \
 For developers, DevOps and performance engineers.
 
-## Why NeoLoad CLI
+## What's new in 2026.3
 
-Let an AI agent build the test, end to end. Open [neoload-headless](https://github.com/Neotys-Labs/neoload-headless) repo in Claude Code or Cursor and describe your application. The agent reads your sources, or explores and records the running application itself. It writes the YAML, then checks and fixes it with neoload checkvu in an automatic loop until it passes. It asks you only what it cannot infer.
+NeoLoad CLI 2026.3 is the design release. Write the test as YAML, prove it on your machine with one virtual user, then run that same file at scale.
 
-Or write it yourself. NeoLoad tests are plain YAML files, versioned and reviewed with your application code. Your IDE validates and completes them as you type.
+**A local check loop in seconds.** `neoload checkvu` replays your test with one virtual user on your machine, before you use any dedicated load generator. It validates the as-code file, runs each user path once, and exits only when every path passes. That is the loop you, or an AI agent, use to generate, check, and fix.
 
-A local check loop in seconds. `neoload checkvu` replays your test with one virtual user on your machine, before you use any dedicated load generator.
+**Let an AI agent build the test, end to end.** Download the [design workspace from the Tricentis Support Hub](https://support-hub.tricentis.com/downloads.do?number=DOW0010273), open it in Claude Code or Cursor, and describe your application. The agent reads your sources, or explores and records the running application itself. It writes the YAML, then checks and fixes it with `neoload checkvu` until it passes. It asks you only what it cannot infer.
 
-Same test, any scale. The YAML you check on your laptop runs unchanged from any CI/CD pipeline on NeoLoad Web, with SLAs that fail the build when performance regresses.
+**Or write it yourself.** NeoLoad tests are plain YAML files, versioned and reviewed with your application code. Declare the as-code `$schema` in the YAML and your IDE validates and completes them as you type.
+
+**Same test, any scale.** The YAML you check on your laptop runs unchanged from any CI/CD pipeline on NeoLoad Web, with SLAs that fail the build when performance regresses.
 
 ## TL;DR ... How
-Local design loop: follow [Set up the environment](https://github.com/Neotys-Labs/neoload-headless/blob/main/docs/setup.md) in neoload-headless (clone, Python, Java, and the editor or AI workspace).
+Local design loop: download the design workspace from the Tricentis Support Hub, then set up Python, Java, and the editor or AI workspace.
 
 CI/CD run:
 ```
