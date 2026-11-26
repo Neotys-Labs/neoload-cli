@@ -20,7 +20,7 @@ NeoLoad CLI 2026.3 is the design release. Write the test as YAML, prove it on yo
 
 **A local check loop in seconds.** `neoload checkvu` replays your test with one virtual user on your machine, before you use any dedicated load generator. It validates the as-code file, runs each user path once, and exits only when every path passes. That is the loop you, or an AI agent, use to generate, check, and fix.
 
-**Let an AI agent build the test, end to end.** Download the [design workspace from the Tricentis Support Hub](https://support-hub.tricentis.com/downloads.do?number=DOW0010273), open it in Claude Code or Cursor, and describe your application. The agent reads your sources, or explores and records the running application itself. It writes the YAML, then checks and fixes it with `neoload checkvu` until it passes. It asks you only what it cannot infer.
+**Let an AI agent build the test, end to end.** Download the [design workspace from the Tricentis Support Hub](https://files.tricentis.com/index.php/s/S4K1s9b08Nl1ZnG/download), open it in Claude Code or Cursor, and describe your application. The agent reads your sources, or explores and records the running application itself. It writes the YAML, then checks and fixes it with `neoload checkvu` until it passes. It asks you only what it cannot infer.
 
 **Or write it yourself.** NeoLoad tests are plain YAML files, versioned and reviewed with your application code. Declare the as-code `$schema` in the YAML and your IDE validates and completes them as you type.
 
@@ -28,7 +28,7 @@ NeoLoad CLI 2026.3 is the design release. Write the test as YAML, prove it on yo
 
 ## TL;DR ... How
 - **Local design loop**
-Download the [design workspace from the Tricentis Support Hub](https://support-hub.tricentis.com/downloads.do?number=DOW0010273), then set up Python, Java, and the editor or AI workspace.
+Download the [design workspace from the Tricentis Support Hub](https://files.tricentis.com/index.php/s/S4K1s9b08Nl1ZnG/download), then set up Python, Java, and the editor or AI workspace.
 
 - **CI/CD run**
 ```
