@@ -16,7 +16,7 @@ import os
 import  gitignorefile
 from neoload_cli_lib.neoLoad_project import is_not_to_be_included
 
-YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema."
+YAML_NOT_CONFIRM_MESSAGE = "YAML does not confirm to NeoLoad DSL schema"
 __models_raw_root = "https://raw.githubusercontent.com/Neotys-Labs/neoload-models/v3"
 __compatibility_url = __models_raw_root + "/schemas/compatibility.json"
 __default_schema_version = "3.0"
@@ -138,6 +138,39 @@ def schema_url_for_version(version):
     return '%s/schemas/v%s/as-code.schema.json' % (__models_raw_root, version)
 
 
+# Fixed on purpose: compatibility.json lists schemas that are not released yet.
+# When 3.2 is released, add a 3.1 message here instead of reading that file.
+_SCHEMA_3_0_UPGRADE_NOTICE = (
+    "WARNING: You are using NeoLoad DSL schema version 3.0; however, version 3.1 is available.\n"
+    "You should consider upgrading by setting `schemaVersion: 3.1` at the top of your YAML file "
+    "to use the latest version."
+)
+
+
+def validation_message(versions, is_valid, is_directory=False, detail=None):
+    """Result text for one validation, including the schema version and the 3.0 upgrade hint."""
+    if isinstance(versions, str):
+        versions = [versions]
+    if len(versions) == 1:
+        version_label = 'NeoLoad DSL schema version %s' % versions[0]
+    else:
+        # TODO looks like the CLI validate against several versions... Should we allow this or force to have a single version ???? Looks suspicious
+        version_label = 'NeoLoad DSL schema versions %s' % ', '.join(versions)
+
+    if not is_valid:
+        message = '%s version %s.' % (YAML_NOT_CONFIRM_MESSAGE, versions[0])
+    elif is_directory:
+        message = 'All yaml files underneath the path provided are valid against %s.' % version_label
+    else:
+        message = 'Yaml file is valid against %s.' % version_label
+    if detail:
+        message += '\n' + detail
+    # Only 3.0 has a released successor to point at.
+    if '3.0' in versions:
+        message += '\n\n' + _SCHEMA_3_0_UPGRADE_NOTICE
+    return message
+
+
 def load_supported_schema_versions(ssl_cert=''):
     """Supported versions are the keys of neoload-models schemas/compatibility.json (v3)."""
     compatibility_json, _etag, _not_modified = get_network_schema_by_spec(__compatibility_url, ssl_cert)
@@ -156,10 +189,13 @@ def load_supported_schema_versions(ssl_cert=''):
 
 
 def resolve_schema_spec(project_object, schema_spec=None, ssl_cert=''):
-    """Pick the GitHub schema URL from schemaVersion, unless the caller overrode it."""
-    if schema_spec is not None:
-        return schema_spec, None
+    """Pick the GitHub schema URL from schemaVersion, unless the caller overrode it.
+
+    The returned version is always the normalized schemaVersion (3.0 when absent).
+    """
     version = normalize_schema_version((project_object or {}).get('schemaVersion'))
+    if schema_spec is not None:
+        return schema_spec, version
     compatibility = load_supported_schema_versions(ssl_cert)
     if version not in compatibility:
         supported = ', '.join(sorted(compatibility.keys()))
@@ -169,7 +205,11 @@ def resolve_schema_spec(project_object, schema_spec=None, ssl_cert=''):
 
 
 def validate_project_object(project_object, schema_spec, ssl_cert='', check_schema=True, label=None):
-    schema_spec, schema_key = resolve_schema_spec(project_object, schema_spec, ssl_cert)
+    """Validate project_object. Returns the schema version it was validated against."""
+    # A caller-supplied schema must not be stored under the versioned cache key.
+    explicit_schema = schema_spec is not None
+    schema_spec, used_version = resolve_schema_spec(project_object, schema_spec, ssl_cert)
+    schema_key = None if explicit_schema else used_version
     json_schema = init_yaml_schema_with_checks(schema_spec, ssl_cert, check_schema, schema_key=schema_key)
     try:
         schema_as_object = json.loads(json_schema)
@@ -196,15 +236,16 @@ def validate_project_object(project_object, schema_spec, ssl_cert='', check_sche
         errors = list(v.iter_errors(project_object))
         logging.debug("Raw validation errors:\n%s" % "\n".join(map(str, errors)))
         report = schema_error_report.format_errors(errors, project_object)
-        raise cli_exception.CliException(
-            YAML_NOT_CONFIRM_MESSAGE + '\n' + ("in %s\n" % label if label else "") + report + "\n")
+        detail = ("in %s\n" % label if label else "") + report
+        raise cli_exception.CliException(validation_message(used_version, is_valid=False, detail=detail) + "\n")
+    return used_version
 
 
 def validate_yaml(yaml_file_path, schema_spec, ssl_cert='', check_schema=True):
     # Resolve and merge "includes:" into one complete in-memory project before
     # validating, instead of validating this file in isolation.
     merged_project = resolve_and_merge_project(yaml_file_path)
-    validate_project_object(merged_project, schema_spec, ssl_cert, check_schema, label="file %s" % yaml_file_path)
+    return validate_project_object(merged_project, schema_spec, ssl_cert, check_schema, label="file %s" % yaml_file_path)
 
 
 def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
@@ -253,10 +294,13 @@ def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
         raise cli_exception.CliException(
             'No root as-code project file found underneath %s (every yaml/yml/json file found is referenced as an include).' % path)
 
+    versions = []
     for file_path in root_files:
         logging.debug("Validating root project file: %s" % file_path)
         try:
-            validate_yaml(file_path, schema_spec, ssl_cert, check_schema=True)
+            version = validate_yaml(file_path, schema_spec, ssl_cert, check_schema=True)
+            if version not in versions:
+                versions.append(version)
         except Exception as err:
             any_errs = True
             # A schema-related failure always aborts immediately with its own
@@ -269,6 +313,7 @@ def validate_yaml_dir(path, schema_spec, ssl_cert='',continue_on_error=True):
 
     if any_errs:
         raise ValueError('One or more errors in files underneath this directory.')
+    return versions
 
 
 def init_yaml_schema_with_checks(schema_spec, ssl_cert='', check_schema=True, schema_key=None):
@@ -383,9 +428,9 @@ def validate_path(file, schema_url, ssl_cert=''):
     path = os.path.abspath(file)
     try:
         if os.path.isdir(path):
-            validate_yaml_dir(path, schema_url, ssl_cert)
-            return 'All yaml files underneath the path provided are valid.'
-        validate_yaml(file, schema_url, ssl_cert)
-        return 'Yaml file is valid.'
+            versions = validate_yaml_dir(path, schema_url, ssl_cert)
+            return validation_message(versions, is_valid=True, is_directory=True)
+        version = validate_yaml(file, schema_url, ssl_cert)
+        return validation_message(version, is_valid=True)
     except Exception as err:
         raise cli_exception.CliException(str(err))

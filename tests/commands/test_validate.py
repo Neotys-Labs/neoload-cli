@@ -36,7 +36,9 @@ class TestValidate:
     def try_success(self,file_path):
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path), '--refresh'])
-        assert 'Yaml file is valid' in str(result.output)
+        assert 'Yaml file is valid against NeoLoad DSL schema version 3.0.' in str(result.output)
+        assert 'You are using NeoLoad DSL schema version 3.0' in str(result.output)
+        assert 'schemaVersion:' in str(result.output)
         assert result.exit_code == 0
         return result
 
@@ -50,7 +52,9 @@ class TestValidate:
         file_path = datafiles / 'default.yaml'
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path)])
-        assert 'Yaml file is valid' in str(result.output)
+        assert 'Yaml file is valid against NeoLoad DSL schema version 3.0.' in str(result.output)
+        assert 'You are using NeoLoad DSL schema version 3.0' in str(result.output)
+        assert 'schemaVersion:' in str(result.output)
         assert result.exit_code == 0
 
     @pytest.mark.datafiles('tests/neoload_projects/invalid_to_schema.yaml')
@@ -58,7 +62,8 @@ class TestValidate:
         file_path = datafiles / 'invalid_to_schema.yaml'
         runner = CliRunner()
         result = runner.invoke(validate, [str(file_path), '--refresh'])
-        assert schema_validation.YAML_NOT_CONFIRM_MESSAGE in str(result.output)
+        assert 'YAML does not confirm to NeoLoad DSL schema version 3.0.' in str(result.output)
+        assert 'schemaVersion:' in str(result.output)
         assert result.exit_code == 1
 
     @pytest.mark.datafiles('tests/neoload_projects/example_1')
