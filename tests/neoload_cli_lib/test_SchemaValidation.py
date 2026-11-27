@@ -72,7 +72,7 @@ class TestSchemaValidation:
                 {'name': 'p', 'schemaVersion': '3.1'}, schema_spec='/tmp/custom-schema.json')
         mock_get.assert_not_called()
         assert spec == '/tmp/custom-schema.json'
-        assert key is None
+        assert key == '3.1'
 
     def test_validate_yaml_downloads_schema_for_declared_version(self, tmp_path):
         yaml_path = tmp_path / 'project.yaml'
@@ -137,6 +137,54 @@ class TestSchemaValidation:
         with mock.patch('requests.get', side_effect=fake_get):
             schema_validation.validate_yaml(str(yaml_path), None)
 
+    def test_upgrade_notice_is_hardcoded_for_schema_3_0(self):
+        message = schema_validation.validation_message('3.0', is_valid=True)
+        assert message == (
+            "Yaml file is valid against NeoLoad DSL schema version 3.0.\n\n"
+            "WARNING: You are using NeoLoad DSL schema version 3.0; however, version 3.1 is available.\n"
+            "You should consider upgrading by setting `schemaVersion: 3.1` at the top of your YAML file "
+            "to use the latest version."
+        )
+        assert 'WARNING' not in schema_validation.validation_message('3.1', is_valid=True)
+        assert 'WARNING' not in schema_validation.validation_message('3.2', is_valid=True)
+
+    def test_validation_error_names_schema_version_and_warns_when_outdated(self, tmp_path):
+        yaml_path = tmp_path / 'project.yaml'
+        yaml_path.write_text('name: foo\nschemaVersion: "3.0"\nunexpected: true\n')
+        with mock.patch('requests.get', side_effect=_compatibility_and_schema(_PERMISSIVE_SCHEMA_3_0)):
+            with pytest.raises(cli_exception.CliException) as context:
+                schema_validation.validate_yaml(str(yaml_path), None)
+        message = str(context.value)
+        assert 'YAML does not confirm to NeoLoad DSL schema version 3.0.' in message
+        assert 'schemaVersion: 3.1' in message
+
+    def test_absent_schema_version_is_reported_as_3_0(self, tmp_path):
+        yaml_path = tmp_path / 'project.yaml'
+        yaml_path.write_text('name: foo\nunexpected: true\n')
+        with mock.patch('requests.get', side_effect=_compatibility_and_schema(_PERMISSIVE_SCHEMA_3_0)):
+            with pytest.raises(cli_exception.CliException) as context:
+                schema_validation.validate_yaml(str(yaml_path), None)
+        assert 'YAML does not confirm to NeoLoad DSL schema version 3.0.' in str(context.value)
+
+    def test_valid_outdated_yaml_returns_upgrade_notice(self, tmp_path):
+        yaml_path = tmp_path / 'project.yaml'
+        yaml_path.write_text('name: foo\nschemaVersion: "3.0"\n')
+        with mock.patch('requests.get', side_effect=_compatibility_and_schema(_PERMISSIVE_SCHEMA_3_0)):
+            version = schema_validation.validate_yaml(str(yaml_path), None)
+            message = schema_validation.validate_path(str(yaml_path), None)
+        assert version == '3.0'
+        assert message.startswith('Yaml file is valid against NeoLoad DSL schema version 3.0.')
+        assert 'schemaVersion: 3.1' in message
+
+    def test_valid_latest_yaml_has_no_upgrade_notice(self, tmp_path):
+        yaml_path = tmp_path / 'project.yaml'
+        yaml_path.write_text('name: foo\nschemaVersion: "3.1"\n')
+        with mock.patch('requests.get', side_effect=_compatibility_and_schema(_PERMISSIVE_SCHEMA_3_1)):
+            version = schema_validation.validate_yaml(str(yaml_path), None)
+            message = schema_validation.validate_path(str(yaml_path), None)
+        assert version == '3.1'
+        assert message == 'Yaml file is valid against NeoLoad DSL schema version 3.1.'
+
     def _resolve(self, project):
         response = mock.Mock(status_code=200, text='{"3.0": {}, "3.1": {}}')
         response.headers.get.return_value = None
@@ -147,3 +195,29 @@ class TestSchemaValidation:
 
 
 __schema_url__ = schema_validation.schema_url_for_version('3.0')
+
+_PERMISSIVE_SCHEMA_3_0 = json.dumps({
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "name": {"type": "string"},
+        "schemaVersion": {"type": "string"},
+    },
+})
+
+_PERMISSIVE_SCHEMA_3_1 = _PERMISSIVE_SCHEMA_3_0
+
+
+def _compatibility_and_schema(schema_text):
+    def fake_get(url, **kwargs):
+        response = mock.Mock(status_code=200)
+        response.headers.get.return_value = None
+        if url.endswith('compatibility.json'):
+            response.text = '{"3.0": {}, "3.1": {}}'
+        elif '/as-code.schema.json' in url:
+            response.text = schema_text
+        else:
+            raise AssertionError('unexpected schema URL: %s' % url)
+        return response
+
+    return fake_get
